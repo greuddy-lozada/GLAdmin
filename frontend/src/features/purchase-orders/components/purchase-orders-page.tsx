@@ -1,19 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Plus, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
-  Box,
-  Button,
-  TextField,
-  Typography,
-  MenuItem,
-  Alert,
-  Stack,
-  IconButton,
-  Paper,
-} from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DataTable, Column } from '@/components/ui/data-table';
 import { SlideForm } from '@/components/ui/slide-form';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -100,7 +99,7 @@ export default function PurchaseOrdersPage() {
 
   const updateDetail = (index: number, field: string, value: unknown) => {
     const updated = [...(formData.details || [])];
-    updated[index] = { ...updated[index], [field]: value };
+    (updated[index] as Record<string, unknown>)[field] = value;
     setFormData({ ...formData, details: updated });
   };
 
@@ -150,80 +149,123 @@ export default function PurchaseOrdersPage() {
   };
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
-          {t('purchaseOrders.title')}
-        </Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">{t('purchaseOrders.title')}</h1>
+        <Button onClick={openCreate}>
+          <Plus className="mr-2 h-4 w-4" />
           {t('purchaseOrders.new')}
         </Button>
-      </Box>
+      </div>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
 
-      <DataTable columns={columns} rows={items} loading={loading} emptyMessage={t('purchaseOrders.empty')}
-        onDelete={(item) => { setDeleteTarget(item); setDeleteOpen(true); }} />
+      <DataTable
+        columns={columns}
+        rows={items}
+        loading={loading}
+        onEdit={(item) => {
+          setSelectedItem(item);
+          setFormOpen(true);
+        }}
+        onDelete={(item) => {
+          setDeleteTarget(item);
+          setDeleteOpen(true);
+        }}
+        emptyMessage={t('purchaseOrders.empty')}
+      />
 
-      <SlideForm open={formOpen} title={selectedItem ? t('purchaseOrders.edit') : t('purchaseOrders.new')} onClose={() => setFormOpen(false)}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <TextField label={t('purchaseOrders.field.supplier')} select value={formData.idSupplier}
-            onChange={(e) => setFormData({ ...formData, idSupplier: Number(e.target.value) })} fullWidth required>
-            {suppliers.map((s) => (
-              <MenuItem key={s.id} value={s.id}>{s.companyName}</MenuItem>
-            ))}
-          </TextField>
-          <TextField label={t('purchaseOrders.field.code')} value={formData.code}
-            onChange={(e) => setFormData({ ...formData, code: e.target.value })} fullWidth />
-          <TextField label={t('purchaseOrders.field.date')} type="date" value={formData.date}
-            onChange={(e) => setFormData({ ...formData, date: e.target.value })} fullWidth slotProps={{ inputLabel: { shrink: true } }} />
-          <TextField label={t('purchaseOrders.field.amount')} type="number" value={formData.amount}
-            onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value) })} fullWidth />
+      <SlideForm
+        open={formOpen}
+        title={selectedItem ? t('purchaseOrders.edit') : t('purchaseOrders.new')}
+        onClose={() => { setFormOpen(false); setSelectedItem(null); }}
+      >
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>{t('purchaseOrders.field.supplier')}</Label>
+            <Select value={String(formData.idSupplier)} onValueChange={(v) => setFormData({ ...formData, idSupplier: Number(v) })}>
+              <SelectTrigger><SelectValue placeholder="Seleccionar proveedor" /></SelectTrigger>
+              <SelectContent>
+                {suppliers.map((s) => (
+                  <SelectItem key={s.id} value={String(s.id)}>{s.companyName}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>{t('purchaseOrders.field.code')}</Label>
+            <Input value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} required />
+          </div>
+          <div className="space-y-2">
+            <Label>{t('purchaseOrders.field.date')}</Label>
+            <Input type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} required />
+          </div>
+          <div className="space-y-2">
+            <Label>{t('purchaseOrders.field.amount')}</Label>
+            <Input type="number" value={formData.amount}
+              onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value) })} required />
+          </div>
 
           {!selectedItem && (
             <>
-              <Typography variant="subtitle1" sx={{ mt: 2, fontWeight: 'bold' }}>
-                {t('purchaseOrders.details')}
-              </Typography>
-              <Button variant="outlined" size="small" startIcon={<AddIcon />} onClick={addDetail}>
-                {t('purchaseOrders.addDetail')}
-              </Button>
+              <div className="flex items-center justify-between">
+                <Label>{t('purchaseOrders.field.details')}</Label>
+                <Button variant="outline" size="sm" onClick={addDetail}>
+                  <Plus className="mr-1 h-3 w-3" /> Agregar
+                </Button>
+              </div>
               {(formData.details || []).map((detail, index) => (
-                <Paper key={index} variant="outlined" sx={{ p: 2 }}>
-                  <Stack spacing={2}>
-                    <TextField label={t('purchaseOrders.field.product')} select value={detail.idProduct}
-                      onChange={(e) => updateDetail(index, 'idProduct', Number(e.target.value))} fullWidth required>
-                      {products.map((p) => (
-                        <MenuItem key={p.id} value={p.id}>{`${p.code} - ${p.name}`}</MenuItem>
-                      ))}
-                    </TextField>
-                    <TextField label={t('purchaseOrders.field.quantity')} type="number" value={detail.quantity}
-                      onChange={(e) => updateDetail(index, 'quantity', Number(e.target.value))} fullWidth />
-                    <TextField label={t('purchaseOrders.field.subtotal')} type="number" value={detail.subtotal}
-                      onChange={(e) => updateDetail(index, 'subtotal', Number(e.target.value))} fullWidth />
-                    <TextField label={t('purchaseOrders.field.observation')} value={detail.observation}
-                      onChange={(e) => updateDetail(index, 'observation', e.target.value)} fullWidth />
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                      <IconButton color="error" onClick={() => removeDetail(index)} size="small">
-                        <DeleteIcon />
-                      </IconButton>
-                    </Box>
-                  </Stack>
-                </Paper>
+                <div key={index} className="space-y-2 rounded border p-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Detalle {index + 1}</span>
+                    <Button variant="ghost" size="icon" onClick={() => removeDetail(index)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t('purchaseOrders.field.product')}</Label>
+                    <Select value={String(detail.idProduct)}
+                      onValueChange={(v) => updateDetail(index, 'idProduct', Number(v))}>
+                      <SelectTrigger><SelectValue placeholder="Seleccionar producto" /></SelectTrigger>
+                      <SelectContent>
+                        {products.map((p) => (
+                          <SelectItem key={p.id} value={String(p.id)}>{p.code} - {p.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-2">
+                      <Label>{t('purchaseOrders.field.quantity')}</Label>
+                      <Input type="number" value={detail.quantity}
+                        onChange={(e) => updateDetail(index, 'quantity', Number(e.target.value))} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{t('purchaseOrders.field.subtotal')}</Label>
+                      <Input type="number" value={detail.subtotal}
+                        onChange={(e) => updateDetail(index, 'subtotal', Number(e.target.value))} />
+                    </div>
+                  </div>
+                </div>
               ))}
             </>
           )}
 
-          <Button variant="contained" onClick={handleSave} disabled={submitting} sx={{ mt: 2 }}>
+          <Button onClick={handleSave} disabled={submitting} className="w-full">
             {submitting ? t('common.saving') : t('common.save')}
           </Button>
-        </Box>
+        </div>
       </SlideForm>
 
-      <ConfirmDialog open={deleteOpen} title={t('purchaseOrders.delete')}
-        message={tp('purchaseOrders.deleteConfirm', { code: String(deleteTarget?.code ?? deleteTarget?.id ?? '') })}
-        confirmLabel={t('common.delete')} onConfirm={handleDelete}
-        onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }} loading={submitting} />
-    </Box>
+      <ConfirmDialog
+        open={deleteOpen}
+        title={t('purchaseOrders.delete')}
+        message={tp('purchaseOrders.deleteConfirm', { code: deleteTarget?.code ?? '' })}
+        confirmLabel={t('common.delete')}
+        onConfirm={handleDelete}
+        onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
+        loading={submitting}
+      />
+    </div>
   );
 }

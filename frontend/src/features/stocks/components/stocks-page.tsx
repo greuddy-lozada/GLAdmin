@@ -1,17 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import {
-  Box,
-  Button,
-  TextField,
-  Typography,
-  MenuItem,
-  Switch,
-  FormControlLabel,
-  Alert,
-} from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DataTable, Column } from '@/components/ui/data-table';
 import { SlideForm } from '@/components/ui/slide-form';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -130,17 +132,16 @@ export default function StocksPage() {
   };
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
-          {t('stocks.title')}
-        </Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">{t('stocks.title')}</h1>
+        <Button onClick={openCreate}>
+          <Plus className="mr-2 h-4 w-4" />
           {t('stocks.new')}
         </Button>
-      </Box>
+      </div>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
 
       <DataTable
         columns={columns}
@@ -159,41 +160,58 @@ export default function StocksPage() {
         title={selectedStock ? t('stocks.edit') : t('stocks.new')}
         onClose={() => setFormOpen(false)}
       >
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <TextField label={t('stocks.field.product')} select value={formData.idProduct}
-            onChange={(e) => setFormData({ ...formData, idProduct: Number(e.target.value) })} fullWidth required>
-            {products.map((product) => (
-              <MenuItem key={product.id} value={product.id}>{product.code} - {product.name}</MenuItem>
-            ))}
-          </TextField>
-          <TextField label={t('stocks.field.supplier')} select value={formData.idSupplier ?? ''}
-            onChange={(e) => setFormData({ ...formData, idSupplier: e.target.value ? Number(e.target.value) : undefined })}
-            fullWidth>
-            <MenuItem value="">{t('common.empty') ?? 'Ninguno'}</MenuItem>
-            {suppliers.map((supplier) => (
-              <MenuItem key={supplier.id} value={supplier.id}>{supplier.companyName}</MenuItem>
-            ))}
-          </TextField>
-          <TextField label={t('stocks.field.batch')} select value={formData.idBatch ?? ''}
-            onChange={(e) => setFormData({ ...formData, idBatch: e.target.value ? Number(e.target.value) : undefined })}
-            fullWidth>
-            <MenuItem value="">{t('common.empty') ?? 'Ninguno'}</MenuItem>
-            {batches.map((batch) => (
-              <MenuItem key={batch.id} value={batch.id}>{batch.code}</MenuItem>
-            ))}
-          </TextField>
-          <TextField label={t('stocks.field.existence')} type="number" value={formData.existence}
-            onChange={(e) => setFormData({ ...formData, existence: Number(e.target.value) })} fullWidth required />
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>{t('stocks.field.product')}</Label>
+            <Select value={String(formData.idProduct)} onValueChange={(v) => setFormData({ ...formData, idProduct: Number(v) })}>
+              <SelectTrigger><SelectValue placeholder="Seleccionar producto" /></SelectTrigger>
+              <SelectContent>
+                {products.map((product) => (
+                  <SelectItem key={product.id} value={String(product.id)}>{product.code} - {product.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>{t('stocks.field.supplier')}</Label>
+            <Select value={formData.idSupplier ? String(formData.idSupplier) : ''}
+              onValueChange={(v) => setFormData({ ...formData, idSupplier: v ? Number(v) : undefined })}>
+              <SelectTrigger><SelectValue placeholder="Ninguno" /></SelectTrigger>
+              <SelectContent>
+                {suppliers.map((supplier) => (
+                  <SelectItem key={supplier.id} value={String(supplier.id)}>{supplier.companyName}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>{t('stocks.field.batch')}</Label>
+            <Select value={formData.idBatch ? String(formData.idBatch) : ''}
+              onValueChange={(v) => setFormData({ ...formData, idBatch: v ? Number(v) : undefined })}>
+              <SelectTrigger><SelectValue placeholder="Ninguno" /></SelectTrigger>
+              <SelectContent>
+                {batches.map((batch) => (
+                  <SelectItem key={batch.id} value={String(batch.id)}>{batch.code}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>{t('stocks.field.existence')}</Label>
+            <Input type="number" value={formData.existence}
+              onChange={(e) => setFormData({ ...formData, existence: Number(e.target.value) })} required />
+          </div>
           {selectedStock && (
-            <FormControlLabel control={
+            <div className="flex items-center gap-2">
               <Switch checked={formData.available ?? true}
-                onChange={(e) => setFormData({ ...formData, available: e.target.checked })} />
-            } label={t('stocks.field.available')} />
+                onCheckedChange={(c) => setFormData({ ...formData, available: c })} />
+              <Label>{t('stocks.field.available')}</Label>
+            </div>
           )}
-          <Button variant="contained" onClick={handleSave} disabled={submitting} sx={{ mt: 2 }}>
+          <Button onClick={handleSave} disabled={submitting} className="w-full">
             {submitting ? t('common.saving') : t('common.save')}
           </Button>
-        </Box>
+        </div>
       </SlideForm>
 
       <ConfirmDialog
@@ -205,6 +223,6 @@ export default function StocksPage() {
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
         loading={submitting}
       />
-    </Box>
+    </div>
   );
 }

@@ -2,14 +2,14 @@
 
 import { ReactNode } from 'react';
 import {
-  Drawer,
-  Box,
-  Typography,
-  IconButton,
-  Divider,
-  CircularProgress,
-} from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { X } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface SlideFormProps {
   open: boolean;
@@ -21,23 +21,26 @@ interface SlideFormProps {
 
 export function SlideForm({ open, title, onClose, children, loading }: SlideFormProps) {
   return (
-    <Drawer anchor="right" open={open} onClose={onClose}>
-      <Box sx={{ width: { xs: '100vw', sm: 480 }, p: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-          <Typography variant="h6">{title}</Typography>
-          <IconButton onClick={onClose} size="small">
-            <CloseIcon />
-          </IconButton>
-        </Box>
-        <Divider sx={{ mb: 3 }} />
-        {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-            <CircularProgress />
-          </Box>
-        ) : (
-          children
-        )}
-      </Box>
-    </Drawer>
+    <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
+      <SheetContent side="right" className="w-full sm:max-w-lg p-0">
+        <SheetHeader className="flex flex-row items-center justify-between border-b px-6 py-4">
+          <SheetTitle>{title}</SheetTitle>
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </Button>
+        </SheetHeader>
+        <div className="px-6 py-4">
+          {loading ? (
+            <div className="space-y-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-10 w-full" />
+              ))}
+            </div>
+          ) : (
+            children
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }

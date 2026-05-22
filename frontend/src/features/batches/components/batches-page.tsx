@@ -1,14 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  Box,
-  Button,
-  TextField,
-  Typography,
-  Alert,
-} from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
+import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DataTable, Column } from '@/components/ui/data-table';
 import { SlideForm } from '@/components/ui/slide-form';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -91,17 +88,16 @@ export default function BatchesPage() {
   };
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
-          {t('batches.title')}
-        </Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">{t('batches.title')}</h1>
+        <Button onClick={openCreate}>
+          <Plus className="mr-2 h-4 w-4" />
           {t('batches.new')}
         </Button>
-      </Box>
+      </div>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
 
       <DataTable
         columns={columns}
@@ -120,15 +116,19 @@ export default function BatchesPage() {
         title={selectedBatch ? t('batches.edit') : t('batches.new')}
         onClose={() => setFormOpen(false)}
       >
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <TextField label={t('batches.field.code')} value={formData.code}
-            onChange={(e) => setFormData({ ...formData, code: e.target.value })} fullWidth required />
-          <TextField label={t('batches.field.description')} value={formData.description ?? ''}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })} fullWidth />
-          <Button variant="contained" onClick={handleSave} disabled={submitting} sx={{ mt: 2 }}>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>{t('batches.field.code')}</Label>
+            <Input value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} required />
+          </div>
+          <div className="space-y-2">
+            <Label>{t('batches.field.description')}</Label>
+            <Input value={formData.description ?? ''} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
+          </div>
+          <Button onClick={handleSave} disabled={submitting} className="w-full">
             {submitting ? t('common.saving') : t('common.save')}
           </Button>
-        </Box>
+        </div>
       </SlideForm>
 
       <ConfirmDialog
@@ -140,6 +140,6 @@ export default function BatchesPage() {
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
         loading={submitting}
       />
-    </Box>
+    </div>
   );
 }

@@ -5,18 +5,13 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
+  TableHeader,
   TableRow,
-  Paper,
-  IconButton,
-  TablePagination,
-  Box,
-  Typography,
-  CircularProgress,
-} from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Pencil, Trash2 } from 'lucide-react';
 
 export interface Column<T> {
   field: keyof T | string;
@@ -55,78 +50,104 @@ export function DataTable<T extends { id: number }>({
 }: DataTableProps<T>) {
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-        <CircularProgress />
-      </Box>
+      <div className="space-y-3">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-10 w-full" />
+        ))}
+      </div>
     );
   }
 
   if (!rows.length) {
     return (
-      <Box sx={{ textAlign: 'center', p: 4 }}>
-        <Typography color="text.secondary">{emptyMessage}</Typography>
-      </Box>
+      <div className="text-center py-12 text-muted-foreground">
+        {emptyMessage}
+      </div>
     );
   }
 
   return (
-    <Paper>
-      <TableContainer>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            {columns.map((col) => (
+              <TableHead key={String(col.field)} style={{ width: col.width }}>
+                {col.headerName}
+              </TableHead>
+            ))}
+            {(onEdit || onDelete) && (
+              <TableHead className="text-right">Acciones</TableHead>
+            )}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rows.map((row) => (
+            <TableRow key={row.id}>
               {columns.map((col) => (
-                <TableCell key={String(col.field)} sx={{ fontWeight: 'bold', width: col.width }}>
-                  {col.headerName}
+                <TableCell key={String(col.field)}>
+                  {col.render
+                    ? col.render(row)
+                    : String(row[col.field as keyof T] ?? '')}
                 </TableCell>
               ))}
               {(onEdit || onDelete) && (
-                <TableCell sx={{ fontWeight: 'bold' }} align="right">
-                  Acciones
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-1">
+                    {onEdit && (
+                      <Button variant="ghost" size="icon" onClick={() => onEdit(row)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {onDelete && (
+                      <Button variant="ghost" size="icon" onClick={() => onDelete(row)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    )}
+                  </div>
                 </TableCell>
               )}
             </TableRow>
-          </TableHead>
-          <TableBody>
-            {rows.map((row) => (
-              <TableRow key={row.id} hover>
-                {columns.map((col) => (
-                  <TableCell key={String(col.field)}>
-                    {col.render
-                      ? col.render(row)
-                      : String(row[col.field as keyof T] ?? '')}
-                  </TableCell>
-                ))}
-                {(onEdit || onDelete) && (
-                  <TableCell align="right">
-                    {onEdit && (
-                      <IconButton size="small" onClick={() => onEdit(row)} color="primary">
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                    )}
-                    {onDelete && (
-                      <IconButton size="small" onClick={() => onDelete(row)} color="error">
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    )}
-                  </TableCell>
-                )}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+          ))}
+        </TableBody>
+      </Table>
       {total !== undefined && onPageChange && (
-        <TablePagination
-          component="div"
-          count={total}
-          page={page}
-          onPageChange={(_, p) => onPageChange(p)}
-          rowsPerPage={pageSize}
-          onRowsPerPageChange={(e) => onPageSizeChange?.(parseInt(e.target.value, 10))}
-          labelRowsPerPage="Filas por página"
-        />
+        <div className="flex items-center justify-between border-t px-4 py-3">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span>Filas por página:</span>
+            <select
+              className="border rounded px-2 py-1 bg-background"
+              value={pageSize}
+              onChange={(e) => onPageSizeChange?.(parseInt(e.target.value, 10))}
+            >
+              {[5, 10, 20, 50].map((size) => (
+                <option key={size} value={size}>{size}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === 0}
+              onClick={() => onPageChange(page - 1)}
+            >
+              Anterior
+            </Button>
+            <span className="px-2">
+              Página {page + 1} de {Math.max(1, Math.ceil((total || 0) / pageSize))}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= Math.ceil((total || 0) / pageSize) - 1}
+              onClick={() => onPageChange(page + 1)}
+            >
+              Siguiente
+            </Button>
+          </div>
+        </div>
       )}
-    </Paper>
+    </div>
   );
 }

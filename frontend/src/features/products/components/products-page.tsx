@@ -1,17 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import {
-  Box,
-  Button,
-  TextField,
-  Typography,
-  MenuItem,
-  Switch,
-  FormControlLabel,
-  Alert,
-} from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DataTable, Column } from '@/components/ui/data-table';
 import { SlideForm } from '@/components/ui/slide-form';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -126,17 +128,16 @@ export default function ProductsPage() {
   };
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
-          {t('products.title')}
-        </Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">{t('products.title')}</h1>
+        <Button onClick={openCreate}>
+          <Plus className="mr-2 h-4 w-4" />
           {t('products.new')}
         </Button>
-      </Box>
+      </div>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
 
       <DataTable
         columns={columns}
@@ -155,38 +156,58 @@ export default function ProductsPage() {
         title={selectedProduct ? t('products.edit') : t('products.new')}
         onClose={() => setFormOpen(false)}
       >
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <TextField label={t('products.field.code')} value={formData.code}
-            onChange={(e) => setFormData({ ...formData, code: e.target.value })} fullWidth required />
-          <TextField label={t('products.field.name')} value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })} fullWidth required />
-          <TextField label={t('products.field.price')} type="number" value={formData.price}
-            onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })} fullWidth required />
-          <TextField label={t('products.field.dollarPrice')} type="number" value={formData.dollarPrice ?? ''}
-            onChange={(e) => setFormData({ ...formData, dollarPrice: e.target.value ? Number(e.target.value) : undefined })}
-            fullWidth />
-          <TextField label={t('products.field.tax')} select value={formData.idTax ?? ''}
-            onChange={(e) => setFormData({ ...formData, idTax: e.target.value ? Number(e.target.value) : undefined })}
-            fullWidth>
-            <MenuItem value="">{t('common.empty') ?? 'Ninguno'}</MenuItem>
-            {taxes.map((tax) => (
-              <MenuItem key={tax.id} value={tax.id}>{tax.name} ({tax.percentage}%)</MenuItem>
-            ))}
-          </TextField>
-          <TextField label={t('products.field.observation')} value={formData.observation ?? ''}
-            onChange={(e) => setFormData({ ...formData, observation: e.target.value })} fullWidth multiline rows={3} />
-          <TextField label={t('products.field.image')} value={formData.image ?? ''}
-            onChange={(e) => setFormData({ ...formData, image: e.target.value })} fullWidth />
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>{t('products.field.code')}</Label>
+            <Input value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} required />
+          </div>
+          <div className="space-y-2">
+            <Label>{t('products.field.name')}</Label>
+            <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
+          </div>
+          <div className="space-y-2">
+            <Label>{t('products.field.price')}</Label>
+            <Input type="number" value={formData.price}
+              onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })} required />
+          </div>
+          <div className="space-y-2">
+            <Label>{t('products.field.dollarPrice')}</Label>
+            <Input type="number" value={formData.dollarPrice ?? ''}
+              onChange={(e) => setFormData({ ...formData, dollarPrice: e.target.value ? Number(e.target.value) : undefined })} />
+          </div>
+          <div className="space-y-2">
+            <Label>{t('products.field.tax')}</Label>
+            <Select value={formData.idTax ? String(formData.idTax) : ''}
+              onValueChange={(v) => setFormData({ ...formData, idTax: v ? Number(v) : undefined })}>
+              <SelectTrigger><SelectValue placeholder="Ninguno" /></SelectTrigger>
+              <SelectContent>
+                {taxes.map((tax) => (
+                  <SelectItem key={tax.id} value={String(tax.id)}>{tax.name} ({tax.percentage}%)</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>{t('products.field.observation')}</Label>
+            <Input value={formData.observation ?? ''}
+              onChange={(e) => setFormData({ ...formData, observation: e.target.value })} />
+          </div>
+          <div className="space-y-2">
+            <Label>{t('products.field.image')}</Label>
+            <Input value={formData.image ?? ''}
+              onChange={(e) => setFormData({ ...formData, image: e.target.value })} />
+          </div>
           {selectedProduct && (
-            <FormControlLabel control={
+            <div className="flex items-center gap-2">
               <Switch checked={formData.available ?? true}
-                onChange={(e) => setFormData({ ...formData, available: e.target.checked })} />
-            } label={t('products.field.available')} />
+                onCheckedChange={(c) => setFormData({ ...formData, available: c })} />
+              <Label>{t('products.field.available')}</Label>
+            </div>
           )}
-          <Button variant="contained" onClick={handleSave} disabled={submitting} sx={{ mt: 2 }}>
+          <Button onClick={handleSave} disabled={submitting} className="w-full">
             {submitting ? t('common.saving') : t('common.save')}
           </Button>
-        </Box>
+        </div>
       </SlideForm>
 
       <ConfirmDialog
@@ -198,6 +219,6 @@ export default function ProductsPage() {
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
         loading={submitting}
       />
-    </Box>
+    </div>
   );
 }

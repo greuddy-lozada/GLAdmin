@@ -1,20 +1,22 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
-  Box,
-  Button,
-  TextField,
-  Typography,
-  MenuItem,
-  Alert,
-} from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DataTable, Column } from '@/components/ui/data-table';
 import { SlideForm } from '@/components/ui/slide-form';
-import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useForeignExchanges } from '@/features/foreign-exchanges/hooks/use-foreign-exchanges';
-import { ForeignExchange, CreateForeignExchangeRequest, UpdateForeignExchangeRequest } from '@/features/foreign-exchanges/models/foreign-exchange.model';
+import { ForeignExchange, CreateForeignExchangeRequest } from '@/features/foreign-exchanges/models/foreign-exchange.model';
 import { foreignExchangeService } from '@/features/foreign-exchanges/services/foreign-exchange.service';
 import { useI18n } from '@/i18n';
 import apiClient from '@/lib/api/api-client';
@@ -23,34 +25,22 @@ export default function ForeignExchangesPage() {
   const { items, loading, loadItems } = useForeignExchanges();
   const { t } = useI18n();
   const [formOpen, setFormOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<ForeignExchange | null>(null);
   const [formData, setFormData] = useState<CreateForeignExchangeRequest>({
+    idCurrency: 0,
     value: 0,
-    idCurrency: undefined,
   });
-  const [currencies, setCurrencies] = useState<{ id: number; code: string; name: string; symbol: string }[]>([]);
+  const [currencies, setCurrencies] = useState<{ id: number; code: string; name: string }[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [deleteTarget, setDeleteTarget] = useState<ForeignExchange | null>(null);
 
   const columns: Column<ForeignExchange>[] = [
     { field: 'id', headerName: t('foreignExchanges.field.id') },
     {
-      field: 'value',
-      headerName: t('foreignExchanges.field.value'),
-      render: (row) => (row.value != null ? Number(row.value).toFixed(2) : '-'),
-    },
-    {
-      field: 'currency',
+      field: 'idCurrency',
       headerName: t('foreignExchanges.field.currency'),
-      render: (row) => row.currency?.name ?? '-',
+      render: (row) => row.currency?.code ?? '',
     },
-    {
-      field: 'createdAt',
-      headerName: t('foreignExchanges.field.createdAt'),
-      render: (row) => new Date(row.createdAt).toLocaleDateString(),
-    },
+    { field: 'value', headerName: t('foreignExchanges.field.rate') },
   ];
 
   useEffect(() => {
@@ -58,19 +48,8 @@ export default function ForeignExchangesPage() {
   }, []);
 
   const openCreate = () => {
-    setSelectedItem(null);
     setError('');
-    setFormData({ value: 0, idCurrency: undefined });
-    setFormOpen(true);
-  };
-
-  const openEdit = (item: ForeignExchange) => {
-    setSelectedItem(item);
-    setError('');
-    setFormData({
-      value: item.value,
-      idCurrency: item.idCurrency,
-    });
+    setFormData({ idCurrency: 0, value: 0 });
     setFormOpen(true);
   };
 
@@ -78,15 +57,7 @@ export default function ForeignExchangesPage() {
     setError('');
     setSubmitting(true);
     try {
-      const data = {
-        ...formData,
-        value: Number(formData.value),
-      };
-      if (selectedItem) {
-        await foreignExchangeService.update(selectedItem.id, data as UpdateForeignExchangeRequest);
-      } else {
-        await foreignExchangeService.create(data);
-      }
+      await foreignExchangeService.create(formData);
       await loadItems();
       setFormOpen(false);
     } catch {
@@ -96,72 +67,53 @@ export default function ForeignExchangesPage() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!deleteTarget) return;
-    setSubmitting(true);
-    try {
-      await foreignExchangeService.delete(deleteTarget.id);
-      await loadItems();
-      setDeleteOpen(false);
-      setDeleteTarget(null);
-    } catch {
-      setError(t('foreignExchanges.error.delete'));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
-          {t('foreignExchanges.title')}
-        </Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">{t('foreignExchanges.title')}</h1>
+        <Button onClick={openCreate}>
+          <Plus className="mr-2 h-4 w-4" />
           {t('foreignExchanges.new')}
         </Button>
-      </Box>
+      </div>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
 
       <DataTable
         columns={columns}
         rows={items}
         loading={loading}
-        onEdit={openEdit}
-        onDelete={(item) => { setDeleteTarget(item); setDeleteOpen(true); }}
         emptyMessage={t('foreignExchanges.empty')}
       />
 
       <SlideForm
         open={formOpen}
-        title={selectedItem ? t('foreignExchanges.edit') : t('foreignExchanges.new')}
+        title={t('foreignExchanges.new')}
         onClose={() => setFormOpen(false)}
       >
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <TextField label={t('foreignExchanges.field.value')} type="number" value={formData.value}
-            onChange={(e) => setFormData({ ...formData, value: Number(e.target.value) })} fullWidth required />
-          <TextField label={t('foreignExchanges.field.currency')} select value={formData.idCurrency ?? ''}
-            onChange={(e) => setFormData({ ...formData, idCurrency: Number(e.target.value) })} fullWidth>
-            {currencies.map((c) => (
-              <MenuItem key={c.id} value={c.id}>{`${c.name} (${c.code})`}</MenuItem>
-            ))}
-          </TextField>
-          <Button variant="contained" onClick={handleSave} disabled={submitting} sx={{ mt: 2 }}>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>{t('foreignExchanges.field.currency')}</Label>
+            <Select value={String(formData.idCurrency)}
+              onValueChange={(v) => setFormData({ ...formData, idCurrency: Number(v) })}>
+              <SelectTrigger><SelectValue placeholder="Seleccionar moneda" /></SelectTrigger>
+              <SelectContent>
+                {currencies.map((c) => (
+                  <SelectItem key={c.id} value={String(c.id)}>{c.code} - {c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>{t('foreignExchanges.field.rate')}</Label>
+            <Input type="number" step="0.01" value={formData.value}
+              onChange={(e) => setFormData({ ...formData, value: Number(e.target.value) })} required />
+          </div>
+          <Button onClick={handleSave} disabled={submitting} className="w-full">
             {submitting ? t('common.saving') : t('common.save')}
           </Button>
-        </Box>
+        </div>
       </SlideForm>
-
-      <ConfirmDialog
-        open={deleteOpen}
-        title={t('foreignExchanges.delete')}
-        message={t('foreignExchanges.deleteConfirm')}
-        confirmLabel={t('common.delete')}
-        onConfirm={handleDelete}
-        onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
-        loading={submitting}
-      />
-    </Box>
+    </div>
   );
 }

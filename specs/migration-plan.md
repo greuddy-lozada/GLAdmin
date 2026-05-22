@@ -914,3 +914,6 @@ Each phase must be verified before proceeding to the next:
 - **Seed user**: `glozada` / `000000` (role: Master)
 - **API base URL**: `http://localhost:4000/api`
 - **Prisma v6** is used (not v7) — run seed via `cd backend && pnpm exec tsx prisma/seed.ts`
+
+##Opencode
+-  opencode -s ses_1af235e89ffeDInGrNuQESgTpE

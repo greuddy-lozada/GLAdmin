@@ -1,16 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  Box,
-  Button,
-  TextField,
-  Typography,
-  Switch,
-  FormControlLabel,
-  Alert,
-} from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
+import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DataTable, Column } from '@/components/ui/data-table';
 import { SlideForm } from '@/components/ui/slide-form';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -118,17 +114,16 @@ export default function SuppliersPage() {
   };
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
-          {t('suppliers.title')}
-        </Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">{t('suppliers.title')}</h1>
+        <Button onClick={openCreate}>
+          <Plus className="mr-2 h-4 w-4" />
           {t('suppliers.new')}
         </Button>
-      </Box>
+      </div>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
 
       <DataTable
         columns={columns}
@@ -147,31 +142,45 @@ export default function SuppliersPage() {
         title={selectedSupplier ? t('suppliers.edit') : t('suppliers.new')}
         onClose={() => setFormOpen(false)}
       >
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <TextField label={t('suppliers.field.documentNumber')} value={formData.documentNumber}
-            onChange={(e) => setFormData({ ...formData, documentNumber: e.target.value })} fullWidth required />
-          <TextField label={t('suppliers.field.companyName')} value={formData.companyName}
-            onChange={(e) => setFormData({ ...formData, companyName: e.target.value })} fullWidth required />
-          <TextField label={t('suppliers.field.firstName')} value={formData.firstName}
-            onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} fullWidth />
-          <TextField label={t('suppliers.field.lastName')} value={formData.lastName}
-            onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} fullWidth />
-          <TextField label={t('suppliers.field.address')} value={formData.address}
-            onChange={(e) => setFormData({ ...formData, address: e.target.value })} fullWidth />
-          <TextField label={t('suppliers.field.phoneNumber')} value={formData.phoneNumber}
-            onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })} fullWidth />
-          <TextField label={t('suppliers.field.email')} type="email" value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })} fullWidth />
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>{t('suppliers.field.documentNumber')}</Label>
+            <Input value={formData.documentNumber} onChange={(e) => setFormData({ ...formData, documentNumber: e.target.value })} required />
+          </div>
+          <div className="space-y-2">
+            <Label>{t('suppliers.field.companyName')}</Label>
+            <Input value={formData.companyName} onChange={(e) => setFormData({ ...formData, companyName: e.target.value })} required />
+          </div>
+          <div className="space-y-2">
+            <Label>{t('suppliers.field.firstName')}</Label>
+            <Input value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} />
+          </div>
+          <div className="space-y-2">
+            <Label>{t('suppliers.field.lastName')}</Label>
+            <Input value={formData.lastName} onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} />
+          </div>
+          <div className="space-y-2">
+            <Label>{t('suppliers.field.address')}</Label>
+            <Input value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
+          </div>
+          <div className="space-y-2">
+            <Label>{t('suppliers.field.phoneNumber')}</Label>
+            <Input value={formData.phoneNumber} onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })} />
+          </div>
+          <div className="space-y-2">
+            <Label>{t('suppliers.field.email')}</Label>
+            <Input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
+          </div>
           {selectedSupplier && (
-            <FormControlLabel control={
-              <Switch checked={formData.available ?? true}
-                onChange={(e) => setFormData({ ...formData, available: e.target.checked })} />
-            } label={t('suppliers.field.available')} />
+            <div className="flex items-center gap-2">
+              <Switch checked={formData.available ?? true} onCheckedChange={(c) => setFormData({ ...formData, available: c })} />
+              <Label>{t('suppliers.field.available')}</Label>
+            </div>
           )}
-          <Button variant="contained" onClick={handleSave} disabled={submitting} sx={{ mt: 2 }}>
+          <Button onClick={handleSave} disabled={submitting} className="w-full">
             {submitting ? t('common.saving') : t('common.save')}
           </Button>
-        </Box>
+        </div>
       </SlideForm>
 
       <ConfirmDialog
@@ -183,6 +192,6 @@ export default function SuppliersPage() {
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
         loading={submitting}
       />
-    </Box>
+    </div>
   );
 }

@@ -5,26 +5,19 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/providers/auth-provider';
 import { navigationConfig } from '@/config/navigation.config';
 import { useI18n } from '@/i18n';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
-  Box,
-  Drawer,
-  AppBar,
-  Toolbar,
-  Typography,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  IconButton,
-  Avatar,
-  Menu,
-  MenuItem,
-  Divider,
-} from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-
-const DRAWER_WIDTH = 260;
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Separator } from '@/components/ui/separator';
+import { Menu, LogOut } from 'lucide-react';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
@@ -32,7 +25,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   if (isLoading) return null;
 
@@ -47,121 +39,115 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   );
 
   const handleLogout = async () => {
-    setAnchorEl(null);
     await logout();
     router.push('/login');
   };
 
-  const drawerContent = (
-    <Box>
-      <Box sx={{ p: 2, textAlign: 'center' }}>
-        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-          GLAdmin
-        </Typography>
-        <Typography variant="caption" color="text.secondary">
+  const navContent = (
+    <nav className="flex flex-col gap-1 p-4">
+      <div className="text-center mb-4">
+        <h2 className="text-lg font-bold text-foreground">GLAdmin</h2>
+        <p className="text-xs text-muted-foreground">
           {user?.firstName} {user?.lastName}
-        </Typography>
-      </Box>
-      <Divider />
-      <List>
-        {visibleNavItems.map((item) => {
-          const Icon = item.icon as React.ComponentType<{ sx?: object }>;
-          const isActive = pathname.startsWith(item.path);
-          return (
-            <ListItem key={item.path} disablePadding>
-              <ListItemButton
-                selected={isActive}
-                onClick={() => {
-                  router.push(item.path);
-                  setMobileOpen(false);
-                }}
-              >
-                <ListItemIcon>
-                  <Icon sx={{ color: isActive ? 'primary.main' : undefined }} />
-                </ListItemIcon>
-                <ListItemText primary={t(`nav.${item.key}`)} />
-              </ListItemButton>
-            </ListItem>
-          );
-        })}
-      </List>
-    </Box>
+        </p>
+      </div>
+      <Separator className="mb-2" />
+      {visibleNavItems.map((item) => {
+        const Icon = item.icon as React.ComponentType<{ className?: string }>;
+        const isActive = pathname.startsWith(item.path);
+        return (
+          <Button
+            key={item.path}
+            variant={isActive ? 'secondary' : 'ghost'}
+            className="justify-start gap-3"
+            onClick={() => {
+              router.push(item.path);
+              setMobileOpen(false);
+            }}
+          >
+            <Icon className="h-4 w-4" />
+            {t(`nav.${item.key}`)}
+          </Button>
+        );
+      })}
+    </nav>
   );
 
   return (
-    <Box sx={{ display: 'flex' }}>
-      <AppBar position="fixed" sx={{ zIndex: (t) => t.zIndex.drawer + 1 }}>
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            edge="start"
-            sx={{ mr: 2, display: { md: 'none' } }}
-            onClick={() => setMobileOpen(!mobileOpen)}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
-            GLAdmin
-          </Typography>
-          <IconButton onClick={(e) => setAnchorEl(e.currentTarget)} sx={{ p: 0 }}>
-            <Avatar sx={{ bgcolor: 'secondary.main' }}>
-              {user?.firstName?.charAt(0)?.toUpperCase()}
-            </Avatar>
-          </IconButton>
-          <Menu
-            anchorEl={anchorEl}
-            open={!!anchorEl}
-            onClose={() => setAnchorEl(null)}
-          >
-            <MenuItem disabled>
-              <Typography variant="body2">
+    <div className="flex min-h-screen">
+      {/* Mobile header */}
+      <header className="fixed top-0 left-0 right-0 z-50 flex h-14 items-center gap-4 border-b bg-background px-4 md:hidden">
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <Menu className="h-5 w-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-[260px] p-0">
+            {navContent}
+          </SheetContent>
+        </Sheet>
+        <span className="font-semibold">GLAdmin</span>
+        <div className="ml-auto">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                    {user?.firstName?.charAt(0)?.toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuLabel>
                 {user?.firstName} {user?.lastName}
-              </Typography>
-            </MenuItem>
-            <Divider />
-            <MenuItem onClick={handleLogout}>{t('nav.logout')}</MenuItem>
-          </Menu>
-        </Toolbar>
-      </AppBar>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                {t('nav.logout')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </header>
 
-      <Box
-        component="nav"
-        sx={{ width: { md: DRAWER_WIDTH }, flexShrink: { md: 0 } }}
-      >
-        <Drawer
-          variant="temporary"
-          open={mobileOpen}
-          onClose={() => setMobileOpen(false)}
-          sx={{
-            display: { xs: 'block', md: 'none' },
-            '& .MuiDrawer-paper': { width: DRAWER_WIDTH },
-          }}
-        >
-          {drawerContent}
-        </Drawer>
-        <Drawer
-          variant="permanent"
-          sx={{
-            display: { xs: 'none', md: 'block' },
-            '& .MuiDrawer-paper': { width: DRAWER_WIDTH, boxSizing: 'border-box' },
-          }}
-          open
-        >
-          {drawerContent}
-        </Drawer>
-      </Box>
+      {/* Desktop sidebar */}
+      <aside className="hidden md:flex md:w-[260px] md:flex-col md:border-r md:bg-background">
+        {navContent}
+      </aside>
 
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          p: 3,
-          width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
-          mt: 8,
-        }}
-      >
-        {children}
-      </Box>
-    </Box>
+      {/* Main content */}
+      <main className="flex-1 overflow-auto pt-14 md:pt-0">
+        <div className="p-6">
+          {/* Desktop top bar */}
+          <div className="hidden md:flex md:items-center md:justify-end md:mb-6">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                      {user?.firstName?.charAt(0)?.toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel>
+                  {user?.firstName} {user?.lastName}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  {t('nav.logout')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          {children}
+        </div>
+      </main>
+    </div>
   );
 }
