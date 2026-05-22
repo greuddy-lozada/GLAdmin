@@ -7,6 +7,8 @@ node_modules/
 # Build and IDE logs
 dist/
 **/dist/
+.next/
+**/.next/
 build/
 **/build/
 .idea/
@@ -19,13 +21,28 @@ build/
 .env*
 !*/.env.example
 
-# Vite specific
+# Vite specific (legacy client)
 .vite/
 **/ .vite/
 
-# Database (Heavy/Local)
+# Database
 api/database.sqlite
+backend/prisma/*.sqlite
+backend/prisma/*.db
 
-# Electron
+# Electron (legacy client)
 client/dist/
 !client/public/
+
+# NestJS
+backend/dist/
+
+# Next.js
+frontend/.next/
+
+# Testing
+coverage/
+**/coverage/
+
+# Prisma
+backend/prisma/migrations/

@@ -1,0 +1,291 @@
+{
+  "common": {
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "edit": "Edit",
+    "delete": "Delete",
+    "actions": "Actions",
+    "yes": "Yes",
+    "no": "No",
+    "loading": "Loading...",
+    "new": "New",
+    "search": "Search",
+    "error": {
+      "save": "Error saving",
+      "load": "Error loading",
+      "delete": "Error deleting"
+    }
+  },
+  "auth": {
+    "title": "GLAdmin",
+    "loginButton": "SIGN IN",
+    "loggingIn": "Signing in...",
+    "userName": "Username",
+    "password": "Password",
+    "error": "Invalid username or password"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "totalUsers": "Users",
+    "totalProducts": "Products",
+    "totalCustomers": "Customers",
+    "totalSuppliers": "Suppliers",
+    "usersDesc": "Registered users",
+    "productsDesc": "Active products",
+    "customersDesc": "Active customers",
+    "suppliersDesc": "Active suppliers"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "customers": "Customers",
+    "suppliers": "Suppliers",
+    "companies": "Companies",
+    "products": "Products",
+    "taxes": "Taxes",
+    "batches": "Batches",
+    "stocks": "Stock",
+    "purchaseOrders": "Purchase Orders",
+    "foreignExchanges": "Exchange Rate",
+    "roles": "Roles",
+    "settings": "Settings",
+    "logout": "Log Out",
+    "profile": "Profile"
+  },
+  "users": {
+    "title": "Users",
+    "new": "New User",
+    "edit": "Edit User",
+    "delete": "Delete User",
+    "deleteConfirm": "Are you sure you want to delete user {{name}}?",
+    "empty": "No users registered",
+    "field": {
+      "id": "#",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "userName": "Username",
+      "email": "Email",
+      "password": "Password",
+      "passwordEdit": "Password (leave blank to keep)",
+      "role": "Role",
+      "available": "Available"
+    },
+    "error": {
+      "save": "Error saving user",
+      "load": "Error loading users",
+      "delete": "Error deleting user"
+    }
+  },
+  "customers": {
+    "title": "Customers",
+    "new": "New Customer",
+    "edit": "Edit Customer",
+    "delete": "Delete Customer",
+    "deleteConfirm": "Are you sure you want to delete customer {{name}}?",
+    "empty": "No customers registered",
+    "field": {
+      "id": "#",
+      "idCardNumber": "ID Card",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "address": "Address",
+      "phoneNumber": "Phone",
+      "email": "Email",
+      "available": "Available"
+    },
+    "error": {
+      "save": "Error saving customer",
+      "load": "Error loading customers",
+      "delete": "Error deleting customer"
+    }
+  },
+  "suppliers": {
+    "title": "Suppliers",
+    "new": "New Supplier",
+    "edit": "Edit Supplier",
+    "delete": "Delete Supplier",
+    "deleteConfirm": "Are you sure you want to delete supplier {{name}}?",
+    "empty": "No suppliers registered",
+    "field": {
+      "id": "#",
+      "documentNumber": "Tax ID",
+      "companyName": "Company Name",
+      "firstName": "Contact First Name",
+      "lastName": "Contact Last Name",
+      "address": "Address",
+      "phoneNumber": "Phone",
+      "email": "Email",
+      "available": "Available"
+    },
+    "error": {
+      "save": "Error saving supplier",
+      "load": "Error loading suppliers",
+      "delete": "Error deleting supplier"
+    }
+  },
+  "companies": {
+    "title": "Companies",
+    "new": "New Company",
+    "edit": "Edit Company",
+    "delete": "Delete Company",
+    "deleteConfirm": "Are you sure you want to delete company {{name}}?",
+    "empty": "No companies registered",
+    "field": {
+      "id": "#",
+      "documentNumber": "Tax ID",
+      "name": "Name",
+      "address": "Address",
+      "phoneNumber": "Phone",
+      "email": "Email",
+      "website": "Website"
+    },
+    "error": {
+      "save": "Error saving company",
+      "load": "Error loading companies",
+      "delete": "Error deleting company"
+    }
+  },
+  "products": {
+    "title": "Products",
+    "new": "New Product",
+    "edit": "Edit Product",
+    "delete": "Delete Product",
+    "deleteConfirm": "Are you sure you want to delete product {{name}}?",
+    "empty": "No products registered",
+    "field": {
+      "id": "#",
+      "code": "Code",
+      "name": "Name",
+      "price": "Price",
+      "dollarPrice": "US$ Price",
+      "tax": "Tax",
+      "observation": "Notes",
+      "image": "Image",
+      "available": "Available"
+    },
+    "error": {
+      "save": "Error saving product",
+      "load": "Error loading products",
+      "delete": "Error deleting product"
+    }
+  },
+  "taxes": {
+    "title": "Taxes",
+    "new": "New Tax",
+    "edit": "Edit Tax",
+    "delete": "Delete Tax",
+    "deleteConfirm": "Are you sure you want to delete tax {{name}}?",
+    "empty": "No taxes registered",
+    "field": {
+      "id": "#",
+      "name": "Name",
+      "percentage": "Percentage",
+      "formula": "Formula"
+    },
+    "error": {
+      "save": "Error saving tax",
+      "load": "Error loading taxes",
+      "delete": "Error deleting tax"
+    }
+  },
+  "batches": {
+    "title": "Batches",
+    "new": "New Batch",
+    "edit": "Edit Batch",
+    "delete": "Delete Batch",
+    "deleteConfirm": "Are you sure you want to delete batch {{name}}?",
+    "empty": "No batches registered",
+    "field": {
+      "id": "#",
+      "code": "Code",
+      "description": "Description"
+    },
+    "error": {
+      "save": "Error saving batch",
+      "load": "Error loading batches",
+      "delete": "Error deleting batch"
+    }
+  },
+  "stocks": {
+    "title": "Stock",
+    "new": "New Entry",
+    "edit": "Edit Entry",
+    "delete": "Delete Entry",
+    "deleteConfirm": "Are you sure you want to delete this stock entry?",
+    "empty": "No stock entries registered",
+    "field": {
+      "id": "#",
+      "product": "Product",
+      "supplier": "Supplier",
+      "batch": "Batch",
+      "existence": "Quantity",
+      "available": "Available"
+    },
+    "error": {
+      "save": "Error saving stock entry",
+      "load": "Error loading stock",
+      "delete": "Error deleting stock entry"
+    }
+  },
+  "purchaseOrders": {
+    "title": "Purchase Orders",
+    "new": "New Order",
+    "edit": "Edit Order",
+    "delete": "Delete Order",
+    "deleteConfirm": "Are you sure you want to delete order #{{code}}?",
+    "empty": "No purchase orders registered",
+    "details": "Details",
+    "addDetail": "Add Product",
+    "field": {
+      "id": "#",
+      "supplier": "Supplier",
+      "code": "Code",
+      "date": "Date",
+      "amount": "Amount",
+      "paymentMethod": "Payment Method",
+      "status": "Status",
+      "product": "Product",
+      "quantity": "Quantity",
+      "subtotal": "Subtotal",
+      "observation": "Notes"
+    },
+    "error": {
+      "save": "Error saving order",
+      "load": "Error loading orders",
+      "delete": "Error deleting order"
+    }
+  },
+  "foreignExchanges": {
+    "title": "Exchange Rate",
+    "new": "New Rate",
+    "edit": "Edit Rate",
+    "delete": "Delete Rate",
+    "deleteConfirm": "Are you sure you want to delete this exchange rate?",
+    "empty": "No exchange rates registered",
+    "field": {
+      "id": "#",
+      "value": "Value",
+      "currency": "Currency",
+      "createdAt": "Date"
+    },
+    "error": {
+      "save": "Error saving rate",
+      "load": "Error loading rates",
+      "delete": "Error deleting rate"
+    }
+  },
+  "roles": {
+    "title": "Roles",
+    "empty": "No roles registered",
+    "field": {
+      "id": "#",
+      "name": "Name",
+      "slug": "Slug"
+    }
+  },
+  "settings": {
+    "title": "Settings"
+  }
+}

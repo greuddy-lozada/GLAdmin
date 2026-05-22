@@ -1,0 +1,82 @@
+{
+  "AUTH": {
+    "LOGIN_SUCCESS": "Inicio de sesión exitoso",
+    "LOGOUT_SUCCESS": "Sesión cerrada exitosamente",
+    "INVALID_CREDENTIALS": "Usuario o contraseña incorrecta",
+    "MISSING_CREDENTIALS": "Petición no cuenta con usuario o contraseña",
+    "USER_FOUND": "Usuario encontrado",
+    "USER_NOT_FOUND": "El usuario no existe",
+    "TOKEN_MISSING": "Token de autenticación no encontrado",
+    "TOKEN_INVALID": "Token inválido o expirado"
+  },
+  "USER": {
+    "CREATED": "Usuario creado exitosamente",
+    "UPDATED": "Usuario actualizado exitosamente",
+    "DELETED": "El usuario fue eliminado",
+    "ALREADY_EXISTS": "El usuario ya existe",
+    "NOT_FOUND": "Usuario no encontrado"
+  },
+  "CUSTOMER": {
+    "CREATED": "Cliente creado exitosamente",
+    "UPDATED": "Cliente actualizado exitosamente",
+    "DELETED": "El cliente fue eliminado",
+    "NOT_FOUND": "Cliente no encontrado"
+  },
+  "SUPPLIER": {
+    "CREATED": "Proveedor creado exitosamente",
+    "UPDATED": "Proveedor actualizado exitosamente",
+    "DELETED": "El proveedor fue eliminado",
+    "NOT_FOUND": "Proveedor no encontrado"
+  },
+  "COMPANY": {
+    "CREATED": "Empresa creada exitosamente",
+    "UPDATED": "Empresa actualizada exitosamente",
+    "DELETED": "La empresa fue eliminada",
+    "NOT_FOUND": "Empresa no encontrada"
+  },
+  "TAX": {
+    "CREATED": "Impuesto creado exitosamente",
+    "UPDATED": "Impuesto actualizado exitosamente",
+    "DELETED": "El impuesto fue eliminado",
+    "NOT_FOUND": "Impuesto no encontrado"
+  },
+  "BATCH": {
+    "CREATED": "Lote creado exitosamente",
+    "UPDATED": "Lote actualizado exitosamente",
+    "DELETED": "El lote fue eliminado",
+    "NOT_FOUND": "Lote no encontrado"
+  },
+  "PRODUCT": {
+    "CREATED": "Producto creado exitosamente",
+    "UPDATED": "Producto actualizado exitosamente",
+    "DELETED": "El producto fue eliminado",
+    "NOT_FOUND": "Producto no encontrado"
+  },
+  "STOCK": {
+    "CREATED": "Entrada de inventario creada exitosamente",
+    "UPDATED": "Entrada de inventario actualizada exitosamente",
+    "DELETED": "Entrada de inventario eliminada",
+    "NOT_FOUND": "Entrada de inventario no encontrada",
+    "DETAIL_ADDED": "Detalle de inventario agregado"
+  },
+  "PURCHASE_ORDER": {
+    "CREATED": "Pedido a proveedor creado exitosamente",
+    "UPDATED": "Pedido a proveedor actualizado exitosamente",
+    "DELETED": "El pedido a proveedor fue eliminado",
+    "NOT_FOUND": "Pedido a proveedor no encontrado"
+  },
+  "FOREIGN_EXCHANGE": {
+    "CREATED": "Tasa de cambio creada exitosamente",
+    "NOT_FOUND": "Tasa de cambio no encontrada"
+  },
+  "ROLE": {
+    "NOT_FOUND": "Rol no encontrado"
+  },
+  "COMMON": {
+    "RECORD_NOT_FOUND": "Registro no encontrado",
+    "VALIDATION_ERROR": "Error de validación",
+    "INTERNAL_ERROR": "Error interno del servidor",
+    "UNAUTHORIZED": "No autorizado",
+    "FORBIDDEN": "Acceso denegado"
+  }
+}

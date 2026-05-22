@@ -1,0 +1,82 @@
+{
+  "AUTH": {
+    "LOGIN_SUCCESS": "Login successful",
+    "LOGOUT_SUCCESS": "Logout successful",
+    "INVALID_CREDENTIALS": "Invalid username or password",
+    "MISSING_CREDENTIALS": "Request missing username or password",
+    "USER_FOUND": "User found",
+    "USER_NOT_FOUND": "User not found",
+    "TOKEN_MISSING": "Missing auth token",
+    "TOKEN_INVALID": "Invalid or expired token"
+  },
+  "USER": {
+    "CREATED": "User has been created",
+    "UPDATED": "User has been updated",
+    "DELETED": "User has been deleted",
+    "ALREADY_EXISTS": "User already exists",
+    "NOT_FOUND": "User not found"
+  },
+  "CUSTOMER": {
+    "CREATED": "Customer has been created",
+    "UPDATED": "Customer has been updated",
+    "DELETED": "Customer has been deleted",
+    "NOT_FOUND": "Customer not found"
+  },
+  "SUPPLIER": {
+    "CREATED": "Supplier has been created",
+    "UPDATED": "Supplier has been updated",
+    "DELETED": "Supplier has been deleted",
+    "NOT_FOUND": "Supplier not found"
+  },
+  "COMPANY": {
+    "CREATED": "Company has been created",
+    "UPDATED": "Company has been updated",
+    "DELETED": "Company has been deleted",
+    "NOT_FOUND": "Company not found"
+  },
+  "TAX": {
+    "CREATED": "Tax has been created",
+    "UPDATED": "Tax has been updated",
+    "DELETED": "Tax has been deleted",
+    "NOT_FOUND": "Tax not found"
+  },
+  "BATCH": {
+    "CREATED": "Batch has been created",
+    "UPDATED": "Batch has been updated",
+    "DELETED": "Batch has been deleted",
+    "NOT_FOUND": "Batch not found"
+  },
+  "PRODUCT": {
+    "CREATED": "Product has been created",
+    "UPDATED": "Product has been updated",
+    "DELETED": "Product has been deleted",
+    "NOT_FOUND": "Product not found"
+  },
+  "STOCK": {
+    "CREATED": "Stock entry has been created",
+    "UPDATED": "Stock entry has been updated",
+    "DELETED": "Stock entry has been deleted",
+    "NOT_FOUND": "Stock entry not found",
+    "DETAIL_ADDED": "Stock detail has been added"
+  },
+  "PURCHASE_ORDER": {
+    "CREATED": "Purchase order has been created",
+    "UPDATED": "Purchase order has been updated",
+    "DELETED": "Purchase order has been deleted",
+    "NOT_FOUND": "Purchase order not found"
+  },
+  "FOREIGN_EXCHANGE": {
+    "CREATED": "Exchange rate has been created",
+    "NOT_FOUND": "Exchange rate not found"
+  },
+  "ROLE": {
+    "NOT_FOUND": "Role not found"
+  },
+  "COMMON": {
+    "RECORD_NOT_FOUND": "Record not found",
+    "VALIDATION_ERROR": "Validation error",
+    "INTERNAL_ERROR": "Internal server error",
+    "UNAUTHORIZED": "Unauthorized",
+    "FORBIDDEN": "Forbidden"
+  }
+}

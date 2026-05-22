@@ -1,0 +1,291 @@
+{
+  "common": {
+    "save": "Guardar",
+    "saving": "Guardando...",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "actions": "Acciones",
+    "yes": "Sí",
+    "no": "No",
+    "loading": "Cargando...",
+    "new": "Nuevo",
+    "search": "Buscar",
+    "error": {
+      "save": "Error al guardar",
+      "load": "Error al cargar",
+      "delete": "Error al eliminar"
+    }
+  },
+  "auth": {
+    "title": "GLAdmin",
+    "loginButton": "INGRESAR",
+    "loggingIn": "Ingresando...",
+    "userName": "Usuario",
+    "password": "Contraseña",
+    "error": "Usuario o contraseña incorrecta"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "totalUsers": "Usuarios",
+    "totalProducts": "Productos",
+    "totalCustomers": "Clientes",
+    "totalSuppliers": "Proveedores",
+    "usersDesc": "Usuarios registrados",
+    "productsDesc": "Productos activos",
+    "customersDesc": "Clientes activos",
+    "suppliersDesc": "Proveedores activos"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "users": "Usuarios",
+    "customers": "Clientes",
+    "suppliers": "Proveedores",
+    "companies": "Empresas",
+    "products": "Productos",
+    "taxes": "Impuestos",
+    "batches": "Lotes",
+    "stocks": "Inventario",
+    "purchaseOrders": "Pedidos",
+    "foreignExchanges": "Tasa Cambio",
+    "roles": "Roles",
+    "settings": "Configuración",
+    "logout": "Cerrar Sesión",
+    "profile": "Perfil"
+  },
+  "users": {
+    "title": "Usuarios",
+    "new": "Nuevo Usuario",
+    "edit": "Editar Usuario",
+    "delete": "Eliminar Usuario",
+    "deleteConfirm": "¿Está seguro de eliminar al usuario {{name}}?",
+    "empty": "No hay usuarios registrados",
+    "field": {
+      "id": "#",
+      "firstName": "Nombre",
+      "lastName": "Apellido",
+      "userName": "Usuario",
+      "email": "Correo",
+      "password": "Contraseña",
+      "passwordEdit": "Contraseña (dejar vacío para mantener)",
+      "role": "Rol",
+      "available": "Disponible"
+    },
+    "error": {
+      "save": "Error al guardar usuario",
+      "load": "Error al cargar usuarios",
+      "delete": "Error al eliminar usuario"
+    }
+  },
+  "customers": {
+    "title": "Clientes",
+    "new": "Nuevo Cliente",
+    "edit": "Editar Cliente",
+    "delete": "Eliminar Cliente",
+    "deleteConfirm": "¿Está seguro de eliminar al cliente {{name}}?",
+    "empty": "No hay clientes registrados",
+    "field": {
+      "id": "#",
+      "idCardNumber": "Cédula/RNC",
+      "firstName": "Nombre",
+      "lastName": "Apellido",
+      "address": "Dirección",
+      "phoneNumber": "Teléfono",
+      "email": "Correo",
+      "available": "Disponible"
+    },
+    "error": {
+      "save": "Error al guardar cliente",
+      "load": "Error al cargar clientes",
+      "delete": "Error al eliminar cliente"
+    }
+  },
+  "suppliers": {
+    "title": "Proveedores",
+    "new": "Nuevo Proveedor",
+    "edit": "Editar Proveedor",
+    "delete": "Eliminar Proveedor",
+    "deleteConfirm": "¿Está seguro de eliminar al proveedor {{name}}?",
+    "empty": "No hay proveedores registrados",
+    "field": {
+      "id": "#",
+      "documentNumber": "RNC",
+      "companyName": "Nombre Comercial",
+      "firstName": "Nombre Contacto",
+      "lastName": "Apellido Contacto",
+      "address": "Dirección",
+      "phoneNumber": "Teléfono",
+      "email": "Correo",
+      "available": "Disponible"
+    },
+    "error": {
+      "save": "Error al guardar proveedor",
+      "load": "Error al cargar proveedores",
+      "delete": "Error al eliminar proveedor"
+    }
+  },
+  "companies": {
+    "title": "Empresas",
+    "new": "Nueva Empresa",
+    "edit": "Editar Empresa",
+    "delete": "Eliminar Empresa",
+    "deleteConfirm": "¿Está seguro de eliminar la empresa {{name}}?",
+    "empty": "No hay empresas registradas",
+    "field": {
+      "id": "#",
+      "documentNumber": "RNC",
+      "name": "Nombre",
+      "address": "Dirección",
+      "phoneNumber": "Teléfono",
+      "email": "Correo",
+      "website": "Sitio Web"
+    },
+    "error": {
+      "save": "Error al guardar empresa",
+      "load": "Error al cargar empresas",
+      "delete": "Error al eliminar empresa"
+    }
+  },
+  "products": {
+    "title": "Productos",
+    "new": "Nuevo Producto",
+    "edit": "Editar Producto",
+    "delete": "Eliminar Producto",
+    "deleteConfirm": "¿Está seguro de eliminar el producto {{name}}?",
+    "empty": "No hay productos registrados",
+    "field": {
+      "id": "#",
+      "code": "Código",
+      "name": "Nombre",
+      "price": "Precio",
+      "dollarPrice": "Precio US$",
+      "tax": "Impuesto",
+      "observation": "Observación",
+      "image": "Imagen",
+      "available": "Disponible"
+    },
+    "error": {
+      "save": "Error al guardar producto",
+      "load": "Error al cargar productos",
+      "delete": "Error al eliminar producto"
+    }
+  },
+  "taxes": {
+    "title": "Impuestos",
+    "new": "Nuevo Impuesto",
+    "edit": "Editar Impuesto",
+    "delete": "Eliminar Impuesto",
+    "deleteConfirm": "¿Está seguro de eliminar el impuesto {{name}}?",
+    "empty": "No hay impuestos registrados",
+    "field": {
+      "id": "#",
+      "name": "Nombre",
+      "percentage": "Porcentaje",
+      "formula": "Fórmula"
+    },
+    "error": {
+      "save": "Error al guardar impuesto",
+      "load": "Error al cargar impuestos",
+      "delete": "Error al eliminar impuesto"
+    }
+  },
+  "batches": {
+    "title": "Lotes",
+    "new": "Nuevo Lote",
+    "edit": "Editar Lote",
+    "delete": "Eliminar Lote",
+    "deleteConfirm": "¿Está seguro de eliminar el lote {{name}}?",
+    "empty": "No hay lotes registrados",
+    "field": {
+      "id": "#",
+      "code": "Código",
+      "description": "Descripción"
+    },
+    "error": {
+      "save": "Error al guardar lote",
+      "load": "Error al cargar lotes",
+      "delete": "Error al eliminar lote"
+    }
+  },
+  "stocks": {
+    "title": "Inventario",
+    "new": "Nueva Entrada",
+    "edit": "Editar Entrada",
+    "delete": "Eliminar Entrada",
+    "deleteConfirm": "¿Está seguro de eliminar la entrada de inventario?",
+    "empty": "No hay registros de inventario",
+    "field": {
+      "id": "#",
+      "product": "Producto",
+      "supplier": "Proveedor",
+      "batch": "Lote",
+      "existence": "Existencia",
+      "available": "Disponible"
+    },
+    "error": {
+      "save": "Error al guardar entrada",
+      "load": "Error al cargar inventario",
+      "delete": "Error al eliminar entrada"
+    }
+  },
+  "purchaseOrders": {
+    "title": "Pedidos",
+    "new": "Nuevo Pedido",
+    "edit": "Editar Pedido",
+    "delete": "Eliminar Pedido",
+    "deleteConfirm": "¿Está seguro de eliminar el pedido #{{code}}?",
+    "empty": "No hay pedidos registrados",
+    "details": "Detalles",
+    "addDetail": "Agregar Producto",
+    "field": {
+      "id": "#",
+      "supplier": "Proveedor",
+      "code": "Código",
+      "date": "Fecha",
+      "amount": "Monto",
+      "paymentMethod": "Método Pago",
+      "status": "Estado",
+      "product": "Producto",
+      "quantity": "Cantidad",
+      "subtotal": "Subtotal",
+      "observation": "Observación"
+    },
+    "error": {
+      "save": "Error al guardar pedido",
+      "load": "Error al cargar pedidos",
+      "delete": "Error al eliminar pedido"
+    }
+  },
+  "foreignExchanges": {
+    "title": "Tasa de Cambio",
+    "new": "Nueva Tasa",
+    "edit": "Editar Tasa",
+    "delete": "Eliminar Tasa",
+    "deleteConfirm": "¿Está seguro de eliminar la tasa de cambio?",
+    "empty": "No hay tasas de cambio registradas",
+    "field": {
+      "id": "#",
+      "value": "Valor",
+      "currency": "Moneda",
+      "createdAt": "Fecha"
+    },
+    "error": {
+      "save": "Error al guardar tasa",
+      "load": "Error al cargar tasas",
+      "delete": "Error al eliminar tasa"
+    }
+  },
+  "roles": {
+    "title": "Roles",
+    "empty": "No hay roles registrados",
+    "field": {
+      "id": "#",
+      "name": "Nombre",
+      "slug": "Slug"
+    }
+  },
+  "settings": {
+    "title": "Configuración"
+  }
+}

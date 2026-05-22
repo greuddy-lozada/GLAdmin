@@ -1,0 +1,313 @@
+// Prisma schema for GLAdmin
+// Migrated from existing Sequelize models and migrations
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Role {
+  id        Int      @id @default(autoincrement())
+  name      String
+  slug      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users User[]
+}
+
+model User {
+  id        Int         @id @default(autoincrement())
+  firstName String
+  lastName  String
+  userName  String      @unique
+  password  String
+  email     String?
+  idRole    Int
+  available Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  role       Role        @relation(fields: [idRole], references: [id])
+  authTokens AuthToken[]
+}
+
+model AuthToken {
+  id        Int      @id @default(autoincrement())
+  token     String
+  userId    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Permission {
+  id        Int      @id @default(autoincrement())
+  name      String?
+  slug      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Customer {
+  id           Int      @id @default(autoincrement())
+  idCardNumber String
+  firstName    String
+  lastName     String
+  address      String?
+  phoneNumber  String?
+  email        String?
+  available    Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sales Sale[]
+}
+
+model Supplier {
+  id             Int      @id @default(autoincrement())
+  documentNumber String
+  companyName    String
+  firstName      String?
+  lastName       String?
+  address        String?
+  phoneNumber    String?
+  email          String?
+  available      Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  stocks          Stock[]
+  purchaseOrders  PurchaseOrder[]
+}
+
+model Company {
+  id             Int      @id @default(autoincrement())
+  documentNumber String
+  name           String
+  address        String
+  phoneNumber    String
+  email          String
+  website        String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  licenses License[]
+}
+
+model License {
+  id         Int       @id @default(autoincrement())
+  code       String?
+  idCompany  Int
+  available  Boolean?
+  expiryDate DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  company Company @relation(fields: [idCompany], references: [id])
+}
+
+model Currency {
+  id        Int      @id @default(autoincrement())
+  code      String?
+  name      String?
+  symbol    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  foreignExchanges ForeignExchange[]
+}
+
+model Module {
+  id        Int      @id @default(autoincrement())
+  name      String?
+  available Boolean?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Tax {
+  id         Int      @id @default(autoincrement())
+  name       String?
+  percentage Int
+  formula    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  products Product[]
+}
+
+model Product {
+  id          Int          @id @default(autoincrement())
+  code        String
+  name        String
+  price       Float
+  dollarPrice Float?
+  idTax       Int?
+  observation String?
+  available   Boolean      @default(true)
+  image       String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  tax                      Tax?                       @relation(fields: [idTax], references: [id])
+  stocks                   Stock[]
+  purchaseOrderDetails     PurchaseOrderDet[]
+  saleDetails              SalesDet[]
+  foreignExchangeLinks     ProductsForeignExchanges[]
+}
+
+model Batch {
+  id          Int      @id @default(autoincrement())
+  code        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  stocks Stock[]
+}
+
+model Stock {
+  id         Int       @id @default(autoincrement())
+  idProduct  Int
+  idSupplier Int?
+  idBatch    Int?
+  existence  Int
+  available  Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  product   Product    @relation(fields: [idProduct], references: [id])
+  supplier  Supplier?  @relation(fields: [idSupplier], references: [id])
+  batch     Batch?     @relation(fields: [idBatch], references: [id])
+  stockDets StockDet[]
+}
+
+model StockDet {
+  id          Int       @id @default(autoincrement())
+  idStock     Int
+  type        Int       // 1 = entry, -1 = exit
+  quantity    Int
+  expiryDate  DateTime?
+  observation String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  stock Stock @relation(fields: [idStock], references: [id])
+}
+
+model PurchaseOrder {
+  id            Int      @id @default(autoincrement())
+  idSupplier    Int
+  code          String?
+  date          DateTime?
+  amount        Float?
+  paymentMethod Int?
+  status        Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  supplier          Supplier              @relation(fields: [idSupplier], references: [id])
+  details           PurchaseOrderDet[]
+  accountsPayables  AccountsPayable[]
+}
+
+model PurchaseOrderDet {
+  id              Int      @id @default(autoincrement())
+  idPurchaseOrder Int
+  idProduct       Int
+  quantity        Int?
+  subtotal        Float?
+  observation     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  purchaseOrder  PurchaseOrder @relation(fields: [idPurchaseOrder], references: [id])
+  product        Product       @relation(fields: [idProduct], references: [id])
+}
+
+model Sale {
+  id            Int       @id @default(autoincrement())
+  idCustomer    Int?
+  code          String?
+  date          DateTime?
+  amount        Float?
+  paymentMethod Int?
+  status        Int?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  customer           Customer?           @relation(fields: [idCustomer], references: [id])
+  details            SalesDet[]
+  accountsReceivables AccountsReceivable[]
+}
+
+model SalesDet {
+  id          Int      @id @default(autoincrement())
+  idSale      Int
+  idProduct   Int
+  quantity    Int?
+  subtotal    Float?
+  observation String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sale    Sale    @relation(fields: [idSale], references: [id])
+  product Product @relation(fields: [idProduct], references: [id])
+}
+
+model AccountsPayable {
+  id              Int      @id @default(autoincrement())
+  idPurchaseOrder Int
+  dueDate         DateTime?
+  issueDate       DateTime?
+  amount          Float?
+  credit          Float?
+  status          Int?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  purchaseOrder PurchaseOrder @relation(fields: [idPurchaseOrder], references: [id])
+}
+
+model AccountsReceivable {
+  id      Int       @id @default(autoincrement())
+  idSale  Int?
+  dueDate DateTime?
+  issueDate DateTime?
+  amount Float?
+  credit Float?
+  status Int?
+  createdAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sale Sale? @relation(fields: [idSale], references: [id])
+}
+
+model ForeignExchange {
+  id         Int      @id @default(autoincrement())
+  value      Float
+  idCurrency Int?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  currency           Currency?                  @relation(fields: [idCurrency], references: [id])
+  productLinks       ProductsForeignExchanges[]
+}
+
+model ProductsForeignExchanges {
+  id                Int      @id @default(autoincrement())
+  idProduct         Int
+  idForeignExchange Int
+  value             Float?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  product         Product         @relation(fields: [idProduct], references: [id])
+  foreignExchange ForeignExchange @relation(fields: [idForeignExchange], references: [id])
+}
