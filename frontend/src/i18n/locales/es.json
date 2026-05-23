@@ -22,6 +22,10 @@
     "next": "Siguiente",
     "pageOf": "Página {{current}} de {{total}}",
     "empty": "No hay registros",
+    "pageNotFound": "Página no encontrada",
+    "errorTitle": "Algo salió mal",
+    "errorRetry": "Reintentar",
+    "goHome": "Ir al inicio",
 
     "error": {
       "save": "Error al guardar",

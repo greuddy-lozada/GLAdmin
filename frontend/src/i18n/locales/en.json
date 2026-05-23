@@ -22,6 +22,10 @@
     "next": "Next",
     "pageOf": "Page {{current}} of {{total}}",
     "empty": "No records",
+    "pageNotFound": "Page not found",
+    "errorTitle": "Something went wrong",
+    "errorRetry": "Retry",
+    "goHome": "Go home",
 
     "error": {
       "save": "Error saving",

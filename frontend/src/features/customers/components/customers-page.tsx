@@ -114,7 +114,6 @@ export default function CustomersPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">{t('customers.title')}</h1>
         <Button onClick={openCreate}>
           <Plus className="mr-2 h-4 w-4" />
           {t('customers.new')}

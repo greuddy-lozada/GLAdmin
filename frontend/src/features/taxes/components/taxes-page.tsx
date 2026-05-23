@@ -98,7 +98,6 @@ export default function TaxesPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">{t('taxes.title')}</h1>
         <Button onClick={openCreate}>
           <Plus className="mr-2 h-4 w-4" />
           {t('taxes.new')}
