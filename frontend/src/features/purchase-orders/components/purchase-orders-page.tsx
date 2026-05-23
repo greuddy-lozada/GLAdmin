@@ -184,7 +184,7 @@ export default function PurchaseOrdersPage() {
           <div className="space-y-2">
             <Label>{t('purchaseOrders.field.supplier')}</Label>
             <Select value={String(formData.idSupplier)} onValueChange={(v) => setFormData({ ...formData, idSupplier: Number(v) })}>
-              <SelectTrigger><SelectValue placeholder="Seleccionar proveedor" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t('common.selectSupplier')} /></SelectTrigger>
               <SelectContent>
                 {suppliers.map((s) => (
                   <SelectItem key={s.id} value={String(s.id)}>{s.companyName}</SelectItem>
@@ -209,15 +209,15 @@ export default function PurchaseOrdersPage() {
           {!selectedItem && (
             <>
               <div className="flex items-center justify-between">
-                <Label>{t('purchaseOrders.field.details')}</Label>
+                <Label>{t('purchaseOrders.details')}</Label>
                 <Button variant="outline" size="sm" onClick={addDetail}>
-                  <Plus className="mr-1 h-3 w-3" /> Agregar
+                  <Plus className="mr-2 h-4 w-4" /> {t('purchaseOrders.addDetail')}
                 </Button>
               </div>
               {(formData.details || []).map((detail, index) => (
                 <div key={index} className="space-y-2 rounded border p-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Detalle {index + 1}</span>
+                    <span className="text-sm font-medium">{tp('purchaseOrders.detailLabel', { index: String(index + 1) })}</span>
                     <Button variant="ghost" size="icon" onClick={() => removeDetail(index)}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
@@ -226,7 +226,7 @@ export default function PurchaseOrdersPage() {
                     <Label>{t('purchaseOrders.field.product')}</Label>
                     <Select value={String(detail.idProduct)}
                       onValueChange={(v) => updateDetail(index, 'idProduct', Number(v))}>
-                      <SelectTrigger><SelectValue placeholder="Seleccionar producto" /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder={t('common.selectProduct')} /></SelectTrigger>
                       <SelectContent>
                         {products.map((p) => (
                           <SelectItem key={p.id} value={String(p.id)}>{p.code} - {p.name}</SelectItem>

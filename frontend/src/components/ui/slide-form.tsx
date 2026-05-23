@@ -22,7 +22,7 @@ interface SlideFormProps {
 export function SlideForm({ open, title, onClose, children, loading }: SlideFormProps) {
   return (
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent side="right" className="w-full sm:max-w-lg p-0">
+      <SheetContent side="right" className="w-full sm:max-w-lg p-0" showCloseButton={false}>
         <SheetHeader className="flex flex-row items-center justify-between border-b px-6 py-4">
           <SheetTitle>{title}</SheetTitle>
           <Button variant="ghost" size="icon" onClick={onClose}>

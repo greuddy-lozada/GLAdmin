@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/i18n';
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -25,12 +26,13 @@ export function ConfirmDialog({
   open,
   title,
   message,
-  confirmLabel = 'Confirmar',
-  cancelLabel = 'Cancelar',
+  confirmLabel,
+  cancelLabel,
   onConfirm,
   onCancel,
   loading,
 }: ConfirmDialogProps) {
+  const { t } = useI18n();
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onCancel()}>
       <DialogContent className="sm:max-w-md">
@@ -40,10 +42,10 @@ export function ConfirmDialog({
         </DialogHeader>
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={onCancel} disabled={loading}>
-            {cancelLabel}
+            {cancelLabel || t('common.cancel')}
           </Button>
           <Button variant="destructive" onClick={onConfirm} disabled={loading}>
-            {loading ? 'Procesando...' : confirmLabel}
+            {loading ? t('common.processing') : (confirmLabel || t('common.confirm'))}
           </Button>
         </DialogFooter>
       </DialogContent>

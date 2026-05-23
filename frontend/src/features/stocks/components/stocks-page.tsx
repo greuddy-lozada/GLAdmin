@@ -164,7 +164,7 @@ export default function StocksPage() {
           <div className="space-y-2">
             <Label>{t('stocks.field.product')}</Label>
             <Select value={String(formData.idProduct)} onValueChange={(v) => setFormData({ ...formData, idProduct: Number(v) })}>
-              <SelectTrigger><SelectValue placeholder="Seleccionar producto" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t('common.selectProduct')} /></SelectTrigger>
               <SelectContent>
                 {products.map((product) => (
                   <SelectItem key={product.id} value={String(product.id)}>{product.code} - {product.name}</SelectItem>
@@ -176,7 +176,7 @@ export default function StocksPage() {
             <Label>{t('stocks.field.supplier')}</Label>
             <Select value={formData.idSupplier ? String(formData.idSupplier) : ''}
               onValueChange={(v) => setFormData({ ...formData, idSupplier: v ? Number(v) : undefined })}>
-              <SelectTrigger><SelectValue placeholder="Ninguno" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t('common.none')} /></SelectTrigger>
               <SelectContent>
                 {suppliers.map((supplier) => (
                   <SelectItem key={supplier.id} value={String(supplier.id)}>{supplier.companyName}</SelectItem>
@@ -188,7 +188,7 @@ export default function StocksPage() {
             <Label>{t('stocks.field.batch')}</Label>
             <Select value={formData.idBatch ? String(formData.idBatch) : ''}
               onValueChange={(v) => setFormData({ ...formData, idBatch: v ? Number(v) : undefined })}>
-              <SelectTrigger><SelectValue placeholder="Ninguno" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t('common.none')} /></SelectTrigger>
               <SelectContent>
                 {batches.map((batch) => (
                   <SelectItem key={batch.id} value={String(batch.id)}>{batch.code}</SelectItem>

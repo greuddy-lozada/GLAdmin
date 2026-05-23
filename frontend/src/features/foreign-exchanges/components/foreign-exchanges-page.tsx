@@ -96,7 +96,7 @@ export default function ForeignExchangesPage() {
             <Label>{t('foreignExchanges.field.currency')}</Label>
             <Select value={String(formData.idCurrency)}
               onValueChange={(v) => setFormData({ ...formData, idCurrency: Number(v) })}>
-              <SelectTrigger><SelectValue placeholder="Seleccionar moneda" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t('common.selectCurrency')} /></SelectTrigger>
               <SelectContent>
                 {currencies.map((c) => (
                   <SelectItem key={c.id} value={String(c.id)}>{c.code} - {c.name}</SelectItem>

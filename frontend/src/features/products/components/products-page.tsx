@@ -179,7 +179,7 @@ export default function ProductsPage() {
             <Label>{t('products.field.tax')}</Label>
             <Select value={formData.idTax ? String(formData.idTax) : ''}
               onValueChange={(v) => setFormData({ ...formData, idTax: v ? Number(v) : undefined })}>
-              <SelectTrigger><SelectValue placeholder="Ninguno" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t('common.none')} /></SelectTrigger>
               <SelectContent>
                 {taxes.map((tax) => (
                   <SelectItem key={tax.id} value={String(tax.id)}>{tax.name} ({tax.percentage}%)</SelectItem>

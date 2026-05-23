@@ -2,6 +2,7 @@
   "common": {
     "save": "Guardar",
     "saving": "Guardando...",
+    "processing": "Procesando...",
     "cancel": "Cancelar",
     "confirm": "Confirmar",
     "edit": "Editar",
@@ -9,9 +10,19 @@
     "actions": "Acciones",
     "yes": "Sí",
     "no": "No",
+    "none": "Ninguno",
+    "selectProduct": "Seleccionar producto",
+    "selectSupplier": "Seleccionar proveedor",
+    "selectCurrency": "Seleccionar moneda",
     "loading": "Cargando...",
     "new": "Nuevo",
     "search": "Buscar",
+    "rowsPerPage": "Filas por página:",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "pageOf": "Página {{current}} de {{total}}",
+    "empty": "No hay registros",
+
     "error": {
       "save": "Error al guardar",
       "load": "Error al cargar",
@@ -28,6 +39,8 @@
   },
   "dashboard": {
     "title": "Dashboard",
+    "welcome": "Bienvenido, {{name}}",
+    "totalOrders": "Pedidos",
     "totalUsers": "Usuarios",
     "totalProducts": "Productos",
     "totalCustomers": "Clientes",
@@ -238,6 +251,7 @@
     "empty": "No hay pedidos registrados",
     "details": "Detalles",
     "addDetail": "Agregar Producto",
+    "detailLabel": "Detalle {{index}}",
     "field": {
       "id": "#",
       "supplier": "Proveedor",
@@ -282,10 +296,12 @@
     "field": {
       "id": "#",
       "name": "Nombre",
-      "slug": "Slug"
+      "slug": "Slug",
+      "description": "Descripción"
     }
   },
   "settings": {
-    "title": "Configuración"
+    "title": "Configuración",
+    "description": "Configuración general del sistema."
   }
 }

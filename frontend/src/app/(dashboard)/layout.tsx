@@ -21,7 +21,7 @@ import { Menu, LogOut } from 'lucide-react';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
-  const { t } = useI18n();
+  const { t, tp } = useI18n();
   const router = useRouter();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -44,7 +44,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   };
 
   const navContent = (
-    <nav className="flex flex-col gap-1 p-4">
+    <nav className="flex flex-col gap-1">
       <div className="text-center mb-4">
         <h2 className="text-lg font-bold text-foreground">GLAdmin</h2>
         <p className="text-xs text-muted-foreground">
@@ -72,6 +72,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       })}
     </nav>
   );
+
+  const currentPage = navigationConfig.find((item) => pathname.startsWith(item.path));
+  const pageTitle = currentPage ? t(`nav.${currentPage.key}`) : '';
+  const showWelcome = pathname === '/dashboard';
 
   return (
     <div className="flex min-h-screen">
@@ -114,7 +118,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       </header>
 
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex md:w-[260px] md:flex-col md:border-r md:bg-background">
+      <aside className="hidden md:flex md:w-[260px] md:flex-col md:border-r md:bg-background md:p-4">
         {navContent}
       </aside>
 
@@ -144,6 +148,15 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+          </div>
+          {/* Page header */}
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold">{pageTitle}</h1>
+            {showWelcome && (
+              <p className="text-muted-foreground mt-1">
+                {tp('dashboard.welcome', { name: `${user?.firstName} ${user?.lastName}` })}
+              </p>
+            )}
           </div>
           {children}
         </div>

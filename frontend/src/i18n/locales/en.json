@@ -2,6 +2,7 @@
   "common": {
     "save": "Save",
     "saving": "Saving...",
+    "processing": "Processing...",
     "cancel": "Cancel",
     "confirm": "Confirm",
     "edit": "Edit",
@@ -9,9 +10,19 @@
     "actions": "Actions",
     "yes": "Yes",
     "no": "No",
+    "none": "None",
+    "selectProduct": "Select product",
+    "selectSupplier": "Select supplier",
+    "selectCurrency": "Select currency",
     "loading": "Loading...",
     "new": "New",
     "search": "Search",
+    "rowsPerPage": "Rows per page:",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {{current}} of {{total}}",
+    "empty": "No records",
+
     "error": {
       "save": "Error saving",
       "load": "Error loading",
@@ -28,6 +39,8 @@
   },
   "dashboard": {
     "title": "Dashboard",
+    "welcome": "Welcome, {{name}}",
+    "totalOrders": "Orders",
     "totalUsers": "Users",
     "totalProducts": "Products",
     "totalCustomers": "Customers",
@@ -238,6 +251,7 @@
     "empty": "No purchase orders registered",
     "details": "Details",
     "addDetail": "Add Product",
+    "detailLabel": "Detail {{index}}",
     "field": {
       "id": "#",
       "supplier": "Supplier",
@@ -282,10 +296,12 @@
     "field": {
       "id": "#",
       "name": "Name",
-      "slug": "Slug"
+      "slug": "Slug",
+      "description": "Description"
     }
   },
   "settings": {
-    "title": "Settings"
+    "title": "Settings",
+    "description": "General system settings."
   }
 }
