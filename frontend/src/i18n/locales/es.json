@@ -52,7 +52,21 @@
     "usersDesc": "Usuarios registrados",
     "productsDesc": "Productos activos",
     "customersDesc": "Clientes activos",
-    "suppliersDesc": "Proveedores activos"
+    "suppliersDesc": "Proveedores activos",
+    "analytics": {
+      "recentOrders": "Órdenes Recientes",
+      "topProducts": "Top Productos",
+      "stockAlerts": "Alertas de Stock",
+      "topSuppliers": "Proveedores Top",
+      "monthlyTrends": "Tendencia Mensual",
+      "code": "Código",
+      "supplier": "Proveedor",
+      "amount": "Monto",
+      "date": "Fecha",
+      "orders": "Órdenes",
+      "stockAlertNone": "Sin alertas de stock",
+      "noOrders": "Sin órdenes recientes"
+    }
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -69,13 +83,18 @@
     "roles": "Roles",
     "settings": "Configuración",
     "logout": "Cerrar Sesión",
-    "profile": "Perfil"
+    "profile": "Perfil",
+    "lightMode": "Modo Claro",
+    "darkMode": "Modo Oscuro"
   },
   "users": {
     "title": "Usuarios",
     "new": "Nuevo Usuario",
     "edit": "Editar Usuario",
     "delete": "Eliminar Usuario",
+    "created": "Usuario creado exitosamente",
+    "updated": "Usuario actualizado exitosamente",
+    "deleted": "Usuario eliminado exitosamente",
     "deleteConfirm": "¿Está seguro de eliminar al usuario {{name}}?",
     "empty": "No hay usuarios registrados",
     "field": {
@@ -169,6 +188,9 @@
     "new": "Nuevo Producto",
     "edit": "Editar Producto",
     "delete": "Eliminar Producto",
+    "created": "Producto creado exitosamente",
+    "updated": "Producto actualizado exitosamente",
+    "deleted": "Producto eliminado exitosamente",
     "deleteConfirm": "¿Está seguro de eliminar el producto {{name}}?",
     "empty": "No hay productos registrados",
     "field": {
@@ -306,6 +328,9 @@
   },
   "settings": {
     "title": "Configuración",
-    "description": "Configuración general del sistema."
+    "description": "Configuración general del sistema.",
+    "personalization": "Personalización",
+    "theme": "Tema",
+    "themeDescription": "Cambia entre modo claro y oscuro"
   }
 }

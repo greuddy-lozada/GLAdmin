@@ -21,6 +21,7 @@ import { useProducts } from '@/features/products/hooks/use-products';
 import { Product, CreateProductRequest, UpdateProductRequest } from '@/features/products/models/product.model';
 import { productService } from '@/features/products/services/product.service';
 import { useI18n } from '@/i18n';
+import { sileo } from 'sileo';
 import apiClient from '@/lib/api/api-client';
 
 export default function ProductsPage() {
@@ -100,8 +101,10 @@ export default function ProductsPage() {
           available: formData.available,
         };
         await productService.update(selectedProduct.id, data);
+        sileo.success({ description: t('products.updated') });
       } else {
         await productService.create(formData);
+        sileo.success({ description: t('products.created') });
       }
       await loadProducts();
       setFormOpen(false);
@@ -117,6 +120,7 @@ export default function ProductsPage() {
     setSubmitting(true);
     try {
       await productService.delete(deleteTarget.id);
+      sileo.success({ description: t('products.deleted') });
       await loadProducts();
       setDeleteOpen(false);
       setDeleteTarget(null);
@@ -128,33 +132,11 @@ export default function ProductsPage() {
   };
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <Button onClick={openCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          {t('products.new')}
-        </Button>
-      </div>
-
-      {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
-
-      <DataTable
-        columns={columns}
-        rows={products}
-        loading={loading}
-        onEdit={openEdit}
-        onDelete={(product) => {
-          setDeleteTarget(product);
-          setDeleteOpen(true);
-        }}
-        emptyMessage={t('products.empty')}
-      />
-
-      <SlideForm
-        open={formOpen}
-        title={selectedProduct ? t('products.edit') : t('products.new')}
-        onClose={() => setFormOpen(false)}
-      >
+    <SlideForm
+      open={formOpen}
+      title={selectedProduct ? t('products.edit') : t('products.new')}
+      onClose={() => setFormOpen(false)}
+      panel={
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>{t('products.field.code')}</Label>
@@ -207,7 +189,28 @@ export default function ProductsPage() {
             {submitting ? t('common.saving') : t('common.save')}
           </Button>
         </div>
-      </SlideForm>
+      }
+    >
+      <div className="flex items-center justify-between mb-6">
+        <Button onClick={openCreate}>
+          <Plus className="mr-2 h-4 w-4" />
+          {t('products.new')}
+        </Button>
+      </div>
+
+      {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
+
+      <DataTable
+        columns={columns}
+        rows={products}
+        loading={loading}
+        onEdit={openEdit}
+        onDelete={(product) => {
+          setDeleteTarget(product);
+          setDeleteOpen(true);
+        }}
+        emptyMessage={t('products.empty')}
+      />
 
       <ConfirmDialog
         open={deleteOpen}
@@ -218,6 +221,6 @@ export default function ProductsPage() {
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
         loading={submitting}
       />
-    </div>
+    </SlideForm>
   );
 }

@@ -102,33 +102,11 @@ export default function CompaniesPage() {
   };
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <Button onClick={openCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          {t('companies.new')}
-        </Button>
-      </div>
-
-      {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
-
-      <DataTable
-        columns={columns}
-        rows={companies}
-        loading={loading}
-        onEdit={openEdit}
-        onDelete={(company) => {
-          setDeleteTarget(company);
-          setDeleteOpen(true);
-        }}
-        emptyMessage={t('companies.empty')}
-      />
-
-      <SlideForm
-        open={formOpen}
-        title={selectedCompany ? t('companies.edit') : t('companies.new')}
-        onClose={() => setFormOpen(false)}
-      >
+    <SlideForm
+      open={formOpen}
+      title={selectedCompany ? t('companies.edit') : t('companies.new')}
+      onClose={() => setFormOpen(false)}
+      panel={
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>{t('companies.field.documentNumber')}</Label>
@@ -158,7 +136,28 @@ export default function CompaniesPage() {
             {submitting ? t('common.saving') : t('common.save')}
           </Button>
         </div>
-      </SlideForm>
+      }
+    >
+      <div className="flex items-center justify-between mb-6">
+        <Button onClick={openCreate}>
+          <Plus className="mr-2 h-4 w-4" />
+          {t('companies.new')}
+        </Button>
+      </div>
+
+      {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
+
+      <DataTable
+        columns={columns}
+        rows={companies}
+        loading={loading}
+        onEdit={openEdit}
+        onDelete={(company) => {
+          setDeleteTarget(company);
+          setDeleteOpen(true);
+        }}
+        emptyMessage={t('companies.empty')}
+      />
 
       <ConfirmDialog
         open={deleteOpen}
@@ -169,6 +168,6 @@ export default function CompaniesPage() {
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
         loading={submitting}
       />
-    </div>
+    </SlideForm>
   );
 }

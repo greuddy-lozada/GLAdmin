@@ -21,6 +21,7 @@ import { useUsers } from '@/features/users/hooks/use-users';
 import { User, CreateUserRequest, UpdateUserRequest } from '@/features/users/models/user.model';
 import { userService } from '@/features/users/services/user.service';
 import { useI18n } from '@/i18n';
+import { sileo } from 'sileo';
 import apiClient from '@/lib/api/api-client';
 
 export default function UsersPage() {
@@ -100,8 +101,10 @@ export default function UsersPage() {
         };
         if (formData.password) data.password = formData.password;
         await userService.update(selectedUser.id, data);
+        sileo.success({ description: t('users.updated') });
       } else {
         await userService.create(formData);
+        sileo.success({ description: t('users.created') });
       }
       await loadUsers();
       setFormOpen(false);
@@ -118,6 +121,7 @@ export default function UsersPage() {
     try {
       await userService.delete(deleteTarget.id);
       await loadUsers();
+      sileo.success({ description: t('users.deleted') });
       setDeleteOpen(false);
       setDeleteTarget(null);
     } catch {
@@ -128,33 +132,11 @@ export default function UsersPage() {
   };
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <Button onClick={openCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          {t('users.new')}
-        </Button>
-      </div>
-
-      {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
-
-      <DataTable
-        columns={columns}
-        rows={users}
-        loading={loading}
-        onEdit={openEdit}
-        onDelete={(user) => {
-          setDeleteTarget(user);
-          setDeleteOpen(true);
-        }}
-        emptyMessage={t('users.empty')}
-      />
-
-      <SlideForm
-        open={formOpen}
-        title={selectedUser ? t('users.edit') : t('users.new')}
-        onClose={() => setFormOpen(false)}
-      >
+    <SlideForm
+      open={formOpen}
+      title={selectedUser ? t('users.edit') : t('users.new')}
+      onClose={() => setFormOpen(false)}
+      panel={
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>{t('users.field.firstName')}</Label>
@@ -200,7 +182,28 @@ export default function UsersPage() {
             {submitting ? t('common.saving') : t('common.save')}
           </Button>
         </div>
-      </SlideForm>
+      }
+    >
+      <div className="flex items-center justify-between mb-6">
+        <Button onClick={openCreate}>
+          <Plus className="mr-2 h-4 w-4" />
+          {t('users.new')}
+        </Button>
+      </div>
+
+      {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
+
+      <DataTable
+        columns={columns}
+        rows={users}
+        loading={loading}
+        onEdit={openEdit}
+        onDelete={(user) => {
+          setDeleteTarget(user);
+          setDeleteOpen(true);
+        }}
+        emptyMessage={t('users.empty')}
+      />
 
       <ConfirmDialog
         open={deleteOpen}
@@ -211,6 +214,6 @@ export default function UsersPage() {
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
         loading={submitting}
       />
-    </div>
+    </SlideForm>
   );
 }

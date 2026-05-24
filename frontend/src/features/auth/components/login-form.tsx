@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { BackgroundBeams } from '@/components/ui/background-beams';
+import { GlareBackground } from '@/components/ui/glare-background';
 import { Lock } from 'lucide-react';
 
 export default function LoginForm() {
@@ -36,8 +36,8 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center p-4">
-      <BackgroundBeams />
+    <div className="relative flex h-full items-center justify-center p-4 overflow-hidden">
+      <GlareBackground />
       <Card className="relative z-10 w-full max-w-sm">
         <CardHeader className="text-center">
           <div className="mx-auto mb-2 flex h-16 w-16 items-center justify-center rounded-full bg-primary">

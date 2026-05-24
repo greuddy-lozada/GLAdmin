@@ -11,4 +11,10 @@ export class DashboardController {
   getStats() {
     return this.dashboardService.getStats();
   }
+
+  @Get('analytics')
+  @Roles('master', 'admin', 'employee')
+  getAnalytics() {
+    return this.dashboardService.getAnalytics();
+  }
 }

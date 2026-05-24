@@ -68,28 +68,11 @@ export default function ForeignExchangesPage() {
   };
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <Button onClick={openCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          {t('foreignExchanges.new')}
-        </Button>
-      </div>
-
-      {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
-
-      <DataTable
-        columns={columns}
-        rows={items}
-        loading={loading}
-        emptyMessage={t('foreignExchanges.empty')}
-      />
-
-      <SlideForm
-        open={formOpen}
-        title={t('foreignExchanges.new')}
-        onClose={() => setFormOpen(false)}
-      >
+    <SlideForm
+      open={formOpen}
+      title={t('foreignExchanges.new')}
+      onClose={() => setFormOpen(false)}
+      panel={
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>{t('foreignExchanges.field.currency')}</Label>
@@ -112,7 +95,23 @@ export default function ForeignExchangesPage() {
             {submitting ? t('common.saving') : t('common.save')}
           </Button>
         </div>
-      </SlideForm>
-    </div>
+      }
+    >
+      <div className="flex items-center justify-between mb-6">
+        <Button onClick={openCreate}>
+          <Plus className="mr-2 h-4 w-4" />
+          {t('foreignExchanges.new')}
+        </Button>
+      </div>
+
+      {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
+
+      <DataTable
+        columns={columns}
+        rows={items}
+        loading={loading}
+        emptyMessage={t('foreignExchanges.empty')}
+      />
+    </SlideForm>
   );
 }

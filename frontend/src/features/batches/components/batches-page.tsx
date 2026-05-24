@@ -88,7 +88,26 @@ export default function BatchesPage() {
   };
 
   return (
-    <div>
+    <SlideForm
+      open={formOpen}
+      title={selectedBatch ? t('batches.edit') : t('batches.new')}
+      onClose={() => setFormOpen(false)}
+      panel={
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>{t('batches.field.code')}</Label>
+            <Input value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} required />
+          </div>
+          <div className="space-y-2">
+            <Label>{t('batches.field.description')}</Label>
+            <Input value={formData.description ?? ''} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
+          </div>
+          <Button onClick={handleSave} disabled={submitting} className="w-full">
+            {submitting ? t('common.saving') : t('common.save')}
+          </Button>
+        </div>
+      }
+    >
       <div className="flex items-center justify-between mb-6">
         <Button onClick={openCreate}>
           <Plus className="mr-2 h-4 w-4" />
@@ -110,26 +129,6 @@ export default function BatchesPage() {
         emptyMessage={t('batches.empty')}
       />
 
-      <SlideForm
-        open={formOpen}
-        title={selectedBatch ? t('batches.edit') : t('batches.new')}
-        onClose={() => setFormOpen(false)}
-      >
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>{t('batches.field.code')}</Label>
-            <Input value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} required />
-          </div>
-          <div className="space-y-2">
-            <Label>{t('batches.field.description')}</Label>
-            <Input value={formData.description ?? ''} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
-          </div>
-          <Button onClick={handleSave} disabled={submitting} className="w-full">
-            {submitting ? t('common.saving') : t('common.save')}
-          </Button>
-        </div>
-      </SlideForm>
-
       <ConfirmDialog
         open={deleteOpen}
         title={t('batches.delete')}
@@ -139,6 +138,6 @@ export default function BatchesPage() {
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
         loading={submitting}
       />
-    </div>
+    </SlideForm>
   );
 }

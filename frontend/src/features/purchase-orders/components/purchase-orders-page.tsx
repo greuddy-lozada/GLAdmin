@@ -149,36 +149,11 @@ export default function PurchaseOrdersPage() {
   };
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <Button onClick={openCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          {t('purchaseOrders.new')}
-        </Button>
-      </div>
-
-      {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
-
-      <DataTable
-        columns={columns}
-        rows={items}
-        loading={loading}
-        onEdit={(item) => {
-          setSelectedItem(item);
-          setFormOpen(true);
-        }}
-        onDelete={(item) => {
-          setDeleteTarget(item);
-          setDeleteOpen(true);
-        }}
-        emptyMessage={t('purchaseOrders.empty')}
-      />
-
-      <SlideForm
-        open={formOpen}
-        title={selectedItem ? t('purchaseOrders.edit') : t('purchaseOrders.new')}
-        onClose={() => { setFormOpen(false); setSelectedItem(null); }}
-      >
+    <SlideForm
+      open={formOpen}
+      title={selectedItem ? t('purchaseOrders.edit') : t('purchaseOrders.new')}
+      onClose={() => { setFormOpen(false); setSelectedItem(null); }}
+      panel={
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>{t('purchaseOrders.field.supplier')}</Label>
@@ -254,7 +229,31 @@ export default function PurchaseOrdersPage() {
             {submitting ? t('common.saving') : t('common.save')}
           </Button>
         </div>
-      </SlideForm>
+      }
+    >
+      <div className="flex items-center justify-between mb-6">
+        <Button onClick={openCreate}>
+          <Plus className="mr-2 h-4 w-4" />
+          {t('purchaseOrders.new')}
+        </Button>
+      </div>
+
+      {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
+
+      <DataTable
+        columns={columns}
+        rows={items}
+        loading={loading}
+        onEdit={(item) => {
+          setSelectedItem(item);
+          setFormOpen(true);
+        }}
+        onDelete={(item) => {
+          setDeleteTarget(item);
+          setDeleteOpen(true);
+        }}
+        emptyMessage={t('purchaseOrders.empty')}
+      />
 
       <ConfirmDialog
         open={deleteOpen}
@@ -265,6 +264,6 @@ export default function PurchaseOrdersPage() {
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
         loading={submitting}
       />
-    </div>
+    </SlideForm>
   );
 }

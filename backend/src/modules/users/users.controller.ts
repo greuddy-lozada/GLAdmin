@@ -2,7 +2,7 @@ import {
   Controller,
   Get,
   Post,
-  Put,
+  Patch,
   Delete,
   Body,
   Param,
@@ -35,7 +35,7 @@ export class UsersController {
     return this.usersService.findById(id);
   }
 
-  @Put(':id')
+  @Patch(':id')
   @Roles('master', 'admin')
   async update(
     @Param('id', ParseIntPipe) id: number,

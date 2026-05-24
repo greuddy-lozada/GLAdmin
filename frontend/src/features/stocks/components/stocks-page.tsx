@@ -132,33 +132,11 @@ export default function StocksPage() {
   };
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <Button onClick={openCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          {t('stocks.new')}
-        </Button>
-      </div>
-
-      {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
-
-      <DataTable
-        columns={columns}
-        rows={stocks}
-        loading={loading}
-        onEdit={openEdit}
-        onDelete={(stock) => {
-          setDeleteTarget(stock);
-          setDeleteOpen(true);
-        }}
-        emptyMessage={t('stocks.empty')}
-      />
-
-      <SlideForm
-        open={formOpen}
-        title={selectedStock ? t('stocks.edit') : t('stocks.new')}
-        onClose={() => setFormOpen(false)}
-      >
+    <SlideForm
+      open={formOpen}
+      title={selectedStock ? t('stocks.edit') : t('stocks.new')}
+      onClose={() => setFormOpen(false)}
+      panel={
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>{t('stocks.field.product')}</Label>
@@ -211,7 +189,28 @@ export default function StocksPage() {
             {submitting ? t('common.saving') : t('common.save')}
           </Button>
         </div>
-      </SlideForm>
+      }
+    >
+      <div className="flex items-center justify-between mb-6">
+        <Button onClick={openCreate}>
+          <Plus className="mr-2 h-4 w-4" />
+          {t('stocks.new')}
+        </Button>
+      </div>
+
+      {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
+
+      <DataTable
+        columns={columns}
+        rows={stocks}
+        loading={loading}
+        onEdit={openEdit}
+        onDelete={(stock) => {
+          setDeleteTarget(stock);
+          setDeleteOpen(true);
+        }}
+        emptyMessage={t('stocks.empty')}
+      />
 
       <ConfirmDialog
         open={deleteOpen}
@@ -222,6 +221,6 @@ export default function StocksPage() {
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
         loading={submitting}
       />
-    </div>
+    </SlideForm>
   );
 }

@@ -122,7 +122,7 @@ export function DataTable<T extends { id: number }>({
 
   if (loading) {
     return (
-      <div className="rounded-md border">
+      <div className="rounded-md bg-white dark:bg-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -166,7 +166,7 @@ export function DataTable<T extends { id: number }>({
   const totalPages = Math.max(1, Math.ceil((total || 0) / pageSize));
 
   return (
-    <div className="rounded-md border">
+    <div className="rounded-md bg-white dark:bg-card">
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (

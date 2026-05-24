@@ -96,7 +96,31 @@ export default function TaxesPage() {
   };
 
   return (
-    <div>
+    <SlideForm
+      open={formOpen}
+      title={selectedTax ? t('taxes.edit') : t('taxes.new')}
+      onClose={() => setFormOpen(false)}
+      panel={
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>{t('taxes.field.name')}</Label>
+            <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
+          </div>
+          <div className="space-y-2">
+            <Label>{t('taxes.field.percentage')}</Label>
+            <Input type="number" value={formData.percentage}
+              onChange={(e) => setFormData({ ...formData, percentage: Number(e.target.value) })} required />
+          </div>
+          <div className="space-y-2">
+            <Label>{t('taxes.field.formula')}</Label>
+            <Input value={formData.formula ?? ''} onChange={(e) => setFormData({ ...formData, formula: e.target.value })} />
+          </div>
+          <Button onClick={handleSave} disabled={submitting} className="w-full">
+            {submitting ? t('common.saving') : t('common.save')}
+          </Button>
+        </div>
+      }
+    >
       <div className="flex items-center justify-between mb-6">
         <Button onClick={openCreate}>
           <Plus className="mr-2 h-4 w-4" />
@@ -118,31 +142,6 @@ export default function TaxesPage() {
         emptyMessage={t('taxes.empty')}
       />
 
-      <SlideForm
-        open={formOpen}
-        title={selectedTax ? t('taxes.edit') : t('taxes.new')}
-        onClose={() => setFormOpen(false)}
-      >
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>{t('taxes.field.name')}</Label>
-            <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
-          </div>
-          <div className="space-y-2">
-            <Label>{t('taxes.field.percentage')}</Label>
-            <Input type="number" value={formData.percentage}
-              onChange={(e) => setFormData({ ...formData, percentage: Number(e.target.value) })} required />
-          </div>
-          <div className="space-y-2">
-            <Label>{t('taxes.field.formula')}</Label>
-            <Input value={formData.formula ?? ''} onChange={(e) => setFormData({ ...formData, formula: e.target.value })} />
-          </div>
-          <Button onClick={handleSave} disabled={submitting} className="w-full">
-            {submitting ? t('common.saving') : t('common.save')}
-          </Button>
-        </div>
-      </SlideForm>
-
       <ConfirmDialog
         open={deleteOpen}
         title={t('taxes.delete')}
@@ -152,6 +151,6 @@ export default function TaxesPage() {
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
         loading={submitting}
       />
-    </div>
+    </SlideForm>
   );
 }

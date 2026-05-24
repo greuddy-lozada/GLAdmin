@@ -52,7 +52,21 @@
     "usersDesc": "Registered users",
     "productsDesc": "Active products",
     "customersDesc": "Active customers",
-    "suppliersDesc": "Active suppliers"
+    "suppliersDesc": "Active suppliers",
+    "analytics": {
+      "recentOrders": "Recent Orders",
+      "topProducts": "Top Products",
+      "stockAlerts": "Stock Alerts",
+      "topSuppliers": "Top Suppliers",
+      "monthlyTrends": "Monthly Trend",
+      "code": "Code",
+      "supplier": "Supplier",
+      "amount": "Amount",
+      "date": "Date",
+      "orders": "Orders",
+      "stockAlertNone": "No stock alerts",
+      "noOrders": "No recent orders"
+    }
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -69,13 +83,18 @@
     "roles": "Roles",
     "settings": "Settings",
     "logout": "Log Out",
-    "profile": "Profile"
+    "profile": "Profile",
+    "lightMode": "Light Mode",
+    "darkMode": "Dark Mode"
   },
   "users": {
     "title": "Users",
     "new": "New User",
     "edit": "Edit User",
     "delete": "Delete User",
+    "created": "User created successfully",
+    "updated": "User updated successfully",
+    "deleted": "User deleted successfully",
     "deleteConfirm": "Are you sure you want to delete user {{name}}?",
     "empty": "No users registered",
     "field": {
@@ -169,6 +188,9 @@
     "new": "New Product",
     "edit": "Edit Product",
     "delete": "Delete Product",
+    "created": "Product created successfully",
+    "updated": "Product updated successfully",
+    "deleted": "Product deleted successfully",
     "deleteConfirm": "Are you sure you want to delete product {{name}}?",
     "empty": "No products registered",
     "field": {
@@ -306,6 +328,9 @@
   },
   "settings": {
     "title": "Settings",
-    "description": "General system settings."
+    "description": "General system settings.",
+    "personalization": "Personalization",
+    "theme": "Theme",
+    "themeDescription": "Switch between light and dark mode"
   }
 }

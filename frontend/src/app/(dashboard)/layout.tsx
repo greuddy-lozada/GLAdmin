@@ -5,10 +5,10 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/providers/auth-provider';
 import { navigationConfig } from '@/config/navigation.config';
 import { useI18n } from '@/i18n';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
+import { UserNav } from '@/components/ui/user-nav';
 import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar';
-import { LogOut, LayoutDashboard, Users, UserCog, Truck, Building2, Package, Receipt, Tags, Store, ShoppingCart, ArrowLeftRight, ShieldCheck, Settings } from 'lucide-react';
+import { LayoutDashboard, Users, UserCog, Truck, Building2, Package, Receipt, Tags, Store, ShoppingCart, ArrowLeftRight, ShieldCheck, Settings } from 'lucide-react';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   dashboard: LayoutDashboard,
@@ -27,7 +27,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const { user, isAuthenticated, isLoading, logout } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const { t, tp } = useI18n();
   const router = useRouter();
   const pathname = usePathname();
@@ -45,16 +45,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     (item) => item.roles.includes(userRole),
   );
 
-  const handleLogout = async () => {
-    await logout();
-    router.push('/login');
-  };
-
   const currentPage = navigationConfig.find((item) => pathname.startsWith(item.path));
   const pageTitle = currentPage ? t(`nav.${currentPage.key}`) : '';
   const showWelcome = pathname === '/dashboard';
-
-  const userInitial = user?.firstName?.charAt(0)?.toUpperCase();
 
   return (
     <div className="flex h-screen flex-col md:flex-row overflow-hidden">
@@ -86,48 +79,27 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   />
                 );
               })}
-              <SidebarLink
-                link={{
-                  label: t('nav.logout'),
-                  href: '#',
-                  icon: <LogOut className="h-5 w-5 shrink-0 text-muted-foreground" />,
-                }}
-                onClick={(e: React.MouseEvent) => {
-                  e.preventDefault();
-                  handleLogout();
-                }}
-              />
             </nav>
-          </div>
-          <div>
-            <SidebarLink
-              link={{
-                label: `${user?.firstName} ${user?.lastName}`,
-                href: '#',
-                icon: (
-                  <Avatar className="h-7 w-7 shrink-0 rounded-full">
-                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                      {userInitial}
-                    </AvatarFallback>
-                  </Avatar>
-                ),
-              }}
-            />
           </div>
         </SidebarBody>
       </Sidebar>
 
-      <main className="flex-1 overflow-y-auto">
-        <div className="p-6 md:p-8">
-          <div className="mb-6">
-            <Breadcrumb />
-            <h1 className="text-2xl font-bold mt-4">{pageTitle}</h1>
+      <main className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between px-6 md:px-8 py-3 border-b border-border bg-card shrink-0">
+          <div className="flex items-center gap-3">
+            <h1 className="text-lg font-semibold">{pageTitle}</h1>
             {showWelcome && (
-              <p className="text-muted-foreground mt-1">
+              <p className="text-sm text-muted-foreground hidden sm:block">
                 {tp('dashboard.welcome', { name: `${user?.firstName} ${user?.lastName}` })}
               </p>
             )}
           </div>
+          <UserNav />
+        </div>
+        <div className="px-6 md:px-8 pt-4 pb-4 shrink-0">
+          <Breadcrumb />
+        </div>
+        <div className="flex-1 overflow-hidden px-6 md:px-8 pb-6 md:pb-8">
           {children}
         </div>
       </main>

@@ -114,33 +114,11 @@ export default function SuppliersPage() {
   };
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <Button onClick={openCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          {t('suppliers.new')}
-        </Button>
-      </div>
-
-      {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
-
-      <DataTable
-        columns={columns}
-        rows={suppliers}
-        loading={loading}
-        onEdit={openEdit}
-        onDelete={(supplier) => {
-          setDeleteTarget(supplier);
-          setDeleteOpen(true);
-        }}
-        emptyMessage={t('suppliers.empty')}
-      />
-
-      <SlideForm
-        open={formOpen}
-        title={selectedSupplier ? t('suppliers.edit') : t('suppliers.new')}
-        onClose={() => setFormOpen(false)}
-      >
+    <SlideForm
+      open={formOpen}
+      title={selectedSupplier ? t('suppliers.edit') : t('suppliers.new')}
+      onClose={() => setFormOpen(false)}
+      panel={
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>{t('suppliers.field.documentNumber')}</Label>
@@ -180,7 +158,28 @@ export default function SuppliersPage() {
             {submitting ? t('common.saving') : t('common.save')}
           </Button>
         </div>
-      </SlideForm>
+      }
+    >
+      <div className="flex items-center justify-between mb-6">
+        <Button onClick={openCreate}>
+          <Plus className="mr-2 h-4 w-4" />
+          {t('suppliers.new')}
+        </Button>
+      </div>
+
+      {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
+
+      <DataTable
+        columns={columns}
+        rows={suppliers}
+        loading={loading}
+        onEdit={openEdit}
+        onDelete={(supplier) => {
+          setDeleteTarget(supplier);
+          setDeleteOpen(true);
+        }}
+        emptyMessage={t('suppliers.empty')}
+      />
 
       <ConfirmDialog
         open={deleteOpen}
@@ -191,6 +190,6 @@ export default function SuppliersPage() {
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
         loading={submitting}
       />
-    </div>
+    </SlideForm>
   );
 }
