@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,18 +17,29 @@ interface SlideFormProps {
 }
 
 export function SlideForm({ open, title, onClose, children, panel, panelWidth = 420, loading }: SlideFormProps) {
+  useEffect(() => {
+    document.documentElement.style.setProperty('--panel-offset', open ? `${panelWidth}px` : '0px');
+    return () => document.documentElement.style.setProperty('--panel-offset', '0px');
+  }, [open, panelWidth]);
+
   return (
-    <div className="flex flex-1 h-full overflow-hidden">
-      <div className="flex-1 min-w-0 overflow-y-auto">
-        {children}
-      </div>
+    <div className="flex-1 h-full min-h-0">
+      {children}
+      {open && (
+        <div
+          className="fixed inset-0 z-50"
+          onClick={onClose}
+          style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}
+        />
+      )}
       <motion.div
         initial={false}
-        animate={{ width: open ? panelWidth : 0 }}
+        animate={{ x: open ? 0 : panelWidth }}
         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-        className="overflow-hidden shrink-0 rounded-l-xl"
+        className="fixed top-0 right-0 h-full z-50"
+        onClick={(e) => e.stopPropagation()}
       >
-        <div style={{ width: panelWidth }} className="h-full bg-card text-foreground">
+        <div style={{ width: panelWidth }} className="h-full bg-card text-foreground shadow-xl">
           <div className="flex items-center justify-between px-6 py-5 border-b border-border">
             <h2 className="text-lg font-semibold">{title}</h2>
             <Button variant="ghost" size="icon" onClick={onClose}>

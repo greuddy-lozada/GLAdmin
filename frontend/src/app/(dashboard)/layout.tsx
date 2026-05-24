@@ -84,7 +84,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </SidebarBody>
       </Sidebar>
 
-      <main className="flex-1 flex flex-col overflow-hidden">
+      <main className="flex-1 flex flex-col overflow-hidden transition-[padding] duration-300" style={{ paddingRight: 'var(--panel-offset, 0px)' }}>
         <div className="flex items-center justify-between px-6 md:px-8 py-3 border-b border-border bg-card shrink-0">
           <div className="flex items-center gap-3">
             <h1 className="text-lg font-semibold">{pageTitle}</h1>
@@ -100,7 +100,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           <Breadcrumb />
         </div>
         <div className="flex-1 overflow-hidden px-6 md:px-8 pb-6 md:pb-8">
-          {children}
+          <div className="max-w-7xl mx-auto h-full">
+            {children}
+          </div>
         </div>
       </main>
     </div>
