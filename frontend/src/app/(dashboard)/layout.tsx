@@ -112,6 +112,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                       )}
                     </button>
                   )}
+                  {!sidebarOpen && group.label && GroupIcon && (
+                    <div className="flex items-center justify-start gap-2 py-2">
+                      <GroupIcon className="h-5 w-5 shrink-0 text-muted-foreground" />
+                    </div>
+                  )}
                   {(sidebarOpen && (expandedGroups.has(gi) || !group.label)) && (
                     <div className="flex flex-col gap-0.5">
                       {group.items.map((item) => {
@@ -120,7 +125,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                           <Link
                             key={item.path}
                             href={item.path}
-                            className={`flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
+                            className={`flex items-center gap-2 px-3 pl-9 py-2 text-sm transition-colors ${
                               active
                                 ? 'bg-secondary text-secondary-foreground rounded-md font-medium'
                                 : 'text-muted-foreground hover:text-foreground'
@@ -138,6 +143,25 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                                 const Icon = iconMap[item.key] || LayoutDashboard;
                                 return <Icon className="h-5 w-5 shrink-0 text-muted-foreground" />;
                               })(),
+                            }}
+                            className={active ? 'bg-secondary text-secondary-foreground rounded-md' : ''}
+                          />
+                        );
+                      })}
+                    </div>
+                  )}
+                  {!sidebarOpen && !group.label && (
+                    <div className="flex flex-col">
+                      {group.items.map((item) => {
+                        const Icon = iconMap[item.key] || LayoutDashboard;
+                        const active = pathname.startsWith(item.path);
+                        return (
+                          <SidebarLink
+                            key={item.path}
+                            link={{
+                              label: t(`nav.${item.key}`),
+                              href: item.path,
+                              icon: <Icon className="h-5 w-5 shrink-0 text-muted-foreground" />,
                             }}
                             className={active ? 'bg-secondary text-secondary-foreground rounded-md' : ''}
                           />
