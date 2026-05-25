@@ -14,16 +14,27 @@ import { useSuppliers } from '@/features/suppliers/hooks/use-suppliers';
 import { Supplier, CreateSupplierRequest, UpdateSupplierRequest } from '@/features/suppliers/models/supplier.model';
 import { supplierService } from '@/features/suppliers/services/supplier.service';
 import { useI18n } from '@/i18n';
+import { RoleGuard } from '@/components/ui/role-guard';
+import { useAuth } from '@/providers/auth-provider';
+import { hasMinLevel } from '@/lib/auth/roles';
 
 export default function SuppliersPage() {
   const { suppliers, loading, loadSuppliers } = useSuppliers();
   const { t, tp } = useI18n();
+  const { user } = useAuth();
+  const role = user?.role?.slug ?? 'employee';
+  const canEdit = hasMinLevel(role, 40);
+  const canDelete = hasMinLevel(role, 100);
   const [formOpen, setFormOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [formData, setFormData] = useState<CreateSupplierRequest & { available?: boolean }>({
     documentNumber: '',
     companyName: '',
+    businessName: '',
+    fiscalAddress: '',
+    taxId: '',
+    taxWithholdingAgent: false,
     firstName: '',
     lastName: '',
     address: '',
@@ -38,6 +49,7 @@ export default function SuppliersPage() {
     { field: 'id', headerName: t('suppliers.field.id') },
     { field: 'documentNumber', headerName: t('suppliers.field.documentNumber') },
     { field: 'companyName', headerName: t('suppliers.field.companyName') },
+    { field: 'businessName', headerName: t('suppliers.field.businessName'), render: (row) => row.businessName ?? '—' },
     { field: 'phoneNumber', headerName: t('suppliers.field.phoneNumber') },
     { field: 'email', headerName: t('suppliers.field.email') },
     {
@@ -50,7 +62,7 @@ export default function SuppliersPage() {
   const openCreate = () => {
     setSelectedSupplier(null);
     setError('');
-    setFormData({ documentNumber: '', companyName: '', firstName: '', lastName: '', address: '', phoneNumber: '', email: '' });
+    setFormData({ documentNumber: '', companyName: '', businessName: '', fiscalAddress: '', taxId: '', taxWithholdingAgent: false, firstName: '', lastName: '', address: '', phoneNumber: '', email: '' });
     setFormOpen(true);
   };
 
@@ -60,6 +72,10 @@ export default function SuppliersPage() {
     setFormData({
       documentNumber: supplier.documentNumber,
       companyName: supplier.companyName,
+      businessName: supplier.businessName || '',
+      fiscalAddress: supplier.fiscalAddress || '',
+      taxId: supplier.taxId || '',
+      taxWithholdingAgent: supplier.taxWithholdingAgent,
       firstName: supplier.firstName || '',
       lastName: supplier.lastName || '',
       address: supplier.address || '',
@@ -78,6 +94,10 @@ export default function SuppliersPage() {
         const data: UpdateSupplierRequest = {
           documentNumber: formData.documentNumber,
           companyName: formData.companyName,
+          businessName: formData.businessName || undefined,
+          fiscalAddress: formData.fiscalAddress || undefined,
+          taxId: formData.taxId || undefined,
+          taxWithholdingAgent: formData.taxWithholdingAgent,
           firstName: formData.firstName || undefined,
           lastName: formData.lastName || undefined,
           address: formData.address || undefined,
@@ -87,7 +107,12 @@ export default function SuppliersPage() {
         };
         await supplierService.update(selectedSupplier.id, data);
       } else {
-        await supplierService.create(formData);
+        await supplierService.create({
+          ...formData,
+          businessName: formData.businessName || undefined,
+          fiscalAddress: formData.fiscalAddress || undefined,
+          taxId: formData.taxId || undefined,
+        });
       }
       await loadSuppliers();
       setFormOpen(false);
@@ -129,6 +154,22 @@ export default function SuppliersPage() {
             <Input value={formData.companyName} onChange={(e) => setFormData({ ...formData, companyName: e.target.value })} required />
           </div>
           <div className="space-y-2">
+            <Label>{t('suppliers.field.businessName')}</Label>
+            <Input value={formData.businessName} onChange={(e) => setFormData({ ...formData, businessName: e.target.value })} />
+          </div>
+          <div className="space-y-2">
+            <Label>{t('suppliers.field.fiscalAddress')}</Label>
+            <Input value={formData.fiscalAddress} onChange={(e) => setFormData({ ...formData, fiscalAddress: e.target.value })} />
+          </div>
+          <div className="space-y-2">
+            <Label>{t('suppliers.field.taxId')}</Label>
+            <Input value={formData.taxId} onChange={(e) => setFormData({ ...formData, taxId: e.target.value })} />
+          </div>
+          <div className="flex items-center gap-2">
+            <Switch checked={formData.taxWithholdingAgent ?? false} onCheckedChange={(c) => setFormData({ ...formData, taxWithholdingAgent: c })} />
+            <Label>{t('suppliers.field.taxWithholdingAgent')}</Label>
+          </div>
+          <div className="space-y-2">
             <Label>{t('suppliers.field.firstName')}</Label>
             <Input value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} />
           </div>
@@ -161,10 +202,12 @@ export default function SuppliersPage() {
       }
     >
       <div className="flex items-center justify-between mb-6">
-        <Button onClick={openCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          {t('suppliers.new')}
-        </Button>
+        <RoleGuard minLevel={40}>
+          <Button onClick={openCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t('suppliers.new')}
+          </Button>
+        </RoleGuard>
       </div>
 
       {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
@@ -173,11 +216,11 @@ export default function SuppliersPage() {
         columns={columns}
         rows={suppliers}
         loading={loading}
-        onEdit={openEdit}
-        onDelete={(supplier) => {
+        onEdit={canEdit ? openEdit : undefined}
+        onDelete={canDelete ? (supplier) => {
           setDeleteTarget(supplier);
           setDeleteOpen(true);
-        }}
+        } : undefined}
         emptyMessage={t('suppliers.empty')}
       />
 

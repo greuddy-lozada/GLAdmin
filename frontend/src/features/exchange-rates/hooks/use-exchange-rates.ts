@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { ForeignExchange, CreateForeignExchangeRequest, UpdateForeignExchangeRequest } from '../models/foreign-exchange.model';
-import { foreignExchangeService } from '../services/foreign-exchange.service';
+import { ExchangeRate, CreateExchangeRateRequest, UpdateExchangeRateRequest } from '../models/exchange-rate.model';
+import { exchangeRateService } from '../services/exchange-rate.service';
 
-export function useForeignExchanges() {
-  const [items, setItems] = useState<ForeignExchange[]>([]);
+export function useExchangeRates() {
+  const [items, setItems] = useState<ExchangeRate[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -13,10 +13,10 @@ export function useForeignExchanges() {
     setLoading(true);
     setError(null);
     try {
-      const data = await foreignExchangeService.getAll();
+      const data = await exchangeRateService.getAll();
       setItems(data);
     } catch {
-      setError('Error al cargar tasas de cambio');
+      setError('Error al cargar tasas');
     } finally {
       setLoading(false);
     }
@@ -26,28 +26,28 @@ export function useForeignExchanges() {
     loadItems();
   }, [loadItems]);
 
-  const createItem = useCallback(async (data: CreateForeignExchangeRequest) => {
+  const createItem = useCallback(async (data: CreateExchangeRateRequest) => {
     setLoading(true);
     try {
-      await foreignExchangeService.create(data);
+      await exchangeRateService.create(data);
       await loadItems();
       return true;
     } catch {
-      setError('Error al crear tasa de cambio');
+      setError('Error al crear tasa');
       return false;
     } finally {
       setLoading(false);
     }
   }, [loadItems]);
 
-  const updateItem = useCallback(async (id: number, data: UpdateForeignExchangeRequest) => {
+  const updateItem = useCallback(async (id: number, data: UpdateExchangeRateRequest) => {
     setLoading(true);
     try {
-      await foreignExchangeService.update(id, data);
+      await exchangeRateService.update(id, data);
       await loadItems();
       return true;
     } catch {
-      setError('Error al actualizar tasa de cambio');
+      setError('Error al actualizar tasa');
       return false;
     } finally {
       setLoading(false);
@@ -57,11 +57,11 @@ export function useForeignExchanges() {
   const deleteItem = useCallback(async (id: number) => {
     setLoading(true);
     try {
-      await foreignExchangeService.delete(id);
+      await exchangeRateService.delete(id);
       await loadItems();
       return true;
     } catch {
-      setError('Error al eliminar tasa de cambio');
+      setError('Error al eliminar tasa');
       return false;
     } finally {
       setLoading(false);

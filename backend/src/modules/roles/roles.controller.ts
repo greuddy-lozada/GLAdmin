@@ -7,13 +7,13 @@ export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 
   @Get()
-  @Roles('master', 'admin', 'employee')
+  @Roles('master', 'executive', 'manager')
   findAll() {
     return this.rolesService.findAll();
   }
 
   @Get(':id')
-  @Roles('master', 'admin', 'employee')
+  @Roles('master', 'executive', 'manager')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.rolesService.findOne(id);
   }

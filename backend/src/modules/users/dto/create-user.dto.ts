@@ -29,14 +29,13 @@ export class CreateUserDto {
   @MaxLength(25)
   password: string;
 
-  @IsOptional()
   @IsEmail()
-  email?: string;
+  email: string;
 
   @IsNumber()
   idRole: number;
 
   @IsOptional()
   @IsBoolean()
-  available?: boolean;
+  isActive?: boolean;
 }

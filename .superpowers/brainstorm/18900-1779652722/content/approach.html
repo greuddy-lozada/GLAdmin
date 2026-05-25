@@ -1,0 +1,56 @@
+<h2>Estructura general — Slice 1 (Compras)</h2>
+<p class="subtitle">4 módulos, 2 nuevos + 2 extendidos. ¿Cómo organizamos las vistas?</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Páginas independientes (Recomendado)</h3>
+      <p>Cada módulo tiene su propia ruta con DataTable + SlideForm, exactamente como el patrón actual (usuarios, productos, etc.)</p>
+      <div class="pros-cons" style="margin-top: 8px;">
+        <div class="pros">
+          <h4>✓</h4>
+          <ul><li>Consistente con el resto de la app</li><li>Mantenible, familiar</li><li>Cada cosa en su lugar</li></ul>
+        </div>
+        <div class="cons">
+          <h4>—</h4>
+          <ul><li>Más entries en el nav</li></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Vista consolidada de Compras</h3>
+      <p>Una sola página "Compras" con pestañas/tabs: Órdenes | Retenciones | CXP | Tasas</p>
+      <div class="pros-cons" style="margin-top: 8px;">
+        <div class="pros">
+          <h4>✓</h4>
+          <ul><li>Agrupa todo el Slice 1</li><li>Menos clutter en el nav</li></ul>
+        </div>
+        <div class="cons">
+          <h4>—</h4>
+          <ul><li>Ruptura con el patrón existente</li><li>Más complejo de implementar</li></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Híbrido</h3>
+      <p>Proveedores y PO siguen como están (formularios extendidos). Tasas y Retenciones como páginas standalone nuevas.</p>
+      <div class="pros-cons" style="margin-top: 8px;">
+        <div class="pros">
+          <h4>✓</h4>
+          <ul><li>Menos cambios a páginas existentes</li><li>Nuevos módulos en rutas nuevas</li></ul>
+        </div>
+        <div class="cons">
+          <h4>—</h4>
+          <ul><li>Dos patrones distintos conviviendo</li></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

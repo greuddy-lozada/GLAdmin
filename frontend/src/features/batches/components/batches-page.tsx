@@ -13,10 +13,17 @@ import { useBatches } from '@/features/batches/hooks/use-batches';
 import { Batch, CreateBatchRequest, UpdateBatchRequest } from '@/features/batches/models/batch.model';
 import { batchService } from '@/features/batches/services/batch.service';
 import { useI18n } from '@/i18n';
+import { RoleGuard } from '@/components/ui/role-guard';
+import { useAuth } from '@/providers/auth-provider';
+import { hasMinLevel } from '@/lib/auth/roles';
 
 export default function BatchesPage() {
   const { batches, loading, loadBatches } = useBatches();
   const { t, tp } = useI18n();
+  const { user } = useAuth();
+  const role = user?.role?.slug ?? 'employee';
+  const canEdit = hasMinLevel(role, 60);
+  const canDelete = hasMinLevel(role, 100);
   const [formOpen, setFormOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null);
@@ -109,10 +116,12 @@ export default function BatchesPage() {
       }
     >
       <div className="flex items-center justify-between mb-6">
-        <Button onClick={openCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          {t('batches.new')}
-        </Button>
+        <RoleGuard minLevel={60}>
+          <Button onClick={openCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t('batches.new')}
+          </Button>
+        </RoleGuard>
       </div>
 
       {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
@@ -121,11 +130,11 @@ export default function BatchesPage() {
         columns={columns}
         rows={batches}
         loading={loading}
-        onEdit={openEdit}
-        onDelete={(batch) => {
+        onEdit={canEdit ? openEdit : undefined}
+        onDelete={canDelete ? (batch) => {
           setDeleteTarget(batch);
           setDeleteOpen(true);
-        }}
+        } : undefined}
         emptyMessage={t('batches.empty')}
       />
 

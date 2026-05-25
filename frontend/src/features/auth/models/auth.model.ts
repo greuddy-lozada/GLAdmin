@@ -3,9 +3,10 @@ export interface User {
   firstName: string;
   lastName: string;
   userName: string;
-  email: string | null;
+  email: string;
   idRole: number;
-  available: boolean;
+  isActive: boolean;
+  mustChangePassword: boolean;
   role?: {
     id: number;
     name: string;
@@ -16,11 +17,19 @@ export interface User {
 }
 
 export interface LoginRequest {
-  userName: string;
+  email: string;
   password: string;
 }
 
 export interface LoginResponse {
   user: User;
-  token: string;
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+}
+
+export interface RefreshResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
 }

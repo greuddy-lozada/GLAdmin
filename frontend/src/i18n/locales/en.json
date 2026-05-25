@@ -37,7 +37,7 @@
     "title": "GLAdmin",
     "loginButton": "SIGN IN",
     "loggingIn": "Signing in...",
-    "userName": "Username",
+    "email": "Email",
     "password": "Password",
     "error": "Invalid username or password"
   },
@@ -79,13 +79,21 @@
     "batches": "Batches",
     "stocks": "Stock",
     "purchaseOrders": "Purchase Orders",
-    "foreignExchanges": "Exchange Rate",
+    "withholdings": "Withholdings",
+    "exchangeRates": "Exchange Rates",
     "roles": "Roles",
     "settings": "Settings",
     "logout": "Log Out",
     "profile": "Profile",
     "lightMode": "Light Mode",
-    "darkMode": "Dark Mode"
+    "darkMode": "Dark Mode",
+    "group": {
+      "compras": "Purchasing",
+      "ventas": "Sales",
+      "inventario": "Inventory",
+      "admin": "Administration",
+      "config": "Settings"
+    }
   },
   "users": {
     "title": "Users",
@@ -106,6 +114,7 @@
       "password": "Password",
       "passwordEdit": "Password (leave blank to keep)",
       "role": "Role",
+      "isActive": "Active",
       "available": "Available"
     },
     "error": {
@@ -148,6 +157,10 @@
       "id": "#",
       "documentNumber": "Tax ID",
       "companyName": "Company Name",
+      "businessName": "Business Name",
+      "fiscalAddress": "Fiscal Address",
+      "taxId": "RIF",
+      "taxWithholdingAgent": "Withholding Agent",
       "firstName": "Contact First Name",
       "lastName": "Contact Last Name",
       "address": "Address",
@@ -273,6 +286,9 @@
     "new": "New Order",
     "edit": "Edit Order",
     "delete": "Delete Order",
+    "created": "Order created successfully",
+    "updated": "Order updated successfully",
+    "deleted": "Order deleted successfully",
     "deleteConfirm": "Are you sure you want to delete order #{{code}}?",
     "empty": "No purchase orders registered",
     "details": "Details",
@@ -283,7 +299,9 @@
       "supplier": "Supplier",
       "code": "Code",
       "date": "Date",
-      "amount": "Amount",
+      "amount": "Amount (Bs.)",
+      "amountUsd": "Amount (USD)",
+      "exchangeRate": "BCV Rate",
       "paymentMethod": "Payment Method",
       "status": "Status",
       "product": "Product",
@@ -297,23 +315,52 @@
       "delete": "Error deleting order"
     }
   },
-  "foreignExchanges": {
-    "title": "Exchange Rate",
+  "exchangeRates": {
+    "title": "Exchange Rates",
     "new": "New Rate",
     "edit": "Edit Rate",
     "delete": "Delete Rate",
-    "deleteConfirm": "Are you sure you want to delete this exchange rate?",
-    "empty": "No exchange rates registered",
+    "deleteConfirm": "Are you sure you want to delete this rate?",
+    "empty": "No rates registered",
     "field": {
       "id": "#",
-      "value": "Value",
+      "rate": "Rate",
       "currency": "Currency",
-      "createdAt": "Date"
+      "type": "Type",
+      "date": "Date",
+      "source": "Source"
     },
     "error": {
       "save": "Error saving rate",
       "load": "Error loading rates",
       "delete": "Error deleting rate"
+    }
+  },
+  "withholdings": {
+    "title": "Withholdings",
+    "new": "New Withholding",
+    "edit": "Edit Withholding",
+    "delete": "Delete Withholding",
+    "created": "Withholding created successfully",
+    "deleted": "Withholding deleted successfully",
+    "deleteConfirm": "Are you sure you want to delete withholding #{{id}}?",
+    "empty": "No withholdings registered",
+    "field": {
+      "id": "#",
+      "supplier": "Supplier",
+      "purchaseOrder": "Purchase Order",
+      "type": "Type",
+      "percentage": "Percentage",
+      "baseAmount": "Taxable Base (Bs.)",
+      "baseAmountUsd": "Taxable Base (USD)",
+      "withheldAmount": "Withheld Amount",
+      "withheldAmountLabel": "Amount to withhold",
+      "period": "Period"
+    },
+    "error": {
+      "save": "Error saving withholding",
+      "load": "Error loading withholdings",
+      "delete": "Error deleting withholding"
     }
   },
   "roles": {

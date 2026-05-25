@@ -21,11 +21,18 @@ import { useStocks } from '@/features/stocks/hooks/use-stocks';
 import { Stock, CreateStockRequest, UpdateStockRequest } from '@/features/stocks/models/stock.model';
 import { stockService } from '@/features/stocks/services/stock.service';
 import { useI18n } from '@/i18n';
+import { RoleGuard } from '@/components/ui/role-guard';
+import { useAuth } from '@/providers/auth-provider';
+import { hasMinLevel } from '@/lib/auth/roles';
 import apiClient from '@/lib/api/api-client';
 
 export default function StocksPage() {
   const { stocks, loading, loadStocks } = useStocks();
   const { t } = useI18n();
+  const { user } = useAuth();
+  const role = user?.role?.slug ?? 'employee';
+  const canEdit = hasMinLevel(role, 60);
+  const canDelete = hasMinLevel(role, 100);
   const [formOpen, setFormOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selectedStock, setSelectedStock] = useState<Stock | null>(null);
@@ -192,10 +199,12 @@ export default function StocksPage() {
       }
     >
       <div className="flex items-center justify-between mb-6">
-        <Button onClick={openCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          {t('stocks.new')}
-        </Button>
+        <RoleGuard minLevel={60}>
+          <Button onClick={openCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t('stocks.new')}
+          </Button>
+        </RoleGuard>
       </div>
 
       {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
@@ -204,11 +213,11 @@ export default function StocksPage() {
         columns={columns}
         rows={stocks}
         loading={loading}
-        onEdit={openEdit}
-        onDelete={(stock) => {
+        onEdit={canEdit ? openEdit : undefined}
+        onDelete={canDelete ? (stock) => {
           setDeleteTarget(stock);
           setDeleteOpen(true);
-        }}
+        } : undefined}
         emptyMessage={t('stocks.empty')}
       />
 

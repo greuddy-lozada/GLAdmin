@@ -18,14 +18,14 @@ export class PurchaseOrdersService {
             }
           : undefined,
       },
-      include: { supplier: true, details: { include: { product: true } } },
+      include: { supplier: true, details: { include: { product: true } }, exchangeRateRef: true, officialExchangeRateRef: true },
     });
     return { data: purchaseOrder, message: 'PURCHASE_ORDER.CREATED' };
   }
 
   async findAll() {
     return this.prisma.purchaseOrder.findMany({
-      include: { supplier: true, details: { include: { product: true } } },
+      include: { supplier: true, details: { include: { product: true } }, exchangeRateRef: true, officialExchangeRateRef: true },
     });
   }
 
@@ -36,6 +36,9 @@ export class PurchaseOrdersService {
         supplier: true,
         details: { include: { product: true } },
         accountsPayables: true,
+        exchangeRateRef: true,
+        officialExchangeRateRef: true,
+        withholdingRecords: true,
       },
     });
     if (!purchaseOrder) throw new NotFoundException('PURCHASE_ORDER.NOT_FOUND');
@@ -48,7 +51,7 @@ export class PurchaseOrdersService {
     const purchaseOrder = await this.prisma.purchaseOrder.update({
       where: { id },
       data: header,
-      include: { supplier: true, details: { include: { product: true } } },
+      include: { supplier: true, details: { include: { product: true } }, exchangeRateRef: true, officialExchangeRateRef: true },
     });
     return { data: purchaseOrder, message: 'PURCHASE_ORDER.UPDATED' };
   }

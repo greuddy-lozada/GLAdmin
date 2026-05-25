@@ -5,17 +5,17 @@ const prisma = new PrismaClient();
 
 async function main() {
   // ── Roles ──
-  const masterRole = await prisma.role.upsert({
+  await prisma.role.upsert({
     where: { id: 1 },
     update: {},
     create: { id: 1, name: 'Master', slug: 'master' },
   });
-  const adminRole = await prisma.role.upsert({
+  await prisma.role.upsert({
     where: { id: 2 },
     update: {},
     create: { id: 2, name: 'Administrador', slug: 'admin' },
   });
-  const employeeRole = await prisma.role.upsert({
+  await prisma.role.upsert({
     where: { id: 3 },
     update: {},
     create: { id: 3, name: 'Empleado', slug: 'employee' },
@@ -29,42 +29,55 @@ async function main() {
     update: {},
     create: {
       id: 1,
+      email: 'admin@gladmin.com',
+      userName: 'glozada',
       firstName: 'Greuddy',
       lastName: 'Lozada',
-      userName: 'glozada',
       password,
-      email: 'admin@gladmin.com',
       idRole: 1,
-      available: true,
+      isActive: true,
     },
   });
   console.log('Admin user created');
 
   // ── Currencies ──
-  const currencies = [
-    { id: 1, code: 'DOP', name: 'Peso Dominicano', symbol: 'RD$' },
+  for (const c of [
+    { id: 1, code: 'VED', name: 'Bolívar Soberano', symbol: 'Bs.' },
     { id: 2, code: 'USD', name: 'Dólar Americano', symbol: 'US$' },
     { id: 3, code: 'EUR', name: 'Euro', symbol: '€' },
-  ];
-  for (const c of currencies) {
-    await prisma.currency.upsert({
-      where: { id: c.id },
-      update: {},
-      create: c,
-    });
+  ]) {
+    await prisma.currency.upsert({ where: { id: c.id }, update: {}, create: c });
   }
   console.log('Currencies created');
 
-  // ── Taxes ──
-  const itbis = await prisma.tax.upsert({
+  // ── Exchange Rates ──
+  await prisma.exchangeRate.upsert({
     where: { id: 1 },
     update: {},
-    create: { id: 1, name: 'ITBIS 18%', percentage: 18, formula: 'monto * 0.18' },
+    create: { id: 1, rate: 60.50, currencyId: 2, type: 'official', date: new Date('2026-05-20'), source: 'BCV' },
   });
-  const exento = await prisma.tax.upsert({
+  await prisma.exchangeRate.upsert({
     where: { id: 2 },
     update: {},
-    create: { id: 2, name: 'Exento', percentage: 0 },
+    create: { id: 2, rate: 72.00, currencyId: 2, type: 'paralelo', date: new Date('2026-05-20'), source: 'dolartoday' },
+  });
+  console.log('Exchange rates created');
+
+  // ── Taxes (Venezuela: IVA) ──
+  await prisma.tax.upsert({
+    where: { id: 1 },
+    update: {},
+    create: { id: 1, name: 'IVA 16%', percentage: 16, formula: 'base * 0.16' },
+  });
+  await prisma.tax.upsert({
+    where: { id: 2 },
+    update: {},
+    create: { id: 2, name: 'IVA 8%', percentage: 8, formula: 'base * 0.08' },
+  });
+  await prisma.tax.upsert({
+    where: { id: 3 },
+    update: {},
+    create: { id: 3, name: 'Exento', percentage: 0 },
   });
   console.log('Taxes created');
 
@@ -74,11 +87,11 @@ async function main() {
     update: {},
     create: {
       id: 1,
-      idCardNumber: '001-1234567-8',
+      idCardNumber: 'V-12345678',
       firstName: 'Juan',
       lastName: 'Pérez',
-      address: 'Calle Principal #42, Santo Domingo',
-      phoneNumber: '809-555-0101',
+      address: 'Av. Principal, Urbanización Las Flores, Caracas',
+      phoneNumber: '0412-555-0101',
       email: 'juan.perez@email.com',
     },
   });
@@ -87,11 +100,11 @@ async function main() {
     update: {},
     create: {
       id: 2,
-      idCardNumber: '002-8765432-1',
+      idCardNumber: 'V-87654321',
       firstName: 'María',
       lastName: 'González',
-      address: 'Av. Independencia #100, Santiago',
-      phoneNumber: '809-555-0202',
+      address: 'Calle Sucre #42, Valencia, Edo. Carabobo',
+      phoneNumber: '0414-555-0202',
       email: 'maria.gonzalez@email.com',
     },
   });
@@ -103,12 +116,16 @@ async function main() {
     update: {},
     create: {
       id: 1,
-      documentNumber: '101-12345-6',
-      companyName: 'Distribuidora Nacional SRL',
+      documentNumber: 'J-12345678-9',
+      companyName: 'Distribuidora Nacional C.A.',
+      businessName: 'Distribuidora Nacional, C.A.',
+      fiscalAddress: 'Zona Industrial de Caracas, Galpón 5, Dtto. Capital',
+      taxId: 'J-12345678-9',
+      taxWithholdingAgent: true,
       firstName: 'Carlos',
       lastName: 'Martínez',
-      address: 'Zona Industrial de Herrera, Nave 5',
-      phoneNumber: '809-555-0303',
+      address: 'Zona Industrial de Caracas, Galpón 5',
+      phoneNumber: '0212-555-0303',
       email: 'carlos@distribuidoranacional.com',
     },
   });
@@ -117,12 +134,16 @@ async function main() {
     update: {},
     create: {
       id: 2,
-      documentNumber: '102-98765-4',
+      documentNumber: 'J-98765432-1',
       companyName: 'Importadora del Caribe SA',
+      businessName: 'Importadora del Caribe, S.A.',
+      fiscalAddress: 'Av. Libertador #350, Chacao, Miranda',
+      taxId: 'J-98765432-1',
+      taxWithholdingAgent: false,
       firstName: 'Ana',
       lastName: 'Ramírez',
-      address: 'Av. 27 de Febrero #350, Santo Domingo',
-      phoneNumber: '809-555-0404',
+      address: 'Av. Libertador #350, Chacao',
+      phoneNumber: '0212-555-0404',
       email: 'ana@importadoracaribe.com',
     },
   });
@@ -134,21 +155,21 @@ async function main() {
     update: {},
     create: {
       id: 1,
-      documentNumber: '101-23456-7',
-      name: 'GLAdmin Solutions SRL',
-      address: 'Av. Abraham Lincoln #500, Santo Domingo',
-      phoneNumber: '809-555-0000',
+      documentNumber: 'J-40123456-7',
+      name: 'GLAdmin Solutions C.A.',
+      address: 'Av. Abraham Lincoln, Torre GLAdmin, Caracas',
+      phoneNumber: '0212-555-0000',
       email: 'info@gladmin.com',
       website: 'https://gladmin.com',
     },
   });
   console.log('Company created');
 
-  // ── Products ──
+  // ── Products (prices in VED) ──
   await prisma.product.upsert({
     where: { id: 1 },
     update: {},
-    create: { id: 1, code: 'PROD-001', name: 'Laptop HP ProBook 450', price: 45000, dollarPrice: 750, idTax: 1, observation: 'Garantía 1 año', available: true },
+    create: { id: 1, code: 'PROD-001', name: 'Laptop HP ProBook 450', price: 45000, dollarPrice: 750, idTax: 1, available: true },
   });
   await prisma.product.upsert({
     where: { id: 2 },
@@ -158,12 +179,12 @@ async function main() {
   await prisma.product.upsert({
     where: { id: 3 },
     update: {},
-    create: { id: 3, code: 'PROD-003', name: 'Teclado Mecánico Redragon', price: 2500, idTax: 1, available: true },
+    create: { id: 3, code: 'PROD-003', name: 'Teclado Mecánico Redragon', price: 2500, idTax: 3, available: true },
   });
   await prisma.product.upsert({
     where: { id: 4 },
     update: {},
-    create: { id: 4, code: 'PROD-004', name: 'Mouse Inalámbrico Logitech', price: 1800, idTax: 1, available: true },
+    create: { id: 4, code: 'PROD-004', name: 'Mouse Inalámbrico Logitech', price: 1800, idTax: 3, available: true },
   });
   await prisma.product.upsert({
     where: { id: 5 },
@@ -189,39 +210,21 @@ async function main() {
   await prisma.stock.upsert({
     where: { id: 1 },
     update: {},
-    create: { id: 1, idProduct: 1, idSupplier: 1, idBatch: 1, existence: 15, available: true },
+    create: { id: 1, idProduct: 1, idSupplier: 1, idBatch: 1, existence: 15 },
   });
   await prisma.stock.upsert({
     where: { id: 2 },
     update: {},
-    create: { id: 2, idProduct: 2, idSupplier: 1, idBatch: 1, existence: 30, available: true },
+    create: { id: 2, idProduct: 2, idSupplier: 1, idBatch: 1, existence: 30 },
   });
   await prisma.stock.upsert({
     where: { id: 3 },
     update: {},
-    create: { id: 3, idProduct: 3, idSupplier: 2, idBatch: 2, existence: 50, available: true },
+    create: { id: 3, idProduct: 3, idSupplier: 2, idBatch: 2, existence: 50 },
   });
   console.log('Stocks created');
 
-  // ── Stock Details ──
-  await prisma.stockDet.upsert({
-    where: { id: 1 },
-    update: {},
-    create: { id: 1, idStock: 1, type: 1, quantity: 15, observation: 'Entrada inicial' },
-  });
-  await prisma.stockDet.upsert({
-    where: { id: 2 },
-    update: {},
-    create: { id: 2, idStock: 2, type: 1, quantity: 30, observation: 'Entrada inicial' },
-  });
-  await prisma.stockDet.upsert({
-    where: { id: 3 },
-    update: {},
-    create: { id: 3, idStock: 3, type: 1, quantity: 50, observation: 'Entrada inicial' },
-  });
-  console.log('Stock details created');
-
-  // ── Purchase Order ──
+  // ── Purchase Order (multi-currency) ──
   await prisma.purchaseOrder.upsert({
     where: { id: 1 },
     update: {},
@@ -231,32 +234,46 @@ async function main() {
       code: 'OC-2025-001',
       date: new Date('2025-01-15'),
       amount: 75000,
+      amountUsd: 75000 / 72.00,
+      exchangeRate: 72.00,
+      exchangeRateId: 2,
+      officialExchangeRate: 60.50,
+      officialExchangeRateId: 1,
       paymentMethod: 1,
       status: 2,
     },
   });
   console.log('Purchase order created');
 
-  // ── Purchase Order Details ──
+  // ── Purchase Order Details (multi-currency) ──
   await prisma.purchaseOrderDet.upsert({
     where: { id: 1 },
     update: {},
-    create: { id: 1, idPurchaseOrder: 1, idProduct: 1, quantity: 5, subtotal: 45000, observation: 'Para oficina principal' },
+    create: { id: 1, idPurchaseOrder: 1, idProduct: 1, quantity: 5, unitPrice: 9000, unitPriceUsd: 9000 / 72.00, subtotal: 45000, subtotalUsd: 45000 / 72.00 },
   });
   await prisma.purchaseOrderDet.upsert({
     where: { id: 2 },
     update: {},
-    create: { id: 2, idPurchaseOrder: 1, idProduct: 2, quantity: 10, subtotal: 30000 },
+    create: { id: 2, idPurchaseOrder: 1, idProduct: 2, quantity: 10, unitPrice: 3000, unitPriceUsd: 3000 / 72.00, subtotal: 30000, subtotalUsd: 30000 / 72.00 },
   });
   console.log('Purchase order details created');
 
-  // ── Foreign Exchange ──
-  await prisma.foreignExchange.upsert({
+  // ── Accounts Payable (multi-currency) ──
+  await prisma.accountsPayable.upsert({
     where: { id: 1 },
     update: {},
-    create: { id: 1, value: 60.50, idCurrency: 2 },
+    create: {
+      id: 1,
+      idPurchaseOrder: 1,
+      dueDate: new Date('2025-02-15'),
+      issueDate: new Date('2025-01-15'),
+      amount: 75000,
+      amountUsd: 75000 / 72.00,
+      exchangeRate: 72.00,
+      status: 1,
+    },
   });
-  console.log('Foreign exchange rates created');
+  console.log('Accounts payable created');
 
   console.log('✅ Seed completed successfully');
 }

@@ -13,10 +13,17 @@ import { useTaxes } from '@/features/taxes/hooks/use-taxes';
 import { Tax, CreateTaxRequest, UpdateTaxRequest } from '@/features/taxes/models/tax.model';
 import { taxService } from '@/features/taxes/services/tax.service';
 import { useI18n } from '@/i18n';
+import { RoleGuard } from '@/components/ui/role-guard';
+import { useAuth } from '@/providers/auth-provider';
+import { hasMinLevel } from '@/lib/auth/roles';
 
 export default function TaxesPage() {
   const { taxes, loading, loadTaxes } = useTaxes();
   const { t, tp } = useI18n();
+  const { user } = useAuth();
+  const role = user?.role?.slug ?? 'employee';
+  const canEdit = hasMinLevel(role, 60);
+  const canDelete = hasMinLevel(role, 100);
   const [formOpen, setFormOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selectedTax, setSelectedTax] = useState<Tax | null>(null);
@@ -122,10 +129,12 @@ export default function TaxesPage() {
       }
     >
       <div className="flex items-center justify-between mb-6">
-        <Button onClick={openCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          {t('taxes.new')}
-        </Button>
+        <RoleGuard minLevel={60}>
+          <Button onClick={openCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t('taxes.new')}
+          </Button>
+        </RoleGuard>
       </div>
 
       {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
@@ -134,11 +143,11 @@ export default function TaxesPage() {
         columns={columns}
         rows={taxes}
         loading={loading}
-        onEdit={openEdit}
-        onDelete={(tax) => {
+        onEdit={canEdit ? openEdit : undefined}
+        onDelete={canDelete ? (tax) => {
           setDeleteTarget(tax);
           setDeleteOpen(true);
-        }}
+        } : undefined}
         emptyMessage={t('taxes.empty')}
       />
 

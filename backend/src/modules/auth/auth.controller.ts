@@ -1,6 +1,8 @@
-import { Controller, Post, Get, Delete, Body } from '@nestjs/common';
+import { Controller, Post, Get, Body, Delete } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { RefreshDto } from './dto/refresh.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
@@ -14,13 +16,27 @@ export class AuthController {
     return this.authService.login(dto);
   }
 
+  @Public()
+  @Post('refresh')
+  async refresh(@Body() dto: RefreshDto) {
+    return this.authService.refresh(dto);
+  }
+
   @Get('me')
   async me(@CurrentUser('id') userId: number) {
     return this.authService.me(userId);
   }
 
-  @Delete('logout')
-  async logout() {
-    return { data: null, message: 'AUTH.LOGOUT_SUCCESS' };
+  @Post('logout')
+  async logout(@CurrentUser('id') userId: number) {
+    return this.authService.logout(userId);
+  }
+
+  @Post('change-password')
+  async changePassword(
+    @CurrentUser('id') userId: number,
+    @Body() dto: ChangePasswordDto,
+  ) {
+    return this.authService.changePassword(userId, dto);
   }
 }

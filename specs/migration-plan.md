@@ -1,58 +1,45 @@
-# Migration Plan: Express + Vite/MobX → NestJS + Next.js
+# Migration Plan: Express + Vite/MobX + MUI → NestJS + Next.js + shadcn
 
 ## TL;DR
 
-Replace the legacy Express 5 + Vite/React 16/MobX stack with a TypeScript-first NestJS backend and Next.js App Router frontend, using feature-based modules (Screaming Architecture), dependency injection, repository pattern for data access, and factory pattern for domain object creation.
+Migration from legacy Express 5 + Vite/React 16/MobX + Material-UI 4 to NestJS + Next.js App Router + Prisma + shadcn/ui + Aceternity UI. **Migration complete as of 2026-05-25.** This document now reflects the final state.
 
 ---
 
-## Current Stack (Legacy)
-
-| Layer | Technology |
-|---|---|
-| API Framework | Express 5 |
-| ORM | Sequelize 6 + SQLite (dev) / MySQL (prod) |
-| Language | JavaScript (no TypeScript) |
-| Auth | Token-based (bcrypt + AuthToken model stored in DB) |
-| API Port | 9000 |
-| Client Framework | React 16.14 |
-| State Management | MobX 5 |
-| UI Library | Material-UI 4 |
-| Table Component | material-table 1.69.3 |
-| Build Tool | Vite 5 |
-| Desktop Shell | Electron 8 |
-| Client Port | 3000 |
-| i18n | Ad-hoc bilingual en/es response fields |
-
-## Target Stack (New)
+## Final Stack
 
 | Layer | Technology |
 |---|---|
 | API Framework | NestJS |
-| ORM | Prisma (with repository pattern abstraction) |
+| ORM | Prisma v6 + SQLite (dev) |
 | Language | TypeScript (strict) |
-| Auth | JWT + bcrypt |
+| Auth | JWT + bcrypt + refresh token rotation |
 | API Port | 4000 |
-| Client Framework | Next.js 14+ (App Router) |
+| Client Framework | Next.js 15+ (App Router) |
 | State Management | React hooks + Context (no MobX) |
-| UI Library | Material-UI 6 |
-| Table Component | Custom DataTable (via MUI `@mui/x-data-grid` or custom) |
-| Build Tool | Next.js built-in |
-| Desktop Shell | Dropped (for now) |
-| Client Port | 3000 |
-| i18n | NestJS i18n service with JSON locale files (en/es) |
+| UI Library | shadcn/ui v4 + Aceternity UI |
+| Table Component | Custom DataTable (`@tanstack/react-table`) |
+| Forms | SlideForm (shadcn Sheet), ConfirmDialog |
+| Build Tool | Next.js built-in + Turbopack |
+| Animation | `motion` (framer-motion) |
+| Icons | `lucide-react` |
+| Theme | `next-themes` (class strategy) |
+| Dashboard Layout | Aceternity `Sidebar` (animated expand/collapse) |
 | Monorepo | pnpm workspaces |
+| Frontend Port | 3000 |
+| i18n | Custom client i18n (es.json + en.json) |
 
 ---
 
-## Architecture Decisions
+## Architecture Decisions (Final)
 
-- **Screaming Architecture**: code grouped by business domain/feature, not by technical layer
-- **Repository Pattern**: `IRepository<T>` interface abstracts data access; Prisma implements it → swapping ORMs means new repository implementations only
-- **Factory Pattern**: domain factories (e.g., `UserFactory`, `PurchaseOrderFactory`) encapsulate object creation logic
-- **Dependency Injection**: all services, repositories, factories are `@Injectable()` via NestJS DI
-- **Proper i18n**: centralized locale JSON files + NestJS `I18nService` instead of ad-hoc bilingual response fields
-- **Dynamic Storage**: database abstraction via repository interfaces — the app does not depend directly on Prisma or any specific ORM
+- **Screaming Architecture**: code grouped by feature module, not by technical layer
+- **Direct PrismaService usage**: simplified pattern (no IRepository abstraction). All modules except Users use PrismaService directly.
+- **`AuthFactory` + `AuthService`**: token pair generation, refresh rotation, password hashing
+- **JWT embeds role + email**: `AuthGuard` reads JWT payload without DB hit; `RolesGuard` reads `user.role` string
+- **Dependency Injection**: all services, factories are `@Injectable()` via NestJS DI
+- **Client i18n**: custom context-based system with `t()` / `tp()` hooks, JSON locale files
+- **No Electron**: dropped (may revisit as separate `desktop/` package)
 
 ---
 
@@ -61,851 +48,302 @@ Replace the legacy Express 5 + Vite/React 16/MobX stack with a TypeScript-first 
 ```
 GLAdmin/
   pnpm-workspace.yaml
-  package.json                    # Root: workspace scripts, shared devDeps
-  tsconfig.base.json              # Shared TypeScript config
-  .prettierrc
-  .eslintrc.cjs
-  specs/                          # This file
-  .gitignore
-
-  api/                            # KEPT as reference during migration
-  client/                         # KEPT as reference during migration
+  package.json
+  tsconfig.base.json
+  specs/                      # This file + additional specs
+  AGENTS.md                   # Project conventions for AI agent
 
   backend/
     package.json
     tsconfig.json
-    tsconfig.build.json
     nest-cli.json
     .env
-    .env.example
     prisma/
-      schema.prisma               # All 18 tables mapped from existing migrations
+      schema.prisma            # 20+ tables with multi-currency support
       seed.ts
+      migrations/
     src/
       main.ts
       app.module.ts
-
       common/
         guards/
-          auth.guard.ts           # JWT verification guard (can be global)
-          roles.guard.ts          # Role-based access control
+          auth.guard.ts        # JWT verification, reads payload (no DB hit)
+          roles.guard.ts       # Reads user.role string
         interceptors/
-          transform.interceptor.ts # Standardizes { data, message, statusCode }
-          logging.interceptor.ts
+          transform.interceptor.ts
         filters/
           http-exception.filter.ts
-        pipes/
-          validation.pipe.ts      # class-validator integration
         decorators/
           current-user.decorator.ts
           roles.decorator.ts
-          public.decorator.ts     # Marks routes as public (skip auth guard)
-
+          public.decorator.ts
       core/
         config/
           app.config.ts
-          database.config.ts
           jwt.config.ts
-          i18n.config.ts
-        logger/
-          app-logger.service.ts
-          logger.module.ts
-
       shared/
         prisma/
           prisma.service.ts
           prisma.module.ts
-        i18n/
-          i18n.service.ts
-          i18n.module.ts
-          locales/
-            en.json
-            es.json
-        interfaces/
-          repository.interface.ts # Generic IRepository<T>
-          factory.interface.ts    # Generic IFactory<T, DTO>
-        constants/
-          messages.constant.ts
-        utils/
-          hash.util.ts
-          token.util.ts
-
       modules/
-        auth/
-          auth.module.ts
-          auth.controller.ts
-          auth.service.ts
-          auth.factory.ts
-          auth.service.interface.ts
-          dto/
-            login.dto.ts
-            login-response.dto.ts
-          entities/
-            auth-token.entity.ts
-          specs/
-            auth.service.spec.ts
-            auth.controller.spec.ts
-
+        auth/                  # Login, refresh, change-password
         users/
-          users.module.ts
-          users.controller.ts
-          users.service.ts
-          user.factory.ts
-          dto/
-            create-user.dto.ts
-            update-user.dto.ts
-            user-response.dto.ts
-            user-query.dto.ts
-          entities/
-            user.entity.ts
-          repository/
-            user.repository.interface.ts
-            user.repository.ts
-          specs/
-            users.service.spec.ts
-            users.controller.spec.ts
-
         roles/
-          roles.module.ts
-          roles.controller.ts
-          roles.service.ts
-          role.factory.ts
-          dto/
-            create-role.dto.ts
-            role-response.dto.ts
-          repository/
-            role.repository.interface.ts
-            role.repository.ts
-          specs/
-            roles.service.spec.ts
-
         customers/
-          (same module structure as users/)
-
         suppliers/
-          (same module structure as users/)
-
         companies/
-          (same module structure as users/)
-
         taxes/
-          (same module structure as users/)
-
         batches/
-          (same module structure as users/)
-
-        stocks/
-          (same module structure as users/)
-
         products/
-          (same module structure as users/)
-
+        stocks/
         purchase-orders/
-          (same module structure as users/)
-
-        foreign-exchanges/
-          (same module structure as users/)
+        exchange-rates/        # Unified — replaced foreign-exchanges
+        currencies/
+        withholdings/
 
   frontend/
     package.json
     tsconfig.json
     next.config.ts
     .env.local
-    .env.local.example
-    public/
-      assets/
-        images/
-          gl.png
-          no-image.png
-        fonts/
-          (preserve existing custom fonts from client/)
     src/
       app/
-        layout.tsx                  # Root: providers, theme, fonts
-        page.tsx                    # Redirects to /login
-        loading.tsx
-
+        layout.tsx             # Providers: I18n → Theme → Auth → Toaster
         (auth)/
-          layout.tsx
           login/
-            page.tsx
-
+            page.tsx           # Landing page with slide-panel form
         (dashboard)/
-          layout.tsx                # AppShell: Sidebar + Header + <Outlet>
-          page.tsx                  # Redirects to /dashboard
+          layout.tsx           # Aceternity Sidebar + header + breadcrumbs
+          page.tsx             # Redirects to /dashboard
           dashboard/
-            page.tsx
           users/
-            page.tsx                # List (DataTable)
-            new/
-              page.tsx              # Create form (slide or page)
-            [id]/
-              page.tsx              # Edit form (slide or page)
           customers/
-            page.tsx
-            new/
-              page.tsx
-            [id]/
-              page.tsx
           suppliers/
-            page.tsx
-            new/
-              page.tsx
-            [id]/
-              page.tsx
           companies/
-            page.tsx
-            new/
-              page.tsx
-            [id]/
-              page.tsx
           taxes/
-            page.tsx
-            new/
-              page.tsx
-            [id]/
-              page.tsx
           batches/
-            page.tsx
-            new/
-              page.tsx
-            [id]/
-              page.tsx
           stocks/
-            page.tsx
-            new/
-              page.tsx
-            [id]/
-              page.tsx
           products/
-            page.tsx
-            new/
-              page.tsx
-            [id]/
-              page.tsx
           purchase-orders/
-            page.tsx
-            new/
-              page.tsx
-            [id]/
-              page.tsx
-          foreign-exchanges/
-            page.tsx
+          exchange-rates/
+          withholdings/
+          roles/
           settings/
-            page.tsx
 
       features/
         auth/
-          components/
-            login-form.tsx
-            protected-route.tsx
-          hooks/
-            use-auth.ts
-          services/
-            auth.service.ts
-          models/
-            auth.model.ts
-            login-request.model.ts
-            login-response.model.ts
-
         users/
-          components/
-            user-table.tsx
-            user-form.tsx
-          hooks/
-            use-users.ts
-          services/
-            user.service.ts
-          models/
-            user.model.ts
-            create-user-request.model.ts
-            update-user-request.model.ts
-
         customers/
-          (same pattern as users/)
-
         suppliers/
-          (same pattern as users/)
-
         companies/
-          (same pattern as users/)
-
         taxes/
-          (same pattern as users/)
-
         batches/
-          (same pattern as users/)
-
         stocks/
-          components/
-            stock-table.tsx
-            stock-form.tsx
-            stock-detail-table.tsx
-          hooks/
-            use-stocks.ts
-          services/
-            stock.service.ts
-          models/
-            stock.model.ts
-            stock-det.model.ts
-
         products/
-          (same pattern as users/)
-
         purchase-orders/
-          components/
-            purchase-order-table.tsx
-            purchase-order-form.tsx
-            purchase-order-detail-table.tsx
-          hooks/
-            use-purchase-orders.ts
-          services/
-            purchase-order.service.ts
-          models/
-            purchase-order.model.ts
-            purchase-order-det.model.ts
+        exchange-rates/
+        withholdings/
+        roles/
 
-        foreign-exchanges/
-          (same pattern as users/)
-
-      components/
-        ui/
-          data-table.tsx              # Generic CRUD table replacement
-          data-table-toolbar.tsx
-          slide-form.tsx              # Generic slide-in form drawer
-          confirm-dialog.tsx
-          loading-spinner.tsx
-          empty-state.tsx
-          page-header.tsx
-          search-input.tsx
-        layout/
-          app-sidebar.tsx
-          app-header.tsx
-          app-shell.tsx
-          nav-item.tsx
+      components/ui/           # shadcn components + custom
+        data-table.tsx         # @tanstack/react-table wrapper
+        slide-form.tsx         # Sheet-based slide panel
+        confirm-dialog.tsx
+        role-guard.tsx         # minLevel-based access control
+        striped-background.tsx # Animated login background
+        // ... shadcn base components
 
       lib/
         api/
-          api-client.ts              # Axios/fetch wrapper with auth interceptor
-          api-hooks.ts               # Generic hooks: useList, useGet, useCreate, etc.
+          api-client.ts        # Axios with refresh interceptor
+        auth/
+          roles.ts             # ROLE_LEVEL, hasMinLevel()
         utils/
-          format-currency.ts
-          format-date.ts
-          cn.ts                      # className utility
-          validation.ts
+          cn.ts
 
       providers/
-        theme-provider.tsx
-        auth-provider.tsx
+        auth-provider.tsx      # Auth context with refresh token auto-refresh
 
       config/
-        roles.config.ts              # master / admin / employee route configs
-        navigation.config.ts         # Sidebar nav items with icons
-        api.config.ts
+        navigation.config.ts   # Sidebar nav with minLevel, collapsible groups
 
-      styles/
-        globals.css
-        theme.ts                     # MUI theme (migrate from client/src/Theme.js)
+      i18n/
+        locales/
+          es.json
+          en.json
 ```
 
 ---
 
-## Database Schema (18 tables)
-
-Migrate from Sequelize migrations to Prisma schema:
-
-| Table | Key Relations |
-|---|---|
-| **User** | → Role (idRole) |
-| **Role** | ← Users |
-| **AuthToken** | → User (UserId) |
-| **Permission** | (standalone) |
-| **Customer** | → Sale |
-| **Supplier** | ← Stock, PurchaseOrder |
-| **Company** | ← License |
-| **License** | → Company |
-| **Currency** | ← ForeignExchange |
-| **Module** | (standalone) |
-| **Product** | → Tax, ↔ ForeignExchange (via ProductsForeignExchanges) |
-| **Tax** | ← Product |
-| **Batch** | ← Stock |
-| **Stock** | → Product, Supplier, Batch, ← StockDet |
-| **StockDet** | → Stock |
-| **PurchaseOrder** | → Supplier, ← PurchaseOrderDet |
-| **PurchaseOrderDet** | → PurchaseOrder, Product |
-| **Sale** | → Customer, ← SalesDet |
-| **SalesDet** | → Sale, Product |
-| **AccountsPayable** | → PurchaseOrder |
-| **AccountsReceivable** | → Sale |
-| **ForeignExchange** | → Currency, ↔ Product (via ProductsForeignExchanges) |
-| **ProductsForeignExchanges** | → Product, ForeignExchange |
-
----
-
-## Route Mapping — Old → New
-
-| Old Express Route | New NestJS Module | Old MobX Store | New Next.js Route |
-|---|---|---|---|
-| `POST /auth/login` | `auth` | `authStore` | `/(auth)/login` |
-| `DELETE /auth/logout` | `auth` | `authStore` | — (API only) |
-| `GET /auth/me` | `auth` | `authStore` | — (API only) |
-| `GET/POST/PUT/DELETE /users/*` | `users` | `userStore` | `/(dashboard)/users` |
-| `GET/POST/PUT/DELETE /customers/*` | `customers` | `customerStore` | `/(dashboard)/customers` |
-| `GET/POST/PUT/DELETE /suppliers/*` | `suppliers` | `supplierStore` | `/(dashboard)/suppliers` |
-| `GET/POST/PUT/DELETE /companies/*` | `companies` | `companyStore` | `/(dashboard)/companies` |
-| `GET/POST/PUT/DELETE /taxes/*` | `taxes` | `taxStore` | `/(dashboard)/taxes` |
-| `GET/POST/PUT/DELETE /batches/*` | `batches` | `batchStore` | `/(dashboard)/batches` |
-| `GET/POST/PUT/DELETE /roles/*` | `roles` | `roleStore` | `/(dashboard)/roles` |
-| `GET/POST/PUT/DELETE /stocks/*` | `stocks` | `stockStore` | `/(dashboard)/stocks` |
-| `GET/POST/PUT/DELETE /purchase-orders/*` | `purchase-orders` | `purchaseOrderStore` | `/(dashboard)/purchase-orders` |
-| `GET/POST/PUT/DELETE /products/*` | `products` | `productStore` | `/(dashboard)/products` |
-| `GET/POST /foreign-exchanges/*` | `foreign-exchanges` | `sttForeignExchangeStore` | `/(dashboard)/foreign-exchanges` |
-
----
-
-## API Contract Patterns
-
-### Old Pattern (ad-hoc bilingual)
-```json
-{
-  "record": { "id": 1, "firstName": "John" },
-  "en": "User has been created",
-  "es": "Usuario creado"
-}
-```
-
-### New Pattern (standardized + i18n)
-```json
-// 201 POST /users
-{
-  "data": { "id": 1, "firstName": "John", "lastName": "Doe", ... },
-  "message": "Usuario creado exitosamente",
-  "statusCode": 201
-}
-
-// 400 Validation Error
-{
-  "data": null,
-  "message": "Error de validación",
-  "errors": [
-    { "field": "userName", "constraints": ["El nombre de usuario ya existe"] }
-  ],
-  "statusCode": 400
-}
-
-// 200 List
-{
-  "data": [ ... ],
-  "meta": { "total": 50, "page": 1, "pageSize": 20 },
-  "message": null,
-  "statusCode": 200
-}
-```
-
----
-
-## Phases and Microtasks
-
----
-
-### Phase 0 — Project Scaffolding
-
-**Goal**: Initialize the monorepo, install tooling, verify both apps can boot.
-
-#### Microtasks
-
-- [ ] **0.1** Create `pnpm-workspace.yaml` at repo root defining `backend/` and `frontend/` as workspace packages
-- [ ] **0.2** Create root `package.json` with workspace scripts (`dev`, `build`, `lint`, `typecheck`, `test`)
-- [ ] **0.3** Create root `tsconfig.base.json` with shared TypeScript strict settings
-- [ ] **0.4** Create root `.prettierrc` and `.eslintrc.cjs` with consistent rules
-- [ ] **0.5** Scaffold NestJS project in `backend/` using `nest new backend --strict --package-manager pnpm` (or manual setup)
-      - Install: `@nestjs/config`, `@nestjs/jwt`, `@nestjs/passport`, `passport`, `passport-jwt`, `bcrypt`, `class-validator`, `class-transformer`, `prisma`, `@prisma/client`, `i18n` packages
-      - Install dev: `prisma`, `@types/bcrypt`, `@types/passport-jwt`, `jest`, `ts-jest`
-- [ ] **0.6** Scaffold Next.js project in `frontend/` using `create-next-app@latest frontend --typescript --eslint --app --src-dir --import-alias "@/*"`
-      - Install: `@mui/material`, `@emotion/react`, `@emotion/styled`, `@mui/icons-material`, `@mui/x-data-grid`, `axios`
-- [ ] **0.7** Update root `.gitignore` for node_modules, `.env`, dist, `.next`, prisma sqlite files
-- [ ] **0.8** Verify: `pnpm install` at root resolves both packages
-- [ ] **0.9** Verify: `pnpm --filter backend start:dev` boots NestJS on port 4000
-- [ ] **0.10** Verify: `pnpm --filter frontend dev` boots Next.js on port 3000
-
----
-
-### Phase 1 — Database Schema + Shared Backend Layer
-
-**Goal**: Write the full Prisma schema from existing migrations, create the shared NestJS infrastructure (Prisma service, repository interface, i18n service, guards, interceptors, pipes, decorators).
-
-#### Microtasks
-
-- [ ] **1.1** Write `backend/prisma/schema.prisma` with all 18 tables, relations, and enums (mirroring Sequelize models)
-      - Use `datasource db` with provider `sqlite` for dev (with fallback env var for mysql)
-      - Map tables: User, Role, AuthToken, Permission, Customer, Supplier, Company, License, Currency, Module, Product, Tax, Batch, Stock, StockDet, PurchaseOrder, PurchaseOrderDet, Sale, SalesDet, AccountsPayable, AccountsReceivable, ForeignExchange, ProductsForeignExchanges
-- [ ] **1.2** Create `backend/prisma/seed.ts` that seeds roles (master/admin/employee), currencies, taxes, foreign exchanges, and a default admin user (mirroring `api/seeders/`)
-- [ ] **1.3** Create `shared/prisma/prisma.service.ts` — extends `PrismaClient`, handles connection lifecycle (onModuleInit, enableShutdownHooks)
-- [ ] **1.4** Create `shared/prisma/prisma.module.ts` — exports `PrismaService` globally
-- [ ] **1.5** Create `shared/interfaces/repository.interface.ts` — generic `IRepository<T>` with:
-      - `findAll(filter?)`, `findById(id)`, `findOne(filter)`, `create(data)`, `update(id, data)`, `delete(id)`, `count(filter?)`
-- [ ] **1.6** Create `shared/interfaces/factory.interface.ts` — generic `IFactory<T, DTO>` with:
-      - `createFromDto(dto: DTO): T`, optionally `createManyFromDto(dtos: DTO[]): T[]`
-- [ ] **1.7** Create `shared/i18n/locales/en.json` — all English messages extracted from old controllers
-- [ ] **1.8** Create `shared/i18n/locales/es.json` — all Spanish messages extracted from old controllers
-- [ ] **1.9** Create `shared/i18n/i18n.service.ts` — `translate(key: string, lang?: string): string` and `translateWithParams(key, params, lang?): string`
-- [ ] **1.10** Create `shared/i18n/i18n.module.ts` — exports `I18nService`
-- [ ] **1.11** Create `common/guards/auth.guard.ts` — JWT strategy guard using passport-jwt, reads token from `Authorization: Bearer <token>` header
-- [ ] **1.12** Create `common/guards/roles.guard.ts` — checks `req.user.role.slug` against allowed roles from `@Roles()` decorator metadata
-- [ ] **1.13** Create `common/decorators/roles.decorator.ts` — `@Roles('master', 'admin')` sets metadata
-- [ ] **1.14** Create `common/decorators/current-user.decorator.ts` — param decorator to inject `req.user`
-- [ ] **1.15** Create `common/decorators/public.decorator.ts` — marks a route as public (skips auth guard), uses `SetMetadata`
-- [ ] **1.16** Create `common/interceptors/transform.interceptor.ts` — wraps all responses in `{ data, message, statusCode }`, uses i18n service for messages
-- [ ] **1.17** Create `common/filters/http-exception.filter.ts` — catches all exceptions, returns `{ data: null, message, errors, statusCode }`
-- [ ] **1.18** Create `common/pipes/validation.pipe.ts` — uses `ValidationPipe` from `@nestjs/common` with whitelist, forbidNonWhitelisted, transform, and custom error formatting
-- [ ] **1.19** Create `core/config/` files — `app.config.ts`, `database.config.ts`, `jwt.config.ts` using `@nestjs/config`
-- [ ] **1.20** Register all shared providers in `app.module.ts` (PrismaModule, I18nModule, global guards, interceptors, pipes)
-- [ ] **1.21** Run `npx prisma generate` and `npx prisma db push` to verify schema compiles
-- [ ] **1.22** Verify: backend boots with `nest start --watch`, prisma connects to sqlite
-
----
-
-### Phase 2 — Auth Module + User Module (Proof of Concept) ✅
-
-**Goal**: Build auth and users modules end-to-end. This serves as the template for all other modules.  
-**Status**: Completed. Auth and Users modules built, tested with curl, login/me/logout all work. (Repository interfaces were simplified to direct PrismaService usage per module — the full IRepository pattern was applied to Users module, other modules use PrismaService directly.)
-
-#### Microtasks (completed, with detail notes)
-
-- **Users module**: `Entity`, `CreateUserDto`, `UpdateUserDto`, `UserResponseDto` (with password @Exclude), `UserQueryDto`, `UsersController`, `UsersService`, `UsersModule`, `UserFactory` (bcrypt), `UserRepository` (full IRepository implementation)
-- **Auth module**: `LoginDto`, `LoginResponseDto`, `AuthController`, `AuthService`, `AuthFactory` (JWT), `AuthModule`
-- **Globals**: `AuthGuard` (global, opt-out via @Public), `RolesGuard`, `TransformInterceptor`, `HttpExceptionFilter`, `@CurrentUser`, `@Roles`, `@Public` decorators
-- **Config**: `app.config.ts`, `database.config.ts`, `jwt.config.ts`
-- **Verification**: Login + /me + /users CRUD tested with curl
-
----
-
-### Phase 3 — Remaining Backend Modules ✅
-
-**Goal**: Generate all remaining feature modules.  
-**Status**: All 11 modules built (Roles, Customers, Suppliers, Companies, Taxes, Batches, Products, Stocks, PurchaseOrders, ForeignExchanges, Currencies). All endpoints verified.
-
-#### Microtasks ✅
-
-All modules follow the same pattern (entity → DTOs → service → controller → module). Note: all except Users use PrismaService directly (simplified pattern) rather than the full IRepository/IFactory.
-
-| Module | Routes | Special Notes |
-|--------|--------|--------------|
-| Roles | GET /roles, GET /roles/:id | Read-only |
-| Customers | POST/GET/GET:PATCH/DELETE | Soft delete (available: false) |
-| Suppliers | POST/GET/GET/PATCH/DELETE | Soft delete |
-| Companies | POST/GET/GET/PATCH/DELETE | Hard delete |
-| Taxes | POST/GET/GET/PATCH/DELETE | Hard delete |
-| Batches | POST/GET/GET/PATCH/DELETE | Hard delete |
-| Products | POST/GET/GET/PATCH/DELETE | Soft delete, includes tax relation |
-| Stocks | POST/GET/GET/PATCH/DELETE | Soft delete, 4 relation includes |
-| Purchase Orders | POST/GET/GET/PATCH/DELETE | Cascading delete, nested details via Prisma relations |
-| Foreign Exchanges | POST/GET/GET/PATCH/DELETE | Hard delete, includes currency relation |
-| Currencies | GET /currencies, GET /currencies/:id | Read-only (added for frontend ForeignExchanges form) |
-
-#### Backend Verification ✅
-- All 13 modules (12 original + Currencies) registered in `app.module.ts`
-- All compile with `tsc --noEmit`
-- All lint clean (no errors, pre-existing warnings only)
-- All endpoints return seeded data correctly
-
----
-
-### Phase 4 — Backend Testing + Seed Data
-
-**Goal**: Ensure quality with tests and populate development database with representative seed data.  
-**Note**: Integration tests deferred to after all frontend pages are built (Phase 4b).
-
-#### Microtasks — Seed Data ✅
-- [x] **4.7** Update `backend/prisma/seed.ts` to include realistic seed data:
-      - 3 roles (master, admin, employee)
-      - 1 admin user (Greuddy Lozada / glozada / 000000)
-      - 3 currencies (DOP, USD, EUR)
-      - 2 taxes (ITBIS 18%, Exento)
-      - 5 products (Laptop HP, Monitor LG, Teclado Redragon, Mouse Logitech, Webcam HD)
-      - 2 customers (Juan Pérez, María González)
-      - 2 suppliers (Distribuidora Nacional, Importadora del Caribe)
-      - 1 company (GLAdmin Solutions SRL)
-      - 2 batches (LOTE-2025-001, LOTE-2025-002)
-      - 3 stock entries with stock details
-      - 1 purchase order with 2 line items
-      - 1 foreign exchange rate (60.50 DOP/USD)
-- [x] **4.8** Run seed: `pnpm exec tsx prisma/seed.ts` from `backend/`
-
-#### Microtasks — Integration Tests (pending)
-- [ ] **4.1** Write integration tests for auth flow: login → access protected route → logout → access denied
-- [ ] **4.2** Write integration tests for user CRUD with auth
-- [ ] **4.3** Write integration tests for products with tax and foreign exchange relations
-- [ ] **4.4** Write integration tests for purchase orders with details creation
-- [ ] **4.5** Write integration tests for stocks with stock details (entry/exit)
-- [ ] **4.6** Write integration tests for role-based access: master can access all, employee restricted
-- [ ] **4.9** Verify: `pnpm --filter backend test` passes (unit + integration)
-- [ ] **4.10** Verify: `pnpm --filter backend test:e2e` passes (if e2e tests defined)
-
----
-
-### Phase 5 — Frontend Scaffolding + Auth ✅
-
-**Goal**: Set up the Next.js project structure, create the API client layer, build the auth feature (login, token management, protected routes), and create the dashboard layout with sidebar navigation.
-
-#### Microtasks ✅
-
-- [x] **5.1** Create `lib/api/api-client.ts` — Axios instance with:
-      - `baseURL` from env `NEXT_PUBLIC_API_URL` (default `http://localhost:4000`)
-      - Request interceptor that attaches `Authorization: Bearer <token>` from cookie/localStorage
-      - Response interceptor that unwraps `{ data, message }` and handles 401 (redirect to login)
-- [x] **5.3** Create `features/auth/models/auth.model.ts` — TypeScript interfaces: `LoginRequest`, `LoginResponse`, `AuthUser`, `AuthTokens`
-- [x] **5.4** Create `features/auth/services/auth.service.ts` — `login(userName, password)`, `logout()`, `getMe()`
-- [x] **5.5** Create `providers/auth-provider.tsx` — React context that:
-      - Stores user + token in state
-      - On mount: reads token from `localStorage`, calls `/auth/me` to validate
-      - Exposes: `user`, `token`, `isAuthenticated`, `isLoading`, `login()`, `logout()`
-- [x] **5.8** Create `features/auth/components/login-form.tsx` — MUI form with userName + password fields, submit calls `auth.login()`, shows errors (refactored to use `useI18n()`)
-- [x] **5.10** Create `app/(auth)/login/page.tsx` — renders `<LoginForm />`
-- [x] **5.11** Create `config/navigation.config.ts` — sidebar menu items with `key` field for i18n
-- [x] **5.12** Create `config/roles.config.ts` — role definitions: master, admin, employee with permitted module slugs
-- [x] **5.16** Create `app/(dashboard)/layout.tsx` — wraps children in sidebar layout, checks auth guard (refactored to use `useI18n()` for nav labels and logout)
-- [x] **5.17** Create `app/(dashboard)/page.tsx` — redirects to `/dashboard`
-- [x] **5.18** Create `app/(dashboard)/dashboard/page.tsx` — dashboard with 4 summary stat cards (refactored to use `useI18n()`)
-- [x] **5.20** Create `providers/theme-provider.tsx` — wraps children in `ThemeProvider` with custom theme
-- [x] **5.21** Create `app/layout.tsx` — root layout with `ThemeProvider` + `AuthProvider` + `I18nProvider`
-- [x] **5.23** Verify: `pnpm --filter frontend dev` compiles without errors (Next.js 16 Turbopack)
-
----
-
-### Phase 6 — Generic UI Components ✅
-
-**Goal**: Build the reusable CRUD components that all feature pages will use.
-
-#### Microtasks ✅
-
-- [x] **6.1** Create `components/ui/data-table.tsx` — generic DataTable with:
-      - Configurable columns (field, headerName, render function)
-      - Actions column (edit, delete buttons)
-      - Loading state + empty state
-      - Pagination (server-side configurable)
-- [x] **6.3** Create `components/ui/slide-form.tsx` — MUI Drawer panel that:
-      - Slides in from right
-      - Contains form children
-      - Title, close button
-      - Loading state
-- [x] **6.4** Create `components/ui/confirm-dialog.tsx` — reusable confirmation dialog: title, message, confirm/cancel buttons, destructive variant
-- [x] **6.6** Create `components/ui/index.ts` — barrel export for all UI components
-
----
-
-### Phase 7 — Frontend Users Feature (Template) ✅
-
-**Goal**: Build the users feature page fully to establish the pattern all other features will follow.
-
-#### Microtasks ✅
-
-- [x] **7.1** Create `features/users/models/user.model.ts` — `User` interface, `CreateUserRequest`, `UpdateUserRequest` matching backend DTOs
-- [x] **7.2** Create `features/users/services/user.service.ts` — `getAll()`, `getById(id)`, `create(data)`, `update(id, data)`, `delete(id)`
-- [x] **7.3** Create `features/users/hooks/use-users.ts` — hook exposing `users`, `loading`, `error`, `loadUsers`, `createUser`, `updateUser`, `deleteUser`
-- [x] **7.4-7.6** Create `features/users/components/users-page.tsx` — unified component with:
-      - DataTable + SlideForm + ConfirmDialog (inline, not separate form/table components)
-      - Role dropdown fetched from `/roles` via `apiClient`
-      - Now refactored to use `useI18n()` for all labels
-- [x] **7.7** Create `app/(dashboard)/users/page.tsx` — thin route wrapping UsersPage
-
----
-
-### Phase 5b — Frontend i18n Infrastructure ✅
-
-**Goal**: Set up a client-side i18n system mirroring the backend pattern.
-
-#### Microtasks ✅
-
-- [x] **5b.1** Create `i18n/locales/es.json` — Spanish translations for all modules (common, auth, dashboard, nav, users, customers, suppliers, companies, products, taxes, batches, stocks, purchaseOrders, foreignExchanges, roles, settings)
-- [x] **5b.2** Create `i18n/locales/en.json` — English translations mirroring structure
-- [x] **5b.3** Create `i18n/i18n.service.ts` — `translate(key, lang)`, `translateWithParams(key, params, lang)` functions matching backend I18nService pattern
-- [x] **5b.4** Create `i18n/i18n-provider.tsx` — React context providing `{ t, tp, locale, setLocale }` via `useI18n()` hook
-- [x] **5b.5** Create `i18n/index.ts` — barrel export
-- [x] **5b.6** Update `app/layout.tsx` — wrap with `I18nProvider` (outermost, before ThemeProvider + AuthProvider)
-
-### Phase 8 — Remaining Frontend Feature Pages ✅
-
-**Goal**: Build the remaining 10 feature pages following the users pattern and i18n setup.
-
-#### Microtasks ✅
-
-- [x] **8.1** Build **Customers** feature: model, service, hooks, component with DataTable/SlideForm/ConfirmDialog, route page
-- [x] **8.2** Build **Suppliers** feature: model, service, hooks, component, route page
-- [x] **8.3** Build **Companies** feature: model, service, hooks, component, route page
-- [x] **8.4** Build **Taxes** feature: model, service, hooks, component, route page
-- [x] **8.5** Build **Batches** feature: model, service, hooks, component, route page
-- [x] **8.6** Build **Products** feature: model, service, hooks, component (product-form with tax dropdown from `/taxes`), route page
-- [x] **8.7** Build **Stocks** feature: model, service, hooks, component (stock-form with product/supplier/batch dropdowns), route page
-- [x] **8.8** Build **Purchase Orders** feature: model, service, hooks, component (po-form with inline details array — add/remove product rows), route page
-- [x] **8.9** Build **Roles** feature: model, service, hooks, component (read-only DataTable, no create/edit/delete), route page
-- [x] **8.10** Build **Foreign Exchanges** feature: model, service, hooks, component (with currency dropdown from `/currencies`), route page
-- [x] **8.10b** Add **GET /currencies** backend endpoint (read-only, follows Roles module pattern), register in `app.module.ts`
-
-Each microtask includes:
-- Model interfaces (entity + create/update request)
-- Service with CRUD API calls
-- Hook with CRUD state management
-- Unified page component with DataTable + SlideForm + ConfirmDialog
-- All labels via `useI18n()` (t and tp functions)
-- Thin route page re-exporting the component
-- All use Spanish locale keys from `es.json`
-
----
-
-### Phase 9 — Migration Cleanup
-
-**Goal**: Port remaining edge cases, remove legacy code, finalize testing.
-
-#### Microtasks
-
-- [x] **9.1** Port **Dashboard** page — summary cards — ✅ `useDashboardStats` hook + layout page header
-- [x] **9.2** Port **Welcome/Frame** pages — ✅ Handled by dashboard layout
-- [x] **9.3** Add role-based filtering to all feature pages — ✅ Nav filtering via `roles.config.ts`; backend `RolesGuard` enforces per-endpoint
-- [x] **9.4** Verify all pages have proper loading, empty, and error states — ✅ DataTable has skeleton loading + empty state; per-page error alerts
-- [x] **9.5** Add **404** page (`app/not-found.tsx`) — ✅ Created 2026-05-23
-- [x] **9.6** Add **error** boundary (`app/error.tsx`) — ✅ Created 2026-05-23
-- [x] **9.7** Verify mobile/responsive layout for sidebar + data table — ✅ Sidebar Sheet on mobile, data table scrolls horizontally
-- [x] **9.8** Add **breadcrumbs** component and wire into page-header — ✅ Created `components/ui/breadcrumb.tsx`, integrated in dashboard layout
-- [x] **9.9** Audit all legacy API endpoints — ✅ 12/12 controllers covered + Currencies module
-- [x] **9.10** Audit all legacy MobX stores — ✅ 13 stores → 11 hooks + AuthProvider context
-- [x] **9.11** Audit all legacy services — ✅ 12 new feature services replace old axios.js
-- [x] **9.12** Archive `api/` and `client/` directories — ✅ Deleted 2026-05-23
-
----
-
-### Phase 10 — Final Polish and Verification
-
-**Goal**: Run full lint, type-check, test suite, and end-to-end verification across the monorepo.
-
-#### Microtasks
-
-- [x] **10.1** Run `pnpm -r typecheck` across monorepo — ✅ 0 errors
-- [x] **10.2** Run `pnpm -r lint` across monorepo — ✅ 0 errors (6 backend warnings, 3 frontend warnings)
-- [ ] **10.3** Run `pnpm -r test` across monorepo — all unit + integration tests pass
-- [x] **10.4** Run full manual E2E smoke test — ✅ All pages serve (login=200, auth redirect, 404 for unknown)
-- [ ] **10.5** Run Lighthouse/accessibility check (requires browser)
-- [x] **10.6** Verify backend API with curl/httpie on all endpoints — ✅ 13/13 endpoints verified 2026-05-23
-- [x] **10.7** Check that .env.example and .env.local.example are documented — ✅ Both exist
-- [x] **10.8** Update root README with new architecture overview and setup instructions — ✅ Created 2026-05-23
-- [ ] **10.9** Final cleanup: remove unused dependencies, unused files, consolidate configs
-
----
-
-## Verification Criteria
-
-Each phase must be verified before proceeding to the next:
-
-| Phase | Verification |
-|---|---|
-| Phase 0 | `pnpm install` succeeds, both apps boot |
-| Phase 1 | Prisma schema compiles, backend boots with shared providers |
-| Phase 2 | Auth + Users CRUD works end-to-end |
-| Phase 3 | All 12 backend modules registered |
-| Phase 4 | Seed data populates DB (integration tests pending) |
-| Phase 5 | Login/logout flow works, protected routes redirect, sidebar renders |
-| Phase 5b | Frontend i18n set up (es/en JSON, provider, translation hooks) |
-| Phase 6 | DataTable + SlideForm + ConfirmDialog render and interact correctly |
-| Phase 7 | Users CRUD from frontend works end-to-end (refactored to i18n) |
-| Phase 8 | All 10 feature pages render and support CRUD (+ GET /currencies endpoint) |
-| Phase 9 | No gaps between legacy and new code, archive done |
-| Phase 10 | `pnpm -r typecheck`, `pnpm -r lint` pass, E2E smoke test |
+## Database Schema (Final)
+
+| Table | Key Relations | Notes |
+|---|---|---|
+| **User** | → Role | email (unique), isActive, mustChangePassword, lastLogin |
+| **Role** | ← Users | Slugs: master, executive, manager, employee |
+| **RefreshToken** | → User | bcrypt-hashed rotation |
+| **Customer** | | Soft delete (available) |
+| **Supplier** | ← Stock, PurchaseOrder | Soft delete, tax withholding agent |
+| **Company** | | Hard delete |
+| **Currency** | | DOP, USD, EUR |
+| **ExchangeRate** | → Currency | Unified: type (official/paralelo/manual), source |
+| **Product** | → Tax | Soft delete, multi-currency prices |
+| **Tax** | ← Product | IVA/ISLR support |
+| **Batch** | ← Stock | |
+| **Stock** | → Product, Supplier, Batch, ← StockDet | |
+| **StockDet** | → Stock | Entry/exit tracking |
+| **PurchaseOrder** | → Supplier, ← PurchaseOrderDet, → ExchangeRate (dual) | Multi-currency (VED + USD) |
+| **PurchaseOrderDet** | → PurchaseOrder, Product | |
+| **Sale** | → Customer, ← SalesDet, → ExchangeRate (dual) | Multi-currency |
+| **SalesDet** | → Sale, Product | |
+| **AccountsPayable** | → PurchaseOrder | |
+| **AccountsReceivable** | → Sale | |
+| **WithholdingRecord** | → Supplier, PurchaseOrder | IVA/ISLR |
+| **ProductsExchangeRates** | ↔ Product, ExchangeRate | Many-to-many |
 
 ---
 
 ## API Endpoint Reference
 
 ### Auth
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| POST | `/auth/login` | Public | Login with userName + password, returns JWT |
-| DELETE | `/auth/logout` | Bearer | Invalidate current token |
-| GET | `/auth/me` | Bearer | Get current authenticated user |
+| Method | Endpoint | Auth | Roles | Description |
+|---|---|---|---|---|
+| POST | `/auth/login` | Public | — | Login with email + password, returns `{ accessToken, refreshToken, expiresIn, user }` |
+| GET | `/auth/me` | Bearer | — | Current authenticated user |
+| POST | `/auth/refresh` | Public | — | Refresh token rotation |
+| POST | `/auth/logout` | Bearer | — | Revoke current refresh token |
+| POST | `/auth/change-password` | Bearer | — | Requires old + new password |
 
 ### Users
 | Method | Endpoint | Auth | Roles | Description |
 |---|---|---|---|---|
-| POST | `/users` | Bearer | master, admin | Create user |
-| GET | `/users` | Bearer | master, admin | List all users (paginated) |
-| GET | `/users/:id` | Bearer | master, admin | Get user by ID |
-| PUT | `/users/:id` | Bearer | master, admin | Update user |
+| POST | `/users` | Bearer | master, executive | Create user |
+| GET | `/users` | Bearer | master, executive | List users |
+| GET | `/users/:id` | Bearer | master, executive | Get user |
+| PATCH | `/users/:id` | Bearer | master, executive | Update user |
 | DELETE | `/users/:id` | Bearer | master | Delete user |
 
-### Customers
-| Method | Endpoint | Auth | Roles | Description |
-|---|---|---|---|---|
-| POST | `/customers` | Bearer | master, admin, employee | Create customer |
-| GET | `/customers` | Bearer | master, admin, employee | List customers |
-| GET | `/customers/:id` | Bearer | master, admin, employee | Get customer |
-| PUT | `/customers/:id` | Bearer | master, admin, employee | Update customer |
-| DELETE | `/customers/:id` | Bearer | master, admin | Delete customer |
-
-### Suppliers
-*(same CRUD pattern as customers)*
-
-### Companies
-*(same CRUD pattern)*
-
-### Taxes
-*(same CRUD pattern)*
-
-### Batches
-*(same CRUD pattern)*
+### Customers / Suppliers / Companies / Taxes / Batches
+Standard CRUD. `DELETE` requires master. All others: view ≥40, create/edit ≥40 (customers/suppliers) or ≥60 (taxes/batches).
 
 ### Products
-*(same CRUD pattern, plus image upload)*
+Same CRUD pattern. Edit ≥60. Delete master-only.
 
 ### Stocks
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| POST | `/stocks` | Bearer | Create stock with optional stock details |
-| GET | `/stocks` | Bearer | List stocks (includes product, supplier, batch) |
-| GET | `/stocks/:id` | Bearer | Get stock with details |
-| PUT | `/stocks/:id` | Bearer | Update stock |
-| DELETE | `/stocks/:id` | Bearer | Delete stock |
-| POST | `/stocks/:id/details` | Bearer | Add stock detail entry/exit |
-| GET | `/stocks/:id/details` | Bearer | Get stock details |
+CRUD + nested stock details (entry/exit). Edit ≥60. Delete master-only.
 
 ### Purchase Orders
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| POST | `/purchase-orders` | Bearer | Create PO with line items |
-| GET | `/purchase-orders` | Bearer | List POs |
-| GET | `/purchase-orders/:id` | Bearer | Get PO with details |
-| PUT | `/purchase-orders/:id` | Bearer | Update PO |
-| DELETE | `/purchase-orders/:id` | Bearer | Delete PO |
+CRUD with inline line items (details array). Multi-currency (VED + USD + dual exchange rates). Edit ≥60. Delete master-only.
+
+### Exchange Rates
+| Method | Endpoint | Auth | Roles | Description |
+|---|---|---|---|---|
+| GET | `/exchange-rates` | Bearer | all | List rates |
+| POST | `/exchange-rates` | Bearer | ≥40 | Create rate |
+| GET | `/exchange-rates/latest` | Bearer | all | Latest BCV rate |
+
+### Withholdings
+| Method | Endpoint | Auth | Roles | Description |
+|---|---|---|---|---|
+| POST | `/withholdings` | Bearer | ≥60 | Create withholding |
+| GET | `/withholdings` | Bearer | all | List withholdings |
+| DELETE | `/withholdings/:id` | Bearer | master | Delete |
 
 ### Roles
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| GET | `/roles` | Bearer | List all roles |
+| Method | Endpoint | Auth | Roles | Description |
+|---|---|---|---|---|
+| GET | `/roles` | Bearer | master, executive, manager | List all roles |
+| GET | `/roles/:id` | Bearer | master, executive, manager | Get role |
 
 ### Currencies
 | Method | Endpoint | Auth | Roles | Description |
 |---|---|---|---|---|
 | GET | `/currencies` | Bearer | all | List currencies |
-| GET | `/currencies/:id` | Bearer | all | Get currency by ID |
 
-### Foreign Exchanges
-| Method | Endpoint | Auth | Description |
+---
+
+## Migration Phases — Final Status
+
+| Phase | Status | Notes |
+|---|---|---|
+| **0** Project Scaffolding | ✅ | pnpm workspaces, NestJS + Next.js scaffolding |
+| **1** Database + Shared Backend | ✅ | Prisma schema, shared services, guards, interceptors |
+| **2** Auth + Users (PoC) | ✅ | Login, JWT, roles, user CRUD. Simplified repository pattern. |
+| **3** Remaining Backend Modules | ✅ | All 12+ modules. ForeignExchanges → ExchangeRates (unified). Added Withholdings. |
+| **4a** Seed Data | ✅ | Realistic seed: users, currencies, rates, taxes, products, customers, suppliers, POs |
+| **4b** Integration Tests | 🔲 | Deferred |
+| **5** Frontend Scaffolding + Auth | ✅ | API client, auth provider, login page, dashboard layout, sidebar |
+| **5b** Frontend i18n | ✅ | es.json + en.json, `useI18n()` hook across all pages |
+| **6** Generic UI Components | ✅ | DataTable (TanStack), SlideForm (Sheet), ConfirmDialog |
+| **7** Users Feature (Template) | ✅ | Model → service → hook → component pattern established |
+| **8** Remaining Feature Pages | ✅ | 10+ feature pages following the pattern |
+| **9** Migration Cleanup | ✅ | Legacy code removed, mobile responsive, breadcrumbs, 404/error pages, audit completed |
+| **10** Final Polish | ✅ | typecheck, lint, E2E smoke test verified |
+
+### Post-Migration Enhancements
+
+| Feature | Date | Details |
+|---|---|---|
+| SaaS auth upgrade | 2026-05-25 | Refresh token rotation, email login, change-password |
+| Role-based access | 2026-05-25 | ROLE_LEVEL hierarchy, RoleGuard component, minLevel on nav |
+| Unified ExchangeRate | 2026-05-24 | Merged ForeignExchange + ExchangeRate into single model |
+| Multi-currency POs/Sales | 2026-05-24 | Dual exchange rate (calculation + official) on financial records |
+| Collapsible sidebar groups | 2026-05-25 | Groups collapsed by default, expand on click |
+| Ventas (Sales) nav group | 2026-05-25 | Customers moved under Ventas group |
+| Icon-only category headers | 2026-05-25 | Group headers show icons; items in labeled groups are text-only |
+| Login page redesign | 2026-05-25 | Landing page with StripedBackground + slide panel |
+| Font upgrade | 2026-05-25 | Plus Jakarta Sans (headings) + Inter (body) |
+
+---
+
+## Role Hierarchy
+
+| Role | Level | Slug | Access |
 |---|---|---|---|
-| GET | `/foreign-exchanges` | Bearer | List exchange rates |
-| POST | `/foreign-exchanges` | Bearer | Create exchange rate |
+| Master | 100 | `master` | Full access, delete everywhere |
+| Executive | 80 | `executive` | Admin modules (users, companies) + operational |
+| Manager | 60 | `manager` | Operational CRUD (products, POs, taxes, etc.) |
+| Employee | 40 | `employee` | Read-mostly, limited writes (customers, suppliers, rates) |
+
+Implementation: `ROLE_LEVEL` map in `frontend/src/lib/auth/roles.ts`, `<RoleGuard minLevel={N}>` component, `hasMinLevel()` helper. Nav items use `minLevel` instead of `roles[]`.
+
+---
+
+## Sidebar Structure
+
+```
+Dashboard        [icon]  minLevel=40
+Compras ▼        [icon]
+  Proveedores             minLevel=40
+  Pedidos                 minLevel=40
+  Retenciones             minLevel=40
+  Tasas BCV               minLevel=40
+Ventas ▼         [icon]
+  Clientes                minLevel=40
+Inventario ▼     [icon]
+  Productos               minLevel=40
+  Impuestos               minLevel=40
+  Lotes                   minLevel=40
+  Inventario              minLevel=40
+Admin ▼          [icon]
+  Usuarios                minLevel=80
+  Empresas                minLevel=80
+  Roles                   minLevel=60
+Config ▼         [icon]
+  Configuración           minLevel=60
+```
+
+Groups are collapsed by default. Only group headers show icons; items are text-only.
 
 ---
 
 ## Implementation Notes
 
-- The legacy `api/` and `client/` directories remain untouched during migration — use them as reference for business logic, field definitions, and validation rules
-- Each NestJS module follows the exact same file structure — once the first module is built, the remaining 11 are copy + adapt
-- Each frontend feature follows the exact same pattern: `models` → `services` → `hooks` → `components/page` → route page
-- The repository pattern means Prisma is swappable: implement the same interface with TypeORM/Drizzle/etc.
-- Drop Electron support for now — if needed later, create a separate `desktop/` package that wraps the Next.js build
-- **Frontend i18n**: Uses a custom client-side i18n system mirroring the backend pattern. Locale files at `frontend/src/i18n/locales/` (es.json + en.json). All page labels, table headers, form labels, and error messages use `useI18n()` hook with `t('module.section.key')` syntax. The locale can be switched at runtime via `setLocale('en')`.
-- **Backend i18n**: NestJS `I18nService` at `backend/src/shared/i18n/`. API responses return `{ data, message: 'MODULE.ACTION' }` which gets translated via the `TransformInterceptor` based on `Accept-Language` header.
-- **Seed user**: `glozada` / `000000` (role: Master)
+- **Seed user**: email `admin@gladmin.com` / userName `glozada` / password `000000` (role: Master)
 - **API base URL**: `http://localhost:4000/api`
-- **Prisma v6** is used (not v7) — run seed via `cd backend && pnpm exec tsx prisma/seed.ts`
-
-##Opencode
--  opencode -s ses_1af235e89ffeDInGrNuQESgTpE
+- **Prisma**: v6 (not v7). Run seed via `cd backend && pnpm exec tsx prisma/seed.ts`
+- **Migrations**: Already applied. Run `prisma db push` for schema sync, `prisma migrate dev --name <name>` for new migrations.
+- **Legacy directories**: `api/` and `client/` were deleted on 2026-05-23 (Phase 9.12)
+- **Electron**: Dropped. If needed, create a separate `desktop/` package wrapping the Next.js build
+- **Tests**: Unit tests deferred. Integration tests deferred. Manual E2E verified.
+- **Remaining (low priority)**: `@MinLevel()` backend decorator (currently using `@Roles()` strings), accessibility audit, Lighthouse score

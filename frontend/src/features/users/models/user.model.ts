@@ -3,9 +3,9 @@ export interface User {
   firstName: string;
   lastName: string;
   userName: string;
-  email: string | null;
+  email: string;
   idRole: number;
-  available: boolean;
+  isActive: boolean;
   role?: {
     id: number;
     name: string;
@@ -20,7 +20,7 @@ export interface CreateUserRequest {
   lastName: string;
   userName: string;
   password: string;
-  email?: string;
+  email: string;
   idRole: number;
 }
 
@@ -31,5 +31,5 @@ export interface UpdateUserRequest {
   password?: string;
   email?: string;
   idRole?: number;
-  available?: boolean;
+  isActive?: boolean;
 }

@@ -21,16 +21,23 @@ import { useUsers } from '@/features/users/hooks/use-users';
 import { User, CreateUserRequest, UpdateUserRequest } from '@/features/users/models/user.model';
 import { userService } from '@/features/users/services/user.service';
 import { useI18n } from '@/i18n';
+import { RoleGuard } from '@/components/ui/role-guard';
+import { useAuth } from '@/providers/auth-provider';
+import { hasMinLevel } from '@/lib/auth/roles';
 import { sileo } from 'sileo';
 import apiClient from '@/lib/api/api-client';
 
 export default function UsersPage() {
   const { users, loading, loadUsers } = useUsers();
   const { t, tp } = useI18n();
+  const { user: currentUser } = useAuth();
+  const role = currentUser?.role?.slug ?? 'employee';
+  const canEdit = hasMinLevel(role, 80);
+  const canDelete = hasMinLevel(role, 100);
   const [formOpen, setFormOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [formData, setFormData] = useState<CreateUserRequest & { available?: boolean }>({
+  const [formData, setFormData] = useState<CreateUserRequest & { isActive?: boolean }>({
     firstName: '',
     lastName: '',
     userName: '',
@@ -55,9 +62,9 @@ export default function UsersPage() {
       render: (row) => row.role?.name ?? String(row.idRole),
     },
     {
-      field: 'available',
-      headerName: t('users.field.available'),
-      render: (row) => (row.available ? t('common.yes') : t('common.no')),
+      field: 'isActive',
+      headerName: t('users.field.isActive'),
+      render: (row) => (row.isActive ? t('common.yes') : t('common.no')),
     },
   ];
 
@@ -80,9 +87,9 @@ export default function UsersPage() {
       lastName: user.lastName,
       userName: user.userName,
       password: '',
-      email: user.email || '',
+      email: user.email,
       idRole: user.idRole,
-      available: user.available,
+      isActive: user.isActive,
     });
     setFormOpen(true);
   };
@@ -97,7 +104,7 @@ export default function UsersPage() {
           lastName: formData.lastName,
           email: formData.email || undefined,
           idRole: formData.idRole,
-          available: formData.available,
+          isActive: formData.isActive,
         };
         if (formData.password) data.password = formData.password;
         await userService.update(selectedUser.id, data);
@@ -173,9 +180,9 @@ export default function UsersPage() {
           </div>
           {selectedUser && (
             <div className="flex items-center gap-2">
-              <Switch checked={formData.available ?? true}
-                onCheckedChange={(c) => setFormData({ ...formData, available: c })} />
-              <Label>{t('users.field.available')}</Label>
+              <Switch checked={formData.isActive ?? true}
+                onCheckedChange={(c) => setFormData({ ...formData, isActive: c })} />
+              <Label>{t('users.field.isActive')}</Label>
             </div>
           )}
           <Button onClick={handleSave} disabled={submitting} className="w-full">
@@ -185,10 +192,12 @@ export default function UsersPage() {
       }
     >
       <div className="flex items-center justify-between mb-6">
-        <Button onClick={openCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          {t('users.new')}
-        </Button>
+        <RoleGuard minLevel={80}>
+          <Button onClick={openCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t('users.new')}
+          </Button>
+        </RoleGuard>
       </div>
 
       {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
@@ -197,11 +206,11 @@ export default function UsersPage() {
         columns={columns}
         rows={users}
         loading={loading}
-        onEdit={openEdit}
-        onDelete={(user) => {
+        onEdit={canEdit ? openEdit : undefined}
+        onDelete={canDelete ? (user) => {
           setDeleteTarget(user);
           setDeleteOpen(true);
-        }}
+        } : undefined}
         emptyMessage={t('users.empty')}
       />
 

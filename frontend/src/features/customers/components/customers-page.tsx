@@ -14,10 +14,17 @@ import { useCustomers } from '@/features/customers/hooks/use-customers';
 import { Customer, CreateCustomerRequest, UpdateCustomerRequest } from '@/features/customers/models/customer.model';
 import { customerService } from '@/features/customers/services/customer.service';
 import { useI18n } from '@/i18n';
+import { RoleGuard } from '@/components/ui/role-guard';
+import { useAuth } from '@/providers/auth-provider';
+import { hasMinLevel } from '@/lib/auth/roles';
 
 export default function CustomersPage() {
   const { customers, loading, loadCustomers } = useCustomers();
   const { t, tp } = useI18n();
+  const { user } = useAuth();
+  const role = user?.role?.slug ?? 'employee';
+  const canEdit = hasMinLevel(role, 40);
+  const canDelete = hasMinLevel(role, 100);
   const [formOpen, setFormOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
@@ -155,10 +162,12 @@ export default function CustomersPage() {
       }
     >
       <div className="flex items-center justify-between mb-6">
-        <Button onClick={openCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          {t('customers.new')}
-        </Button>
+        <RoleGuard minLevel={40}>
+          <Button onClick={openCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t('customers.new')}
+          </Button>
+        </RoleGuard>
       </div>
 
       {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
@@ -167,11 +176,11 @@ export default function CustomersPage() {
         columns={columns}
         rows={customers}
         loading={loading}
-        onEdit={openEdit}
-        onDelete={(customer) => {
+        onEdit={canEdit ? openEdit : undefined}
+        onDelete={canDelete ? (customer) => {
           setDeleteTarget(customer);
           setDeleteOpen(true);
-        }}
+        } : undefined}
         emptyMessage={t('customers.empty')}
       />
 

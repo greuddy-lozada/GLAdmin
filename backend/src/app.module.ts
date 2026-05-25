@@ -22,8 +22,9 @@ import { BatchesModule } from './modules/batches/batches.module';
 import { StocksModule } from './modules/stocks/stocks.module';
 import { ProductsModule } from './modules/products/products.module';
 import { PurchaseOrdersModule } from './modules/purchase-orders/purchase-orders.module';
-import { ForeignExchangesModule } from './modules/foreign-exchanges/foreign-exchanges.module';
 import { CurrenciesModule } from './modules/currencies/currencies.module';
+import { ExchangeRatesModule } from './modules/exchange-rates/exchange-rates.module';
+import { WithholdingsModule } from './modules/withholdings/withholdings.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 
 import appConfig from './core/config/app.config';
@@ -54,8 +55,9 @@ import databaseConfig from './core/config/database.config';
     StocksModule,
     ProductsModule,
     PurchaseOrdersModule,
-    ForeignExchangesModule,
     CurrenciesModule,
+    ExchangeRatesModule,
+    WithholdingsModule,
     DashboardModule,
   ],
   providers: [

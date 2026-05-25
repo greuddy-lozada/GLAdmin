@@ -13,10 +13,17 @@ import { useCompanies } from '@/features/companies/hooks/use-companies';
 import { Company, CreateCompanyRequest, UpdateCompanyRequest } from '@/features/companies/models/company.model';
 import { companyService } from '@/features/companies/services/company.service';
 import { useI18n } from '@/i18n';
+import { RoleGuard } from '@/components/ui/role-guard';
+import { useAuth } from '@/providers/auth-provider';
+import { hasMinLevel } from '@/lib/auth/roles';
 
 export default function CompaniesPage() {
   const { companies, loading, loadCompanies } = useCompanies();
   const { t, tp } = useI18n();
+  const { user } = useAuth();
+  const role = user?.role?.slug ?? 'employee';
+  const canEdit = hasMinLevel(role, 80);
+  const canDelete = hasMinLevel(role, 100);
   const [formOpen, setFormOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
@@ -139,10 +146,12 @@ export default function CompaniesPage() {
       }
     >
       <div className="flex items-center justify-between mb-6">
-        <Button onClick={openCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          {t('companies.new')}
-        </Button>
+        <RoleGuard minLevel={80}>
+          <Button onClick={openCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t('companies.new')}
+          </Button>
+        </RoleGuard>
       </div>
 
       {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
@@ -151,11 +160,11 @@ export default function CompaniesPage() {
         columns={columns}
         rows={companies}
         loading={loading}
-        onEdit={openEdit}
-        onDelete={(company) => {
+        onEdit={canEdit ? openEdit : undefined}
+        onDelete={canDelete ? (company) => {
           setDeleteTarget(company);
           setDeleteOpen(true);
-        }}
+        } : undefined}
         emptyMessage={t('companies.empty')}
       />
 

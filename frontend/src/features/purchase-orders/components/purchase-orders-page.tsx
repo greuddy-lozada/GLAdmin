@@ -20,11 +20,20 @@ import { usePurchaseOrders } from '@/features/purchase-orders/hooks/use-purchase
 import { PurchaseOrder, CreatePurchaseOrderRequest } from '@/features/purchase-orders/models/purchase-order.model';
 import { purchaseOrderService } from '@/features/purchase-orders/services/purchase-order.service';
 import { useI18n } from '@/i18n';
+import { RoleGuard } from '@/components/ui/role-guard';
+import { useAuth } from '@/providers/auth-provider';
+import { hasMinLevel } from '@/lib/auth/roles';
+import { sileo } from 'sileo';
 import apiClient from '@/lib/api/api-client';
 
 export default function PurchaseOrdersPage() {
   const { items, loading, loadItems } = usePurchaseOrders();
   const { t, tp } = useI18n();
+  const { user } = useAuth();
+  const role = user?.role?.slug ?? 'employee';
+  const canCreate = hasMinLevel(role, 60);
+  const canEdit = hasMinLevel(role, 60);
+  const canDelete = hasMinLevel(role, 100);
   const [formOpen, setFormOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<PurchaseOrder | null>(null);
@@ -39,6 +48,7 @@ export default function PurchaseOrdersPage() {
   });
   const [suppliers, setSuppliers] = useState<{ id: number; companyName: string }[]>([]);
   const [products, setProducts] = useState<{ id: number; code: string; name: string }[]>([]);
+  const [exchangeRates, setExchangeRates] = useState<{ id: number; rate: number; date: string }[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<PurchaseOrder | null>(null);
@@ -54,7 +64,12 @@ export default function PurchaseOrdersPage() {
     {
       field: 'amount',
       headerName: t('purchaseOrders.field.amount'),
-      render: (row) => (row.amount != null ? `RD$ ${Number(row.amount).toFixed(2)}` : '-'),
+      render: (row) => (row.amount != null ? `Bs. ${Number(row.amount).toFixed(2)}` : '-'),
+    },
+    {
+      field: 'amountUsd',
+      headerName: t('purchaseOrders.field.amountUsd'),
+      render: (row) => (row.amountUsd != null ? `USD ${Number(row.amountUsd).toFixed(2)}` : '-'),
     },
     {
       field: 'date',
@@ -66,6 +81,7 @@ export default function PurchaseOrdersPage() {
   useEffect(() => {
     apiClient.get('/suppliers').then((r) => setSuppliers(r.data.data || [])).catch(() => {});
     apiClient.get('/products').then((r) => setProducts(r.data.data || [])).catch(() => {});
+    apiClient.get('/exchange-rates').then((r) => setExchangeRates(r.data.data || [])).catch(() => {});
   }, []);
 
   const openCreate = () => {
@@ -76,6 +92,9 @@ export default function PurchaseOrdersPage() {
       code: '',
       date: new Date().toISOString().split('T')[0],
       amount: 0,
+      amountUsd: 0,
+      exchangeRate: 0,
+      exchangeRateId: 0,
       paymentMethod: 1,
       status: 1,
       details: [],
@@ -110,6 +129,9 @@ export default function PurchaseOrdersPage() {
       const data = {
         ...formData,
         amount: Number(formData.amount),
+        amountUsd: Number(formData.amountUsd ?? 0),
+        exchangeRate: Number(formData.exchangeRate ?? 0),
+        exchangeRateId: Number(formData.exchangeRateId ?? 0),
         idSupplier: Number(formData.idSupplier),
       };
       if (selectedItem) {
@@ -118,6 +140,9 @@ export default function PurchaseOrdersPage() {
           code: data.code,
           date: data.date,
           amount: data.amount,
+          amountUsd: data.amountUsd,
+          exchangeRate: data.exchangeRate,
+          exchangeRateId: data.exchangeRateId,
           paymentMethod: data.paymentMethod,
           status: data.status,
         });
@@ -125,6 +150,7 @@ export default function PurchaseOrdersPage() {
         await purchaseOrderService.create(data);
       }
       await loadItems();
+      sileo.success({ description: selectedItem ? t('purchaseOrders.updated') : t('purchaseOrders.created') });
       setFormOpen(false);
     } catch {
       setError(t('purchaseOrders.error.save'));
@@ -139,6 +165,7 @@ export default function PurchaseOrdersPage() {
     try {
       await purchaseOrderService.delete(deleteTarget.id);
       await loadItems();
+      sileo.success({ description: t('purchaseOrders.deleted') });
       setDeleteOpen(false);
       setDeleteTarget(null);
     } catch {
@@ -175,9 +202,44 @@ export default function PurchaseOrdersPage() {
             <Input type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} required />
           </div>
           <div className="space-y-2">
-            <Label>{t('purchaseOrders.field.amount')}</Label>
-            <Input type="number" value={formData.amount}
-              onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value) })} required />
+            <Label>{t('purchaseOrders.field.amount')} (Bs.)</Label>
+            <Input type="number" step="0.01" value={formData.amount}
+              onChange={(e) => {
+                const amt = Number(e.target.value);
+                const er = exchangeRates.find((r) => r.id === formData.exchangeRateId);
+                setFormData({
+                  ...formData,
+                  amount: amt,
+                  amountUsd: er && er.rate > 0 ? amt / er.rate : formData.amountUsd,
+                });
+              }} required />
+          </div>
+          <div className="space-y-2">
+            <Label>{t('purchaseOrders.field.amountUsd')}</Label>
+            <Input type="number" step="0.01" value={formData.amountUsd ?? 0}
+              onChange={(e) => setFormData({ ...formData, amountUsd: Number(e.target.value) })} />
+          </div>
+          <div className="space-y-2">
+            <Label>{t('purchaseOrders.field.exchangeRate')}</Label>
+            <Select value={String(formData.exchangeRateId || '')}
+              onValueChange={(v) => {
+                const er = exchangeRates.find((r) => r.id === Number(v));
+                setFormData({
+                  ...formData,
+                  exchangeRateId: Number(v),
+                  exchangeRate: er?.rate ?? 0,
+                  amountUsd: er && er.rate > 0 ? (formData.amount ?? 0) / er.rate : formData.amountUsd,
+                });
+              }}>
+              <SelectTrigger><SelectValue placeholder="Seleccionar tasa" /></SelectTrigger>
+              <SelectContent>
+                {exchangeRates.map((er) => (
+                  <SelectItem key={er.id} value={String(er.id)}>
+                    {er.date ? new Date(er.date).toLocaleDateString() : '—'} — {er.rate} Bs./USD
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {!selectedItem && (
@@ -232,10 +294,12 @@ export default function PurchaseOrdersPage() {
       }
     >
       <div className="flex items-center justify-between mb-6">
-        <Button onClick={openCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          {t('purchaseOrders.new')}
-        </Button>
+        <RoleGuard minLevel={60}>
+          <Button onClick={openCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t('purchaseOrders.new')}
+          </Button>
+        </RoleGuard>
       </div>
 
       {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
@@ -244,14 +308,14 @@ export default function PurchaseOrdersPage() {
         columns={columns}
         rows={items}
         loading={loading}
-        onEdit={(item) => {
+        onEdit={canEdit ? (item) => {
           setSelectedItem(item);
           setFormOpen(true);
-        }}
-        onDelete={(item) => {
+        } : undefined}
+        onDelete={canDelete ? (item) => {
           setDeleteTarget(item);
           setDeleteOpen(true);
-        }}
+        } : undefined}
         emptyMessage={t('purchaseOrders.empty')}
       />
 

@@ -1,5 +1,6 @@
 // Prisma schema for GLAdmin
-// Migrated from existing Sequelize models and migrations
+// Multi-currency enabled — all financial transactions store
+// VED (Bolívares) + USD amounts + exchange rate at time of record
 
 generator client {
   provider = "prisma-client-js"
@@ -21,27 +22,30 @@ model Role {
 }
 
 model User {
-  id        Int         @id @default(autoincrement())
-  firstName String
-  lastName  String
-  userName  String      @unique
-  password  String
-  email     String?
-  idRole    Int
-  available Boolean     @default(true)
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  id                 Int       @id @default(autoincrement())
+  email              String    @unique
+  userName           String    @unique
+  password           String
+  firstName          String
+  lastName           String
+  idRole             Int
+  mustChangePassword Boolean   @default(false)
+  lastLogin          DateTime?
+  isActive           Boolean   @default(true)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
-  role       Role        @relation(fields: [idRole], references: [id])
-  authTokens AuthToken[]
+  role          Role           @relation(fields: [idRole], references: [id])
+  refreshTokens RefreshToken[]
 }
 
-model AuthToken {
-  id        Int      @id @default(autoincrement())
-  token     String
-  userId    Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model RefreshToken {
+  id         Int      @id @default(autoincrement())
+  tokenHash  String
+  userId     Int
+  deviceInfo String?
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
 }
@@ -54,6 +58,9 @@ model Permission {
   updatedAt DateTime @updatedAt
 }
 
+// ────────────────────────────────────────────
+// CUSTOMER (Slice 3 — Ventas)
+// ────────────────────────────────────────────
 model Customer {
   id           Int      @id @default(autoincrement())
   idCardNumber String
@@ -69,23 +76,34 @@ model Customer {
   sales Sale[]
 }
 
+// ────────────────────────────────────────────
+// SUPPLIER (Slice 1 — Compras)
+// ────────────────────────────────────────────
 model Supplier {
-  id             Int      @id @default(autoincrement())
-  documentNumber String
-  companyName    String
-  firstName      String?
-  lastName       String?
-  address        String?
-  phoneNumber    String?
-  email          String?
-  available      Boolean  @default(true)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id                Int      @id @default(autoincrement())
+  documentNumber    String
+  companyName       String
+  businessName      String?  // Razón Social
+  fiscalAddress     String?  // Dirección Fiscal
+  taxId             String?  // RIF
+  firstName         String?
+  lastName          String?
+  address           String?
+  phoneNumber       String?
+  email             String?
+  taxWithholdingAgent Boolean @default(false) // sujeto a retención IVA/ISLR
+  available         Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
-  stocks          Stock[]
-  purchaseOrders  PurchaseOrder[]
+  stocks            Stock[]
+  purchaseOrders    PurchaseOrder[]
+  withholdingRecords WithholdingRecord[]
 }
 
+// ────────────────────────────────────────────
+// COMPANY
+// ────────────────────────────────────────────
 model Company {
   id             Int      @id @default(autoincrement())
   documentNumber String
@@ -112,6 +130,9 @@ model License {
   company Company @relation(fields: [idCompany], references: [id])
 }
 
+// ────────────────────────────────────────────
+// CURRENCY / EXCHANGE RATE (Transversal)
+// ────────────────────────────────────────────
 model Currency {
   id        Int      @id @default(autoincrement())
   code      String?
@@ -120,7 +141,25 @@ model Currency {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  foreignExchanges ForeignExchange[]
+  exchangeRates ExchangeRate[]
+}
+
+model ExchangeRate {
+  id         Int      @id @default(autoincrement())
+  rate       Float    // VED per 1 unit of foreign currency
+  currencyId Int?     // which currency (USD, EUR, etc.)
+  type       String   @default("official") // "official" | "paralelo" | "manual"
+  date       DateTime // date the rate was recorded
+  source     String?  // "BCV", "dolartoday", "enparalelovzla", "manual"
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  currency              Currency?                @relation(fields: [currencyId], references: [id])
+  purchaseOrders        PurchaseOrder[]          @relation("CalculationRate")
+  officialPurchaseOrders PurchaseOrder[]         @relation("OfficialRate")
+  sales                 Sale[]                   @relation("CalculationRate")
+  officialSales         Sale[]                   @relation("OfficialRate")
+  productLinks          ProductsExchangeRates[]
 }
 
 model Module {
@@ -131,6 +170,9 @@ model Module {
   updatedAt DateTime @updatedAt
 }
 
+// ────────────────────────────────────────────
+// TAX / PRODUCT (Slice 2 — Inventario)
+// ────────────────────────────────────────────
 model Tax {
   id         Int      @id @default(autoincrement())
   name       String?
@@ -146,7 +188,7 @@ model Product {
   id          Int          @id @default(autoincrement())
   code        String
   name        String
-  price       Float
+  price       Float        // VED
   dollarPrice Float?
   idTax       Int?
   observation String?
@@ -159,7 +201,7 @@ model Product {
   stocks                   Stock[]
   purchaseOrderDetails     PurchaseOrderDet[]
   saleDetails              SalesDet[]
-  foreignExchangeLinks     ProductsForeignExchanges[]
+  exchangeRateLinks        ProductsExchangeRates[]
 }
 
 model Batch {
@@ -195,26 +237,38 @@ model StockDet {
   quantity    Int
   expiryDate  DateTime?
   observation String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   stock Stock @relation(fields: [idStock], references: [id])
 }
 
+// ────────────────────────────────────────────
+// PURCHASE ORDERS (Slice 1 — Compras)
+// Multi-currency: amount in VED + amountUsd + exchangeRate + officialExchangeRate
+// ────────────────────────────────────────────
 model PurchaseOrder {
-  id            Int      @id @default(autoincrement())
-  idSupplier    Int
-  code          String?
-  date          DateTime?
-  amount        Float?
-  paymentMethod Int?
-  status        Int?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                     Int      @id @default(autoincrement())
+  idSupplier             Int
+  code                   String?
+  date                   DateTime?
+  amount                 Float?   // VED total
+  amountUsd              Float?   // USD total
+  exchangeRate           Float?   // rate used at creation (usually paralelo)
+  exchangeRateId         Int?
+  officialExchangeRate   Float?   // official BCV rate for legal reporting
+  officialExchangeRateId Int?
+  paymentMethod          Int?
+  status                 Int?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 
-  supplier          Supplier              @relation(fields: [idSupplier], references: [id])
-  details           PurchaseOrderDet[]
-  accountsPayables  AccountsPayable[]
+  supplier                  Supplier           @relation(fields: [idSupplier], references: [id])
+  details                   PurchaseOrderDet[]
+  accountsPayables          AccountsPayable[]
+  exchangeRateRef           ExchangeRate?      @relation("CalculationRate", fields: [exchangeRateId], references: [id])
+  officialExchangeRateRef   ExchangeRate?      @relation("OfficialRate", fields: [officialExchangeRateId], references: [id])
+  withholdingRecords        WithholdingRecord[]
 }
 
 model PurchaseOrderDet {
@@ -222,7 +276,10 @@ model PurchaseOrderDet {
   idPurchaseOrder Int
   idProduct       Int
   quantity        Int?
-  subtotal        Float?
+  unitPrice        Float?  // VED unit price
+  unitPriceUsd     Float?  // USD unit price
+  subtotal        Float?   // VED subtotal
+  subtotalUsd     Float?   // USD subtotal
   observation     String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -231,42 +288,17 @@ model PurchaseOrderDet {
   product        Product       @relation(fields: [idProduct], references: [id])
 }
 
-model Sale {
-  id            Int       @id @default(autoincrement())
-  idCustomer    Int?
-  code          String?
-  date          DateTime?
-  amount        Float?
-  paymentMethod Int?
-  status        Int?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  customer           Customer?           @relation(fields: [idCustomer], references: [id])
-  details            SalesDet[]
-  accountsReceivables AccountsReceivable[]
-}
-
-model SalesDet {
-  id          Int      @id @default(autoincrement())
-  idSale      Int
-  idProduct   Int
-  quantity    Int?
-  subtotal    Float?
-  observation String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  sale    Sale    @relation(fields: [idSale], references: [id])
-  product Product @relation(fields: [idProduct], references: [id])
-}
-
+// ────────────────────────────────────────────
+// ACCOUNTS PAYABLE (Slice 1 — CXP)
+// ────────────────────────────────────────────
 model AccountsPayable {
   id              Int      @id @default(autoincrement())
   idPurchaseOrder Int
   dueDate         DateTime?
   issueDate       DateTime?
-  amount          Float?
+  amount          Float?   // VED
+  amountUsd       Float?   // USD
+  exchangeRate    Float?
   credit          Float?
   status          Int?
   createdAt       DateTime @default(now())
@@ -275,39 +307,101 @@ model AccountsPayable {
   purchaseOrder PurchaseOrder @relation(fields: [idPurchaseOrder], references: [id])
 }
 
+// ────────────────────────────────────────────
+// TAX WITHHOLDING (Slice 1 — Retenciones)
+// IVA e ISLR (75%/100%)
+// ────────────────────────────────────────────
+model WithholdingRecord {
+  id                Int      @id @default(autoincrement())
+  idSupplier        Int
+  idPurchaseOrder   Int?
+  type              String   // "IVA" | "ISLR"
+  percentage        Float    // 75 or 100
+  baseAmount        Float    // VED taxable base
+  baseAmountUsd     Float?
+  withheldAmount    Float    // VED withheld
+  withheldAmountUsd Float?
+  exchangeRate      Float?
+  documentNumber    String?  // comprobante de retención
+  period            String?  // tax period "YYYY-MM"
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  supplier      Supplier      @relation(fields: [idSupplier], references: [id])
+  purchaseOrder PurchaseOrder? @relation(fields: [idPurchaseOrder], references: [id])
+}
+
+// ────────────────────────────────────────────
+// SALES (Slice 3 — Ventas)
+// Multi-currency
+// ────────────────────────────────────────────
+model Sale {
+  id                     Int       @id @default(autoincrement())
+  idCustomer             Int?
+  code                   String?
+  date                   DateTime?
+  amount                 Float?    // VED total
+  amountUsd              Float?    // USD total
+  exchangeRate           Float?
+  exchangeRateId         Int?
+  officialExchangeRate   Float?    // official BCV rate for legal reporting
+  officialExchangeRateId Int?
+  paymentMethod          Int?
+  status                 Int?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  customer               Customer?           @relation(fields: [idCustomer], references: [id])
+  details                SalesDet[]
+  accountsReceivables    AccountsReceivable[]
+  exchangeRateRef        ExchangeRate?       @relation("CalculationRate", fields: [exchangeRateId], references: [id])
+  officialExchangeRateRef ExchangeRate?       @relation("OfficialRate", fields: [officialExchangeRateId], references: [id])
+}
+
+model SalesDet {
+  id          Int      @id @default(autoincrement())
+  idSale      Int
+  idProduct   Int
+  quantity    Int?
+  unitPrice    Float?  // VED unit price
+  unitPriceUsd Float?  // USD unit price
+  subtotal    Float?   // VED subtotal
+  subtotalUsd Float?   // USD subtotal
+  observation String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sale    Sale    @relation(fields: [idSale], references: [id])
+  product Product @relation(fields: [idProduct], references: [id])
+}
+
 model AccountsReceivable {
-  id      Int       @id @default(autoincrement())
-  idSale  Int?
-  dueDate DateTime?
-  issueDate DateTime?
-  amount Float?
-  credit Float?
-  status Int?
-  createdAt  DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         Int       @id @default(autoincrement())
+  idSale     Int?
+  dueDate    DateTime?
+  issueDate  DateTime?
+  amount     Float?    // VED
+  amountUsd  Float?    // USD
+  exchangeRate Float?
+  credit     Float?
+  status     Int?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   sale Sale? @relation(fields: [idSale], references: [id])
 }
 
-model ForeignExchange {
-  id         Int      @id @default(autoincrement())
-  value      Float
-  idCurrency Int?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+// ────────────────────────────────────────────
+// PRODUCT EXCHANGE RATE LINKS
+// ────────────────────────────────────────────
+model ProductsExchangeRates {
+  id              Int      @id @default(autoincrement())
+  idProduct       Int
+  idExchangeRate  Int
+  value           Float?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  currency           Currency?                  @relation(fields: [idCurrency], references: [id])
-  productLinks       ProductsForeignExchanges[]
-}
-
-model ProductsForeignExchanges {
-  id                Int      @id @default(autoincrement())
-  idProduct         Int
-  idForeignExchange Int
-  value             Float?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  product         Product         @relation(fields: [idProduct], references: [id])
-  foreignExchange ForeignExchange @relation(fields: [idForeignExchange], references: [id])
+  product      Product      @relation(fields: [idProduct], references: [id])
+  exchangeRate ExchangeRate @relation(fields: [idExchangeRate], references: [id])
 }

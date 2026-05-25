@@ -7,9 +7,9 @@ export interface CreateUserData {
   lastName: string;
   userName: string;
   password: string;
-  email?: string;
+  email: string;
   idRole: number;
-  available: boolean;
+  isActive: boolean;
 }
 
 @Injectable()
@@ -25,7 +25,7 @@ export class UserFactory {
       password: hashedPassword,
       email: dto.email,
       idRole: dto.idRole,
-      available: dto.available ?? true,
+      isActive: dto.isActive ?? true,
     };
   }
 }

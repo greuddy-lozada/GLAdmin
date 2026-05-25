@@ -4,13 +4,16 @@ export class LoginResponseDto {
     firstName: string;
     lastName: string;
     userName: string;
-    email: string | null;
+    email: string;
     role?: {
       id: number;
       name: string;
       slug: string;
     };
-    available: boolean;
+    isActive: boolean;
+    mustChangePassword: boolean;
   };
-  token: string;
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
 }

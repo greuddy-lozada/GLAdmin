@@ -4,9 +4,11 @@ export class UserEntity {
   lastName: string;
   userName: string;
   password: string;
-  email: string | null;
+  email: string;
   idRole: number;
-  available: boolean;
+  isActive: boolean;
+  mustChangePassword: boolean;
+  lastLogin: Date | null;
   createdAt: Date;
   updatedAt: Date;
 

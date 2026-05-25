@@ -21,12 +21,19 @@ import { useProducts } from '@/features/products/hooks/use-products';
 import { Product, CreateProductRequest, UpdateProductRequest } from '@/features/products/models/product.model';
 import { productService } from '@/features/products/services/product.service';
 import { useI18n } from '@/i18n';
+import { RoleGuard } from '@/components/ui/role-guard';
+import { useAuth } from '@/providers/auth-provider';
+import { hasMinLevel } from '@/lib/auth/roles';
 import { sileo } from 'sileo';
 import apiClient from '@/lib/api/api-client';
 
 export default function ProductsPage() {
   const { products, loading, loadProducts } = useProducts();
   const { t, tp } = useI18n();
+  const { user } = useAuth();
+  const role = user?.role?.slug ?? 'employee';
+  const canEdit = hasMinLevel(role, 60);
+  const canDelete = hasMinLevel(role, 100);
   const [formOpen, setFormOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -192,10 +199,12 @@ export default function ProductsPage() {
       }
     >
       <div className="flex items-center justify-between mb-6">
-        <Button onClick={openCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          {t('products.new')}
-        </Button>
+        <RoleGuard minLevel={60}>
+          <Button onClick={openCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t('products.new')}
+          </Button>
+        </RoleGuard>
       </div>
 
       {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
@@ -204,11 +213,11 @@ export default function ProductsPage() {
         columns={columns}
         rows={products}
         loading={loading}
-        onEdit={openEdit}
-        onDelete={(product) => {
+        onEdit={canEdit ? openEdit : undefined}
+        onDelete={canDelete ? (product) => {
           setDeleteTarget(product);
           setDeleteOpen(true);
-        }}
+        } : undefined}
         emptyMessage={t('products.empty')}
       />
 

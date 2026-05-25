@@ -37,9 +37,9 @@ export class UserRepository implements IUserRepository {
         lastName: data.lastName!,
         userName: data.userName!,
         password: data.password!,
-        email: data.email,
+        email: data.email!,
         idRole: data.idRole!,
-        available: data.available ?? true,
+        isActive: data.isActive ?? true,
       },
       include: { role: true },
     });
@@ -54,7 +54,7 @@ export class UserRepository implements IUserRepository {
         lastName: data.lastName,
         email: data.email,
         idRole: data.idRole,
-        available: data.available,
+        isActive: data.isActive,
       },
       include: { role: true },
     });

@@ -1,14 +1,16 @@
 'use client';
 
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/providers/auth-provider';
-import { navigationConfig } from '@/config/navigation.config';
+import { navigationGroups, navigationConfig } from '@/config/navigation.config';
+import { hasMinLevel } from '@/lib/auth/roles';
 import { useI18n } from '@/i18n';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { UserNav } from '@/components/ui/user-nav';
 import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar';
-import { LayoutDashboard, Users, UserCog, Truck, Building2, Package, Receipt, Tags, Store, ShoppingCart, ArrowLeftRight, ShieldCheck, Settings } from 'lucide-react';
+import { LayoutDashboard, Users, UserCog, Truck, Building2, Package, Receipt, Tags, Store, ShoppingCart, DollarSign, FileText, ShieldCheck, Settings, ChevronDown, ChevronRight } from 'lucide-react';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   dashboard: LayoutDashboard,
@@ -21,9 +23,18 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   batches: Tags,
   stocks: Store,
   purchaseOrders: ShoppingCart,
-  foreignExchanges: ArrowLeftRight,
+  exchangeRates: DollarSign,
+  withholdings: FileText,
   roles: ShieldCheck,
   settings: Settings,
+};
+
+const groupIconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  compras: ShoppingCart,
+  ventas: UserCog,
+  inventario: Package,
+  admin: ShieldCheck,
+  config: Settings,
 };
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
@@ -32,22 +43,38 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace('/login');
+    }
+  }, [isAuthenticated, router]);
 
   if (isLoading) return null;
 
-  if (!isAuthenticated) {
-    router.replace('/login');
-    return null;
-  }
+  if (!isAuthenticated) return null;
 
   const userRole = user?.role?.slug || 'employee';
-  const visibleNavItems = navigationConfig.filter(
-    (item) => item.roles.includes(userRole),
-  );
+  const visibleGroups = navigationGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => hasMinLevel(userRole, item.minLevel)),
+    }))
+    .filter((group) => group.items.length > 0);
 
   const currentPage = navigationConfig.find((item) => pathname.startsWith(item.path));
   const pageTitle = currentPage ? t(`nav.${currentPage.key}`) : '';
   const showWelcome = pathname === '/dashboard';
+
+  const toggleGroup = (gi: number) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(gi)) next.delete(gi);
+      else next.add(gi);
+      return next;
+    });
+  };
 
   return (
     <div className="flex h-screen flex-col md:flex-row overflow-hidden">
@@ -65,18 +92,60 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               <div className="h-5 w-6 shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm bg-primary" />
             )}
             <nav className="mt-6 flex flex-col gap-1">
-              {visibleNavItems.map((item) => {
-                const Icon = iconMap[item.key] || LayoutDashboard;
+              {visibleGroups.map((group, gi) => {
+                const GroupIcon = group.key ? groupIconMap[group.key] : undefined;
                 return (
-                  <SidebarLink
-                    key={item.path}
-                    link={{
-                      label: t(`nav.${item.key}`),
-                      href: item.path,
-                      icon: <Icon className="h-5 w-5 shrink-0 text-muted-foreground" />,
-                    }}
-                    className={pathname.startsWith(item.path) ? 'bg-secondary text-secondary-foreground rounded-md' : ''}
-                  />
+                <div key={gi}>
+                  {group.label && sidebarOpen && (
+                    <button
+                      onClick={() => toggleGroup(gi)}
+                      className="flex w-full items-center justify-between px-3 py-1.5 text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold hover:text-foreground transition-colors"
+                    >
+                      <span className="flex items-center gap-2">
+                        {GroupIcon && <GroupIcon className="h-3.5 w-3.5" />}
+                        <span>{t(group.label)}</span>
+                      </span>
+                      {expandedGroups.has(gi) ? (
+                        <ChevronDown className="h-3 w-3" />
+                      ) : (
+                        <ChevronRight className="h-3 w-3" />
+                      )}
+                    </button>
+                  )}
+                  {(sidebarOpen && (expandedGroups.has(gi) || !group.label)) && (
+                    <div className="flex flex-col gap-0.5">
+                      {group.items.map((item) => {
+                        const active = pathname.startsWith(item.path);
+                        return group.label ? (
+                          <Link
+                            key={item.path}
+                            href={item.path}
+                            className={`flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
+                              active
+                                ? 'bg-secondary text-secondary-foreground rounded-md font-medium'
+                                : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                          >
+                            {t(`nav.${item.key}`)}
+                          </Link>
+                        ) : (
+                          <SidebarLink
+                            key={item.path}
+                            link={{
+                              label: t(`nav.${item.key}`),
+                              href: item.path,
+                              icon: (() => {
+                                const Icon = iconMap[item.key] || LayoutDashboard;
+                                return <Icon className="h-5 w-5 shrink-0 text-muted-foreground" />;
+                              })(),
+                            }}
+                            className={active ? 'bg-secondary text-secondary-foreground rounded-md' : ''}
+                          />
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
                 );
               })}
             </nav>

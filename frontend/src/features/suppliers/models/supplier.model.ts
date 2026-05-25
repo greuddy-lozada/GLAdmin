@@ -2,6 +2,10 @@ export interface Supplier {
   id: number;
   documentNumber: string;
   companyName: string;
+  businessName?: string | null;
+  fiscalAddress?: string | null;
+  taxId?: string | null;
+  taxWithholdingAgent: boolean;
   firstName?: string | null;
   lastName?: string | null;
   address?: string | null;
@@ -15,6 +19,10 @@ export interface Supplier {
 export interface CreateSupplierRequest {
   documentNumber: string;
   companyName: string;
+  businessName?: string;
+  fiscalAddress?: string;
+  taxId?: string;
+  taxWithholdingAgent?: boolean;
   firstName?: string;
   lastName?: string;
   address?: string;
@@ -25,6 +33,10 @@ export interface CreateSupplierRequest {
 export interface UpdateSupplierRequest {
   documentNumber?: string;
   companyName?: string;
+  businessName?: string;
+  fiscalAddress?: string;
+  taxId?: string;
+  taxWithholdingAgent?: boolean;
   firstName?: string;
   lastName?: string;
   address?: string;

@@ -37,7 +37,7 @@
     "title": "GLAdmin",
     "loginButton": "INGRESAR",
     "loggingIn": "Ingresando...",
-    "userName": "Usuario",
+    "email": "Correo Electrónico",
     "password": "Contraseña",
     "error": "Usuario o contraseña incorrecta"
   },
@@ -79,13 +79,21 @@
     "batches": "Lotes",
     "stocks": "Inventario",
     "purchaseOrders": "Pedidos",
-    "foreignExchanges": "Tasa Cambio",
+    "withholdings": "Retenciones",
+    "exchangeRates": "Tasas de Cambio",
     "roles": "Roles",
     "settings": "Configuración",
     "logout": "Cerrar Sesión",
     "profile": "Perfil",
     "lightMode": "Modo Claro",
-    "darkMode": "Modo Oscuro"
+    "darkMode": "Modo Oscuro",
+    "group": {
+      "compras": "Compras",
+      "ventas": "Ventas",
+      "inventario": "Inventario",
+      "admin": "Administración",
+      "config": "Configuración"
+    }
   },
   "users": {
     "title": "Usuarios",
@@ -106,6 +114,7 @@
       "password": "Contraseña",
       "passwordEdit": "Contraseña (dejar vacío para mantener)",
       "role": "Rol",
+      "isActive": "Activo",
       "available": "Disponible"
     },
     "error": {
@@ -148,6 +157,10 @@
       "id": "#",
       "documentNumber": "RNC",
       "companyName": "Nombre Comercial",
+      "businessName": "Razón Social",
+      "fiscalAddress": "Dirección Fiscal",
+      "taxId": "RIF",
+      "taxWithholdingAgent": "Agente de Retención",
       "firstName": "Nombre Contacto",
       "lastName": "Apellido Contacto",
       "address": "Dirección",
@@ -273,6 +286,9 @@
     "new": "Nuevo Pedido",
     "edit": "Editar Pedido",
     "delete": "Eliminar Pedido",
+    "created": "Pedido creado exitosamente",
+    "updated": "Pedido actualizado exitosamente",
+    "deleted": "Pedido eliminado exitosamente",
     "deleteConfirm": "¿Está seguro de eliminar el pedido #{{code}}?",
     "empty": "No hay pedidos registrados",
     "details": "Detalles",
@@ -283,7 +299,9 @@
       "supplier": "Proveedor",
       "code": "Código",
       "date": "Fecha",
-      "amount": "Monto",
+      "amount": "Monto (Bs.)",
+      "amountUsd": "Monto (USD)",
+      "exchangeRate": "Tasa BCV",
       "paymentMethod": "Método Pago",
       "status": "Estado",
       "product": "Producto",
@@ -297,23 +315,52 @@
       "delete": "Error al eliminar pedido"
     }
   },
-  "foreignExchanges": {
-    "title": "Tasa de Cambio",
+  "exchangeRates": {
+    "title": "Tasas de Cambio",
     "new": "Nueva Tasa",
     "edit": "Editar Tasa",
     "delete": "Eliminar Tasa",
-    "deleteConfirm": "¿Está seguro de eliminar la tasa de cambio?",
-    "empty": "No hay tasas de cambio registradas",
+    "deleteConfirm": "¿Está seguro de eliminar la tasa?",
+    "empty": "No hay tasas registradas",
     "field": {
       "id": "#",
-      "value": "Valor",
+      "rate": "Tasa",
       "currency": "Moneda",
-      "createdAt": "Fecha"
+      "type": "Tipo",
+      "date": "Fecha",
+      "source": "Fuente"
     },
     "error": {
       "save": "Error al guardar tasa",
       "load": "Error al cargar tasas",
       "delete": "Error al eliminar tasa"
+    }
+  },
+  "withholdings": {
+    "title": "Retenciones",
+    "new": "Nueva Retención",
+    "edit": "Editar Retención",
+    "delete": "Eliminar Retención",
+    "created": "Retención creada exitosamente",
+    "deleted": "Retención eliminada exitosamente",
+    "deleteConfirm": "¿Está seguro de eliminar la retención #{{id}}?",
+    "empty": "No hay retenciones registradas",
+    "field": {
+      "id": "#",
+      "supplier": "Proveedor",
+      "purchaseOrder": "Orden de Compra",
+      "type": "Tipo",
+      "percentage": "Porcentaje",
+      "baseAmount": "Base Imponible (Bs.)",
+      "baseAmountUsd": "Base Imponible (USD)",
+      "withheldAmount": "Monto Retenido",
+      "withheldAmountLabel": "Monto a retener",
+      "period": "Período"
+    },
+    "error": {
+      "save": "Error al guardar retención",
+      "load": "Error al cargar retenciones",
+      "delete": "Error al eliminar retención"
     }
   },
   "roles": {
