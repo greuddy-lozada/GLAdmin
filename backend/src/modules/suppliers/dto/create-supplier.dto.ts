@@ -2,9 +2,6 @@ import { IsString, IsOptional, IsBoolean } from 'class-validator';
 
 export class CreateSupplierDto {
   @IsString()
-  documentNumber: string;
-
-  @IsString()
   companyName: string;
 
   @IsOptional() @IsString() businessName?: string;

@@ -21,11 +21,36 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface OrganizationInfo {
+  id: number;
+  name: string;
+  slug: string;
+  plan: { name: string; label: string } | null;
+  role: string;
+}
+
+export interface OrganizationDetail {
+  id: number;
+  name: string;
+  slug: string;
+  plan: { name: string; label: string; features: string } | null;
+}
+
 export interface LoginResponse {
   user: User;
   accessToken: string;
   refreshToken: string;
   expiresIn: number;
+  organizations?: OrganizationInfo[];
+  organization?: OrganizationDetail;
+}
+
+export interface SelectOrgResponse {
+  user: User;
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  organization: OrganizationDetail;
 }
 
 export interface RefreshResponse {

@@ -1,13 +1,19 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
+import { ContextService } from '../../modules/tenant/context.service';
 import { CreateWithholdingDto } from './dto/create-withholding.dto';
 import { UpdateWithholdingDto } from './dto/update-withholding.dto';
 
 @Injectable()
 export class WithholdingsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly contextService: ContextService,
+  ) {}
 
   async create(dto: CreateWithholdingDto) {
+    const ctx = this.contextService?.getCurrent();
+    const orgId = ctx?.organizationId;
     const record = await this.prisma.withholdingRecord.create({
       data: {
         idSupplier: dto.idSupplier,
@@ -21,7 +27,8 @@ export class WithholdingsService {
         exchangeRate: dto.exchangeRate,
         documentNumber: dto.documentNumber,
         period: dto.period,
-      },
+        organizationId: orgId!,
+      } as any,
       include: { supplier: true, purchaseOrder: true },
     });
     return { data: record, message: 'WITHHOLDING.CREATED' };

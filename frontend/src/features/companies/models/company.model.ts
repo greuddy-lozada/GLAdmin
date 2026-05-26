@@ -1,6 +1,6 @@
 export interface Company {
   id: number;
-  documentNumber: string;
+  taxId: string;
   name: string;
   address: string;
   phoneNumber: string;
@@ -11,7 +11,7 @@ export interface Company {
 }
 
 export interface CreateCompanyRequest {
-  documentNumber: string;
+  taxId: string;
   name: string;
   address: string;
   phoneNumber: string;
@@ -20,7 +20,7 @@ export interface CreateCompanyRequest {
 }
 
 export interface UpdateCompanyRequest {
-  documentNumber?: string;
+  taxId?: string;
   name?: string;
   address?: string;
   phoneNumber?: string;

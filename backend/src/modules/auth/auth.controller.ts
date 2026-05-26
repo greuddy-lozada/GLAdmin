@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Delete } from '@nestjs/common';
+import { Controller, Post, Get, Body, Delete, HttpCode } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshDto } from './dto/refresh.dto';
@@ -38,5 +38,14 @@ export class AuthController {
     @Body() dto: ChangePasswordDto,
   ) {
     return this.authService.changePassword(userId, dto);
+  }
+
+  @Post('select-org')
+  @HttpCode(200)
+  async selectOrg(
+    @CurrentUser('id') userId: number,
+    @Body('organizationId') organizationId: number,
+  ) {
+    return this.authService.selectOrg(userId, organizationId);
   }
 }

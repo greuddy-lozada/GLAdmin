@@ -1,0 +1,85 @@
+<h2>Architecture Approaches for Multi-Tenant GLAdmin</h2>
+<p class="subtitle">Three ways to add multi-tenant + admin + payments. Click to select your preference.</p>
+
+<div class="section">
+<h3>Approach A: Prisma Middleware (Recommended)</h3>
+<div class="mockup" style="text-align:left">
+  <div class="mockup-body" style="padding: 12px;">
+    <code style="font-size:0.85rem">
+// Single middleware intercepts all queries<br>
+prisma.$use(async (params, next) => {<br>
+&nbsp;&nbsp;if (shouldFilter(params.model)) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;params.args.where.organizationId = currentOrgId;<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;return next(params);<br>
+});
+    </code>
+  </div>
+</div>
+<div class="pros-cons">
+  <div class="pros"><h4>Pros</h4><ul><li>One line of code per query type</li><li>Can't forget the filter (always applied)</li><li>Works with existing services unchanged</li><li>Easy to bypass for super admin</li></ul></div>
+  <div class="cons"><h4>Cons</h4><ul><li>Middleware runs on every query (implicit)</li><li>Harder to debug when filter is wrong</li></ul></div>
+</div>
+
+<div class="option" data-choice="a" onclick="toggleSelect(this)">
+  <div class="letter">A</div>
+  <div class="content"><h3>Prisma Middleware</h3><p>Global interceptor, explicit filter, minimal code changes</p></div>
+</div>
+</div>
+
+<div class="section">
+<h3>Approach B: Base Service Pattern</h3>
+<div class="mockup" style="text-align:left">
+  <div class="mockup-body" style="padding: 12px;">
+    <code style="font-size:0.85rem">
+class BaseService {<br>
+&nbsp;&nbsp;protected orgFilter(): PrismaFilter {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;return { organizationId: getOrgId() };<br>
+&nbsp;&nbsp;}<br>
+}<br><br>
+// Each service must call orgFilter() explicitly<br>
+findAll() {<br>
+&nbsp;&nbsp;return prisma.supplier.findMany({<br>
+&nbsp;&nbsp;&nbsp;&nbsp;where: { ...this.orgFilter() }<br>
+&nbsp;&nbsp;});<br>
+}
+    </code>
+  </div>
+</div>
+<div class="pros-cons">
+  <div class="pros"><h4>Pros</h4><ul><li>Explicit — you see the filter in every query</li><li>No magic, easy to debug</li><li>Easy to customize per service</li></ul></div>
+  <div class="cons"><h4>Cons</h4><ul><li>Must remember to add filter to every new query</li><li>More boilerplate, more code changes</li><li>Easy to accidentally skip (data leak risk)</li></ul></div>
+</div>
+
+<div class="option" data-choice="b" onclick="toggleSelect(this)">
+  <div class="letter">B</div>
+  <div class="content"><h3>Base Service</h3><p>Explicit per-query filter via base class, more code but visible</p></div>
+</div>
+</div>
+
+<div class="section">
+<h3>Approach C: Hybrid — Middleware + Service Methods</h3>
+<div class="mockup" style="text-align:left">
+  <div class="mockup-body" style="padding: 12px;">
+    <code style="font-size:0.85rem">
+// Middleware catches 95% of queries<br>
+prisma.$use(autoOrgFilter);<br><br>
+// Service can bypass or customize:<br>
+findAllForSuperAdmin() {<br>
+&nbsp;&nbsp;return prisma.supplier.findMany({<br>
+&nbsp;&nbsp;&nbsp;&nbsp;where: { /* bypass middleware */ }<br>
+&nbsp;&nbsp;});<br>
+}
+    </code>
+  </div>
+</div>
+<div class="pros-cons">
+  <div class="pros"><h4>Pros</h4><ul><li>Middleware for safety (can't forget)</li><li>Service methods for exceptions</li><li>Best of both worlds</li></ul></div>
+  <div class="cons"><h4>Cons</h4><ul><li>Slightly more complex mental model</li><li>Need clear convention for when to use which</li></ul></div>
+</div>
+
+<div class="option" data-choice="c" onclick="toggleSelect(this)">
+  <div class="letter">C</div>
+  <div class="content"><h3>Hybrid</h3><p>Middleware default + service overrides for special cases</p></div>
+</div>
+</div>

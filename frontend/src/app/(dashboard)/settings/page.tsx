@@ -39,7 +39,7 @@ export default function SettingsPage() {
       </Card>
 
       <Card>
-        <CardContent className="py-6">
+        <CardContent>
           <p className="text-sm text-muted-foreground">
             {t('settings.description')}
           </p>

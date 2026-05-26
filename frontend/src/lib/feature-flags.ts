@@ -1,0 +1,22 @@
+export type FeatureFlag =
+  | 'basic_auth'
+  | 'multi_currency'
+  | 'basic_reports'
+  | 'advanced_reports'
+  | 'suppliers'
+  | 'customers'
+  | 'products'
+  | 'export'
+  | 'api_access'
+  | 'audit_log'
+  | 'purchase_orders'
+  | 'sales'
+  | 'inventory'
+  | 'withholding'
+  | 'multiple_orgs'
+  | 'white_label'
+  | 'priority_support';
+
+export function hasFeature(features: string[], feature: FeatureFlag): boolean {
+  return features.includes(feature);
+}

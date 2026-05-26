@@ -21,7 +21,7 @@ export interface PurchaseOrder {
   status?: number;
   createdAt: string;
   updatedAt: string;
-  supplier?: { id: number; companyName: string; documentNumber: string };
+  supplier?: { id: number; companyName: string };
   details?: (PurchaseOrderDetail & { id: number; product?: { id: number; code: string; name: string } })[];
 }
 

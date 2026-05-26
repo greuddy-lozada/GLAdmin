@@ -1,15 +1,21 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
+import { ContextService } from '../../modules/tenant/context.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 
 @Injectable()
 export class ProductsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly contextService: ContextService,
+  ) {}
 
   async create(dto: CreateProductDto) {
+    const ctx = this.contextService?.getCurrent();
+    const orgId = ctx?.organizationId;
     const product = await this.prisma.product.create({
-      data: dto,
+      data: { ...dto, organizationId: orgId! } as any,
       include: { tax: true },
     });
     return { data: product, message: 'PRODUCT.CREATED' };

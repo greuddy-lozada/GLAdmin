@@ -29,7 +29,6 @@ export default function SuppliersPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [formData, setFormData] = useState<CreateSupplierRequest & { available?: boolean }>({
-    documentNumber: '',
     companyName: '',
     businessName: '',
     fiscalAddress: '',
@@ -47,7 +46,6 @@ export default function SuppliersPage() {
 
   const columns: Column<Supplier>[] = [
     { field: 'id', headerName: t('suppliers.field.id') },
-    { field: 'documentNumber', headerName: t('suppliers.field.documentNumber') },
     { field: 'companyName', headerName: t('suppliers.field.companyName') },
     { field: 'businessName', headerName: t('suppliers.field.businessName'), render: (row) => row.businessName ?? '—' },
     { field: 'phoneNumber', headerName: t('suppliers.field.phoneNumber') },
@@ -62,7 +60,7 @@ export default function SuppliersPage() {
   const openCreate = () => {
     setSelectedSupplier(null);
     setError('');
-    setFormData({ documentNumber: '', companyName: '', businessName: '', fiscalAddress: '', taxId: '', taxWithholdingAgent: false, firstName: '', lastName: '', address: '', phoneNumber: '', email: '' });
+    setFormData({ companyName: '', businessName: '', fiscalAddress: '', taxId: '', taxWithholdingAgent: false, firstName: '', lastName: '', address: '', phoneNumber: '', email: '' });
     setFormOpen(true);
   };
 
@@ -70,7 +68,6 @@ export default function SuppliersPage() {
     setSelectedSupplier(supplier);
     setError('');
     setFormData({
-      documentNumber: supplier.documentNumber,
       companyName: supplier.companyName,
       businessName: supplier.businessName || '',
       fiscalAddress: supplier.fiscalAddress || '',
@@ -92,7 +89,6 @@ export default function SuppliersPage() {
     try {
       if (selectedSupplier) {
         const data: UpdateSupplierRequest = {
-          documentNumber: formData.documentNumber,
           companyName: formData.companyName,
           businessName: formData.businessName || undefined,
           fiscalAddress: formData.fiscalAddress || undefined,
@@ -145,10 +141,6 @@ export default function SuppliersPage() {
       onClose={() => setFormOpen(false)}
       panel={
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>{t('suppliers.field.documentNumber')}</Label>
-            <Input value={formData.documentNumber} onChange={(e) => setFormData({ ...formData, documentNumber: e.target.value })} required />
-          </div>
           <div className="space-y-2">
             <Label>{t('suppliers.field.companyName')}</Label>
             <Input value={formData.companyName} onChange={(e) => setFormData({ ...formData, companyName: e.target.value })} required />

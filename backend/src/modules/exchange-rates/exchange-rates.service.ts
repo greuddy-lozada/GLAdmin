@@ -1,13 +1,19 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
+import { ContextService } from '../../modules/tenant/context.service';
 import { CreateExchangeRateDto } from './dto/create-exchange-rate.dto';
 import { UpdateExchangeRateDto } from './dto/update-exchange-rate.dto';
 
 @Injectable()
 export class ExchangeRatesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly contextService: ContextService,
+  ) {}
 
   async create(dto: CreateExchangeRateDto) {
+    const ctx = this.contextService?.getCurrent();
+    const orgId = ctx?.organizationId;
     const rate = await this.prisma.exchangeRate.create({
       data: {
         rate: dto.rate,
@@ -15,7 +21,8 @@ export class ExchangeRatesService {
         type: dto.type ?? 'official',
         date: dto.date ? new Date(dto.date) : new Date(),
         source: dto.source,
-      },
+        organizationId: orgId!,
+      } as any,
       include: { currency: true },
     });
     return { data: rate, message: 'EXCHANGE_RATE.CREATED' };

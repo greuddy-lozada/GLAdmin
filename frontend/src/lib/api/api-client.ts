@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 const apiClient: AxiosInstance = axios.create({
   baseURL: API_URL,
@@ -26,6 +26,10 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem('accessToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    const currentOrgId = localStorage.getItem('currentOrgId');
+    if (currentOrgId) {
+      config.headers['x-organization-id'] = currentOrgId;
     }
   }
   return config;

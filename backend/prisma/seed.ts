@@ -50,16 +50,128 @@ async function main() {
   }
   console.log('Currencies created');
 
+  // ── Plans ──
+  await prisma.plan.upsert({
+    where: { name: 'free' },
+    update: {},
+    create: {
+      id: 1,
+      name: 'free',
+      label: 'Free',
+      amount: 0,
+      currency: 'usd',
+      interval: 'lifetime',
+      features: JSON.stringify(['basic_auth', 'multi_currency', 'basic_reports']),
+      maxUsers: 5,
+    },
+  });
+
+  await prisma.plan.upsert({
+    where: { name: 'starter' },
+    update: {},
+    create: {
+      id: 2,
+      name: 'starter',
+      label: 'Starter',
+      amount: 2999,
+      currency: 'usd',
+      interval: 'monthly',
+      features: JSON.stringify([
+        'basic_auth', 'multi_currency', 'basic_reports',
+        'suppliers', 'customers', 'products', 'export',
+      ]),
+      maxUsers: 10,
+    },
+  });
+
+  await prisma.plan.upsert({
+    where: { name: 'professional' },
+    update: {},
+    create: {
+      id: 3,
+      name: 'professional',
+      label: 'Professional',
+      amount: 9999,
+      currency: 'usd',
+      interval: 'monthly',
+      features: JSON.stringify([
+        'basic_auth', 'multi_currency', 'basic_reports', 'advanced_reports',
+        'suppliers', 'customers', 'products', 'export',
+        'api_access', 'audit_log', 'purchase_orders', 'sales',
+        'inventory', 'withholding',
+      ]),
+      maxUsers: 50,
+    },
+  });
+
+  await prisma.plan.upsert({
+    where: { name: 'enterprise' },
+    update: {},
+    create: {
+      id: 4,
+      name: 'enterprise',
+      label: 'Enterprise',
+      amount: 29999,
+      currency: 'usd',
+      interval: 'monthly',
+      features: JSON.stringify([
+        'basic_auth', 'multi_currency', 'basic_reports', 'advanced_reports',
+        'suppliers', 'customers', 'products', 'export',
+        'api_access', 'audit_log', 'purchase_orders', 'sales',
+        'inventory', 'withholding', 'multiple_orgs', 'white_label',
+        'priority_support',
+      ]),
+      maxUsers: 999,
+    },
+  });
+
+  const freePlan = await prisma.plan.findUnique({ where: { name: 'free' } });
+  console.log('Plans created');
+
+  // ── Default Organization ──
+  await prisma.organization.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      id: 1,
+      name: 'Default Organization',
+      slug: 'default',
+      isActive: true,
+      settings: JSON.stringify({ requireInvite: false, allowPublicSignup: false }),
+      planId: freePlan!.id,
+    },
+  });
+  console.log('Default organization created');
+
+  // ── Assign existing users to org ──
+  const users = await prisma.user.findMany();
+  for (const user of users) {
+    await prisma.userOrganization.upsert({
+      where: { userId_organizationId: { userId: user.id, organizationId: 1 } },
+      update: {},
+      create: {
+        userId: user.id,
+        organizationId: 1,
+        roleId: user.idRole,
+      },
+    });
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { currentOrganizationId: 1 },
+    });
+  }
+  console.log('User organizations created');
+
   // ── Exchange Rates ──
   await prisma.exchangeRate.upsert({
     where: { id: 1 },
     update: {},
-    create: { id: 1, rate: 60.50, currencyId: 2, type: 'official', date: new Date('2026-05-20'), source: 'BCV' },
+    create: { id: 1, rate: 60.50, currencyId: 2, type: 'official', date: new Date('2026-05-20'), source: 'BCV', organizationId: 1 },
   });
   await prisma.exchangeRate.upsert({
     where: { id: 2 },
     update: {},
-    create: { id: 2, rate: 72.00, currencyId: 2, type: 'paralelo', date: new Date('2026-05-20'), source: 'dolartoday' },
+    create: { id: 2, rate: 72.00, currencyId: 2, type: 'paralelo', date: new Date('2026-05-20'), source: 'dolartoday', organizationId: 1 },
   });
   console.log('Exchange rates created');
 
@@ -67,17 +179,17 @@ async function main() {
   await prisma.tax.upsert({
     where: { id: 1 },
     update: {},
-    create: { id: 1, name: 'IVA 16%', percentage: 16, formula: 'base * 0.16' },
+    create: { id: 1, name: 'IVA 16%', percentage: 16, formula: 'base * 0.16', organizationId: 1 },
   });
   await prisma.tax.upsert({
     where: { id: 2 },
     update: {},
-    create: { id: 2, name: 'IVA 8%', percentage: 8, formula: 'base * 0.08' },
+    create: { id: 2, name: 'IVA 8%', percentage: 8, formula: 'base * 0.08', organizationId: 1 },
   });
   await prisma.tax.upsert({
     where: { id: 3 },
     update: {},
-    create: { id: 3, name: 'Exento', percentage: 0 },
+    create: { id: 3, name: 'Exento', percentage: 0, organizationId: 1 },
   });
   console.log('Taxes created');
 
@@ -93,6 +205,7 @@ async function main() {
       address: 'Av. Principal, Urbanización Las Flores, Caracas',
       phoneNumber: '0412-555-0101',
       email: 'juan.perez@email.com',
+      organizationId: 1,
     },
   });
   await prisma.customer.upsert({
@@ -106,6 +219,7 @@ async function main() {
       address: 'Calle Sucre #42, Valencia, Edo. Carabobo',
       phoneNumber: '0414-555-0202',
       email: 'maria.gonzalez@email.com',
+      organizationId: 1,
     },
   });
   console.log('Customers created');
@@ -116,7 +230,6 @@ async function main() {
     update: {},
     create: {
       id: 1,
-      documentNumber: 'J-12345678-9',
       companyName: 'Distribuidora Nacional C.A.',
       businessName: 'Distribuidora Nacional, C.A.',
       fiscalAddress: 'Zona Industrial de Caracas, Galpón 5, Dtto. Capital',
@@ -127,6 +240,7 @@ async function main() {
       address: 'Zona Industrial de Caracas, Galpón 5',
       phoneNumber: '0212-555-0303',
       email: 'carlos@distribuidoranacional.com',
+      organizationId: 1,
     },
   });
   await prisma.supplier.upsert({
@@ -134,7 +248,6 @@ async function main() {
     update: {},
     create: {
       id: 2,
-      documentNumber: 'J-98765432-1',
       companyName: 'Importadora del Caribe SA',
       businessName: 'Importadora del Caribe, S.A.',
       fiscalAddress: 'Av. Libertador #350, Chacao, Miranda',
@@ -145,6 +258,7 @@ async function main() {
       address: 'Av. Libertador #350, Chacao',
       phoneNumber: '0212-555-0404',
       email: 'ana@importadoracaribe.com',
+      organizationId: 1,
     },
   });
   console.log('Suppliers created');
@@ -155,12 +269,13 @@ async function main() {
     update: {},
     create: {
       id: 1,
-      documentNumber: 'J-40123456-7',
+      taxId: 'J-40123456-7',
       name: 'GLAdmin Solutions C.A.',
       address: 'Av. Abraham Lincoln, Torre GLAdmin, Caracas',
       phoneNumber: '0212-555-0000',
       email: 'info@gladmin.com',
       website: 'https://gladmin.com',
+      organizationId: 1,
     },
   });
   console.log('Company created');
@@ -169,27 +284,27 @@ async function main() {
   await prisma.product.upsert({
     where: { id: 1 },
     update: {},
-    create: { id: 1, code: 'PROD-001', name: 'Laptop HP ProBook 450', price: 45000, dollarPrice: 750, idTax: 1, available: true },
+    create: { id: 1, code: 'PROD-001', name: 'Laptop HP ProBook 450', price: 45000, dollarPrice: 750, idTax: 1, available: true, organizationId: 1 },
   });
   await prisma.product.upsert({
     where: { id: 2 },
     update: {},
-    create: { id: 2, code: 'PROD-002', name: 'Monitor LG 24" Full HD', price: 12000, dollarPrice: 200, idTax: 1, available: true },
+    create: { id: 2, code: 'PROD-002', name: 'Monitor LG 24" Full HD', price: 12000, dollarPrice: 200, idTax: 1, available: true, organizationId: 1 },
   });
   await prisma.product.upsert({
     where: { id: 3 },
     update: {},
-    create: { id: 3, code: 'PROD-003', name: 'Teclado Mecánico Redragon', price: 2500, idTax: 3, available: true },
+    create: { id: 3, code: 'PROD-003', name: 'Teclado Mecánico Redragon', price: 2500, idTax: 3, available: true, organizationId: 1 },
   });
   await prisma.product.upsert({
     where: { id: 4 },
     update: {},
-    create: { id: 4, code: 'PROD-004', name: 'Mouse Inalámbrico Logitech', price: 1800, idTax: 3, available: true },
+    create: { id: 4, code: 'PROD-004', name: 'Mouse Inalámbrico Logitech', price: 1800, idTax: 3, available: true, organizationId: 1 },
   });
   await prisma.product.upsert({
     where: { id: 5 },
     update: {},
-    create: { id: 5, code: 'PROD-005', name: 'Webcam HD 1080p', price: 3200, dollarPrice: 55, idTax: 2, available: true },
+    create: { id: 5, code: 'PROD-005', name: 'Webcam HD 1080p', price: 3200, dollarPrice: 55, idTax: 2, available: true, organizationId: 1 },
   });
   console.log('Products created');
 
@@ -197,12 +312,12 @@ async function main() {
   await prisma.batch.upsert({
     where: { id: 1 },
     update: {},
-    create: { id: 1, code: 'LOTE-2025-001', description: 'Lote inicial enero 2025' },
+    create: { id: 1, code: 'LOTE-2025-001', description: 'Lote inicial enero 2025', organizationId: 1 },
   });
   await prisma.batch.upsert({
     where: { id: 2 },
     update: {},
-    create: { id: 2, code: 'LOTE-2025-002', description: 'Lote marzo 2025' },
+    create: { id: 2, code: 'LOTE-2025-002', description: 'Lote marzo 2025', organizationId: 1 },
   });
   console.log('Batches created');
 
@@ -210,17 +325,17 @@ async function main() {
   await prisma.stock.upsert({
     where: { id: 1 },
     update: {},
-    create: { id: 1, idProduct: 1, idSupplier: 1, idBatch: 1, existence: 15 },
+    create: { id: 1, idProduct: 1, idSupplier: 1, idBatch: 1, existence: 15, organizationId: 1 },
   });
   await prisma.stock.upsert({
     where: { id: 2 },
     update: {},
-    create: { id: 2, idProduct: 2, idSupplier: 1, idBatch: 1, existence: 30 },
+    create: { id: 2, idProduct: 2, idSupplier: 1, idBatch: 1, existence: 30, organizationId: 1 },
   });
   await prisma.stock.upsert({
     where: { id: 3 },
     update: {},
-    create: { id: 3, idProduct: 3, idSupplier: 2, idBatch: 2, existence: 50 },
+    create: { id: 3, idProduct: 3, idSupplier: 2, idBatch: 2, existence: 50, organizationId: 1 },
   });
   console.log('Stocks created');
 
@@ -241,6 +356,7 @@ async function main() {
       officialExchangeRateId: 1,
       paymentMethod: 1,
       status: 2,
+      organizationId: 1,
     },
   });
   console.log('Purchase order created');
@@ -249,12 +365,12 @@ async function main() {
   await prisma.purchaseOrderDet.upsert({
     where: { id: 1 },
     update: {},
-    create: { id: 1, idPurchaseOrder: 1, idProduct: 1, quantity: 5, unitPrice: 9000, unitPriceUsd: 9000 / 72.00, subtotal: 45000, subtotalUsd: 45000 / 72.00 },
+    create: { id: 1, idPurchaseOrder: 1, idProduct: 1, quantity: 5, unitPrice: 9000, unitPriceUsd: 9000 / 72.00, subtotal: 45000, subtotalUsd: 45000 / 72.00, organizationId: 1 },
   });
   await prisma.purchaseOrderDet.upsert({
     where: { id: 2 },
     update: {},
-    create: { id: 2, idPurchaseOrder: 1, idProduct: 2, quantity: 10, unitPrice: 3000, unitPriceUsd: 3000 / 72.00, subtotal: 30000, subtotalUsd: 30000 / 72.00 },
+    create: { id: 2, idPurchaseOrder: 1, idProduct: 2, quantity: 10, unitPrice: 3000, unitPriceUsd: 3000 / 72.00, subtotal: 30000, subtotalUsd: 30000 / 72.00, organizationId: 1 },
   });
   console.log('Purchase order details created');
 
@@ -271,6 +387,7 @@ async function main() {
       amountUsd: 75000 / 72.00,
       exchangeRate: 72.00,
       status: 1,
+      organizationId: 1,
     },
   });
   console.log('Accounts payable created');

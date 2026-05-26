@@ -10,7 +10,7 @@ import { useI18n } from '@/i18n';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { UserNav } from '@/components/ui/user-nav';
 import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar';
-import { LayoutDashboard, Users, UserCog, Truck, Building2, Package, Receipt, Tags, Store, ShoppingCart, DollarSign, FileText, ShieldCheck, Settings, ChevronDown, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Users, UserCog, Truck, Building2, Package, Receipt, Tags, Store, ShoppingCart, DollarSign, FileText, ShieldCheck, Settings, CreditCard, Mail, ArrowLeftRight, Wallet, ChevronDown, ChevronRight } from 'lucide-react';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   dashboard: LayoutDashboard,
@@ -26,7 +26,14 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   exchangeRates: DollarSign,
   withholdings: FileText,
   roles: ShieldCheck,
+  adminOrganizations: Building2,
+  adminUsers: Users,
+  adminPlans: CreditCard,
+  adminInvites: Mail,
   settings: Settings,
+  payments: Wallet,
+  transactions: ArrowLeftRight,
+  billing: CreditCard,
 };
 
 const groupIconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -38,7 +45,7 @@ const groupIconMap: Record<string, React.ComponentType<{ className?: string }>> 
 };
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading, currentOrg } = useAuth();
   const { t, tp } = useI18n();
   const router = useRouter();
   const pathname = usePathname();
@@ -174,6 +181,21 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               })}
             </nav>
           </div>
+          {currentOrg && (
+            <div className="border-t pt-3 px-3">
+              {sidebarOpen ? (
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold">{t('nav.org')}</p>
+                  <p className="text-sm font-medium truncate">{currentOrg.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{currentOrg.slug}</p>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-1" title={currentOrg.name}>
+                  <div className="h-2 w-2 rounded-full bg-primary" />
+                </div>
+              )}
+            </div>
+          )}
         </SidebarBody>
       </Sidebar>
 

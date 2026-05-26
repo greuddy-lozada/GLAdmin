@@ -1,14 +1,20 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
+import { ContextService } from '../../modules/tenant/context.service';
 import { CreateTaxDto } from './dto/create-tax.dto';
 import { UpdateTaxDto } from './dto/update-tax.dto';
 
 @Injectable()
 export class TaxesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly contextService: ContextService,
+  ) {}
 
   async create(dto: CreateTaxDto) {
-    const tax = await this.prisma.tax.create({ data: dto });
+    const ctx = this.contextService?.getCurrent();
+    const orgId = ctx?.organizationId;
+    const tax = await this.prisma.tax.create({ data: { ...dto, organizationId: orgId! } as any });
     return { data: tax, message: 'TAX.CREATED' };
   }
 

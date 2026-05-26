@@ -23,8 +23,12 @@ export default function LoginForm() {
     setError('');
     setLoading(true);
     try {
-      await login(email, password);
-      router.push('/dashboard');
+      const { organizations } = await login(email, password);
+      if (organizations && organizations.length > 1) {
+        router.push('/org-picker');
+      } else {
+        router.push('/dashboard');
+      }
     } catch {
       setError(t('auth.error'));
     } finally {

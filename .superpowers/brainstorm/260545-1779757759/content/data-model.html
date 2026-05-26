@@ -1,0 +1,137 @@
+<h2>Data Model — Multi-Tenant Core</h2>
+<p class="subtitle">New and modified Prisma models for tenant isolation</p>
+
+<div class="section">
+<h3>New Models</h3>
+<div class="split">
+<div class="mockup" style="text-align:left">
+<div class="mockup-header">Organization</div>
+<div class="mockup-body" style="padding:12px;font-size:0.8rem;line-height:1.6">
+<code>
+id          Int<br>
+name        String<br>
+slug        String @unique<br>
+isActive    Boolean @default(true)<br>
+settings    String? (JSON)<br>
+planId      Int? → Plan<br>
+createdAt   DateTime<br>
+updatedAt   DateTime
+</code>
+</div>
+</div>
+<div class="mockup" style="text-align:left">
+<div class="mockup-header">Plan</div>
+<div class="mockup-body" style="padding:12px;font-size:0.8rem;line-height:1.6">
+<code>
+id          Int<br>
+name        String @unique<br>
+label       String<br>
+amount      Int (cents)<br>
+currency    String @default("usd")<br>
+interval    String<br>
+features    String (JSON array)<br>
+maxUsers    Int @default(5)<br>
+isActive    Boolean<br>
+createdAt   DateTime
+</code>
+</div>
+</div>
+</div>
+
+<div class="split">
+<div class="mockup" style="text-align:left">
+<div class="mockup-header">UserOrganization (join)</div>
+<div class="mockup-body" style="padding:12px;font-size:0.8rem;line-height:1.6">
+<code>
+userId          Int<br>
+organizationId  Int<br>
+roleId          Int → Role<br>
+<br>
+@@id([userId, organizationId])
+</code>
+<p style="margin-top:8px;font-size:0.75rem;color:var(--muted)">Per-org role: user can be "manager" in Org A and "employee" in Org B</p>
+</div>
+</div>
+<div class="mockup" style="text-align:left">
+<div class="mockup-header">Invite</div>
+<div class="mockup-body" style="padding:12px;font-size:0.8rem;line-height:1.6">
+<code>
+id              Int<br>
+code            String @unique<br>
+email           String<br>
+organizationId  Int<br>
+roleId          Int<br>
+invitedById     Int<br>
+expiresAt       DateTime (7 days)<br>
+used            Boolean @default(false)<br>
+createdAt       DateTime
+</code>
+</div>
+</div>
+</div>
+</div>
+
+<div class="section">
+<h3>Modified Model — User</h3>
+<div class="mockup" style="text-align:left">
+<div class="mockup-header">User (added fields)</div>
+<div class="mockup-body" style="padding:12px;font-size:0.8rem;line-height:1.6">
+<code>
+currentOrganizationId  Int? → Organization<br>
+organizations          UserOrganization[]<br>
+invitedBy              Invite[]<br>
+<br>
+// Existing fields remain unchanged (idRole stays)
+</code>
+</div>
+</div>
+</div>
+
+<div class="section">
+<h3>Modified Models — Business Tables</h3>
+<p>Every business table gets <code>organizationId Int</code> + relation. Examples:</p>
+<div class="split">
+<div class="mockup" style="text-align:left">
+<div class="mockup-header">Supplier</div>
+<div class="mockup-body" style="padding:12px;font-size:0.8rem;line-height:1.6">
+<code>
+// ... existing fields ...<br>
+organizationId  Int<br>
+organization    Organization @relation<br>
+</code>
+</div>
+</div>
+<div class="mockup" style="text-align:left">
+<div class="mockup-header">Customer, Product, PurchaseOrder,</div>
+<div class="mockup-body" style="padding:12px;font-size:0.8rem;line-height:1.6">
+<code>
+// → Same pattern on ALL business models<br>
+// (13 tables total)
+</code>
+</div>
+</div>
+</div>
+</div>
+
+<div class="section">
+<h3>Role Resolution Flow</h3>
+<div class="mockup" style="text-align:left">
+<div class="mockup-body" style="padding:12px;font-size:0.85rem;line-height:1.6">
+<code>
+1. User has idRole (base/global role)<br>
+2. UserOrganization records override per-org<br>
+3. When user picks an org:<br>
+&nbsp;&nbsp;&nbsp;JWT stores: { sub, orgId, roleId }<br>
+&nbsp;&nbsp;&nbsp;roleId = UserOrganization.roleId<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;?? User.idRole (fallback)<br>
+4. RolesGuard reads org-scoped role from JWT<br>
+5. Super admin (master role): bypasses org filter<br>
+</code>
+</div>
+</div>
+</div>
+
+<div class="option" data-choice="y" onclick="toggleSelect(this)">
+  <div class="letter">✓</div>
+  <div class="content"><h3>Looks good</h3><p>Proceed to implementation order and frontend</p></div>
+</div>

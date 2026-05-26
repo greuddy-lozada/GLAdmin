@@ -7,7 +7,14 @@
     "USER_FOUND": "Usuario encontrado",
     "USER_NOT_FOUND": "El usuario no existe",
     "TOKEN_MISSING": "Token de autenticación no encontrado",
-    "TOKEN_INVALID": "Token inválido o expirado"
+    "TOKEN_INVALID": "Token inválido o expirado",
+    "ORG_SELECTED": "Organización seleccionada",
+    "NO_ORGANIZATIONS": "El usuario no pertenece a ninguna organización",
+    "NOT_ORG_MEMBER": "No eres miembro de esta organización",
+    "EMAIL_EXISTS": "El correo ya está registrado"
+  },
+  "ADMIN": {
+    "MAX_USERS_REACHED": "Límite de usuarios alcanzado. Actualiza tu plan para añadir más usuarios."
   },
   "USER": {
     "CREATED": "Usuario creado exitosamente",
@@ -71,6 +78,9 @@
   },
   "ROLE": {
     "NOT_FOUND": "Rol no encontrado"
+  },
+  "BOOTSTRAP": {
+    "SLUG_TAKEN": "El slug ya está en uso"
   },
   "COMMON": {
     "RECORD_NOT_FOUND": "Registro no encontrado",

@@ -21,6 +21,7 @@
     "previous": "Anterior",
     "next": "Siguiente",
     "pageOf": "Página {{current}} de {{total}}",
+    "morePages": "Más páginas",
     "empty": "No hay registros",
     "pageNotFound": "Página no encontrada",
     "errorTitle": "Algo salió mal",
@@ -82,7 +83,15 @@
     "withholdings": "Retenciones",
     "exchangeRates": "Tasas de Cambio",
     "roles": "Roles",
+    "adminOrganizations": "Organizaciones",
+    "adminUsers": "Usuarios Admin",
+    "adminPlans": "Planes",
+    "adminInvites": "Invitaciones",
     "settings": "Configuración",
+    "payments": "Pagos",
+    "transactions": "Transacciones",
+    "billing": "Facturación",
+    "org": "Organización",
     "logout": "Cerrar Sesión",
     "profile": "Perfil",
     "lightMode": "Modo Claro",
@@ -132,7 +141,7 @@
     "empty": "No hay clientes registrados",
     "field": {
       "id": "#",
-      "idCardNumber": "Cédula/RNC",
+      "idCardNumber": "Cédula",
       "firstName": "Nombre",
       "lastName": "Apellido",
       "address": "Dirección",
@@ -155,7 +164,6 @@
     "empty": "No hay proveedores registrados",
     "field": {
       "id": "#",
-      "documentNumber": "RNC",
       "companyName": "Nombre Comercial",
       "businessName": "Razón Social",
       "fiscalAddress": "Dirección Fiscal",
@@ -183,7 +191,7 @@
     "empty": "No hay empresas registradas",
     "field": {
       "id": "#",
-      "documentNumber": "RNC",
+      "taxId": "RIF",
       "name": "Nombre",
       "address": "Dirección",
       "phoneNumber": "Teléfono",
@@ -373,11 +381,197 @@
       "description": "Descripción"
     }
   },
+  "admin": {
+    "title": "Administración",
+    "organizations": {
+      "title": "Organizaciones",
+      "new": "Nueva Organización",
+      "edit": "Editar Organización",
+      "delete": "Eliminar Organización",
+      "deleteConfirm": "¿Está seguro de eliminar la organización {{name}}?",
+      "created": "Organización creada exitosamente",
+      "updated": "Organización actualizada exitosamente",
+      "deleted": "Organización eliminada exitosamente",
+      "empty": "No hay organizaciones registradas",
+      "field": {
+        "id": "#",
+        "name": "Nombre",
+        "slug": "Slug",
+        "plan": "Plan",
+        "userCount": "Usuarios",
+        "isActive": "Activo"
+      },
+      "error": {
+        "save": "Error al guardar organización",
+        "load": "Error al cargar organizaciones",
+        "delete": "Error al eliminar organización"
+      }
+    },
+    "users": {
+      "title": "Usuarios",
+      "edit": "Editar Usuario Admin",
+      "updated": "Usuario actualizado exitosamente",
+      "empty": "No hay usuarios registrados",
+      "field": {
+        "id": "#",
+        "name": "Nombre",
+        "email": "Correo",
+        "role": "Rol",
+        "isActive": "Activo",
+        "orgCount": "Organizaciones"
+      },
+      "error": {
+        "save": "Error al guardar usuario",
+        "load": "Error al cargar usuarios"
+      }
+    },
+    "plans": {
+      "title": "Planes",
+      "new": "Nuevo Plan",
+      "edit": "Editar Plan",
+      "delete": "Eliminar Plan",
+      "deleteConfirm": "¿Está seguro de eliminar el plan {{name}}?",
+      "created": "Plan creado exitosamente",
+      "updated": "Plan actualizado exitosamente",
+      "deleted": "Plan eliminado exitosamente",
+      "empty": "No hay planes registrados",
+      "field": {
+        "id": "#",
+        "name": "Nombre",
+        "label": "Etiqueta",
+        "amount": "Monto",
+        "currency": "Moneda",
+        "interval": "Intervalo",
+        "maxUsers": "Máx. Usuarios",
+        "features": "Características",
+        "isActive": "Activo"
+      },
+      "error": {
+        "save": "Error al guardar plan",
+        "load": "Error al cargar planes",
+        "delete": "Error al eliminar plan"
+      }
+    },
+    "invites": {
+      "title": "Invitaciones",
+      "new": "Nueva Invitación",
+      "delete": "Eliminar Invitación",
+      "deleteConfirm": "¿Está seguro de eliminar la invitación a {{email}}?",
+      "created": "Invitación creada exitosamente",
+      "deleted": "Invitación eliminada exitosamente",
+      "empty": "No hay invitaciones registradas",
+      "field": {
+        "id": "#",
+        "email": "Correo",
+        "organization": "Organización",
+        "role": "Rol",
+        "expiresAt": "Expira",
+        "used": "Usada"
+      },
+      "error": {
+        "save": "Error al guardar invitación",
+        "load": "Error al cargar invitaciones",
+        "delete": "Error al eliminar invitación"
+      }
+    }
+  },
+  "bootstrap": {
+    "title": "Bienvenido a GLAdmin",
+    "subtitle": "Configura tu organización para comenzar",
+    "step": {
+      "org": "Organización",
+      "admin": "Cuenta de Administrador"
+    },
+    "field": {
+      "orgName": "Nombre de la Organización",
+      "orgSlug": "Slug de URL",
+      "firstName": "Nombre",
+      "lastName": "Apellido",
+      "email": "Correo Electrónico",
+      "password": "Contraseña"
+    },
+    "next": "Siguiente",
+    "back": "Atrás",
+    "finish": "Finalizar Configuración",
+    "loading": "Configurando...",
+    "error": "Error de configuración"
+  },
+  "orgPicker": {
+    "title": "Seleccionar Organización",
+    "description": "Selecciona una organización para continuar"
+  },
   "settings": {
     "title": "Configuración",
     "description": "Configuración general del sistema.",
     "personalization": "Personalización",
     "theme": "Tema",
     "themeDescription": "Cambia entre modo claro y oscuro"
+  },
+  "pagoMovil": {
+    "config": {
+      "title": "Configuración Pago Móvil",
+      "field": {
+        "phoneNumber": "Teléfono",
+        "bankId": "Banco",
+        "idNumber": "Cédula/RIF",
+        "exchangeRate": "Tasa de Cambio (Bs./USD)",
+        "isActive": "Activo"
+      },
+      "created": "Configuración guardada exitosamente",
+      "updated": "Configuración actualizada exitosamente",
+      "empty": "No hay configuración de Pago Móvil",
+      "error": {
+        "save": "Error al guardar configuración",
+        "load": "Error al cargar configuración"
+      }
+    },
+    "transactions": {
+      "title": "Transacciones Pago Móvil",
+      "new": "Nuevo Pago",
+      "field": {
+        "amountVes": "Monto (Bs.)",
+        "amountUsd": "Monto (USD)",
+        "bank": "Banco",
+        "phoneNumber": "Teléfono",
+        "reference": "Referencia",
+        "proofImage": "Comprobante",
+        "status": "Estado",
+        "createdAt": "Fecha"
+      },
+      "status": {
+        "pending": "Pendiente",
+        "approved": "Aprobado",
+        "rejected": "Rechazado"
+      },
+      "submitted": "Pago registrado exitosamente",
+      "empty": "No hay transacciones registradas",
+      "error": {
+        "save": "Error al registrar pago",
+        "load": "Error al cargar transacciones"
+      }
+    },
+    "review": {
+      "title": "Revisar Transacción",
+      "description": "¿Está seguro de {{action}} esta transacción?",
+      "approved": "Aprobar",
+      "rejected": "Rechazar",
+      "error": "Error al revisar transacción"
+    }
+  },
+  "billing": {
+    "title": "Facturación",
+    "currentPlan": "Plan Actual",
+    "availablePlans": "Planes Disponibles",
+    "subscribe": "Suscribirse",
+    "perMonth": "/mes",
+    "perYear": "/año",
+    "features": "Características",
+    "success": "Suscripción procesada exitosamente",
+    "canceled": "Suscripción cancelada",
+    "error": {
+      "load": "Error al cargar planes",
+      "checkout": "Error al iniciar pago",
+      "notConfigured": "Stripe no está configurado. Contacta al administrador."
+    }
   }
 }

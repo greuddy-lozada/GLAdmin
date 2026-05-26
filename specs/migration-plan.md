@@ -346,4 +346,5 @@ Groups are collapsed by default. Only group headers show icons; items are text-o
 - **Legacy directories**: `api/` and `client/` were deleted on 2026-05-23 (Phase 9.12)
 - **Electron**: Dropped. If needed, create a separate `desktop/` package wrapping the Next.js build
 - **Tests**: Unit tests deferred. Integration tests deferred. Manual E2E verified.
-- **Remaining (low priority)**: `@MinLevel()` backend decorator (currently using `@Roles()` strings), accessibility audit, Lighthouse score
+- **`@MinLevel()` backend decorator**: ✅ Implemented. Both `@Roles()` and `@MinLevel()` work.
+- **Remaining (low priority)**: accessibility audit, Lighthouse score. Most spec-pending items resolved 2026-05-25.

@@ -1,0 +1,99 @@
+<h2>Frontend Impact</h2>
+<p class="subtitle">What the UI needs for multi-tenant</p>
+
+<div class="section">
+<h3>Org Context Provider</h3>
+<div class="mockup" style="text-align:left">
+<div class="mockup-body" style="padding:12px;font-size:0.85rem;line-height:1.6;">
+<code>
+// React context holding current org<br>
+interface OrgContext {<br>
+&nbsp;&nbsp;id: number;<br>
+&nbsp;&nbsp;name: string;<br>
+&nbsp;&nbsp;slug: string;<br>
+&nbsp;&nbsp;plan: { name: string; features: string[] };<br>
+&nbsp;&nbsp;role: { id: number; slug: string };<br>
+}<br><br>
+// API client auto-injects header<br>
+apiClient.defaults.headers['x-organization-id'] = orgId;
+</code>
+</div>
+</div>
+</div>
+
+<div class="section">
+<h3>Sidebar Changes</h3>
+<div class="mockup" style="background:var(--surface);border-radius:8px;padding:16px;">
+<div style="display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+  <div style="width:24px;height:24px;background:var(--accent);border-radius:4px;"></div>
+  <div style="flex:1;">
+    <div style="font-weight:600;font-size:0.85rem;">Org Name</div>
+    <div style="font-size:0.7rem;color:var(--muted);cursor:pointer;">▼ Switch Org</div>
+  </div>
+  <div style="font-size:0.65rem;background:var(--accent);color:white;padding:2px 6px;border-radius:4px;">Free</div>
+</div>
+<div style="padding-top:8px;font-size:0.75rem;">
+  → Nav items unchanged (already role-filtered)<br>
+  → New "Admin" nav item for org management<br>
+  → Org switcher dropdown at top
+</div>
+</div>
+</div>
+
+<div class="section">
+<h3>Login Flow Changes</h3>
+<div class="mockup" style="background:var(--surface);border-radius:8px;padding:16px;font-size:0.85rem;">
+<code>
+1. User enters email + password → POST /auth/login<br>
+2. Response includes list of user's orgs<br>
+3. If 1 org → auto-select, redirect to dashboard<br>
+4. If 2+ orgs → show org picker grid<br>
+5. User picks org → POST /auth/select-org<br>
+6. JWT returned with orgId + role<br>
+7. Redirect to dashboard (scoped to that org)
+</code>
+</div>
+</div>
+
+<div class="section">
+<h3>New Pages</h3>
+<div class="split">
+<div class="mockup" style="text-align:left;">
+<div class="mockup-header">Admin /users</div>
+<div class="mockup-body" style="padding:12px;font-size:0.8rem;">
+List org members<br>
+Create user<br>
+Change role<br>
+Deactivate<br>
+Generate invite
+</div>
+</div>
+<div class="mockup" style="text-align:left;">
+<div class="mockup-header">Billing</div>
+<div class="mockup-body" style="padding:12px;font-size:0.8rem;">
+Current plan<br>
+Plan selector<br>
+Payment history<br>
+Pago Movil config<br>
+Stripe portal link
+</div>
+</div>
+</div>
+</div>
+
+<div class="section">
+<h3>Existing Pages — Minimal Changes</h3>
+<p style="font-size:0.85rem;">All existing CRUD pages work as-is because:</p>
+<ul style="font-size:0.85rem;">
+<li>DataTable columns unchanged</li>
+<li>SlideForm fields unchanged</li>
+<li>API calls go through apiClient (auto-injects org header)</li>
+<li>Backend middleware filters by org</li>
+<li>Only new: org picker, admin pages, billing page</li>
+</ul>
+</div>
+
+<div class="option" data-choice="y" onclick="toggleSelect(this)">
+  <div class="letter">✓</div>
+  <div class="content"><h3>Looks good</h3><p>Write the design doc</p></div>
+</div>

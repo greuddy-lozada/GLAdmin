@@ -41,7 +41,7 @@ export default function WithholdingsPage() {
     percentage: 75,
     baseAmount: 0,
   });
-  const [suppliers, setSuppliers] = useState<{ id: number; companyName: string; documentNumber: string }[]>([]);
+  const [suppliers, setSuppliers] = useState<{ id: number; companyName: string }[]>([]);
   const [purchaseOrders, setPurchaseOrders] = useState<{ id: number; code: string | null; amount: number }[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');

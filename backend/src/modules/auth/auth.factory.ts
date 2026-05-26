@@ -18,6 +18,22 @@ export class AuthFactory {
     return this.jwtService.sign(payload, { expiresIn: '15m' });
   }
 
+  createOrgAccessToken(
+    user: UserEntity,
+    orgId: number,
+    orgRole: string,
+  ): string {
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role?.slug,
+      orgId,
+      orgRole,
+      type: 'access',
+    };
+    return this.jwtService.sign(payload, { expiresIn: '15m' });
+  }
+
   async generateRefreshToken(): Promise<{ raw: string; hash: string }> {
     const raw = crypto.randomBytes(32).toString('hex');
     const hash = await bcrypt.hash(raw, 10);

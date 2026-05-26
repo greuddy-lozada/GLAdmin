@@ -21,6 +21,7 @@
     "previous": "Previous",
     "next": "Next",
     "pageOf": "Page {{current}} of {{total}}",
+    "morePages": "More pages",
     "empty": "No records",
     "pageNotFound": "Page not found",
     "errorTitle": "Something went wrong",
@@ -82,7 +83,15 @@
     "withholdings": "Withholdings",
     "exchangeRates": "Exchange Rates",
     "roles": "Roles",
+    "adminOrganizations": "Organizations",
+    "adminUsers": "Users (Admin)",
+    "adminPlans": "Plans",
+    "adminInvites": "Invitations",
     "settings": "Settings",
+    "payments": "Payments",
+    "transactions": "Transactions",
+    "billing": "Billing",
+    "org": "Organization",
     "logout": "Log Out",
     "profile": "Profile",
     "lightMode": "Light Mode",
@@ -155,7 +164,6 @@
     "empty": "No suppliers registered",
     "field": {
       "id": "#",
-      "documentNumber": "Tax ID",
       "companyName": "Company Name",
       "businessName": "Business Name",
       "fiscalAddress": "Fiscal Address",
@@ -373,11 +381,197 @@
       "description": "Description"
     }
   },
+  "admin": {
+    "title": "Admin",
+    "organizations": {
+      "title": "Organizations",
+      "new": "New Organization",
+      "edit": "Edit Organization",
+      "delete": "Delete Organization",
+      "deleteConfirm": "Are you sure you want to delete organization {{name}}?",
+      "created": "Organization created successfully",
+      "updated": "Organization updated successfully",
+      "deleted": "Organization deleted successfully",
+      "empty": "No organizations registered",
+      "field": {
+        "id": "#",
+        "name": "Name",
+        "slug": "Slug",
+        "plan": "Plan",
+        "userCount": "Users",
+        "isActive": "Active"
+      },
+      "error": {
+        "save": "Error saving organization",
+        "load": "Error loading organizations",
+        "delete": "Error deleting organization"
+      }
+    },
+    "users": {
+      "title": "Users",
+      "edit": "Edit Admin User",
+      "updated": "User updated successfully",
+      "empty": "No users registered",
+      "field": {
+        "id": "#",
+        "name": "Name",
+        "email": "Email",
+        "role": "Role",
+        "isActive": "Active",
+        "orgCount": "Organizations"
+      },
+      "error": {
+        "save": "Error saving user",
+        "load": "Error loading users"
+      }
+    },
+    "plans": {
+      "title": "Plans",
+      "new": "New Plan",
+      "edit": "Edit Plan",
+      "delete": "Delete Plan",
+      "deleteConfirm": "Are you sure you want to delete plan {{name}}?",
+      "created": "Plan created successfully",
+      "updated": "Plan updated successfully",
+      "deleted": "Plan deleted successfully",
+      "empty": "No plans registered",
+      "field": {
+        "id": "#",
+        "name": "Name",
+        "label": "Label",
+        "amount": "Amount",
+        "currency": "Currency",
+        "interval": "Interval",
+        "maxUsers": "Max Users",
+        "features": "Features",
+        "isActive": "Active"
+      },
+      "error": {
+        "save": "Error saving plan",
+        "load": "Error loading plans",
+        "delete": "Error deleting plan"
+      }
+    },
+    "invites": {
+      "title": "Invitations",
+      "new": "New Invitation",
+      "delete": "Delete Invitation",
+      "deleteConfirm": "Are you sure you want to delete invitation to {{email}}?",
+      "created": "Invitation created successfully",
+      "deleted": "Invitation deleted successfully",
+      "empty": "No invitations registered",
+      "field": {
+        "id": "#",
+        "email": "Email",
+        "organization": "Organization",
+        "role": "Role",
+        "expiresAt": "Expires",
+        "used": "Used"
+      },
+      "error": {
+        "save": "Error saving invitation",
+        "load": "Error loading invitations",
+        "delete": "Error deleting invitation"
+      }
+    }
+  },
+  "bootstrap": {
+    "title": "Welcome to GLAdmin",
+    "subtitle": "Set up your organization to get started",
+    "step": {
+      "org": "Organization",
+      "admin": "Admin Account"
+    },
+    "field": {
+      "orgName": "Organization Name",
+      "orgSlug": "URL Slug",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "password": "Password"
+    },
+    "next": "Next",
+    "back": "Back",
+    "finish": "Finish Setup",
+    "loading": "Setting up...",
+    "error": "Setup failed"
+  },
+  "orgPicker": {
+    "title": "Select Organization",
+    "description": "Choose an organization to continue"
+  },
   "settings": {
     "title": "Settings",
     "description": "General system settings.",
     "personalization": "Personalization",
     "theme": "Theme",
     "themeDescription": "Switch between light and dark mode"
+  },
+  "pagoMovil": {
+    "config": {
+      "title": "Pago Móvil Configuration",
+      "field": {
+        "phoneNumber": "Phone Number",
+        "bankId": "Bank",
+        "idNumber": "ID Number",
+        "exchangeRate": "Exchange Rate (Bs./USD)",
+        "isActive": "Active"
+      },
+      "created": "Configuration saved successfully",
+      "updated": "Configuration updated successfully",
+      "empty": "No Pago Móvil configuration",
+      "error": {
+        "save": "Error saving configuration",
+        "load": "Error loading configuration"
+      }
+    },
+    "transactions": {
+      "title": "Pago Móvil Transactions",
+      "new": "New Payment",
+      "field": {
+        "amountVes": "Amount (Bs.)",
+        "amountUsd": "Amount (USD)",
+        "bank": "Bank",
+        "phoneNumber": "Phone Number",
+        "reference": "Reference",
+        "proofImage": "Proof Image",
+        "status": "Status",
+        "createdAt": "Date"
+      },
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "submitted": "Payment submitted successfully",
+      "empty": "No transactions registered",
+      "error": {
+        "save": "Error submitting payment",
+        "load": "Error loading transactions"
+      }
+    },
+    "review": {
+      "title": "Review Transaction",
+      "description": "Are you sure you want to {{action}} this transaction?",
+      "approved": "Approve",
+      "rejected": "Reject",
+      "error": "Error reviewing transaction"
+    }
+  },
+  "billing": {
+    "title": "Billing",
+    "currentPlan": "Current Plan",
+    "availablePlans": "Available Plans",
+    "subscribe": "Subscribe",
+    "perMonth": "/month",
+    "perYear": "/year",
+    "features": "Features",
+    "success": "Subscription processed successfully",
+    "canceled": "Subscription canceled",
+    "error": {
+      "load": "Error loading plans",
+      "checkout": "Error starting checkout",
+      "notConfigured": "Stripe is not configured. Contact the administrator."
+    }
   }
 }

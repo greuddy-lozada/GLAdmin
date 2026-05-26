@@ -13,6 +13,10 @@ import {
   FileText,
   Settings,
   ShieldCheck,
+  CreditCard,
+  Mail,
+  ArrowLeftRight,
+  Wallet,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -69,6 +73,10 @@ export const navigationGroups: NavGroup[] = [
       { key: 'users', label: 'Usuarios', icon: Users, path: '/users', minLevel: 80 },
       { key: 'companies', label: 'Empresas', icon: Building2, path: '/companies', minLevel: 80 },
       { key: 'roles', label: 'Roles', icon: ShieldCheck, path: '/roles', minLevel: 60 },
+      { key: 'adminOrganizations', label: 'Organizaciones', icon: Building2, path: '/admin/organizations', minLevel: 80 },
+      { key: 'adminUsers', label: 'Usuarios Admin', icon: Users, path: '/admin/users', minLevel: 80 },
+      { key: 'adminPlans', label: 'Planes', icon: CreditCard, path: '/admin/plans', minLevel: 80 },
+      { key: 'adminInvites', label: 'Invitaciones', icon: Mail, path: '/admin/invites', minLevel: 80 },
     ],
   },
   {
@@ -76,6 +84,9 @@ export const navigationGroups: NavGroup[] = [
     label: 'nav.group.config',
     items: [
       { key: 'settings', label: 'Configuración', icon: Settings, path: '/settings', minLevel: 60 },
+      { key: 'payments', label: 'Pagos', icon: Wallet, path: '/settings/payments', minLevel: 60 },
+      { key: 'transactions', label: 'Transacciones', icon: ArrowLeftRight, path: '/settings/payments/transactions', minLevel: 40 },
+      { key: 'billing', label: 'Facturación', icon: CreditCard, path: '/billing', minLevel: 40 },
     ],
   },
 ];

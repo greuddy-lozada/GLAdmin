@@ -20,14 +20,34 @@ export default function LoginPage() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const [panelOpen, setPanelOpen] = useState(false);
+  const [checkingBootstrap, setCheckingBootstrap] = useState(true);
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      router.replace('/dashboard');
-    }
-  }, [isLoading, isAuthenticated, router]);
+    const checkBootstrap = async () => {
+      try {
+        const res = await fetch('/api/bootstrap/status');
+        const json = await res.json();
+        if (json.data?.requiresSetup) {
+          router.replace('/setup');
+          return;
+        }
+      } catch {
+        // If bootstrap endpoint fails, proceed to login normally
+      }
+      setCheckingBootstrap(false);
+    };
+    checkBootstrap();
+  }, [router]);
 
-  if (isLoading) return null;
+  useEffect(() => {
+    if (checkingBootstrap) return;
+    if (!isLoading && isAuthenticated) {
+      const savedOrgId = localStorage.getItem('currentOrgId');
+      router.replace(savedOrgId ? '/dashboard' : '/org-picker');
+    }
+  }, [isLoading, isAuthenticated, checkingBootstrap, router]);
+
+  if (isLoading || checkingBootstrap) return null;
 
   return (
     <div className="relative h-full overflow-hidden">

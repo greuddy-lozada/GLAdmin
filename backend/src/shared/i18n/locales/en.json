@@ -7,7 +7,14 @@
     "USER_FOUND": "User found",
     "USER_NOT_FOUND": "User not found",
     "TOKEN_MISSING": "Missing auth token",
-    "TOKEN_INVALID": "Invalid or expired token"
+    "TOKEN_INVALID": "Invalid or expired token",
+    "ORG_SELECTED": "Organization selected",
+    "NO_ORGANIZATIONS": "User does not belong to any organization",
+    "NOT_ORG_MEMBER": "You are not a member of this organization",
+    "EMAIL_EXISTS": "Email already registered"
+  },
+  "ADMIN": {
+    "MAX_USERS_REACHED": "User limit reached. Upgrade your plan to add more users."
   },
   "USER": {
     "CREATED": "User has been created",
@@ -71,6 +78,9 @@
   },
   "ROLE": {
     "NOT_FOUND": "Role not found"
+  },
+  "BOOTSTRAP": {
+    "SLUG_TAKEN": "Slug is already in use"
   },
   "COMMON": {
     "RECORD_NOT_FOUND": "Record not found",

@@ -1,0 +1,101 @@
+<h2>Implementation Phases</h2>
+<p class="subtitle">Build order, each phase is deployable</p>
+
+<div class="section">
+<div class="mockup" style="text-align:left">
+<div class="mockup-header">Phase 1: Foundation (Schema + Middleware)</div>
+<div class="mockup-body" style="padding:12px;font-size:0.85rem;line-height:1.6;">
+1. Create Organization, Plan, UserOrganization models in Prisma<br>
+2. Add organizationId to all 13 business tables<br>
+3. Add currentOrganizationId to User<br>
+4. Prisma middleware for auto-org filtering<br>
+5. TenantMiddleware (header/query/cookie resolution)<br>
+6. Migration: seed default org + assign all existing data<br>
+7. Seed Free plan + assign to default org
+</div>
+</div>
+</div>
+
+<div class="section">
+<div class="mockup" style="text-align:left">
+<div class="mockup-header">Phase 2: Auth + Org Picker</div>
+<div class="mockup-body" style="padding:12px;font-size:0.85rem;line-height:1.6;">
+1. Login returns list of user's orgs<br>
+2. POST /auth/select-org { organizationId } → JWT with org context<br>
+3. Frontend: org picker page after login<br>
+4. JWT payload includes orgId + org-scoped roleId<br>
+5. RolesGuard reads role from JWT org context<br>
+6. Update AuthProvider with org switching
+</div>
+</div>
+</div>
+
+<div class="section">
+<div class="mockup" style="text-align:left">
+<div class="mockup-header">Phase 3: Admin Panel (User Management)</div>
+<div class="mockup-body" style="padding:12px;font-size:0.85rem;line-height:1.6;">
+1. GET /admin/users — list org users<br>
+2. POST /admin/users — create user with temp password<br>
+3. PATCH /admin/users/:id/role — change org role<br>
+4. POST /admin/users/:id/deactivate | /reactivate<br>
+5. POST /admin/invites — generate invite code<br>
+6. POST /auth/accept-invite — consume invite<br>
+7. GET /admin/stats — org user stats
+</div>
+</div>
+</div>
+
+<div class="section">
+<div class="mockup" style="text-align:left">
+<div class="mockup-header">Phase 4: Frontend Admin + Org Context</div>
+<div class="mockup-body" style="padding:12px;font-size:0.85rem;line-height:1.6;">
+1. OrgContext provider (React context)<br>
+2. API client auto-injects x-organization-id header<br>
+3. Org switcher in sidebar header<br>
+4. Admin page: user list, create, deactivate, invites<br>
+5. All existing CRUD pages scope to current org<br>
+6. Settings page: org settings + plan info
+</div>
+</div>
+</div>
+
+<div class="section">
+<div class="mockup" style="text-align:left">
+<div class="mockup-header">Phase 5: Plans + Feature Gating</div>
+<div class="mockup-body" style="padding:12px;font-size:0.85rem;line-height:1.6;">
+1. PlanGuard decorator + @RequiresFeature()<br>
+2. GET /subscriptions/plans — list available plans<br>
+3. POST /subscriptions/select-plan — change plan (admin)<br>
+4. Frontend: plan badge in sidebar, feature-gated buttons<br>
+5. <RequireFeature> component for conditional rendering
+</div>
+</div>
+</div>
+
+<div class="section">
+<div class="mockup" style="text-align:left">
+<div class="mockup-header">Phase 6: Payments</div>
+<div class="mockup-body" style="padding:12px;font-size:0.85rem;line-height:1.6;">
+1. Create PagoMovilConfig + PagoMovilTransaction models<br>
+2. Pago Movil endpoints (banks, initiate, proof, admin review)<br>
+3. Stripe integration (checkout session, portal, webhooks)<br>
+4. Frontend: billing page, payment history, plan upgrade
+</div>
+</div>
+</div>
+
+<div class="section">
+<div class="mockup" style="text-align:left">
+<div class="mockup-header">Phase 7: Bootstrap / Setup Wizard</div>
+<div class="mockup-body" style="padding:12px;font-size:0.85rem;line-height:1.6;">
+1. GET /bootstrap/status — first-run detection<br>
+2. POST /bootstrap/setup — create first org + admin user<br>
+3. Frontend: setup wizard page on first visit
+</div>
+</div>
+</div>
+
+<div class="option" data-choice="y" onclick="toggleSelect(this)">
+  <div class="letter">✓</div>
+  <div class="content"><h3>Looks good</h3><p>Proceed to frontend impact</p></div>
+</div>

@@ -1,23 +1,30 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
+import { ContextService } from '../../modules/tenant/context.service';
 import { CreatePurchaseOrderDto } from './dto/create-purchase-order.dto';
 import { UpdatePurchaseOrderDto } from './dto/update-purchase-order.dto';
 
 @Injectable()
 export class PurchaseOrdersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly contextService: ContextService,
+  ) {}
 
   async create(dto: CreatePurchaseOrderDto) {
+    const ctx = this.contextService?.getCurrent();
+    const orgId = ctx?.organizationId;
     const { details, ...header } = dto;
     const purchaseOrder = await this.prisma.purchaseOrder.create({
       data: {
         ...header,
+        organizationId: orgId!,
         details: details
           ? {
-              create: details,
+              create: details.map(d => ({ ...d, organizationId: orgId! })) as any,
             }
           : undefined,
-      },
+      } as any,
       include: { supplier: true, details: { include: { product: true } }, exchangeRateRef: true, officialExchangeRateRef: true },
     });
     return { data: purchaseOrder, message: 'PURCHASE_ORDER.CREATED' };

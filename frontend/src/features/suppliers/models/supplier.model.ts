@@ -1,6 +1,5 @@
 export interface Supplier {
   id: number;
-  documentNumber: string;
   companyName: string;
   businessName?: string | null;
   fiscalAddress?: string | null;
@@ -17,7 +16,6 @@ export interface Supplier {
 }
 
 export interface CreateSupplierRequest {
-  documentNumber: string;
   companyName: string;
   businessName?: string;
   fiscalAddress?: string;
@@ -31,7 +29,6 @@ export interface CreateSupplierRequest {
 }
 
 export interface UpdateSupplierRequest {
-  documentNumber?: string;
   companyName?: string;
   businessName?: string;
   fiscalAddress?: string;

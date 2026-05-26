@@ -1,5 +1,5 @@
 import apiClient from '@/lib/api/api-client';
-import { LoginRequest, LoginResponse, RefreshResponse } from '../models/auth.model';
+import { LoginRequest, LoginResponse, RefreshResponse, SelectOrgResponse } from '../models/auth.model';
 
 export const authService = {
   async login(data: LoginRequest): Promise<LoginResponse> {
@@ -19,5 +19,10 @@ export const authService = {
 
   async logout(): Promise<void> {
     await apiClient.post('/auth/logout');
+  },
+
+  async selectOrg(organizationId: number): Promise<SelectOrgResponse> {
+    const response = await apiClient.post('/auth/select-org', { organizationId });
+    return response.data.data;
   },
 };

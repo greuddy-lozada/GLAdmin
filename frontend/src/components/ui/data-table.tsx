@@ -18,6 +18,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Pencil, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { useI18n } from '@/i18n';
@@ -209,15 +210,19 @@ export function DataTable<T extends { id: number }>({
         <div className="flex items-center justify-between border-t px-3 py-3">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>{t('common.rowsPerPage')}</span>
-            <select
-              className="h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs"
-              value={pageSize}
-              onChange={(e) => onPageSizeChange?.(parseInt(e.target.value, 10))}
+            <Select
+              value={String(pageSize)}
+              onValueChange={(v) => onPageSizeChange?.(parseInt(v, 10))}
             >
-              {[5, 10, 20, 50].map((size) => (
-                <option key={size} value={size}>{size}</option>
-              ))}
-            </select>
+              <SelectTrigger className="h-9 w-[72px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {[5, 10, 20, 50].map((size) => (
+                  <SelectItem key={size} value={String(size)}>{String(size)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex items-center gap-1">
             <Button

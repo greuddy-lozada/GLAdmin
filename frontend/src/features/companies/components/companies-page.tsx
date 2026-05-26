@@ -28,7 +28,7 @@ export default function CompaniesPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [formData, setFormData] = useState<CreateCompanyRequest>({
-    documentNumber: '',
+    taxId: '',
     name: '',
     address: '',
     phoneNumber: '',
@@ -40,7 +40,7 @@ export default function CompaniesPage() {
 
   const columns: Column<Company>[] = [
     { field: 'id', headerName: t('companies.field.id') },
-    { field: 'documentNumber', headerName: t('companies.field.documentNumber') },
+    { field: 'taxId', headerName: t('companies.field.taxId') },
     { field: 'name', headerName: t('companies.field.name') },
     { field: 'phoneNumber', headerName: t('companies.field.phoneNumber') },
     { field: 'email', headerName: t('companies.field.email') },
@@ -49,7 +49,7 @@ export default function CompaniesPage() {
   const openCreate = () => {
     setSelectedCompany(null);
     setError('');
-    setFormData({ documentNumber: '', name: '', address: '', phoneNumber: '', email: '' });
+    setFormData({ taxId: '', name: '', address: '', phoneNumber: '', email: '' });
     setFormOpen(true);
   };
 
@@ -57,7 +57,7 @@ export default function CompaniesPage() {
     setSelectedCompany(company);
     setError('');
     setFormData({
-      documentNumber: company.documentNumber,
+      taxId: company.taxId,
       name: company.name,
       address: company.address,
       phoneNumber: company.phoneNumber,
@@ -73,7 +73,7 @@ export default function CompaniesPage() {
     try {
       if (selectedCompany) {
         const data: UpdateCompanyRequest = {
-          documentNumber: formData.documentNumber,
+          taxId: formData.taxId,
           name: formData.name,
           address: formData.address,
           phoneNumber: formData.phoneNumber,
@@ -116,8 +116,8 @@ export default function CompaniesPage() {
       panel={
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>{t('companies.field.documentNumber')}</Label>
-            <Input value={formData.documentNumber} onChange={(e) => setFormData({ ...formData, documentNumber: e.target.value })} required />
+            <Label>{t('companies.field.taxId')}</Label>
+            <Input value={formData.taxId} onChange={(e) => setFormData({ ...formData, taxId: e.target.value })} required />
           </div>
           <div className="space-y-2">
             <Label>{t('companies.field.name')}</Label>

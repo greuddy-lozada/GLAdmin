@@ -13,7 +13,7 @@ export interface Withholding {
   period?: string | null;
   createdAt: string;
   updatedAt: string;
-  supplier?: { id: number; companyName: string; documentNumber: string };
+  supplier?: { id: number; companyName: string };
   purchaseOrder?: { id: number; code?: string | null } | null;
 }
 
