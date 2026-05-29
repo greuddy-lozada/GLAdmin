@@ -34,6 +34,7 @@ import { PagoMovilModule } from './modules/pago-movil/pago-movil.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { BootstrapModule } from './modules/bootstrap/bootstrap.module';
 import { SyncModule } from './modules/sync/sync.module';
+import { SalesModule } from './modules/sales/sales.module';
 
 import appConfig from './core/config/app.config';
 import jwtConfig from './core/config/jwt.config';
@@ -73,6 +74,7 @@ import databaseConfig from './core/config/database.config';
     PaymentsModule,
     BootstrapModule,
     SyncModule,
+    SalesModule,
   ],
   providers: [
     {
