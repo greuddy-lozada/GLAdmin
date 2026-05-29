@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
   ParseIntPipe,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
@@ -25,7 +26,10 @@ export class ProductsController {
 
   @Get()
   @Roles('master', 'admin', 'employee')
-  findAll() {
+  findAll(@Query('includeStock') includeStock?: string) {
+    if (includeStock === 'true') {
+      return this.productsService.findAllWithStock();
+    }
     return this.productsService.findAll();
   }
 

@@ -55,4 +55,21 @@ export class ProductsService {
     });
     return { data: product, message: 'PRODUCT.DELETED' };
   }
+
+  async findAllWithStock() {
+    const orgId = this.contextService.getCurrent()?.organizationId;
+    if (!orgId) throw new Error('No organization context');
+    const products = await this.prisma.product.findMany({
+      where: { organizationId: orgId, available: true },
+      include: {
+        tax: true,
+        stocks: true,
+      },
+    });
+
+    return products.map((product) => ({
+      ...product,
+      stock: product.stocks.reduce((sum, s) => sum + s.existence, 0),
+    }));
+  }
 }
