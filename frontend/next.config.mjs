@@ -1,3 +1,5 @@
+import withSerwist from '@serwist/next';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   async rewrites() {
@@ -10,4 +12,7 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSerwist({
+  swSrc: 'sw.ts',
+  swDest: 'public/sw.js',
+})(nextConfig);
