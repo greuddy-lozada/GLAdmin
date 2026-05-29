@@ -240,6 +240,25 @@ export class SyncEngine {
     await this.pull();
     await this.push();
   }
+
+  async clearLocalData(): Promise<void> {
+    await localDb.products.clear();
+    await localDb.customers.clear();
+    await localDb.syncQueue.clear();
+    await localDb.stockCache.clear();
+    await localDb.sales.clear();
+    await localDb.syncMetadata.clear();
+    await localDb.suppliers.clear();
+    await localDb.companies.clear();
+    await localDb.taxes.clear();
+  }
+
+  async onOrgSwitch(): Promise<void> {
+    await this.push();
+    await this.clearLocalData();
+    this._lastSyncAt = undefined;
+    await this.pull();
+  }
 }
 
 export const syncEngine = new SyncEngine();
