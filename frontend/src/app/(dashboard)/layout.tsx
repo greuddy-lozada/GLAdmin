@@ -10,6 +10,7 @@ import { useI18n } from '@/i18n';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { UserNav } from '@/components/ui/user-nav';
 import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar';
+import { SyncIndicator } from '@/components/sync-indicator';
 import { LayoutDashboard, Users, UserCog, Truck, Building2, Package, Receipt, Tags, Store, ShoppingCart, DollarSign, FileText, ShieldCheck, Settings, CreditCard, Mail, ArrowLeftRight, Wallet, ChevronDown, ChevronRight } from 'lucide-react';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -209,7 +210,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               </p>
             )}
           </div>
-          <UserNav />
+          <div className="flex items-center gap-3">
+            <SyncIndicator />
+            <UserNav />
+          </div>
         </div>
         <div className="px-6 md:px-8 pt-4 pb-4 shrink-0">
           <Breadcrumb />
