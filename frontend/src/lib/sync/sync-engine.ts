@@ -10,6 +10,8 @@ export class SyncEngine {
   private pushInFlight = false;
   private pullInFlight = false;
   private _lastSyncAt?: string;
+  private broadcastChannel?: BroadcastChannel;
+  private isLeader = false;
 
   get lastSyncAt() {
     return this._lastSyncAt;
@@ -149,20 +151,51 @@ export class SyncEngine {
   start() {
     if (typeof window === 'undefined') return;
 
-    this.pullInterval = setInterval(() => this.pull(), 30_000);
+    this.broadcastChannel = new BroadcastChannel('gladmin-sync');
+
+    this.broadcastChannel.onmessage = (event) => {
+      if (event.data.type === 'leader-election' && event.data.tabId < this.getTabId()) {
+        this.isLeader = false;
+      }
+    };
+
+    this.broadcastChannel.postMessage({ type: 'leader-election', tabId: this.getTabId() });
+    setTimeout(() => {
+      this.isLeader = true;
+    }, 1000);
+
+    this.pullInterval = setInterval(() => {
+      if (this.isLeader) {
+        this.pull();
+      }
+    }, 30_000);
 
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === 'visible' && this.isLeader) {
         this.pull();
       }
     });
 
-    this.pull();
+    if (this.isLeader) {
+      this.pull();
+    }
+  }
+
+  private getTabId(): number {
+    let tabId = sessionStorage.getItem('tabId');
+    if (!tabId) {
+      tabId = Math.random().toString(36).substring(2);
+      sessionStorage.setItem('tabId', tabId);
+    }
+    return parseInt(tabId, 36);
   }
 
   stop() {
     if (this.pullInterval) {
       clearInterval(this.pullInterval);
+    }
+    if (this.broadcastChannel) {
+      this.broadcastChannel.close();
     }
   }
 
