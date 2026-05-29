@@ -3,6 +3,10 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react';
 import { User, OrganizationInfo, OrganizationDetail } from '@/features/auth/models/auth.model';
 import { authService } from '@/features/auth/services/auth.service';
+import { localDb } from '@/lib/sync/db';
+import { networkStatus } from '@/lib/sync/network-status';
+import { PinSetup } from '@/features/auth/components/pin-setup';
+import { PinUnlock } from '@/features/auth/components/pin-unlock';
 
 interface AuthContextType {
   user: User | null;
@@ -29,6 +33,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [organizations, setOrganizations] = useState<OrganizationInfo[]>([]);
   const [currentOrg, setCurrentOrg] = useState<OrganizationDetail | null>(null);
+  const [showPinSetup, setShowPinSetup] = useState(false);
+  const [showPinUnlock, setShowPinUnlock] = useState(false);
   const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const scheduleRefresh = useCallback((refreshToken: string, expiresIn: number) => {
@@ -43,6 +49,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem(REFRESH_KEY, res.refreshToken);
         scheduleRefresh(res.refreshToken, res.expiresIn);
       } catch {
+        const savedUser = localStorage.getItem(USER_KEY);
+        const parsed = savedUser ? JSON.parse(savedUser) as User : null;
+        if (parsed && !networkStatus.isOnline) {
+          const pinStored = await localDb.syncMetadata.get(`pin_${parsed.id}`);
+          if (pinStored) {
+            setShowPinUnlock(true);
+            return;
+          }
+        }
         setToken(null);
         setUser(null);
         localStorage.removeItem(TOKEN_KEY);
@@ -97,6 +112,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(ORG_ID_KEY, String(response.organization.id));
     }
     scheduleRefresh(response.refreshToken, response.expiresIn);
+    const pinStored = await localDb.syncMetadata.get(`pin_${response.user.id}`);
+    if (!pinStored) {
+      setShowPinSetup(true);
+    }
     return { organizations: response.organizations };
   }, [scheduleRefresh]);
 
@@ -144,6 +163,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }}
     >
       {children}
+      {showPinSetup && user && (
+        <PinSetup
+          userId={user.id}
+          onComplete={() => setShowPinSetup(false)}
+        />
+      )}
+      {showPinUnlock && user && (
+        <PinUnlock
+          userId={user.id}
+          onUnlock={() => setShowPinUnlock(false)}
+        />
+      )}
     </AuthContext.Provider>
   );
 }
