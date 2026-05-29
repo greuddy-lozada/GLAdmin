@@ -176,6 +176,15 @@ export class SyncEngine {
       }
     });
 
+    window.addEventListener('beforeunload', (event) => {
+      syncQueue.count().then(count => {
+        if (count > 0) {
+          event.preventDefault();
+          event.returnValue = `You have ${count} pending changes that haven't been synced. Are you sure you want to leave?`;
+        }
+      });
+    });
+
     if (this.isLeader) {
       this.pull();
     }
