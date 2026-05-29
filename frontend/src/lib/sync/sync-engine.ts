@@ -45,7 +45,7 @@ export class SyncEngine {
         params: since ? { since } : undefined,
       });
 
-      const { products, customers, exchangeRates, cursor } = response.data.data;
+      const { products, customers, exchangeRates, suppliers, companies, taxes, cursor } = response.data.data;
 
       for (const product of products) {
         await localDb.products.put({
@@ -69,6 +69,34 @@ export class SyncEngine {
           taxId: customer.taxId,
           phone: customer.phone,
           updatedAt: customer.updatedAt,
+        });
+      }
+
+      for (const supplier of suppliers) {
+        await localDb.suppliers.put({
+          id: supplier.id,
+          organizationId: 1,
+          companyName: supplier.companyName,
+          updatedAt: supplier.updatedAt,
+        });
+      }
+
+      for (const company of companies) {
+        await localDb.companies.put({
+          id: company.id,
+          organizationId: 1,
+          name: company.name,
+          updatedAt: company.updatedAt,
+        });
+      }
+
+      for (const tax of taxes) {
+        await localDb.taxes.put({
+          id: tax.id,
+          organizationId: 1,
+          name: tax.name,
+          percentage: tax.percentage,
+          updatedAt: tax.updatedAt,
         });
       }
 
