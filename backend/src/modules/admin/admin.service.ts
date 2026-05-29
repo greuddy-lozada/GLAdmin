@@ -15,7 +15,7 @@ import { CreatePlanDto } from './dto/create-plan.dto';
 import { UpdatePlanDto } from './dto/update-plan.dto';
 import { CreateInviteDto } from './dto/create-invite.dto';
 
-interface UserWithRelations {
+export interface UserWithRelations {
   id: number;
   email: string;
   userName: string;
@@ -29,13 +29,13 @@ interface UserWithRelations {
   createdAt: Date;
   updatedAt: Date;
   currentOrganizationId: number | null;
-  role: { id: number; name: string; slug: string; level: number };
+  role: { id: number; name: string; slug: string; createdAt: Date; updatedAt: Date };
   organizations: {
     userId: number;
     organizationId: number;
     roleId: number;
-    organization: { id: number; name: string; slug: string };
-    role: { id: number; name: string; slug: string; level: number };
+    organization: { id: number; name: string; slug: string; isActive: boolean; settings: string | null; planId: number | null; createdAt: Date; updatedAt: Date };
+    role: { id: number; name: string; slug: string; createdAt: Date; updatedAt: Date };
   }[];
 }
 

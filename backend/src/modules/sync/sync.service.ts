@@ -28,7 +28,7 @@ export interface SyncProductWithStock {
 
 interface SaleWithDetails {
   id: number;
-  details: { idProduct: number; quantity: number }[];
+  details: { idProduct: number; quantity: number | null }[];
 }
 
 @Injectable()

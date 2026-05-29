@@ -4,13 +4,13 @@ import { ContextService } from '../../modules/tenant/context.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 
-interface ProductWithStock {
+export interface ProductWithStock {
   id: number;
   name: string;
   price: number;
   available: boolean;
   organizationId: number;
-  tax?: { id: number; name: string; percentage: number } | null;
+  tax?: { id: number; name: string | null; percentage: number } | null;
   stocks: { existence: number }[];
   stock: number;
 }
@@ -21,7 +21,7 @@ interface ProductWithStocks {
   price: number;
   available: boolean;
   organizationId: number;
-  tax?: { id: number; name: string; percentage: number } | null;
+  tax?: { id: number; name: string | null; percentage: number } | null;
   stocks: { existence: number }[];
 }
 

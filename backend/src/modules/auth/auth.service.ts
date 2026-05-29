@@ -31,7 +31,8 @@ interface UserOrganizationWithRelations {
     id: number;
     name: string;
     slug: string;
-    level: number;
+    createdAt: Date;
+    updatedAt: Date;
   };
 }
 
