@@ -1,14 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { ContextService } from '../tenant/context.service';
+import { SalesService } from '../sales/sales.service';
 import { PushMutationDto } from './dto/push-mutation.dto';
 import { ResolveConflictDto } from './dto/resolve-conflict.dto';
+import { CreateSaleDto } from '../sales/dto/create-sale.dto';
 
 @Injectable()
 export class SyncService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly context: ContextService,
+    private readonly salesService: SalesService,
   ) {}
 
   async pull(since?: string) {
@@ -103,13 +106,13 @@ export class SyncService {
     for (const mutation of mutations) {
       try {
         if (mutation.table === 'sales' && mutation.operation === 'create') {
-          const saleData = mutation.data as {
+          const mutationItems = mutation.data as {
             items: Array<{ productId: number; quantity: number }>;
           };
 
           let hasConflict = false;
 
-          for (const item of saleData.items) {
+          for (const item of mutationItems.items) {
             const currentStock = await this.prisma.stock.findFirst({
               where: { idProduct: item.productId, organizationId: orgId },
             });
@@ -159,39 +162,30 @@ export class SyncService {
               }
             }
 
-            await this.prisma.stock.update({
-              where: { id: currentStock!.id },
-              data: { existence: { decrement: item.quantity } },
-            });
           }
 
           if (hasConflict) continue;
 
-          const sale = await this.prisma.sale.create({
-            data: {
-              organizationId: orgId,
-              code: mutation.data.code as string,
-              date: new Date(mutation.data.date as string),
-              amount: mutation.data.amount as number,
-              amountUsd: mutation.data.amountUsd as number,
-              exchangeRate: mutation.data.exchangeRate as number,
-              paymentMethod: mutation.data.paymentMethod as number,
-              status: mutation.data.status as number,
-              idCustomer: mutation.data.idCustomer as number,
-              details: {
-                create: (mutation.data.items as Array<{ productId: number; quantity: number; unitPrice: number; unitPriceUsd: number; subtotal: number; subtotalUsd: number }>).map((item) => ({
-                  organizationId: orgId,
-                  idProduct: item.productId,
-                  quantity: item.quantity,
-                  unitPrice: item.unitPrice,
-                  unitPriceUsd: item.unitPriceUsd,
-                  subtotal: item.subtotal,
-                  subtotalUsd: item.subtotalUsd,
-                })),
-              },
-            },
-          });
+          const createSaleDto: CreateSaleDto = {
+            code: mutation.data.code as string,
+            date: new Date(mutation.data.date as string).toISOString(),
+            amount: mutation.data.amount as number,
+            amountUsd: mutation.data.amountUsd as number,
+            exchangeRate: mutation.data.exchangeRate as number,
+            paymentMethod: mutation.data.paymentMethod as number,
+            status: mutation.data.status as number,
+            idCustomer: mutation.data.idCustomer as number,
+            items: (mutation.data.items as Array<{ productId: number; quantity: number; unitPrice: number; unitPriceUsd: number; subtotal: number; subtotalUsd: number }>).map((item) => ({
+              productId: item.productId,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              unitPriceUsd: item.unitPriceUsd,
+              subtotal: item.subtotal,
+              subtotalUsd: item.subtotalUsd,
+            })),
+          };
 
+          const sale = await this.salesService.create(createSaleDto);
           accepted.push(sale.id);
         } else {
           accepted.push(0);
