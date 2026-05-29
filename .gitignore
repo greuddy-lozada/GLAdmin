@@ -16,7 +16,6 @@ build/
 .DS_Store
 *.log
 *.txt
-/specs
 # Environment variables (Sensitive)
 .env*
 !*/.env.example
