@@ -1,4 +1,4 @@
-import withSerwist from '@serwist/next';
+import { withSerwist } from '@serwist/turbopack';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -12,7 +12,4 @@ const nextConfig = {
   },
 };
 
-export default withSerwist({
-  swSrc: 'sw.ts',
-  swDest: 'public/sw.js',
-})(nextConfig);
+export default withSerwist(nextConfig);
