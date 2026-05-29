@@ -33,6 +33,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { PagoMovilModule } from './modules/pago-movil/pago-movil.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { BootstrapModule } from './modules/bootstrap/bootstrap.module';
+import { SyncModule } from './modules/sync/sync.module';
 
 import appConfig from './core/config/app.config';
 import jwtConfig from './core/config/jwt.config';
@@ -71,6 +72,7 @@ import databaseConfig from './core/config/database.config';
     PagoMovilModule,
     PaymentsModule,
     BootstrapModule,
+    SyncModule,
   ],
   providers: [
     {
