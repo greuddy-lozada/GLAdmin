@@ -12,6 +12,29 @@ import { LoginDto } from './dto/login.dto';
 import { RefreshDto } from './dto/refresh.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 
+interface UserOrganizationWithRelations {
+  userId: number;
+  organizationId: number;
+  roleId: number;
+  organization: {
+    id: number;
+    name: string;
+    slug: string;
+    plan: {
+      id: number;
+      name: string;
+      label: string;
+      features: string;
+    } | null;
+  };
+  role: {
+    id: number;
+    name: string;
+    slug: string;
+    level: number;
+  };
+}
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -250,7 +273,7 @@ export class AuthService {
   }
 
   private async getUserOrgs(userId: number) {
-    const userOrgs = await this.prisma.userOrganization.findMany({
+    const userOrgs: UserOrganizationWithRelations[] = await this.prisma.userOrganization.findMany({
       where: { userId },
       include: {
         organization: { include: { plan: true } },

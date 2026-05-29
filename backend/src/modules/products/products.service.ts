@@ -4,6 +4,27 @@ import { ContextService } from '../../modules/tenant/context.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 
+interface ProductWithStock {
+  id: number;
+  name: string;
+  price: number;
+  available: boolean;
+  organizationId: number;
+  tax?: { id: number; name: string; percentage: number } | null;
+  stocks: { existence: number }[];
+  stock: number;
+}
+
+interface ProductWithStocks {
+  id: number;
+  name: string;
+  price: number;
+  available: boolean;
+  organizationId: number;
+  tax?: { id: number; name: string; percentage: number } | null;
+  stocks: { existence: number }[];
+}
+
 @Injectable()
 export class ProductsService {
   constructor(
@@ -56,7 +77,7 @@ export class ProductsService {
     return { data: product, message: 'PRODUCT.DELETED' };
   }
 
-  async findAllWithStock() {
+  async findAllWithStock(): Promise<ProductWithStock[]> {
     const orgId = this.contextService.getCurrent()?.organizationId;
     if (!orgId) throw new Error('No organization context');
     const products = await this.prisma.product.findMany({
@@ -67,9 +88,9 @@ export class ProductsService {
       },
     });
 
-    return products.map((product) => ({
+    return products.map((product: ProductWithStocks) => ({
       ...product,
-      stock: product.stocks.reduce((sum, s) => sum + s.existence, 0),
-    }));
+      stock: product.stocks.reduce((sum: number, s: { existence: number }) => sum + s.existence, 0),
+    })) as ProductWithStock[];
   }
 }

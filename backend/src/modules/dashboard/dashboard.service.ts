@@ -1,6 +1,27 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 
+export interface ProductWithExistence {
+  id: number;
+  name: string;
+  price: number;
+  existence: number;
+}
+
+interface RecentOrder {
+  id: number;
+  code: string;
+  date: Date;
+  amount: number;
+  supplier: { companyName: string };
+}
+
+interface TopSupplier {
+  id: number;
+  companyName: string;
+  _count: { purchaseOrders: number };
+}
+
 @Injectable()
 export class DashboardService {
   constructor(private readonly prisma: PrismaService) {}
@@ -49,16 +70,21 @@ export class DashboardService {
           orderBy: { purchaseOrders: { _count: 'desc' } },
           take: 5,
         }),
-        this.prisma.$queryRawUnsafe<{ month: string | null; count: bigint }[]>(
-          "SELECT strftime('%Y-%m', date) as month, COUNT(*) as count FROM PurchaseOrder WHERE date IS NOT NULL GROUP BY month ORDER BY month DESC LIMIT 6",
-        ),
+        this.prisma.$queryRaw`SELECT strftime('%Y-%m', date) as month, COUNT(*) as count FROM PurchaseOrder WHERE date IS NOT NULL GROUP BY month ORDER BY month DESC LIMIT 6` as Promise<{ month: string | null; count: bigint }[]>,
       ]);
 
-    const productsWithExistence = allProducts.map((p) => ({
+    interface ProductWithStock {
+  id: number;
+  name: string;
+  price: number;
+  stocks: { existence: number }[];
+}
+
+const productsWithExistence: ProductWithExistence[] = (allProducts as ProductWithStock[]).map((p) => ({
       id: p.id,
       name: p.name,
       price: p.price,
-      existence: p.stocks.reduce((sum, s) => sum + s.existence, 0),
+      existence: p.stocks.reduce((sum: number, s: { existence: number }) => sum + s.existence, 0),
     }));
 
     productsWithExistence.sort((a, b) => b.existence - a.existence);
@@ -76,7 +102,7 @@ export class DashboardService {
 
     return {
       data: {
-        recentOrders: recentOrders.map((o) => ({
+        recentOrders: recentOrders.map((o: RecentOrder) => ({
           id: o.id,
           code: o.code,
           date: o.date?.toISOString() ?? null,
@@ -85,7 +111,7 @@ export class DashboardService {
         })),
         topProducts: top5Products,
         stockAlerts: alerts,
-        topSuppliers: topSuppliers.map((s) => ({
+        topSuppliers: topSuppliers.map((s: TopSupplier) => ({
           id: s.id,
           companyName: s.companyName,
           orderCount: s._count.purchaseOrders,

@@ -4,7 +4,6 @@ import {
   ConflictException,
   ForbiddenException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { ContextService } from '../tenant/context.service';
 import * as crypto from 'crypto';
@@ -16,14 +15,29 @@ import { CreatePlanDto } from './dto/create-plan.dto';
 import { UpdatePlanDto } from './dto/update-plan.dto';
 import { CreateInviteDto } from './dto/create-invite.dto';
 
-type UserWithRelations = Prisma.UserGetPayload<{
-  include: {
-    role: true;
-    organizations: {
-      include: { organization: true; role: true };
-    };
-  };
-}>;
+interface UserWithRelations {
+  id: number;
+  email: string;
+  userName: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  idRole: number;
+  mustChangePassword: boolean;
+  lastLogin: Date | null;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  currentOrganizationId: number | null;
+  role: { id: number; name: string; slug: string; level: number };
+  organizations: {
+    userId: number;
+    organizationId: number;
+    roleId: number;
+    organization: { id: number; name: string; slug: string };
+    role: { id: number; name: string; slug: string; level: number };
+  }[];
+}
 
 function stripPassword<T>(obj: T): Omit<T, 'password'> {
   const { password: _pw, ...rest } = obj as any;

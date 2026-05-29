@@ -86,7 +86,7 @@ export class UsersService {
       },
     });
 
-    return memberships.map((m) => stripPassword(m.user));
+    return memberships.map((m: { user: UserEntity }) => stripPassword(m.user));
   }
 
   async findById(id: number): Promise<SafeUser> {

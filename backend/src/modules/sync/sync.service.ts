@@ -6,6 +6,31 @@ import { PushMutationDto } from './dto/push-mutation.dto';
 import { ResolveConflictDto } from './dto/resolve-conflict.dto';
 import { CreateSaleDto } from '../sales/dto/create-sale.dto';
 
+interface SyncProduct {
+  id: number;
+  name: string;
+  price: number;
+  dollarPrice: number | null;
+  idTax: number | null;
+  updatedAt: Date;
+  stocks: { existence: number }[];
+}
+
+export interface SyncProductWithStock {
+  id: number;
+  name: string;
+  price: number;
+  dollarPrice: number | null;
+  idTax: number | null;
+  updatedAt: Date;
+  stock: number;
+}
+
+interface SaleWithDetails {
+  id: number;
+  details: { idProduct: number; quantity: number }[];
+}
+
 @Injectable()
 export class SyncService {
   constructor(
@@ -19,7 +44,7 @@ export class SyncService {
     if (!orgId) throw new Error('No organization context');
     const sinceDate = since ? new Date(since) : new Date(0);
 
-    const products = await this.prisma.product.findMany({
+    const products: SyncProduct[] = await this.prisma.product.findMany({
       where: {
         organizationId: orgId,
         updatedAt: { gt: sinceDate },
@@ -93,14 +118,14 @@ export class SyncService {
       },
     });
 
-    const productsWithStock = products.map((p) => ({
+    const productsWithStock: SyncProductWithStock[] = products.map((p) => ({
       id: p.id,
       name: p.name,
       price: p.price,
       dollarPrice: p.dollarPrice,
       idTax: p.idTax,
       updatedAt: p.updatedAt,
-      stock: p.stocks.reduce((sum, s) => sum + s.existence, 0),
+      stock: p.stocks.reduce((sum: number, s: { existence: number }) => sum + s.existence, 0),
     }));
 
     return {
@@ -136,7 +161,7 @@ export class SyncService {
             });
 
             if (!currentStock || currentStock.existence < item.quantity) {
-              const salesSince = await this.prisma.sale.findMany({
+              const salesSince: SaleWithDetails[] = await this.prisma.sale.findMany({
                 where: {
                   organizationId: orgId,
                   createdAt: { gt: new Date(mutation.localTimestamp) },
@@ -147,8 +172,8 @@ export class SyncService {
                 include: { details: true },
               });
 
-              const consumedSince = salesSince.reduce((sum, sale) => {
-                const detail = sale.details.find((d) => d.idProduct === item.productId);
+              const consumedSince = salesSince.reduce((sum: number, sale: SaleWithDetails) => {
+                const detail = sale.details.find((d: { idProduct: number; quantity: number }) => d.idProduct === item.productId);
                 return sum + (detail?.quantity || 0);
               }, 0);
 

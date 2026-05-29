@@ -14,7 +14,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     const extended = this.$extends({
       query: {
         $allModels: {
-          async $allOperations({ model, operation, args, query }) {
+          async $allOperations({ model, operation, args, query }: any) {
             const ctx = contextService?.getCurrent();
             if (!ctx || ctx.isSuperAdmin || !ctx.organizationId) return query(args);
             if (model === 'User') return query(args);

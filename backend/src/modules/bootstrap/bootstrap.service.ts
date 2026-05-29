@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException, ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { PrismaService } from '../../shared/prisma/prisma.service';
@@ -44,7 +45,7 @@ export class BootstrapService {
       throw new ConflictException('BOOTSTRAP.SLUG_TAKEN');
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       let role = await tx.role.findFirst({ where: { slug: 'master' } });
       if (!role) {
         role = await tx.role.create({
