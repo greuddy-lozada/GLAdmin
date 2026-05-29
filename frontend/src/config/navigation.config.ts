@@ -17,6 +17,7 @@ import {
   Mail,
   ArrowLeftRight,
   Wallet,
+  AlertCircle,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -88,6 +89,7 @@ export const navigationGroups: NavGroup[] = [
       { key: 'payments', label: 'Pagos', icon: Wallet, path: '/settings/payments', minLevel: 60 },
       { key: 'transactions', label: 'Transacciones', icon: ArrowLeftRight, path: '/settings/payments/transactions', minLevel: 40 },
       { key: 'billing', label: 'Facturación', icon: CreditCard, path: '/billing', minLevel: 40 },
+      { key: 'syncConflicts', label: 'Sync Conflicts', icon: AlertCircle, path: '/settings/sync/conflicts', minLevel: 60 },
     ],
   },
 ];
