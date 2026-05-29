@@ -66,6 +66,21 @@ export class SyncService {
       },
     });
 
+    const suppliers = await this.prisma.supplier.findMany({
+      where: { organizationId: orgId, updatedAt: { gt: sinceDate } },
+      select: { id: true, companyName: true, updatedAt: true },
+    });
+
+    const companies = await this.prisma.company.findMany({
+      where: { organizationId: orgId, updatedAt: { gt: sinceDate } },
+      select: { id: true, name: true, updatedAt: true },
+    });
+
+    const taxes = await this.prisma.tax.findMany({
+      where: { organizationId: orgId, updatedAt: { gt: sinceDate } },
+      select: { id: true, name: true, percentage: true, updatedAt: true },
+    });
+
     const lastPullAt = new Date();
 
     await this.prisma.syncCursor.upsert({
@@ -92,6 +107,9 @@ export class SyncService {
       products: productsWithStock,
       customers,
       exchangeRates,
+      suppliers,
+      companies,
+      taxes,
       cursor: { lastPullAt: lastPullAt.toISOString() },
     };
   }
