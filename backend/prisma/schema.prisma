@@ -100,6 +100,8 @@ model Organization {
   invites               Invite[]
   pagoMovilConfigs      PagoMovilConfig[]
   pagoMovilTransactions PagoMovilTransaction[]
+  syncCursors           SyncCursor[]
+  syncConflicts         SyncConflict[]
 }
 
 model Plan {
@@ -555,4 +557,33 @@ model ProductsExchangeRates {
 
   product      Product      @relation(fields: [idProduct], references: [id])
   exchangeRate ExchangeRate @relation(fields: [idExchangeRate], references: [id])
+}
+
+model SyncCursor {
+  id              Int      @id @default(autoincrement())
+  organizationId  Int      @unique
+  lastPullAt      DateTime
+  lastPushAt      DateTime
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  organization    Organization @relation(fields: [organizationId], references: [id])
+}
+
+model SyncConflict {
+  id              Int       @id @default(autoincrement())
+  organizationId  Int
+  table           String
+  recordId        Int?
+  localData       String
+  serverData      String
+  localTimestamp   DateTime
+  description     String
+  status          String    @default("pending")
+  resolvedBy      Int?
+  resolvedAt      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  organization    Organization @relation(fields: [organizationId], references: [id])
 }
