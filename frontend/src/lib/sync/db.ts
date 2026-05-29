@@ -47,6 +47,28 @@ export interface LocalSale {
   createdAt: string;
 }
 
+export interface LocalSupplier {
+  id: number;
+  organizationId: number;
+  companyName: string;
+  updatedAt: string;
+}
+
+export interface LocalCompany {
+  id: number;
+  organizationId: number;
+  name: string;
+  updatedAt: string;
+}
+
+export interface LocalTax {
+  id: number;
+  organizationId: number;
+  name: string;
+  percentage: number;
+  updatedAt: string;
+}
+
 export interface SyncMetadata {
   key: string;
   value: string;
@@ -59,6 +81,9 @@ export const localDb = new Dexie('GLAdmin') as Dexie & {
   stockCache: EntityTable<StockCacheItem, 'productId'>;
   sales: EntityTable<LocalSale, 'id'>;
   syncMetadata: EntityTable<SyncMetadata, 'key'>;
+  suppliers: EntityTable<LocalSupplier, 'id'>;
+  companies: EntityTable<LocalCompany, 'id'>;
+  taxes: EntityTable<LocalTax, 'id'>;
 };
 
 localDb.version(1).stores({
@@ -68,4 +93,16 @@ localDb.version(1).stores({
   stockCache: 'productId',
   sales: '++id, syncedAt',
   syncMetadata: 'key',
+});
+
+localDb.version(2).stores({
+  products: 'id, updatedAt, organizationId',
+  customers: 'id, updatedAt, organizationId',
+  syncQueue: '++id, status, localTimestamp',
+  stockCache: 'productId',
+  sales: '++id, syncedAt',
+  syncMetadata: 'key',
+  suppliers: 'id, updatedAt, organizationId',
+  companies: 'id, updatedAt, organizationId',
+  taxes: 'id, updatedAt, organizationId',
 });
