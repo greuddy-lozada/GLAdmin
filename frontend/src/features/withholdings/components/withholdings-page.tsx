@@ -153,8 +153,8 @@ export default function WithholdingsPage() {
             <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="IVA">IVA</SelectItem>
-                <SelectItem value="ISLR">ISLR</SelectItem>
+                <SelectItem value="IVA">{t('withholdings.type.IVA')}</SelectItem>
+                <SelectItem value="ISLR">{t('withholdings.type.ISLR')}</SelectItem>
               </SelectContent>
             </Select>
           </div>

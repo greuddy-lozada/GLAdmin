@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { sileo } from 'sileo';
 import { localDb, type LocalProduct } from '@/lib/sync/db';
 
 export interface CartItem {
@@ -21,6 +22,11 @@ export function usePos() {
   };
 
   const addToCart = (product: LocalProduct) => {
+    const currentQty = cart.find(item => item.productId === product.id)?.quantity ?? 0;
+    if (currentQty + 1 > product.stock) {
+      sileo.error({ description: `Stock insuficiente para ${product.name}` });
+      return;
+    }
     const existing = cart.find(item => item.productId === product.id);
     if (existing) {
       setCart(cart.map(item =>

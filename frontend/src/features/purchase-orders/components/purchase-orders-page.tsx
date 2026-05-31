@@ -231,7 +231,7 @@ export default function PurchaseOrdersPage() {
                   amountUsd: er && er.rate > 0 ? (formData.amount ?? 0) / er.rate : formData.amountUsd,
                 });
               }}>
-              <SelectTrigger><SelectValue placeholder="Seleccionar tasa" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t('exchangeRates.selectRate')} /></SelectTrigger>
               <SelectContent>
                 {exchangeRates.map((er) => (
                   <SelectItem key={er.id} value={String(er.id)}>

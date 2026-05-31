@@ -109,9 +109,9 @@ export default function ExchangeRatesPage() {
             <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="official">Official (BCV)</SelectItem>
-                <SelectItem value="paralelo">Paralelo</SelectItem>
-                <SelectItem value="manual">Manual</SelectItem>
+                <SelectItem value="official">{t('exchangeRates.type.official')}</SelectItem>
+                <SelectItem value="paralelo">{t('exchangeRates.type.paralelo')}</SelectItem>
+                <SelectItem value="manual">{t('exchangeRates.type.manual')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -137,9 +137,9 @@ export default function ExchangeRatesPage() {
             <Select value={formData.source} onValueChange={(v) => setFormData({ ...formData, source: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="BCV">BCV</SelectItem>
-                <SelectItem value="dolartoday">DolarToday</SelectItem>
-                <SelectItem value="enparalelovzla">EnParaleloVzla</SelectItem>
+                <SelectItem value="BCV">{t('exchangeRates.source.bcv')}</SelectItem>
+                <SelectItem value="dolartoday">{t('exchangeRates.source.dolartoday')}</SelectItem>
+                <SelectItem value="enparalelovzla">{t('exchangeRates.source.enparalelovzla')}</SelectItem>
                 <SelectItem value="manual">Manual</SelectItem>
               </SelectContent>
             </Select>

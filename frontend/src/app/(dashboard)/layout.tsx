@@ -11,6 +11,8 @@ import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { UserNav } from '@/components/ui/user-nav';
 import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar';
 import { SyncIndicator } from '@/components/sync-indicator';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { OrgSwitcher } from '@/components/ui/org-switcher';
 import { LayoutDashboard, Users, UserCog, Truck, Building2, Package, Receipt, Tags, Store, ShoppingCart, DollarSign, FileText, ShieldCheck, Settings, CreditCard, Mail, ArrowLeftRight, Wallet, ChevronDown, ChevronRight, AlertCircle } from 'lucide-react';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -65,7 +67,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <div className="flex items-center justify-center h-screen">
         <div className="flex flex-col items-center gap-3">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -196,11 +198,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           {currentOrg && (
             <div className="border-t pt-3 px-3">
               {sidebarOpen ? (
-                <div>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold">{t('nav.org')}</p>
-                  <p className="text-sm font-medium truncate">{currentOrg.name}</p>
-                  <p className="text-xs text-muted-foreground truncate">{currentOrg.slug}</p>
-                </div>
+                <OrgSwitcher />
               ) : (
                 <div className="flex flex-col items-center gap-1" title={currentOrg.name}>
                   <div className="h-2 w-2 rounded-full bg-primary" />
@@ -231,8 +229,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
         <div className="flex-1 overflow-hidden px-6 md:px-8 pb-6 md:pb-8">
           <div className="max-w-7xl mx-auto h-full">
-            <Suspense fallback={<div className="flex items-center justify-center h-64"><p className="text-muted-foreground">Loading...</p></div>}>
-              {children}
+            <Suspense fallback={<div className="flex items-center justify-center h-64"><p className="text-muted-foreground">{t('common.loading')}</p></div>}>
+              <ErrorBoundary>
+                {children}
+              </ErrorBoundary>
             </Suspense>
           </div>
         </div>

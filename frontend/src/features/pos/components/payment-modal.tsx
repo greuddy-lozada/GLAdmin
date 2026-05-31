@@ -9,6 +9,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { useI18n } from '@/i18n';
+import { PaymentMethod } from '../models/pos.model';
 
 interface PaymentModalProps {
   total: number;

@@ -142,8 +142,8 @@ export default function AdminPlansPage() {
             <Select value={formData.currency} onValueChange={(v) => setFormData({ ...formData, currency: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="usd">USD</SelectItem>
-                <SelectItem value="ves">VES</SelectItem>
+                <SelectItem value="usd">{t('admin.plans.currency.usd')}</SelectItem>
+                <SelectItem value="ves">{t('admin.plans.currency.ves')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -152,9 +152,9 @@ export default function AdminPlansPage() {
             <Select value={formData.interval} onValueChange={(v) => setFormData({ ...formData, interval: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="month">Month</SelectItem>
-                <SelectItem value="year">Year</SelectItem>
-                <SelectItem value="lifetime">Lifetime</SelectItem>
+                <SelectItem value="month">{t('admin.plans.interval.month')}</SelectItem>
+                <SelectItem value="year">{t('admin.plans.interval.year')}</SelectItem>
+                <SelectItem value="lifetime">{t('admin.plans.interval.lifetime')}</SelectItem>
               </SelectContent>
             </Select>
           </div>

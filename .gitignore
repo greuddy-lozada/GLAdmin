@@ -42,4 +42,5 @@ frontend/.next/
 # Testing
 coverage/
 **/coverage/
-
+specs/
+**/specs/

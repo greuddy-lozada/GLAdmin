@@ -111,13 +111,13 @@ export default function PagoMovilConfigPage() {
           <div className="space-y-4 max-w-md">
             <div className="space-y-2">
               <Label>{t('pagoMovil.config.field.phoneNumber')}</Label>
-              <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="0412-1234567" />
+              <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder={t('pagoMovil.phonePlaceholder')} />
             </div>
 
             <div className="space-y-2">
               <Label>{t('pagoMovil.config.field.bankId')}</Label>
               <Select value={bankId} onValueChange={setBankId}>
-                <SelectTrigger><SelectValue placeholder="Seleccionar banco" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t('pagoMovil.selectBank')} /></SelectTrigger>
                 <SelectContent>
                   {VENEZUELA_BANKS.map((b) => (
                     <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
@@ -128,7 +128,7 @@ export default function PagoMovilConfigPage() {
 
             <div className="space-y-2">
               <Label>{t('pagoMovil.config.field.idNumber')}</Label>
-              <Input value={idNumber} onChange={(e) => setIdNumber(e.target.value)} placeholder="V-12345678" />
+              <Input value={idNumber} onChange={(e) => setIdNumber(e.target.value)} placeholder={t('pagoMovil.idPlaceholder')} />
             </div>
 
             <div className="space-y-2">

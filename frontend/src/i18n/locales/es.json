@@ -2,6 +2,8 @@
   "common": {
     "save": "Guardar",
     "saving": "Guardando...",
+    "view": "Ver",
+    "selectFile": "Seleccionar archivo",
     "processing": "Procesando...",
     "cancel": "Cancelar",
     "confirm": "Confirmar",
@@ -22,6 +24,7 @@
     "next": "Siguiente",
     "pageOf": "Página {{current}} de {{total}}",
     "morePages": "Más páginas",
+    "uploading": "Subiendo...",
     "empty": "No hay registros",
     "pageNotFound": "Página no encontrada",
     "errorTitle": "Algo salió mal",
@@ -382,7 +385,18 @@
       "save": "Error al guardar tasa",
       "load": "Error al cargar tasas",
       "delete": "Error al eliminar tasa"
-    }
+    },
+    "type": {
+      "official": "Oficial (BCV)",
+      "paralelo": "Paralelo",
+      "manual": "Manual"
+    },
+    "source": {
+      "bcv": "BCV",
+      "dolartoday": "DolarToday",
+      "enparalelovzla": "EnParaleloVzla"
+    },
+    "selectRate": "Seleccionar tasa"
   },
   "withholdings": {
     "title": "Retenciones",
@@ -409,13 +423,50 @@
       "save": "Error al guardar retención",
       "load": "Error al cargar retenciones",
       "delete": "Error al eliminar retención"
+    },
+    "type": {
+      "IVA": "IVA",
+      "ISLR": "ISLR"
     }
   },
   "pos": {
     "completed": "Venta completada exitosamente",
     "loading": "Cargando POS...",
     "searchProducts": "Buscar productos...",
-    "stock": "Stock"
+    "cart": {
+      "title": "Carrito",
+      "empty": "El carrito está vacío",
+      "remove": "Eliminar",
+      "subtotal": "Subtotal",
+      "tax": "IVA",
+      "totalVes": "Total (Bs.)",
+      "totalUsd": "Total (USD)",
+      "rate": "Tasa: {{rate}} Bs./USD",
+      "quantity": "Cantidad",
+      "addCustomer": "Agregar cliente"
+    },
+    "payment": {
+      "title": "Seleccionar método de pago",
+      "checkout": "Cobrar",
+      "cash": "Efectivo",
+      "pagoMovil": "Pago Móvil",
+      "transfer": "Transferencia",
+      "card": "Tarjeta",
+      "customer": "Cliente",
+      "searchCustomer": "Buscar cliente...",
+      "noCustomer": "Sin cliente"
+    },
+    "receipt": {
+      "title": "Venta completada",
+      "items": "{{count}} artículos",
+      "close": "Cerrar",
+      "autoClose": "Esta ventana se cerrará automáticamente"
+    },
+    "stock": {
+      "outOfStock": "Sin stock",
+      "lowStock": "Stock bajo",
+      "insufficient": "Stock insuficiente para {{name}}"
+    }
   },
   "sync": {
     "noConflicts": "Sin conflictos",
@@ -504,6 +555,15 @@
         "load": "Error al cargar planes",
         "delete": "Error al eliminar plan"
       }
+    },
+    "currency": {
+      "usd": "USD",
+      "ves": "VES"
+    },
+    "interval": {
+      "month": "Mes",
+      "year": "Año",
+      "lifetime": "Vitalicio"
     },
     "invites": {
       "title": "Invitaciones",
@@ -600,6 +660,7 @@
       "empty": "No hay transacciones registradas",
       "error": {
         "save": "Error al registrar pago",
+        "upload": "Error al subir comprobante",
         "load": "Error al cargar transacciones"
       }
     },
@@ -609,7 +670,10 @@
       "approved": "Aprobar",
       "rejected": "Rechazar",
       "error": "Error al revisar transacción"
-    }
+    },
+    "phonePlaceholder": "0412-1234567",
+    "idPlaceholder": "V-12345678",
+    "selectBank": "Seleccionar banco"
   },
   "billing": {
     "title": "Facturación",

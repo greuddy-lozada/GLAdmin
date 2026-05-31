@@ -224,6 +224,7 @@ export class SyncEngine {
   }
 
   private scheduleNext() {
+    if (this.pullTimer) clearTimeout(this.pullTimer);
     const delay = this.retryCount === 0
       ? INITIAL_BACKOFF
       : Math.min(INITIAL_BACKOFF * Math.pow(2, this.retryCount), MAX_BACKOFF);

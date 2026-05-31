@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/i18n';
 import type { CartItem } from '../hooks/use-pos';
 
 interface CartProps {
@@ -12,11 +13,12 @@ interface CartProps {
 }
 
 export function Cart({ items, onUpdateQuantity, onRemove, total, totalUsd }: CartProps) {
+  const { t } = useI18n();
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold">Cart</h2>
+      <h2 className="text-lg font-semibold">{t('pos.cart.title')}</h2>
       {items.length === 0 ? (
-        <p className="text-muted-foreground">Cart is empty</p>
+        <p className="text-muted-foreground">{t('pos.cart.empty')}</p>
       ) : (
         <>
           <div className="space-y-2">
@@ -49,7 +51,7 @@ export function Cart({ items, onUpdateQuantity, onRemove, total, totalUsd }: Car
                     variant="destructive"
                     onClick={() => onRemove(item.productId)}
                   >
-                    Remove
+                    {t('pos.cart.remove')}
                   </Button>
                 </div>
               </div>
@@ -57,11 +59,11 @@ export function Cart({ items, onUpdateQuantity, onRemove, total, totalUsd }: Car
           </div>
           <div className="border-t pt-4 space-y-2">
             <div className="flex justify-between">
-              <span>Total (VES):</span>
+              <span>{t('pos.cart.totalVes')}:</span>
               <span className="font-semibold">${total.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
-              <span>Total (USD):</span>
+              <span>{t('pos.cart.totalUsd')}:</span>
               <span className="font-semibold">${totalUsd.toFixed(2)}</span>
             </div>
           </div>

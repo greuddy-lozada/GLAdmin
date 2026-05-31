@@ -2,6 +2,8 @@
   "common": {
     "save": "Save",
     "saving": "Saving...",
+    "view": "View",
+    "selectFile": "Select file",
     "processing": "Processing...",
     "cancel": "Cancel",
     "confirm": "Confirm",
@@ -22,6 +24,7 @@
     "next": "Next",
     "pageOf": "Page {{current}} of {{total}}",
     "morePages": "More pages",
+    "uploading": "Uploading...",
     "empty": "No records",
     "pageNotFound": "Page not found",
     "errorTitle": "Something went wrong",
@@ -382,7 +385,18 @@
       "save": "Error saving rate",
       "load": "Error loading rates",
       "delete": "Error deleting rate"
-    }
+    },
+    "type": {
+      "official": "Official (BCV)",
+      "paralelo": "Paralelo",
+      "manual": "Manual"
+    },
+    "source": {
+      "bcv": "BCV",
+      "dolartoday": "DolarToday",
+      "enparalelovzla": "EnParaleloVzla"
+    },
+    "selectRate": "Select rate"
   },
   "withholdings": {
     "title": "Withholdings",
@@ -409,13 +423,50 @@
       "save": "Error saving withholding",
       "load": "Error loading withholdings",
       "delete": "Error deleting withholding"
+    },
+    "type": {
+      "IVA": "IVA",
+      "ISLR": "ISLR"
     }
   },
   "pos": {
     "completed": "Sale completed successfully",
     "loading": "Loading POS...",
     "searchProducts": "Search products...",
-    "stock": "Stock"
+    "cart": {
+      "title": "Cart",
+      "empty": "Cart is empty",
+      "remove": "Remove",
+      "subtotal": "Subtotal",
+      "tax": "IVA",
+      "totalVes": "Total (VES)",
+      "totalUsd": "Total (USD)",
+      "rate": "Rate: {{rate}} Bs./USD",
+      "quantity": "Qty",
+      "addCustomer": "Add customer"
+    },
+    "payment": {
+      "title": "Select payment method",
+      "checkout": "Checkout",
+      "cash": "Cash",
+      "pagoMovil": "Pago Móvil",
+      "transfer": "Transfer",
+      "card": "Card",
+      "customer": "Customer",
+      "searchCustomer": "Search customer...",
+      "noCustomer": "No customer"
+    },
+    "receipt": {
+      "title": "Sale completed",
+      "items": "{{count}} items",
+      "close": "Close",
+      "autoClose": "This window will close automatically"
+    },
+    "stock": {
+      "outOfStock": "Out of stock",
+      "lowStock": "Low stock",
+      "insufficient": "Insufficient stock for {{name}}"
+    }
   },
   "sync": {
     "noConflicts": "No conflicts",
@@ -504,6 +555,15 @@
         "load": "Error loading plans",
         "delete": "Error deleting plan"
       }
+    },
+    "currency": {
+      "usd": "USD",
+      "ves": "VES"
+    },
+    "interval": {
+      "month": "Month",
+      "year": "Year",
+      "lifetime": "Lifetime"
     },
     "invites": {
       "title": "Invitations",
@@ -600,6 +660,7 @@
       "empty": "No transactions registered",
       "error": {
         "save": "Error submitting payment",
+        "upload": "Error uploading proof",
         "load": "Error loading transactions"
       }
     },
@@ -609,7 +670,10 @@
       "approved": "Approve",
       "rejected": "Reject",
       "error": "Error reviewing transaction"
-    }
+    },
+    "phonePlaceholder": "0412-1234567",
+    "idPlaceholder": "V-12345678",
+    "selectBank": "Select bank"
   },
   "billing": {
     "title": "Billing",

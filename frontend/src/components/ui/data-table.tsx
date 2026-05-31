@@ -20,6 +20,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Pencil, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { useI18n } from '@/i18n';
 
@@ -123,7 +124,7 @@ export function DataTable<T extends { id: number }>({
 
   if (loading) {
     return (
-      <div className="rounded-md bg-white dark:bg-card">
+      <div className="rounded-md bg-white dark:bg-card overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -157,17 +158,13 @@ export function DataTable<T extends { id: number }>({
   }
 
   if (!rows.length) {
-    return (
-      <div className="text-center py-12 text-muted-foreground">
-        {emptyMessage || t('common.empty')}
-      </div>
-    );
+    return <EmptyState title={emptyMessage || t('common.empty')} />;
   }
 
   const totalPages = Math.max(1, Math.ceil((total || 0) / pageSize));
 
   return (
-    <div className="rounded-md bg-white dark:bg-card">
+    <div className="rounded-md bg-white dark:bg-card overflow-x-auto">
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (

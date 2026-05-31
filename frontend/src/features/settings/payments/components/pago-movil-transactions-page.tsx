@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Plus, Upload, X, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,6 +16,7 @@ import { useI18n } from '@/i18n';
 import { usePagoMovilTransactions } from '../hooks/use-pago-movil-transactions';
 import { PagoMovilTransaction, CreatePagoMovilTransactionRequest } from '../models/pago-movil-transaction.model';
 import { sileo } from 'sileo';
+import { uploadFile } from '@/lib/api/upload';
 
 const VENEZUELA_BANKS = [
   { id: '0102', name: 'Banco de Venezuela' },
@@ -80,6 +81,8 @@ export default function PagoMovilTransactionsPage() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
+  const [uploadingProof, setUploadingProof] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const getBankName = (bankId: string) => VENEZUELA_BANKS.find((b) => b.id === bankId)?.name ?? bankId;
 
@@ -94,6 +97,19 @@ export default function PagoMovilTransactionsPage() {
     },
     { field: 'phoneNumber', headerName: t('pagoMovil.transactions.field.phoneNumber') },
     { field: 'reference', headerName: t('pagoMovil.transactions.field.reference') },
+    {
+      field: 'proofImage',
+      headerName: t('pagoMovil.transactions.field.proofImage'),
+      render: (row) =>
+        row.proofImage ? (
+          <a href={row.proofImage} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
+            <Eye className="h-4 w-4" />
+            {t('common.view')}
+          </a>
+        ) : (
+          <span className="text-muted-foreground text-sm">{t('common.none')}</span>
+        ),
+    },
     {
       field: 'status',
       headerName: t('pagoMovil.transactions.field.status'),
@@ -110,6 +126,29 @@ export default function PagoMovilTransactionsPage() {
     setFormError('');
     setFormData({ amountVes: 0, amountUsd: 0, bankId: '', phoneNumber: '', reference: '' });
     setFormOpen(true);
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingProof(true);
+    try {
+      const path = await uploadFile(file);
+      setFormData((prev) => ({ ...prev, proofImage: path }));
+    } catch {
+      setFormError(t('pagoMovil.transactions.error.upload'));
+    } finally {
+      setUploadingProof(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveProof = () => {
+    setFormData((prev) => {
+      const { proofImage: _, ...rest } = prev;
+      return rest;
+    });
   };
 
   const handleSave = async () => {
@@ -167,7 +206,7 @@ export default function PagoMovilTransactionsPage() {
             <div className="space-y-2">
               <Label>{t('pagoMovil.transactions.field.bank')}</Label>
               <Select value={formData.bankId} onValueChange={(v) => setFormData({ ...formData, bankId: v })}>
-                <SelectTrigger><SelectValue placeholder="Seleccionar banco" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t('pagoMovil.selectBank')} /></SelectTrigger>
                 <SelectContent>
                   {VENEZUELA_BANKS.map((b) => (
                     <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
@@ -187,8 +226,24 @@ export default function PagoMovilTransactionsPage() {
             </div>
             <div className="space-y-2">
               <Label>{t('pagoMovil.transactions.field.proofImage')}</Label>
-              <Input value={formData.proofImage ?? ''}
-                onChange={(e) => setFormData({ ...formData, proofImage: e.target.value })} placeholder="filename.jpg" />
+              {formData.proofImage ? (
+                <div className="flex items-center gap-2">
+                  <a href={formData.proofImage} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline truncate flex-1">
+                    {formData.proofImage.split('/').pop()}
+                  </a>
+                  <Button type="button" variant="ghost" size="icon" onClick={handleRemoveProof} title={t('common.delete')}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,application/pdf" className="hidden" onChange={handleFileSelect} />
+                  <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={uploadingProof}>
+                    <Upload className="mr-2 h-4 w-4" />
+                    {uploadingProof ? t('common.uploading') : t('common.selectFile')}
+                  </Button>
+                </div>
+              )}
             </div>
             {formError && <Alert variant="destructive"><AlertDescription>{formError}</AlertDescription></Alert>}
             <Button onClick={handleSave} disabled={submitting} className="w-full">
@@ -218,15 +273,22 @@ export default function PagoMovilTransactionsPage() {
       </SlideForm>
 
       <RoleGuard minLevel={60}>
-        <div className="flex gap-2 mt-4">
+        <div className="flex flex-wrap gap-4 mt-4">
           {items.filter((i) => i.status === 'pending').map((tx) => (
-            <div key={tx.id} className="flex gap-2 items-center text-sm text-muted-foreground">
-              <span>#{tx.id}</span>
-              <Button size="sm" variant="outline" className="text-green-600"
+            <div key={tx.id} className="flex gap-2 items-center text-sm text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
+              <span className="font-medium">#{tx.id}</span>
+              <span className="text-xs text-muted-foreground">{getBankName(tx.bankId)}</span>
+              {tx.proofImage && (
+                <a href={tx.proofImage} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1 text-xs">
+                  <Eye className="h-3 w-3" />
+                  {t('common.view')}
+                </a>
+              )}
+              <Button size="sm" variant="outline" className="text-green-600 h-7 text-xs"
                 onClick={() => setReviewDialog({ open: true, id: tx.id, action: 'approved' })}>
                 {t('pagoMovil.review.approved')}
               </Button>
-              <Button size="sm" variant="outline" className="text-red-600"
+              <Button size="sm" variant="outline" className="text-red-600 h-7 text-xs"
                 onClick={() => setReviewDialog({ open: true, id: tx.id, action: 'rejected' })}>
                 {t('pagoMovil.review.rejected')}
               </Button>
