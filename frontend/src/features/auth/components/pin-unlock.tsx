@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { localDb } from '@/lib/sync/db';
+import { useI18n } from '@/i18n';
 
 interface PinUnlockProps {
   userId: number;
@@ -55,6 +57,7 @@ export function PinUnlock({ userId, onUnlock }: PinUnlockProps) {
   const [error, setError] = useState('');
   const [locked, setLocked] = useState(false);
   const [remainingSeconds, setRemainingSeconds] = useState(0);
+  const { t, tp } = useI18n();
 
   useEffect(() => {
     const { lockUntil } = getAttemptData(userId);
@@ -82,7 +85,7 @@ export function PinUnlock({ userId, onUnlock }: PinUnlockProps) {
 
     const stored = await localDb.syncMetadata.get(`pin_${userId}`);
     if (!stored) {
-      setError('PIN not set up');
+      setError(t('auth.pin.errorNotSet'));
       return;
     }
 
@@ -98,41 +101,44 @@ export function PinUnlock({ userId, onUnlock }: PinUnlockProps) {
         setAttemptData(userId, newCount, lockUntil);
         setLocked(true);
         setRemainingSeconds(LOCKOUT_MS / 1000);
-        setError(`Too many attempts. Try again in ${LOCKOUT_MS / 1000} seconds.`);
+        setError(tp('auth.pin.errorLocked', { seconds: String(LOCKOUT_MS / 1000) }));
       } else {
         setAttemptData(userId, newCount, 0);
-        setError(`Incorrect PIN. ${MAX_ATTEMPTS - newCount} attempts remaining.`);
+        setError(tp('auth.pin.errorIncorrect', { remaining: String(MAX_ATTEMPTS - newCount) }));
       }
       setPin('');
     }
   };
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-lg font-semibold">Enter PIN</h2>
-      <p className="text-sm text-muted-foreground">
-        Enter your PIN to access the app offline.
-      </p>
-      <div className="space-y-2">
-        <Input
-          type="password"
-          inputMode="numeric"
-          placeholder="Enter PIN"
-          value={pin}
-          onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-          maxLength={6}
-          disabled={locked}
-        />
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        {locked && remainingSeconds > 0 && (
-          <p className="text-sm text-muted-foreground">
-            Locked for {remainingSeconds}s
-          </p>
-        )}
-      </div>
-      <Button type="button" onClick={handleSubmit} className="w-full" disabled={locked}>
-        Unlock
-      </Button>
-    </div>
+    <Dialog open>
+      <DialogContent showCloseButton={false} className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>{t('auth.pin.unlockTitle')}</DialogTitle>
+          <DialogDescription>{t('auth.pin.unlockDescription')}</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <Input
+            type="password"
+            inputMode="numeric"
+            placeholder={t('auth.pin.placeholder')}
+            value={pin}
+            onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+            maxLength={6}
+            disabled={locked}
+            autoFocus
+          />
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          {locked && remainingSeconds > 0 && (
+            <p className="text-sm text-muted-foreground">
+              {tp('auth.pin.locked', { seconds: String(remainingSeconds) })}
+            </p>
+          )}
+          <Button type="button" onClick={handleSubmit} className="w-full" disabled={locked}>
+            {t('auth.pin.unlockButton')}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -23,7 +23,7 @@ export class NetworkStatus {
     };
   }
 
-  private setOnline(online: boolean) {
+  setOnline(online: boolean) {
     if (this._online === online) return;
     this._online = online;
     this.listeners.forEach(fn => fn(online));

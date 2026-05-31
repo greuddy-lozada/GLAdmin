@@ -133,6 +133,14 @@ export class SyncEngine {
     } catch (error) {
       this.retryCount++;
       this.emit('sync-error', error);
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        (error.code === 'ERR_NETWORK' || error.code === 'ECONNREFUSED')
+      ) {
+        networkStatus.setOnline(false);
+      }
     } finally {
       this.pullInFlight = false;
       this.scheduleNext();
@@ -164,8 +172,8 @@ export class SyncEngine {
 
       const { accepted, conflicts, errors } = response.data.data;
 
-      for (const id of accepted) {
-        const item = pending.find(p => p.recordId === id);
+      for (let i = 0; i < accepted.length; i++) {
+        const item = pending[i];
         if (item?.id !== undefined) {
           await syncQueue.markComplete(item.id);
         }

@@ -3,7 +3,9 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { localDb } from '@/lib/sync/db';
+import { useI18n } from '@/i18n';
 
 interface PinSetupProps {
   userId: number;
@@ -40,15 +42,16 @@ export function PinSetup({ userId, onComplete }: PinSetupProps) {
   const [pin, setPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
   const [error, setError] = useState('');
+  const { t } = useI18n();
 
   const handleSubmit = async () => {
     if (!/^\d{4,6}$/.test(pin)) {
-      setError('PIN must be 4-6 digits');
+      setError(t('auth.pin.errorInvalid'));
       return;
     }
 
     if (pin !== confirmPin) {
-      setError('PINs do not match');
+      setError(t('auth.pin.errorMismatch'));
       return;
     }
 
@@ -63,36 +66,39 @@ export function PinSetup({ userId, onComplete }: PinSetupProps) {
   };
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-lg font-semibold">Set Up Offline PIN</h2>
-      <p className="text-sm text-muted-foreground">
-        Create a 4-6 digit PIN to access the app when offline.
-      </p>
-      <div className="space-y-2">
-        <Input
-          type="password"
-          inputMode="numeric"
-          placeholder="Enter PIN"
-          value={pin}
-          onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-          maxLength={6}
-        />
-        <Input
-          type="password"
-          inputMode="numeric"
-          placeholder="Confirm PIN"
-          value={confirmPin}
-          onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ''))}
-          maxLength={6}
-        />
-        {error && <p className="text-sm text-destructive">{error}</p>}
-      </div>
-      <Button type="button" onClick={handleSubmit} className="w-full">
-        Save PIN
-      </Button>
-      <Button type="button" variant="ghost" onClick={onComplete} className="w-full">
-        Skip for now
-      </Button>
-    </div>
+    <Dialog open>
+      <DialogContent showCloseButton={false} className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>{t('auth.pin.setupTitle')}</DialogTitle>
+          <DialogDescription>{t('auth.pin.setupDescription')}</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <Input
+            type="password"
+            inputMode="numeric"
+            placeholder={t('auth.pin.enterPin')}
+            value={pin}
+            onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+            maxLength={6}
+            autoFocus
+          />
+          <Input
+            type="password"
+            inputMode="numeric"
+            placeholder={t('auth.pin.confirmPin')}
+            value={confirmPin}
+            onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ''))}
+            maxLength={6}
+          />
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          <Button type="button" onClick={handleSubmit} className="w-full">
+            {t('auth.pin.saveButton')}
+          </Button>
+          <Button type="button" variant="ghost" onClick={onComplete} className="w-full">
+            {t('auth.pin.skipButton')}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -40,7 +40,25 @@
     "loggingIn": "Ingresando...",
     "email": "Correo Electrónico",
     "password": "Contraseña",
-    "error": "Usuario o contraseña incorrecta"
+    "error": "Usuario o contraseña incorrecta",
+    "pin": {
+      "unlockTitle": "Ingresar PIN",
+      "unlockDescription": "Ingresa tu PIN para acceder a la aplicación sin conexión.",
+      "placeholder": "Ingresar PIN",
+      "unlockButton": "Desbloquear",
+      "errorNotSet": "PIN no configurado",
+      "errorIncorrect": "PIN incorrecto. {{remaining}} intentos restantes.",
+      "errorLocked": "Demasiados intentos. Intenta de nuevo en {{seconds}} segundos.",
+      "locked": "Bloqueado por {{seconds}}s",
+      "setupTitle": "Configurar PIN sin conexión",
+      "setupDescription": "Crea un PIN de 4-6 dígitos para acceder sin conexión.",
+      "enterPin": "Ingresar PIN",
+      "confirmPin": "Confirmar PIN",
+      "saveButton": "Guardar PIN",
+      "skipButton": "Omitir por ahora",
+      "errorMismatch": "Los PIN no coinciden",
+      "errorInvalid": "El PIN debe tener 4-6 dígitos"
+    }
   },
   "dashboard": {
     "title": "Dashboard",

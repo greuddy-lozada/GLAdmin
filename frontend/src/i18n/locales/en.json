@@ -40,7 +40,25 @@
     "loggingIn": "Signing in...",
     "email": "Email",
     "password": "Password",
-    "error": "Invalid username or password"
+    "error": "Invalid username or password",
+    "pin": {
+      "unlockTitle": "Enter PIN",
+      "unlockDescription": "Enter your PIN to access the app offline.",
+      "placeholder": "Enter PIN",
+      "unlockButton": "Unlock",
+      "errorNotSet": "PIN not set up",
+      "errorIncorrect": "Incorrect PIN. {{remaining}} attempts remaining.",
+      "errorLocked": "Too many attempts. Try again in {{seconds}} seconds.",
+      "locked": "Locked for {{seconds}}s",
+      "setupTitle": "Set Up Offline PIN",
+      "setupDescription": "Create a 4-6 digit PIN to access the app when offline.",
+      "enterPin": "Enter PIN",
+      "confirmPin": "Confirm PIN",
+      "saveButton": "Save PIN",
+      "skipButton": "Skip for now",
+      "errorMismatch": "PINs do not match",
+      "errorInvalid": "PIN must be 4-6 digits"
+    }
   },
   "dashboard": {
     "title": "Dashboard",

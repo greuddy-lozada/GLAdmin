@@ -90,6 +90,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           syncEngine.start();
         }
       } catch {
+        const savedUser = localStorage.getItem(USER_KEY);
+        if (savedUser) {
+          try {
+            const parsed = JSON.parse(savedUser) as User;
+            if (!networkStatus.isOnline) {
+              const pinStored = await localDb.syncMetadata.get(`pin_${parsed.id}`);
+              if (pinStored) {
+                setUser(parsed);
+                setShowPinUnlock(true);
+                setIsLoading(false);
+                return;
+              }
+            }
+          } catch {
+            console.warn('Failed to parse saved user for PIN fallback');
+          }
+        }
+        setToken(null);
+        setUser(null);
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(REFRESH_KEY);
         localStorage.removeItem(USER_KEY);
