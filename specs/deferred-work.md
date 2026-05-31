@@ -72,12 +72,34 @@ Start backend + frontend and test the full user flow:
 - [ ] Add file type + size validation
 - [ ] Show proofImage in transaction detail view
 
-## 4. Stripe Webhook Reliability
+## 4. Stripe — All Items Deferred
 
-- [ ] Add idempotency key handling
-- [ ] Implement webhook retry with queue (Bull or similar)
-- [ ] Add webhook secret verification with proper error logging
-- [ ] Create webhook dashboard in admin panel
+> **Decision**: All Stripe-related items are deferred. The in-memory event.id dedup (C5) is sufficient for dev; persistent dedup, timeouts, webhook reliability, encryption, and billing polish are tracked below.
+
+### 4.1 Webhook Event ID Dedup (Persistent)
+
+- [ ] Replace in-memory `Set` in `payments.service.ts` with DB-backed dedup (e.g., column in Organization or a dedicated `WebhookEvent` table)
+- [ ] Add TTL/cleanup for old event IDs
+- [ ] Reference: 4.2.1
+
+### 4.2 Stripe Client Timeout & Retry
+
+- [ ] Add `timeout` and `maxNetworkRetries` to Stripe client construction in `payments.service.ts:15`
+- [ ] Reference: 4.5.1
+
+### 4.3 Webhook Security
+
+- [ ] Verify `req.rawBody` is populated before signature verification (add guard/check)
+- [ ] Log warnings or alert for unhandled event types (`invoice.payment_failed`, etc.) instead of silent `{ received: true }`
+- [ ] Reference: 4.7.1-2
+
+### 4.4 Billing / Checkout Polish
+
+- [ ] Complete Stripe checkout redirect flow (requires `STRIPE_SECRET_KEY`)
+- [ ] Handle success/cancel URL navigation
+- [ ] Plan change reflected after webhook
+- [ ] Billing error states and retry UI
+- [ ] Reference: deferred-work §1 Billing Flow
 
 ## 5. Tests
 

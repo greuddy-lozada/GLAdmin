@@ -14,6 +14,7 @@ import { useCustomers } from '@/features/customers/hooks/use-customers';
 import { Customer, CreateCustomerRequest, UpdateCustomerRequest } from '@/features/customers/models/customer.model';
 import { customerService } from '@/features/customers/services/customer.service';
 import { useI18n } from '@/i18n';
+import { sileo } from 'sileo';
 import { RoleGuard } from '@/components/ui/role-guard';
 import { useAuth } from '@/providers/auth-provider';
 import { hasMinLevel } from '@/lib/auth/roles';
@@ -91,8 +92,10 @@ export default function CustomersPage() {
           available: formData.available,
         };
         await customerService.update(selectedCustomer.id, data);
+        sileo.success({ description: t('customers.updated') });
       } else {
         await customerService.create(formData);
+        sileo.success({ description: t('customers.created') });
       }
       await loadCustomers();
       setFormOpen(false);
@@ -108,6 +111,7 @@ export default function CustomersPage() {
     setSubmitting(true);
     try {
       await customerService.delete(deleteTarget.id);
+      sileo.success({ description: t('customers.deleted') });
       await loadCustomers();
       setDeleteOpen(false);
       setDeleteTarget(null);

@@ -91,6 +91,7 @@
     "payments": "Pagos",
     "transactions": "Transacciones",
     "billing": "Facturación",
+    "syncConflicts": "Conflictos de sincronización",
     "org": "Organización",
     "logout": "Cerrar Sesión",
     "profile": "Perfil",
@@ -149,6 +150,9 @@
       "email": "Correo",
       "available": "Disponible"
     },
+    "created": "Cliente creado exitosamente",
+    "updated": "Cliente actualizado exitosamente",
+    "deleted": "Cliente eliminado exitosamente",
     "error": {
       "save": "Error al guardar cliente",
       "load": "Error al cargar clientes",
@@ -176,6 +180,9 @@
       "email": "Correo",
       "available": "Disponible"
     },
+    "created": "Proveedor creado exitosamente",
+    "updated": "Proveedor actualizado exitosamente",
+    "deleted": "Proveedor eliminado exitosamente",
     "error": {
       "save": "Error al guardar proveedor",
       "load": "Error al cargar proveedores",
@@ -198,6 +205,9 @@
       "email": "Correo",
       "website": "Sitio Web"
     },
+    "created": "Empresa creada exitosamente",
+    "updated": "Empresa actualizada exitosamente",
+    "deleted": "Empresa eliminada exitosamente",
     "error": {
       "save": "Error al guardar empresa",
       "load": "Error al cargar empresas",
@@ -244,6 +254,9 @@
       "percentage": "Porcentaje",
       "formula": "Fórmula"
     },
+    "created": "Impuesto creado exitosamente",
+    "updated": "Impuesto actualizado exitosamente",
+    "deleted": "Impuesto eliminado exitosamente",
     "error": {
       "save": "Error al guardar impuesto",
       "load": "Error al cargar impuestos",
@@ -262,6 +275,9 @@
       "code": "Código",
       "description": "Descripción"
     },
+    "created": "Lote creado exitosamente",
+    "updated": "Lote actualizado exitosamente",
+    "deleted": "Lote eliminado exitosamente",
     "error": {
       "save": "Error al guardar lote",
       "load": "Error al cargar lotes",
@@ -283,6 +299,9 @@
       "existence": "Existencia",
       "available": "Disponible"
     },
+    "created": "Entrada de inventario creada exitosamente",
+    "updated": "Entrada de inventario actualizada exitosamente",
+    "deleted": "Entrada de inventario eliminada exitosamente",
     "error": {
       "save": "Error al guardar entrada",
       "load": "Error al cargar inventario",
@@ -338,6 +357,9 @@
       "date": "Fecha",
       "source": "Fuente"
     },
+    "created": "Tasa creada exitosamente",
+    "updated": "Tasa actualizada exitosamente",
+    "deleted": "Tasa eliminada exitosamente",
     "error": {
       "save": "Error al guardar tasa",
       "load": "Error al cargar tasas",
@@ -370,6 +392,19 @@
       "load": "Error al cargar retenciones",
       "delete": "Error al eliminar retención"
     }
+  },
+  "pos": {
+    "completed": "Venta completada exitosamente",
+    "loading": "Cargando POS...",
+    "searchProducts": "Buscar productos...",
+    "stock": "Stock"
+  },
+  "sync": {
+    "noConflicts": "Sin conflictos",
+    "table": "Tabla:",
+    "status": "Estado:",
+    "acceptServer": "Aceptar Servidor",
+    "acceptLocal": "Aceptar Local"
   },
   "roles": {
     "title": "Roles",

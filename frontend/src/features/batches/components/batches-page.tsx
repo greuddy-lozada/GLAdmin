@@ -13,6 +13,7 @@ import { useBatches } from '@/features/batches/hooks/use-batches';
 import { Batch, CreateBatchRequest, UpdateBatchRequest } from '@/features/batches/models/batch.model';
 import { batchService } from '@/features/batches/services/batch.service';
 import { useI18n } from '@/i18n';
+import { sileo } from 'sileo';
 import { RoleGuard } from '@/components/ui/role-guard';
 import { useAuth } from '@/providers/auth-provider';
 import { hasMinLevel } from '@/lib/auth/roles';
@@ -67,8 +68,10 @@ export default function BatchesPage() {
           description: formData.description || null,
         };
         await batchService.update(selectedBatch.id, data);
+        sileo.success({ description: t('batches.updated') });
       } else {
         await batchService.create(formData);
+        sileo.success({ description: t('batches.created') });
       }
       await loadBatches();
       setFormOpen(false);
@@ -84,6 +87,7 @@ export default function BatchesPage() {
     setSubmitting(true);
     try {
       await batchService.delete(deleteTarget.id);
+      sileo.success({ description: t('batches.deleted') });
       await loadBatches();
       setDeleteOpen(false);
       setDeleteTarget(null);

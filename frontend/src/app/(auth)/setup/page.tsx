@@ -48,8 +48,8 @@ export default function SetupPage() {
       localStorage.setItem('refreshToken', data.data.refreshToken);
       await login(form.adminEmail, form.adminPassword);
       router.push('/dashboard');
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
     } finally {
       setLoading(false);
     }

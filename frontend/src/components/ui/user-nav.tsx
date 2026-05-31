@@ -62,6 +62,7 @@ export function UserNav() {
             </div>
             <div className="h-px bg-border my-1" />
             <button
+              type="button"
               onClick={() => { setTheme(theme === 'dark' ? 'light' : 'dark'); setOpen(false); }}
               className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
             >
@@ -70,6 +71,7 @@ export function UserNav() {
             </button>
             <div className="h-px bg-border my-1" />
             <button
+              type="button"
               onClick={handleLogout}
               className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
             >

@@ -42,6 +42,24 @@ export class TransformInterceptor<T> implements NestInterceptor<
         if (
           typeof responseBody === 'object' &&
           'data' in responseBody &&
+          Array.isArray(responseBody.data) &&
+          'total' in responseBody &&
+          'page' in responseBody &&
+          'limit' in responseBody
+        ) {
+          return {
+            data: responseBody.data,
+            total: responseBody.total,
+            page: responseBody.page,
+            limit: responseBody.limit,
+            message: null,
+            statusCode,
+          };
+        }
+
+        if (
+          typeof responseBody === 'object' &&
+          'data' in responseBody &&
           'message' in responseBody
         ) {
           const msg = responseBody.message

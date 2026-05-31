@@ -6,12 +6,14 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
   ParseIntPipe,
 } from '@nestjs/common';
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 @Controller('customers')
 export class CustomersController {
@@ -25,8 +27,8 @@ export class CustomersController {
 
   @Get()
   @Roles('master', 'admin', 'employee')
-  findAll() {
-    return this.customersService.findAll();
+  async findAll(@Query() pagination: PaginationQueryDto) {
+    return this.customersService.findAll(pagination.page, pagination.limit);
   }
 
   @Get(':id')

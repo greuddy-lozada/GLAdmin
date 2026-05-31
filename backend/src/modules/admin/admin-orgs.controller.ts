@@ -7,12 +7,14 @@ import {
   Param,
   Body,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { CreateOrgDto } from './dto/create-org.dto';
 import { UpdateOrgDto } from './dto/update-org.dto';
 import { AssignUserOrgDto } from './dto/assign-user-org.dto';
 import { MinLevel, ROLE_LEVEL } from '../../common/decorators/min-level.decorator';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 @Controller('admin/orgs')
 export class AdminOrgsController {
@@ -20,8 +22,8 @@ export class AdminOrgsController {
 
   @Get()
   @MinLevel(ROLE_LEVEL.master)
-  findAll() {
-    return this.adminService.findAllOrgs();
+  findAll(@Query() pagination: PaginationQueryDto) {
+    return this.adminService.findAllOrgs(pagination.page, pagination.limit);
   }
 
   @Get(':id')

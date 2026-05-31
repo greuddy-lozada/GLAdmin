@@ -1,6 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { Logger } from '@nestjs/common';
 
+const logger = new Logger('Seed');
 const prisma = new PrismaClient();
 
 async function main() {
@@ -13,14 +15,19 @@ async function main() {
   await prisma.role.upsert({
     where: { id: 2 },
     update: {},
-    create: { id: 2, name: 'Administrador', slug: 'admin' },
+    create: { id: 2, name: 'Ejecutivo', slug: 'executive' },
   });
   await prisma.role.upsert({
     where: { id: 3 },
     update: {},
-    create: { id: 3, name: 'Empleado', slug: 'employee' },
+    create: { id: 3, name: 'Gerente', slug: 'manager' },
   });
-  console.log('Roles created');
+  await prisma.role.upsert({
+    where: { id: 4 },
+    update: {},
+    create: { id: 4, name: 'Empleado', slug: 'employee' },
+  });
+  logger.log('Roles created');
 
   // ── Admin user ──
   const password = await bcrypt.hash('000000', 10);
@@ -38,7 +45,7 @@ async function main() {
       isActive: true,
     },
   });
-  console.log('Admin user created');
+  logger.log('Admin user created');
 
   // ── Currencies ──
   for (const c of [
@@ -48,7 +55,7 @@ async function main() {
   ]) {
     await prisma.currency.upsert({ where: { id: c.id }, update: {}, create: c });
   }
-  console.log('Currencies created');
+  logger.log('Currencies created');
 
   // ── Plans ──
   await prisma.plan.upsert({
@@ -126,7 +133,7 @@ async function main() {
   });
 
   const freePlan = await prisma.plan.findUnique({ where: { name: 'free' } });
-  console.log('Plans created');
+  logger.log('Plans created');
 
   // ── Default Organization ──
   await prisma.organization.upsert({
@@ -141,7 +148,7 @@ async function main() {
       planId: freePlan!.id,
     },
   });
-  console.log('Default organization created');
+  logger.log('Default organization created');
 
   // ── Assign existing users to org ──
   const users = await prisma.user.findMany();
@@ -160,7 +167,7 @@ async function main() {
       data: { currentOrganizationId: 1 },
     });
   }
-  console.log('User organizations created');
+  logger.log('User organizations created');
 
   // ── Exchange Rates ──
   await prisma.exchangeRate.upsert({
@@ -173,7 +180,7 @@ async function main() {
     update: {},
     create: { id: 2, rate: 72.00, currencyId: 2, type: 'paralelo', date: new Date('2026-05-20'), source: 'dolartoday', organizationId: 1 },
   });
-  console.log('Exchange rates created');
+  logger.log('Exchange rates created');
 
   // ── Taxes (Venezuela: IVA) ──
   await prisma.tax.upsert({
@@ -191,7 +198,7 @@ async function main() {
     update: {},
     create: { id: 3, name: 'Exento', percentage: 0, organizationId: 1 },
   });
-  console.log('Taxes created');
+  logger.log('Taxes created');
 
   // ── Customers ──
   await prisma.customer.upsert({
@@ -222,7 +229,7 @@ async function main() {
       organizationId: 1,
     },
   });
-  console.log('Customers created');
+  logger.log('Customers created');
 
   // ── Suppliers ──
   await prisma.supplier.upsert({
@@ -261,7 +268,7 @@ async function main() {
       organizationId: 1,
     },
   });
-  console.log('Suppliers created');
+  logger.log('Suppliers created');
 
   // ── Company ──
   await prisma.company.upsert({
@@ -278,7 +285,7 @@ async function main() {
       organizationId: 1,
     },
   });
-  console.log('Company created');
+  logger.log('Company created');
 
   // ── Products (prices in VED) ──
   await prisma.product.upsert({
@@ -306,7 +313,7 @@ async function main() {
     update: {},
     create: { id: 5, code: 'PROD-005', name: 'Webcam HD 1080p', price: 3200, dollarPrice: 55, idTax: 2, available: true, organizationId: 1 },
   });
-  console.log('Products created');
+  logger.log('Products created');
 
   // ── Batches ──
   await prisma.batch.upsert({
@@ -319,7 +326,7 @@ async function main() {
     update: {},
     create: { id: 2, code: 'LOTE-2025-002', description: 'Lote marzo 2025', organizationId: 1 },
   });
-  console.log('Batches created');
+  logger.log('Batches created');
 
   // ── Stocks ──
   await prisma.stock.upsert({
@@ -337,7 +344,7 @@ async function main() {
     update: {},
     create: { id: 3, idProduct: 3, idSupplier: 2, idBatch: 2, existence: 50, organizationId: 1 },
   });
-  console.log('Stocks created');
+  logger.log('Stocks created');
 
   // ── Purchase Order (multi-currency) ──
   await prisma.purchaseOrder.upsert({
@@ -359,7 +366,7 @@ async function main() {
       organizationId: 1,
     },
   });
-  console.log('Purchase order created');
+  logger.log('Purchase order created');
 
   // ── Purchase Order Details (multi-currency) ──
   await prisma.purchaseOrderDet.upsert({
@@ -372,7 +379,7 @@ async function main() {
     update: {},
     create: { id: 2, idPurchaseOrder: 1, idProduct: 2, quantity: 10, unitPrice: 3000, unitPriceUsd: 3000 / 72.00, subtotal: 30000, subtotalUsd: 30000 / 72.00, organizationId: 1 },
   });
-  console.log('Purchase order details created');
+  logger.log('Purchase order details created');
 
   // ── Accounts Payable (multi-currency) ──
   await prisma.accountsPayable.upsert({
@@ -390,9 +397,9 @@ async function main() {
       organizationId: 1,
     },
   });
-  console.log('Accounts payable created');
+  logger.log('Accounts payable created');
 
-  console.log('✅ Seed completed successfully');
+  logger.log('✅ Seed completed successfully');
 }
 
 main()
@@ -400,7 +407,7 @@ main()
     await prisma.$disconnect();
   })
   .catch(async (e) => {
-    console.error(e);
+    logger.error(e);
     await prisma.$disconnect();
     process.exit(1);
   });

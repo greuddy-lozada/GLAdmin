@@ -20,7 +20,7 @@ export function GlareBackground() {
     "--shade":
       "radial-gradient( farthest-corner circle at var(--m-x) var(--m-y),rgba(255,255,255,0.1) 12%,rgba(255,255,255,0.15) 20%,rgba(255,255,255,0.25) 120% ) var(--bg-x) var(--bg-y)/300% no-repeat",
     backgroundBlendMode: "hue, hue, hue, overlay",
-  } as any;
+  } as Record<string, string>;
 
   const update = (clientX: number, clientY: number) => {
     if (!refElement.current) return;

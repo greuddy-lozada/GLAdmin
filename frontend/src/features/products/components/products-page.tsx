@@ -66,7 +66,7 @@ export default function ProductsPage() {
   ];
 
   useEffect(() => {
-    apiClient.get('/taxes').then((r) => setTaxes(r.data.data || [])).catch(() => {});
+    apiClient.get('/taxes').then((r) => setTaxes(r.data.data || [])).catch(() => console.warn('Failed to load taxes'));
   }, []);
 
   const openCreate = () => {

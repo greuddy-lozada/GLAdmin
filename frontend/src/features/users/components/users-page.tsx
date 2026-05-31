@@ -43,7 +43,7 @@ export default function UsersPage() {
     userName: '',
     password: '',
     email: '',
-    idRole: 3,
+    idRole: 4,
   });
   const [roles, setRoles] = useState<{ id: number; name: string }[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -69,13 +69,13 @@ export default function UsersPage() {
   ];
 
   useEffect(() => {
-    apiClient.get('/roles').then((r) => setRoles(r.data.data || [])).catch(() => {});
+    apiClient.get('/roles').then((r) => setRoles(r.data.data || [])).catch(() => console.warn('Failed to load roles'));
   }, []);
 
   const openCreate = () => {
     setSelectedUser(null);
     setError('');
-    setFormData({ firstName: '', lastName: '', userName: '', password: '', email: '', idRole: 3 });
+    setFormData({ firstName: '', lastName: '', userName: '', password: '', email: '', idRole: 4 });
     setFormOpen(true);
   };
 

@@ -3,6 +3,7 @@ import { PrismaService } from '../../shared/prisma/prisma.service';
 import { ContextService } from '../../modules/tenant/context.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { Prisma } from '@prisma/client';
 
 export interface ProductWithStock {
   id: number;
@@ -36,17 +37,24 @@ export class ProductsService {
     const ctx = this.contextService?.getCurrent();
     const orgId = ctx?.organizationId;
     const product = await this.prisma.product.create({
-      data: { ...dto, organizationId: orgId! } as any,
+      data: { ...dto, organizationId: orgId! } as unknown as Prisma.ProductCreateInput,
       include: { tax: true },
     });
     return { data: product, message: 'PRODUCT.CREATED' };
   }
 
-  async findAll() {
-    return this.prisma.product.findMany({
-      where: { available: true },
-      include: { tax: true },
-    });
+  async findAll(page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.prisma.product.findMany({
+        where: { available: true },
+        include: { tax: true },
+        skip,
+        take: limit,
+      }),
+      this.prisma.product.count({ where: { available: true } }),
+    ]);
+    return { data, total, page, limit };
   }
 
   async findOne(id: number) {
@@ -77,20 +85,29 @@ export class ProductsService {
     return { data: product, message: 'PRODUCT.DELETED' };
   }
 
-  async findAllWithStock(): Promise<ProductWithStock[]> {
+  async findAllWithStock(page = 1, limit = 20) {
     const orgId = this.contextService.getCurrent()?.organizationId;
     if (!orgId) throw new Error('No organization context');
-    const products = await this.prisma.product.findMany({
-      where: { organizationId: orgId, available: true },
-      include: {
-        tax: true,
-        stocks: true,
-      },
-    });
+    const skip = (page - 1) * limit;
+    const where = { organizationId: orgId, available: true };
+    const [products, total] = await Promise.all([
+      this.prisma.product.findMany({
+        where,
+        include: {
+          tax: true,
+          stocks: true,
+        },
+        skip,
+        take: limit,
+      }),
+      this.prisma.product.count({ where }),
+    ]);
 
-    return products.map((product: ProductWithStocks) => ({
+    const data = products.map((product: ProductWithStocks) => ({
       ...product,
       stock: product.stocks.reduce((sum: number, s: { existence: number }) => sum + s.existence, 0),
     })) as ProductWithStock[];
+
+    return { data, total, page, limit };
   }
 }

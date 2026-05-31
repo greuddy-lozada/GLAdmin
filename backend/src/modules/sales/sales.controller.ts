@@ -1,9 +1,12 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, ParseIntPipe } from '@nestjs/common';
 import { SalesService } from './sales.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
 import { UpdateSaleDto } from './dto/update-sale.dto';
+import { MinLevel, ROLE_LEVEL } from '../../common/decorators/min-level.decorator';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 @Controller('sales')
+@MinLevel(ROLE_LEVEL.employee)
 export class SalesController {
   constructor(private readonly salesService: SalesService) {}
 
@@ -13,8 +16,8 @@ export class SalesController {
   }
 
   @Get()
-  async findAll() {
-    return this.salesService.findAll();
+  async findAll(@Query() pagination: PaginationQueryDto) {
+    return this.salesService.findAll(pagination.page, pagination.limit);
   }
 
   @Get(':id')

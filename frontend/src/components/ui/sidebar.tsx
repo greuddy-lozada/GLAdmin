@@ -121,6 +121,7 @@ export const MobileSidebar = ({
         <span className="font-semibold">GLAdmin</span>
         <div className="flex justify-end z-20 w-full">
           <button
+            type="button"
             onClick={() => setOpen(!open)}
             className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground size-9"
             aria-label="Toggle menu"
@@ -144,10 +145,14 @@ export const MobileSidebar = ({
               )}
             >
               <div
+                role="button"
+                tabIndex={0}
                 className="absolute right-6 top-6 z-50"
                 onClick={() => setOpen(!open)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setOpen(!open); }}
               >
                 <button
+                  type="button"
                   className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground size-9"
                   aria-label="Close menu"
                 >
@@ -170,8 +175,7 @@ export const SidebarLink = ({
 }: {
   link: Links;
   className?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
+  [key: string]: unknown;
 }) => {
   const { open, animate } = useSidebar();
   return (

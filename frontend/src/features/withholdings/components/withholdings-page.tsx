@@ -61,8 +61,8 @@ export default function WithholdingsPage() {
   ];
 
   useEffect(() => {
-    apiClient.get('/suppliers').then((r) => setSuppliers(r.data.data || [])).catch(() => {});
-    apiClient.get('/purchase-orders').then((r) => setPurchaseOrders(r.data.data || [])).catch(() => {});
+    apiClient.get('/suppliers').then((r) => setSuppliers(r.data.data || [])).catch(() => console.warn('Failed to load suppliers'));
+    apiClient.get('/purchase-orders').then((r) => setPurchaseOrders(r.data.data || [])).catch(() => console.warn('Failed to load purchase orders'));
   }, []);
 
   const openCreate = () => {

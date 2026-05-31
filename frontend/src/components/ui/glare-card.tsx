@@ -40,7 +40,7 @@ export const GlareCard = ({
     "--radius": "48px",
     "--easing": "ease",
     "--transition": "var(--duration) var(--easing)",
-  } as any;
+  } as Record<string, string>;
 
   const backgroundStyle = {
     "--step": "5%",

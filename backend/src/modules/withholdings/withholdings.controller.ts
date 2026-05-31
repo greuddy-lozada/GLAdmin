@@ -7,11 +7,13 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { WithholdingsService } from './withholdings.service';
 import { CreateWithholdingDto } from './dto/create-withholding.dto';
 import { UpdateWithholdingDto } from './dto/update-withholding.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 @Controller('withholdings')
 export class WithholdingsController {
@@ -25,8 +27,8 @@ export class WithholdingsController {
 
   @Get()
   @Roles('master', 'admin', 'employee')
-  findAll() {
-    return this.withholdingsService.findAll();
+  findAll(@Query() pagination: PaginationQueryDto) {
+    return this.withholdingsService.findAll(pagination.page, pagination.limit);
   }
 
   @Get(':id')

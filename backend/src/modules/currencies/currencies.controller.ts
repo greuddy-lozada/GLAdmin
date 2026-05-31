@@ -1,6 +1,7 @@
-import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { CurrenciesService } from './currencies.service';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 @Controller('currencies')
 export class CurrenciesController {
@@ -8,8 +9,8 @@ export class CurrenciesController {
 
   @Get()
   @Roles('master', 'admin', 'employee')
-  findAll() {
-    return this.currenciesService.findAll();
+  findAll(@Query() pagination: PaginationQueryDto) {
+    return this.currenciesService.findAll(pagination.page, pagination.limit);
   }
 
   @Get(':id')

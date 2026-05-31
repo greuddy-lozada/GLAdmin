@@ -1,6 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 
 import { PrismaModule } from './shared/prisma/prisma.module';
@@ -35,10 +36,18 @@ import { PaymentsModule } from './modules/payments/payments.module';
 import { BootstrapModule } from './modules/bootstrap/bootstrap.module';
 import { SyncModule } from './modules/sync/sync.module';
 import { SalesModule } from './modules/sales/sales.module';
+import { UploadsModule } from './modules/uploads/uploads.module';
+import { HealthModule } from './modules/health/health.module';
+import { AuditLogModule } from './modules/audit-log/audit-log.module';
 
 import appConfig from './core/config/app.config';
 import jwtConfig from './core/config/jwt.config';
 import databaseConfig from './core/config/database.config';
+
+const jwtSecret = process.env.JWT_SECRET;
+if (!jwtSecret) {
+  throw new Error('JWT_SECRET environment variable is required');
+}
 
 @Module({
   imports: [
@@ -46,9 +55,13 @@ import databaseConfig from './core/config/database.config';
       load: [appConfig, jwtConfig, databaseConfig],
       isGlobal: true,
     }),
+    ThrottlerModule.forRoot([{
+      ttl: 60000,
+      limit: 100,
+    }]),
     JwtModule.register({
       global: true,
-      secret: process.env.JWT_SECRET ?? 'gladmin-dev-secret',
+      secret: jwtSecret,
       signOptions: { expiresIn: '7d' },
     }),
     PrismaModule,
@@ -75,6 +88,9 @@ import databaseConfig from './core/config/database.config';
     BootstrapModule,
     SyncModule,
     SalesModule,
+    UploadsModule,
+    HealthModule,
+    AuditLogModule,
   ],
   providers: [
     {
@@ -92,6 +108,10 @@ import databaseConfig from './core/config/database.config';
     {
       provide: APP_GUARD,
       useClass: FeatureGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
     {
       provide: APP_INTERCEPTOR,

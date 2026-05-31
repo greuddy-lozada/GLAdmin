@@ -7,11 +7,13 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { ExchangeRatesService } from './exchange-rates.service';
 import { CreateExchangeRateDto } from './dto/create-exchange-rate.dto';
 import { UpdateExchangeRateDto } from './dto/update-exchange-rate.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 @Controller('exchange-rates')
 export class ExchangeRatesController {
@@ -25,8 +27,8 @@ export class ExchangeRatesController {
 
   @Get()
   @Roles('master', 'admin', 'employee')
-  findAll() {
-    return this.exchangeRatesService.findAll();
+  findAll(@Query() pagination: PaginationQueryDto) {
+    return this.exchangeRatesService.findAll(pagination.page, pagination.limit);
   }
 
   @Get('latest')

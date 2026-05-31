@@ -79,9 +79,9 @@ export default function PurchaseOrdersPage() {
   ];
 
   useEffect(() => {
-    apiClient.get('/suppliers').then((r) => setSuppliers(r.data.data || [])).catch(() => {});
-    apiClient.get('/products').then((r) => setProducts(r.data.data || [])).catch(() => {});
-    apiClient.get('/exchange-rates').then((r) => setExchangeRates(r.data.data || [])).catch(() => {});
+    apiClient.get('/suppliers').then((r) => setSuppliers(r.data.data || [])).catch(() => console.warn('Failed to load suppliers'));
+    apiClient.get('/products').then((r) => setProducts(r.data.data || [])).catch(() => console.warn('Failed to load products'));
+    apiClient.get('/exchange-rates').then((r) => setExchangeRates(r.data.data || [])).catch(() => console.warn('Failed to load exchange rates'));
   }, []);
 
   const openCreate = () => {

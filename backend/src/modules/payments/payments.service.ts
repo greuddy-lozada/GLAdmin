@@ -17,6 +17,8 @@ function getStripeInstance() {
 
 @Injectable()
 export class PaymentsService {
+  private readonly processedEvents = new Set<string>();
+
   constructor(private readonly prisma: PrismaService) {}
 
   async createCheckoutSession(planId: number, organizationId: number) {
@@ -65,6 +67,11 @@ export class PaymentsService {
   }
 
   async handleWebhook(event: any) {
+    if (this.processedEvents.has(event.id)) {
+      return;
+    }
+    this.processedEvents.add(event.id);
+
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
       const organizationId = Number(session.metadata?.organizationId);

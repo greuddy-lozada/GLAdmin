@@ -34,10 +34,11 @@ export class AuthFactory {
     return this.jwtService.sign(payload, { expiresIn: '15m' });
   }
 
-  async generateRefreshToken(): Promise<{ raw: string; hash: string }> {
+  async generateRefreshToken(): Promise<{ raw: string; hash: string; tokenId: string }> {
+    const tokenId = crypto.randomUUID();
     const raw = crypto.randomBytes(32).toString('hex');
     const hash = await bcrypt.hash(raw, 10);
-    return { raw, hash };
+    return { raw: `${tokenId}.${raw}`, hash, tokenId };
   }
 
   async hashRefreshToken(raw: string): Promise<string> {

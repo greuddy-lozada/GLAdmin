@@ -70,7 +70,12 @@ export class DashboardService {
           orderBy: { purchaseOrders: { _count: 'desc' } },
           take: 5,
         }),
-        this.prisma.$queryRaw`SELECT strftime('%Y-%m', date) as month, COUNT(*) as count FROM PurchaseOrder WHERE date IS NOT NULL GROUP BY month ORDER BY month DESC LIMIT 6` as Promise<{ month: string | null; count: bigint }[]>,
+        this.prisma.purchaseOrder.findMany({
+          where: { date: { not: null } },
+          select: { date: true },
+          orderBy: { date: 'desc' },
+          take: 500,
+        }),
       ]);
 
     interface ProductWithStock {
@@ -95,9 +100,17 @@ const productsWithExistence: ProductWithExistence[] = (allProducts as ProductWit
       .sort((a, b) => a.existence - b.existence)
       .slice(0, 5);
 
-    const monthlyData = (Array.isArray(monthlyOrders) ? monthlyOrders : [])
-      .filter((r) => r.month != null)
-      .map((r) => ({ month: r.month, count: Number(r.count) }))
+    const monthCounts = new Map<string, number>();
+    for (const order of monthlyOrders as { date: Date | null }[]) {
+      if (!order.date) continue;
+      const month = order.date.toISOString().substring(0, 7);
+      monthCounts.set(month, (monthCounts.get(month) || 0) + 1);
+    }
+
+    const monthlyData = Array.from(monthCounts.entries())
+      .map(([month, count]) => ({ month, count }))
+      .sort((a, b) => b.month.localeCompare(a.month))
+      .slice(0, 6)
       .reverse();
 
     return {

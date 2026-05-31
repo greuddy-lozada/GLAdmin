@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { localDb } from '@/lib/sync/db';
+import { localDb, type LocalProduct } from '@/lib/sync/db';
 
 export interface CartItem {
   productId: number;
@@ -13,14 +13,14 @@ export interface CartItem {
 
 export function usePos() {
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<LocalProduct[]>([]);
 
   const loadProducts = async () => {
     const allProducts = await localDb.products.toArray();
     setProducts(allProducts);
   };
 
-  const addToCart = (product: any) => {
+  const addToCart = (product: LocalProduct) => {
     const existing = cart.find(item => item.productId === product.id);
     if (existing) {
       setCart(cart.map(item =>

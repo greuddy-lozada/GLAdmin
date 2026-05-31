@@ -13,6 +13,7 @@ import { useTaxes } from '@/features/taxes/hooks/use-taxes';
 import { Tax, CreateTaxRequest, UpdateTaxRequest } from '@/features/taxes/models/tax.model';
 import { taxService } from '@/features/taxes/services/tax.service';
 import { useI18n } from '@/i18n';
+import { sileo } from 'sileo';
 import { RoleGuard } from '@/components/ui/role-guard';
 import { useAuth } from '@/providers/auth-provider';
 import { hasMinLevel } from '@/lib/auth/roles';
@@ -75,8 +76,10 @@ export default function TaxesPage() {
           formula: formData.formula || null,
         };
         await taxService.update(selectedTax.id, data);
+        sileo.success({ description: t('taxes.updated') });
       } else {
         await taxService.create(formData);
+        sileo.success({ description: t('taxes.created') });
       }
       await loadTaxes();
       setFormOpen(false);
@@ -92,6 +95,7 @@ export default function TaxesPage() {
     setSubmitting(true);
     try {
       await taxService.delete(deleteTarget.id);
+      sileo.success({ description: t('taxes.deleted') });
       await loadTaxes();
       setDeleteOpen(false);
       setDeleteTarget(null);

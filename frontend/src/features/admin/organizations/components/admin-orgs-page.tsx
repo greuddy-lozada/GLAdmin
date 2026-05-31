@@ -42,7 +42,7 @@ export default function AdminOrgsPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    apiClient.get('/admin/plans').then((r) => setPlans(r.data.data || [])).catch(() => {});
+    apiClient.get('/admin/plans').then((r) => setPlans(r.data.data || [])).catch(() => console.warn('Failed to load plans'));
   }, []);
 
   const slugify = (text: string) =>

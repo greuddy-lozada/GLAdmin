@@ -3,6 +3,7 @@ import { PrismaService } from '../../shared/prisma/prisma.service';
 import { ContextService } from '../../modules/tenant/context.service';
 import { CreateBatchDto } from './dto/create-batch.dto';
 import { UpdateBatchDto } from './dto/update-batch.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class BatchesService {
@@ -14,12 +15,17 @@ export class BatchesService {
   async create(dto: CreateBatchDto) {
     const ctx = this.contextService?.getCurrent();
     const orgId = ctx?.organizationId;
-    const batch = await this.prisma.batch.create({ data: { ...dto, organizationId: orgId! } as any });
+    const batch = await this.prisma.batch.create({ data: { ...dto, organizationId: orgId! } as unknown as Prisma.BatchCreateInput });
     return { data: batch, message: 'BATCH.CREATED' };
   }
 
-  async findAll() {
-    return this.prisma.batch.findMany();
+  async findAll(page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.prisma.batch.findMany({ skip, take: limit }),
+      this.prisma.batch.count(),
+    ]);
+    return { data, total, page, limit };
   }
 
   async findOne(id: number) {

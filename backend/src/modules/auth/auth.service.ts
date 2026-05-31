@@ -59,10 +59,11 @@ export class AuthService {
       throw new UnauthorizedException('AUTH.USER_INACTIVE');
     }
 
-    const { raw, hash } = await this.authFactory.generateRefreshToken();
+    const { raw, hash, tokenId } = await this.authFactory.generateRefreshToken();
 
     await this.prisma.refreshToken.create({
       data: {
+        tokenId,
         tokenHash: hash,
         userId: user.id,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
@@ -147,9 +148,10 @@ export class AuthService {
 
     await this.prisma.refreshToken.deleteMany({ where: { userId } });
 
-    const { raw, hash } = await this.authFactory.generateRefreshToken();
+    const { raw, hash, tokenId } = await this.authFactory.generateRefreshToken();
     await this.prisma.refreshToken.create({
       data: {
+        tokenId,
         tokenHash: hash,
         userId,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
@@ -187,36 +189,38 @@ export class AuthService {
   }
 
   async refresh(dto: RefreshDto) {
-    const tokens = await this.prisma.refreshToken.findMany({
-      where: { expiresAt: { gt: new Date() } },
-      include: { user: { include: { role: true } } },
-    });
-
-    let matchedToken: typeof tokens[0] | null = null;
-    for (const token of tokens) {
-      const isValid = await this.authFactory.compareRefreshToken(
-        dto.refreshToken,
-        token.tokenHash,
-      );
-      if (isValid) {
-        matchedToken = token;
-        break;
-      }
-    }
-
-    if (!matchedToken) {
+    const dotIndex = dto.refreshToken.indexOf('.');
+    if (dotIndex === -1) {
       throw new UnauthorizedException('AUTH.INVALID_REFRESH_TOKEN');
     }
 
-    const user = matchedToken.user;
+    const tokenId = dto.refreshToken.substring(0, dotIndex);
+    const rawSecret = dto.refreshToken.substring(dotIndex + 1);
 
-    await this.prisma.refreshToken.delete({
-      where: { id: matchedToken.id },
+    const token = await this.prisma.refreshToken.findUnique({
+      where: { tokenId, expiresAt: { gt: new Date() } },
+      include: { user: { include: { role: true } } },
     });
 
-    const { raw, hash } = await this.authFactory.generateRefreshToken();
+    if (!token) {
+      throw new UnauthorizedException('AUTH.INVALID_REFRESH_TOKEN');
+    }
+
+    const isValid = await this.authFactory.compareRefreshToken(rawSecret, token.tokenHash);
+    if (!isValid) {
+      throw new UnauthorizedException('AUTH.INVALID_REFRESH_TOKEN');
+    }
+
+    const user = token.user;
+
+    await this.prisma.refreshToken.delete({
+      where: { id: token.id },
+    });
+
+    const { raw, hash, tokenId: newTokenId } = await this.authFactory.generateRefreshToken();
     await this.prisma.refreshToken.create({
       data: {
+        tokenId: newTokenId,
         tokenHash: hash,
         userId: user.id,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),

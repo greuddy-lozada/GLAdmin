@@ -15,57 +15,64 @@ export class SalesService {
     const orgId = this.context.getCurrent()?.organizationId;
     if (!orgId) throw new Error('No organization context');
 
-    const sale = await this.prisma.sale.create({
-      data: {
-        organizationId: orgId,
-        code: dto.code,
-        date: new Date(dto.date),
-        amount: dto.amount,
-        amountUsd: dto.amountUsd,
-        exchangeRate: dto.exchangeRate,
-        paymentMethod: dto.paymentMethod,
-        status: dto.status,
-        idCustomer: dto.idCustomer,
-        details: {
-          create: dto.items.map((item) => ({
-            organizationId: orgId,
-            idProduct: item.productId,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            unitPriceUsd: item.unitPriceUsd,
-            subtotal: item.subtotal,
-            subtotalUsd: item.subtotalUsd,
-            observation: item.observation,
-          })),
+    return this.prisma.$transaction(async (tx) => {
+      const sale = await tx.sale.create({
+        data: {
+          organizationId: orgId,
+          code: dto.code,
+          date: new Date(dto.date),
+          amount: dto.amount,
+          amountUsd: dto.amountUsd,
+          exchangeRate: dto.exchangeRate,
+          paymentMethod: dto.paymentMethod,
+          status: dto.status,
+          idCustomer: dto.idCustomer,
+          details: {
+            create: dto.items.map((item) => ({
+              organizationId: orgId,
+              idProduct: item.productId,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              unitPriceUsd: item.unitPriceUsd,
+              subtotal: item.subtotal,
+              subtotalUsd: item.subtotalUsd,
+              observation: item.observation,
+            })),
+          },
         },
-      },
-      include: {
-        details: true,
-        customer: true,
-      },
-    });
-
-    for (const item of dto.items) {
-      await this.prisma.stock.updateMany({
-        where: { idProduct: item.productId, organizationId: orgId },
-        data: { existence: { decrement: item.quantity } },
+        include: {
+          details: true,
+          customer: true,
+        },
       });
-    }
 
-    return sale;
+      for (const item of dto.items) {
+        await tx.stock.updateMany({
+          where: { idProduct: item.productId, organizationId: orgId },
+          data: { existence: { decrement: item.quantity } },
+        });
+      }
+
+      return sale;
+    });
   }
 
-  async findAll() {
+  async findAll(page = 1, limit = 20) {
     const orgId = this.context.getCurrent()?.organizationId;
     if (!orgId) throw new Error('No organization context');
-    return this.prisma.sale.findMany({
-      where: { organizationId: orgId },
-      include: {
-        details: true,
-        customer: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    const skip = (page - 1) * limit;
+    const where = { organizationId: orgId };
+    const [data, total] = await Promise.all([
+      this.prisma.sale.findMany({
+        where,
+        skip,
+        take: limit,
+        include: { details: true, customer: true },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.sale.count({ where }),
+    ]);
+    return { data, total, page, limit };
   }
 
   async findOne(id: number) {
@@ -116,15 +123,17 @@ export class SalesService {
     if (!orgId) throw new Error('No organization context');
     const sale = await this.findOne(id);
 
-    for (const item of sale.details) {
-      await this.prisma.stock.updateMany({
-        where: { idProduct: item.idProduct, organizationId: orgId },
-        data: { existence: { increment: item.quantity || 0 } },
-      });
-    }
+    await this.prisma.$transaction(async (tx) => {
+      for (const item of sale.details) {
+        await tx.stock.updateMany({
+          where: { idProduct: item.idProduct, organizationId: orgId },
+          data: { existence: { increment: item.quantity || 0 } },
+        });
+      }
 
-    await this.prisma.sale.delete({
-      where: { id, organizationId: orgId },
+      await tx.sale.delete({
+        where: { id, organizationId: orgId },
+      });
     });
 
     return sale;

@@ -6,12 +6,14 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
   ParseIntPipe,
 } from '@nestjs/common';
 import { StocksService } from './stocks.service';
 import { CreateStockDto } from './dto/create-stock.dto';
 import { UpdateStockDto } from './dto/update-stock.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 @Controller('stocks')
 export class StocksController {
@@ -25,8 +27,8 @@ export class StocksController {
 
   @Get()
   @Roles('master', 'admin', 'employee')
-  findAll() {
-    return this.stocksService.findAll();
+  async findAll(@Query() pagination: PaginationQueryDto) {
+    return this.stocksService.findAll(pagination.page, pagination.limit);
   }
 
   @Get(':id')

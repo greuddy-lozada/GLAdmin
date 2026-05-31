@@ -104,10 +104,12 @@ export class BootstrapService {
         data: { currentOrganizationId: organization.id },
       });
 
+      const tokenId = crypto.randomUUID();
       const rawRefresh = crypto.randomBytes(32).toString('hex');
       const refreshHash = await bcrypt.hash(rawRefresh, 10);
       await tx.refreshToken.create({
         data: {
+          tokenId,
           tokenHash: refreshHash,
           userId: user.id,
           expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
@@ -131,7 +133,7 @@ export class BootstrapService {
       return {
         data: {
           accessToken,
-          refreshToken: rawRefresh,
+          refreshToken: `${tokenId}.${rawRefresh}`,
           expiresIn: 900,
           user: userWithoutPassword,
           organization: {

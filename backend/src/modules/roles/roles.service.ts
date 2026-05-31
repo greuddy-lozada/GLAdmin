@@ -5,8 +5,13 @@ import { PrismaService } from '../../shared/prisma/prisma.service';
 export class RolesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll() {
-    return this.prisma.role.findMany();
+  async findAll(page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.prisma.role.findMany({ skip, take: limit }),
+      this.prisma.role.count(),
+    ]);
+    return { data, total, page, limit };
   }
 
   async findOne(id: number) {

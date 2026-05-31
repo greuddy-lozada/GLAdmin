@@ -3,6 +3,7 @@ import { PrismaService } from '../../shared/prisma/prisma.service';
 import { ContextService } from '../../modules/tenant/context.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class CompaniesService {
@@ -14,12 +15,17 @@ export class CompaniesService {
   async create(dto: CreateCompanyDto) {
     const ctx = this.contextService?.getCurrent();
     const orgId = ctx?.organizationId;
-    const company = await this.prisma.company.create({ data: { ...dto, organizationId: orgId! } as any });
+    const company = await this.prisma.company.create({ data: { ...dto, organizationId: orgId! } as unknown as Prisma.CompanyCreateInput });
     return { data: company, message: 'COMPANY.CREATED' };
   }
 
-  async findAll() {
-    return this.prisma.company.findMany();
+  async findAll(page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.prisma.company.findMany({ skip, take: limit }),
+      this.prisma.company.count(),
+    ]);
+    return { data, total, page, limit };
   }
 
   async findOne(id: number) {

@@ -20,6 +20,7 @@ import { useExchangeRates } from '@/features/exchange-rates/hooks/use-exchange-r
 import { ExchangeRate, CreateExchangeRateRequest } from '@/features/exchange-rates/models/exchange-rate.model';
 import { exchangeRateService } from '@/features/exchange-rates/services/exchange-rate.service';
 import { useI18n } from '@/i18n';
+import { sileo } from 'sileo';
 import { RoleGuard } from '@/components/ui/role-guard';
 import apiClient from '@/lib/api/api-client';
 
@@ -43,8 +44,8 @@ export default function ExchangeRatesPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    exchangeRateService.getLatest().then(setLatestRate).catch(() => {});
-    apiClient.get('/currencies').then((r) => setCurrencies(r.data.data || [])).catch(() => {});
+    exchangeRateService.getLatest().then(setLatestRate).catch(() => console.warn('Failed to load latest rate'));
+    apiClient.get('/currencies').then((r) => setCurrencies(r.data.data || [])).catch(() => console.warn('Failed to load currencies'));
   }, []);
 
   const columns: Column<ExchangeRate>[] = [
@@ -86,6 +87,7 @@ export default function ExchangeRatesPage() {
     setSubmitting(true);
     try {
       await exchangeRateService.create(formData);
+      sileo.success({ description: t('exchangeRates.created') });
       await loadItems();
       setFormOpen(false);
     } catch {

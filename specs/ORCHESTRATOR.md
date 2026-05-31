@@ -44,6 +44,21 @@ Master tracker for all specs, implementation plans, and their completion status.
 
 ---
 
+## Status: Audit Fixes (React Doctor 71→73 + Code Review)
+
+| Spec | Status | Notes |
+|------|--------|-------|
+| `specs/audit-fixes.md` | ✅ Complete | Sprint 1-6 done. Score: 71→73/100 |
+| `specs/audit-reglas.md` | 🔄 In Progress | 14/14 High/Critical items implemented. See Priority Matrix below. |
+| Sprint 1 - Security blockers | ✅ Complete | Isolation bypass, PIN PBKDF2+salt, JWT secret |
+| Sprint 2 - Sync engine alive | ✅ Complete | start(), beforeunload, leader election, orgId |
+| Sprint 3 - Data integrity | ✅ Complete | Role @unique, refresh O(1), $transaction, DB-agnostic |
+| Sprint 4 - Hardening | ✅ Complete | Rate limiting, sync roles, CORS, Prisma $extends |
+| Sprint 5 - Polish | ✅ Complete | Upload endpoint, as any cleanup, health, PIN skip |
+| Sprint 6 - React Doctor | ✅ Complete | reduced-motion CSS, button-has-type, array-index-key, keyboard events |
+
+---
+
 ## Status: Legacy Specs (from original project setup)
 
 These specs were created during initial project scaffolding. None have been formally implemented — they represent the original vision.

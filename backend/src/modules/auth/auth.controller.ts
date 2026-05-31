@@ -1,4 +1,5 @@
-import { Controller, Post, Get, Body, Delete, HttpCode } from '@nestjs/common';
+import { Controller, Post, Get, Body, Delete, HttpCode, UseGuards } from '@nestjs/common';
+import { ThrottlerGuard, Throttle, SkipThrottle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshDto } from './dto/refresh.dto';
@@ -7,16 +8,21 @@ import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @Controller('auth')
+@SkipThrottle()
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Public()
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('login')
   async login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
   }
 
   @Public()
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('refresh')
   async refresh(@Body() dto: RefreshDto) {
     return this.authService.refresh(dto);
@@ -33,6 +39,8 @@ export class AuthController {
   }
 
   @Post('change-password')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 3, ttl: 3600000 } })
   async changePassword(
     @CurrentUser('id') userId: number,
     @Body() dto: ChangePasswordDto,

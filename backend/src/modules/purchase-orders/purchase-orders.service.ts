@@ -14,26 +14,49 @@ export class PurchaseOrdersService {
   async create(dto: CreatePurchaseOrderDto) {
     const ctx = this.contextService?.getCurrent();
     const orgId = ctx?.organizationId;
-    const { details, ...header } = dto;
+    const { details } = dto;
     const purchaseOrder = await this.prisma.purchaseOrder.create({
       data: {
-        ...header,
+        idSupplier: dto.idSupplier,
+        code: dto.code,
+        date: dto.date ? new Date(dto.date) : undefined,
+        amount: dto.amount,
+        amountUsd: dto.amountUsd,
+        exchangeRate: dto.exchangeRate,
+        exchangeRateId: dto.exchangeRateId,
+        officialExchangeRate: dto.officialExchangeRate,
+        officialExchangeRateId: dto.officialExchangeRateId,
+        paymentMethod: dto.paymentMethod,
+        status: dto.status,
         organizationId: orgId!,
         details: details
           ? {
-              create: details.map(d => ({ ...d, organizationId: orgId! })) as any,
+              create: details.map((d) => ({
+                idProduct: d.idProduct,
+                quantity: d.quantity,
+                unitPrice: d.unitPrice,
+                unitPriceUsd: d.unitPriceUsd,
+                subtotal: d.subtotal,
+                subtotalUsd: d.subtotalUsd,
+                observation: d.observation,
+                organizationId: orgId!,
+              })),
             }
           : undefined,
-      } as any,
+      },
       include: { supplier: true, details: { include: { product: true } }, exchangeRateRef: true, officialExchangeRateRef: true },
     });
     return { data: purchaseOrder, message: 'PURCHASE_ORDER.CREATED' };
   }
 
-  async findAll() {
-    return this.prisma.purchaseOrder.findMany({
-      include: { supplier: true, details: { include: { product: true } }, exchangeRateRef: true, officialExchangeRateRef: true },
-    });
+  async findAll(page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const include = { supplier: true, details: { include: { product: true } }, exchangeRateRef: true, officialExchangeRateRef: true };
+    const [data, total] = await Promise.all([
+      this.prisma.purchaseOrder.findMany({ skip, take: limit, include }),
+      this.prisma.purchaseOrder.count(),
+    ]);
+    return { data, total, page, limit };
   }
 
   async findOne(id: number) {
@@ -65,10 +88,12 @@ export class PurchaseOrdersService {
 
   async remove(id: number) {
     const po = await this.findOne(id);
-    await this.prisma.purchaseOrderDet.deleteMany({
-      where: { idPurchaseOrder: id },
+    await this.prisma.$transaction(async (tx) => {
+      await tx.purchaseOrderDet.deleteMany({
+        where: { idPurchaseOrder: id },
+      });
+      await tx.purchaseOrder.delete({ where: { id } });
     });
-    await this.prisma.purchaseOrder.delete({ where: { id } });
     return { data: po, message: 'PURCHASE_ORDER.DELETED' };
   }
 }

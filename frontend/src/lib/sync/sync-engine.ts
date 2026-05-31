@@ -1,17 +1,33 @@
 import { localDb } from './db';
-import { syncQueue } from './sync-queue';
+import { syncQueue, MAX_PUSH_RETRIES, getBackoffDelay } from './sync-queue';
 import { networkStatus } from './network-status';
 import type { SyncEvent, SyncListener, PullResponse, PushResponse } from './types';
 import apiClient from '@/lib/api/api-client';
 
+const ORG_STORAGE_KEY = 'currentOrgId';
+const INITIAL_BACKOFF = 15000;
+const MAX_BACKOFF = 30000;
+const LEADER_HEARTBEAT_MS = 15_000;
+const ELECTION_TIMEOUT_MS = 2000;
+
+function getStoredOrgId(): number {
+  const raw = localStorage.getItem(ORG_STORAGE_KEY);
+  return raw ? parseInt(raw, 10) : 1;
+}
+
 export class SyncEngine {
   private events: Map<SyncEvent, Set<SyncListener>> = new Map();
-  private pullInterval?: ReturnType<typeof setInterval>;
+  private heartbeatInterval?: ReturnType<typeof setInterval>;
   private pushInFlight = false;
   private pullInFlight = false;
+  private retryCount = 0;
+  private pullTimer?: ReturnType<typeof setTimeout>;
+  private pushRetryTimer?: ReturnType<typeof setTimeout>;
   private _lastSyncAt?: string;
   private broadcastChannel?: BroadcastChannel;
   private isLeader = false;
+  private electionTimer?: ReturnType<typeof setTimeout>;
+  private tabId = 0;
 
   get lastSyncAt() {
     return this._lastSyncAt;
@@ -32,7 +48,12 @@ export class SyncEngine {
   }
 
   async pull(): Promise<void> {
-    if (this.pullInFlight || !networkStatus.isOnline) return;
+    if (this.pullInFlight) return;
+
+    if (!networkStatus.isOnline) {
+      this.scheduleNext();
+      return;
+    }
 
     this.pullInFlight = true;
     this.emit('sync-start');
@@ -40,6 +61,7 @@ export class SyncEngine {
     try {
       const metadata = await localDb.syncMetadata.get('lastPullAt');
       const since = metadata?.value;
+      const orgId = getStoredOrgId();
 
       const response = await apiClient.get<PullResponse>('/sync/pull', {
         params: since ? { since } : undefined,
@@ -50,7 +72,7 @@ export class SyncEngine {
       for (const product of products) {
         await localDb.products.put({
           id: product.id,
-          organizationId: 1,
+          organizationId: orgId,
           name: product.name,
           price: product.price,
           priceUsd: product.priceUsd,
@@ -63,7 +85,7 @@ export class SyncEngine {
       for (const customer of customers) {
         await localDb.customers.put({
           id: customer.id,
-          organizationId: 1,
+          organizationId: orgId,
           firstName: customer.firstName,
           lastName: customer.lastName,
           taxId: customer.taxId,
@@ -75,7 +97,7 @@ export class SyncEngine {
       for (const supplier of suppliers) {
         await localDb.suppliers.put({
           id: supplier.id,
-          organizationId: 1,
+          organizationId: orgId,
           companyName: supplier.companyName,
           updatedAt: supplier.updatedAt,
         });
@@ -84,7 +106,7 @@ export class SyncEngine {
       for (const company of companies) {
         await localDb.companies.put({
           id: company.id,
-          organizationId: 1,
+          organizationId: orgId,
           name: company.name,
           updatedAt: company.updatedAt,
         });
@@ -93,7 +115,7 @@ export class SyncEngine {
       for (const tax of taxes) {
         await localDb.taxes.put({
           id: tax.id,
-          organizationId: 1,
+          organizationId: orgId,
           name: tax.name,
           percentage: tax.percentage,
           updatedAt: tax.updatedAt,
@@ -106,11 +128,14 @@ export class SyncEngine {
       });
 
       this._lastSyncAt = cursor.lastPullAt;
+      this.retryCount = 0;
       this.emit('sync-complete');
     } catch (error) {
+      this.retryCount++;
       this.emit('sync-error', error);
     } finally {
       this.pullInFlight = false;
+      this.scheduleNext();
     }
   }
 
@@ -141,21 +166,21 @@ export class SyncEngine {
 
       for (const id of accepted) {
         const item = pending.find(p => p.recordId === id);
-        if (item?.id) {
+        if (item?.id !== undefined) {
           await syncQueue.markComplete(item.id);
         }
       }
 
       for (const conflict of conflicts) {
         const item = pending.find(p => p.localTimestamp === conflict.localTimestamp);
-        if (item?.id) {
+        if (item?.id !== undefined) {
           await syncQueue.markFailed(item.id);
         }
       }
 
       for (const error of errors) {
         const item = pending.find(p => p.localTimestamp === error.localTimestamp);
-        if (item?.id) {
+        if (item?.id !== undefined) {
           await syncQueue.markFailed(item.id);
         }
       }
@@ -166,10 +191,36 @@ export class SyncEngine {
 
       this.emit('sync-complete');
     } catch (error) {
+      let maxRetry = 0;
+      for (const item of pending) {
+        const newCount = item.retryCount + 1;
+        if (newCount > MAX_PUSH_RETRIES) {
+          await syncQueue.markFailed(item.id!);
+        } else {
+          await syncQueue.incrementRetry(item.id!, newCount);
+          maxRetry = Math.max(maxRetry, newCount);
+        }
+      }
+      if (maxRetry > 0) {
+        this.schedulePushRetry(getBackoffDelay(maxRetry, INITIAL_BACKOFF, MAX_BACKOFF));
+      }
       this.emit('sync-error', error);
     } finally {
       this.pushInFlight = false;
     }
+  }
+
+  private schedulePushRetry(delay: number) {
+    if (this.pushRetryTimer) clearTimeout(this.pushRetryTimer);
+    this.pushRetryTimer = setTimeout(() => this.push(), delay);
+  }
+
+  private scheduleNext() {
+    const delay = this.retryCount === 0
+      ? INITIAL_BACKOFF
+      : Math.min(INITIAL_BACKOFF * Math.pow(2, this.retryCount), MAX_BACKOFF);
+    const jitter = delay * (0.8 + Math.random() * 0.4);
+    this.pullTimer = setTimeout(() => this.pull(), jitter);
   }
 
   triggerPush(): void {
@@ -179,61 +230,83 @@ export class SyncEngine {
   start() {
     if (typeof window === 'undefined') return;
 
+    if (this.broadcastChannel) return;
+
+    this.tabId = this.generateTabId();
     this.broadcastChannel = new BroadcastChannel('gladmin-sync');
 
     this.broadcastChannel.onmessage = (event) => {
-      if (event.data.type === 'leader-election' && event.data.tabId < this.getTabId()) {
+      const { type, tabId } = event.data;
+
+      if (type === 'election-probe' && this.isLeader) {
+        this.broadcastChannel!.postMessage({ type: 'leader-heartbeat', tabId: this.tabId });
+        return;
+      }
+
+      if (type === 'leader-heartbeat' && tabId < this.tabId) {
         this.isLeader = false;
+        if (this.electionTimer) {
+          clearTimeout(this.electionTimer);
+          this.electionTimer = undefined;
+        }
       }
     };
 
-    this.broadcastChannel.postMessage({ type: 'leader-election', tabId: this.getTabId() });
-    setTimeout(() => {
+    this.broadcastChannel.postMessage({ type: 'election-probe', tabId: this.tabId });
+
+    this.electionTimer = setTimeout(() => {
       this.isLeader = true;
-    }, 1000);
 
-    this.pullInterval = setInterval(() => {
-      if (this.isLeader) {
-        this.pull();
-      }
-    }, 30_000);
+      this.heartbeatInterval = setInterval(() => {
+        if (this.isLeader && this.broadcastChannel) {
+          this.broadcastChannel.postMessage({ type: 'leader-heartbeat', tabId: this.tabId });
+        }
+      }, LEADER_HEARTBEAT_MS);
 
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible' && this.isLeader) {
-        this.pull();
-      }
-    });
-
-    window.addEventListener('beforeunload', (event) => {
-      syncQueue.count().then(count => {
-        if (count > 0) {
-          event.preventDefault();
-          event.returnValue = `You have ${count} pending changes that haven't been synced. Are you sure you want to leave?`;
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && this.isLeader) {
+          this.pull();
         }
       });
-    });
 
-    if (this.isLeader) {
       this.pull();
-    }
+    }, ELECTION_TIMEOUT_MS);
+
+    window.addEventListener('beforeunload', (event) => {
+      if (syncQueue.hasPendingSync) {
+        event.preventDefault();
+        event.returnValue = 'You have pending changes that have not been synced. Are you sure you want to leave?';
+      }
+    });
   }
 
-  private getTabId(): number {
-    let tabId = sessionStorage.getItem('tabId');
-    if (!tabId) {
-      tabId = Math.random().toString(36).substring(2);
-      sessionStorage.setItem('tabId', tabId);
+  private generateTabId(): number {
+    let raw = sessionStorage.getItem('tabId');
+    if (!raw) {
+      raw = Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
+      sessionStorage.setItem('tabId', raw);
     }
-    return parseInt(tabId, 36);
+    return parseInt(raw, 36);
   }
 
   stop() {
-    if (this.pullInterval) {
-      clearInterval(this.pullInterval);
+    if (this.pullTimer) {
+      clearTimeout(this.pullTimer);
+      this.pullTimer = undefined;
+    }
+    if (this.pushRetryTimer) {
+      clearTimeout(this.pushRetryTimer);
+      this.pushRetryTimer = undefined;
+    }
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = undefined;
     }
     if (this.broadcastChannel) {
       this.broadcastChannel.close();
+      this.broadcastChannel = undefined;
     }
+    this.isLeader = false;
   }
 
   async forceSync(): Promise<void> {

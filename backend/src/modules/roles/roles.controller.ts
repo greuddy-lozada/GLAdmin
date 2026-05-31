@@ -1,6 +1,7 @@
-import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { RolesService } from './roles.service';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 @Controller('roles')
 export class RolesController {
@@ -8,8 +9,8 @@ export class RolesController {
 
   @Get()
   @Roles('master', 'executive', 'manager')
-  findAll() {
-    return this.rolesService.findAll();
+  findAll(@Query() pagination: PaginationQueryDto) {
+    return this.rolesService.findAll(pagination.page, pagination.limit);
   }
 
   @Get(':id')

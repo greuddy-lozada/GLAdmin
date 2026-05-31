@@ -14,7 +14,7 @@ datasource db {
 model Role {
   id        Int      @id @default(autoincrement())
   name      String
-  slug      String
+  slug      String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -34,6 +34,7 @@ model User {
   mustChangePassword Boolean   @default(false)
   lastLogin          DateTime?
   isActive           Boolean   @default(true)
+  version            Int       @default(0)
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
@@ -49,6 +50,7 @@ model User {
 
 model RefreshToken {
   id         Int      @id @default(autoincrement())
+  tokenId    String   @unique
   tokenHash  String
   userId     Int
   deviceInfo String?
@@ -73,6 +75,7 @@ model Organization {
   id        Int      @id @default(autoincrement())
   name      String
   slug      String   @unique
+  version   Int      @default(0)
   isActive  Boolean  @default(true)
   settings  String?
   planId    Int?
@@ -102,6 +105,7 @@ model Organization {
   pagoMovilTransactions PagoMovilTransaction[]
   syncCursors           SyncCursor[]
   syncConflicts         SyncConflict[]
+  auditLogs             AuditLog[]
 }
 
 model Plan {
@@ -113,6 +117,7 @@ model Plan {
   interval  String
   features  String
   maxUsers  Int      @default(5)
+  version   Int      @default(0)
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -130,6 +135,8 @@ model UserOrganization {
   role         Role         @relation(fields: [roleId], references: [id])
 
   @@id([userId, organizationId])
+
+  @@index([organizationId])
 }
 
 model Invite {
@@ -140,12 +147,15 @@ model Invite {
   roleId         Int
   invitedById    Int
   expiresAt      DateTime
+  version        Int      @default(0)
   used           Boolean  @default(false)
   createdAt      DateTime @default(now())
 
   organization Organization @relation(fields: [organizationId], references: [id])
   role         Role         @relation(fields: [roleId], references: [id])
   invitedBy    User         @relation("InvitedBy", fields: [invitedById], references: [id])
+
+  @@index([organizationId])
 }
 
 model PagoMovilConfig {
@@ -155,11 +165,14 @@ model PagoMovilConfig {
   bankId         String
   idNumber       String
   exchangeRate   Float
+  version        Int      @default(0)
   isActive       Boolean  @default(true)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id])
+  organization    Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
 }
 
 model PagoMovilTransaction {
@@ -172,6 +185,7 @@ model PagoMovilTransaction {
   phoneNumber    String
   reference      String
   proofImage     String?
+  version        Int      @default(0)
   status         String   @default("pending")
   reviewedBy     Int?
   reviewedAt     DateTime?
@@ -180,6 +194,9 @@ model PagoMovilTransaction {
 
   organization Organization @relation(fields: [organizationId], references: [id])
   user         User         @relation(fields: [userId], references: [id])
+
+  @@index([organizationId])
+  @@index([status])
 }
 
 // ────────────────────────────────────────────
@@ -193,6 +210,7 @@ model Customer {
   address      String?
   phoneNumber  String?
   email        String?
+  version      Int      @default(0)
   available    Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -200,6 +218,10 @@ model Customer {
 
   organization Organization @relation(fields: [organizationId], references: [id])
   sales        Sale[]
+
+  @@index([organizationId])
+  @@index([organizationId, available])
+  @@index([organizationId, updatedAt])
 }
 
 // ────────────────────────────────────────────
@@ -208,15 +230,16 @@ model Customer {
 model Supplier {
   id                Int      @id @default(autoincrement())
   companyName       String
-  businessName      String?  // Razón Social
-  fiscalAddress     String?  // Dirección Fiscal
-  taxId             String?  // RIF
+  businessName      String?
+  fiscalAddress     String?
+  taxId             String?
   firstName         String?
   lastName          String?
   address           String?
   phoneNumber       String?
   email             String?
-  taxWithholdingAgent Boolean @default(false) // sujeto a retención IVA/ISLR
+  taxWithholdingAgent Boolean @default(false)
+  version           Int      @default(0)
   available         Boolean  @default(true)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
@@ -226,6 +249,10 @@ model Supplier {
   stocks            Stock[]
   purchaseOrders    PurchaseOrder[]
   withholdingRecords WithholdingRecord[]
+
+  @@index([organizationId])
+  @@index([organizationId, available])
+  @@index([organizationId, updatedAt])
 }
 
 // ────────────────────────────────────────────
@@ -239,18 +266,23 @@ model Company {
   phoneNumber    String
   email          String
   website        String?
+  version        Int      @default(0)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   organizationId Int
 
   organization Organization @relation(fields: [organizationId], references: [id])
   licenses     License[]
+
+  @@index([organizationId])
+  @@index([organizationId, updatedAt])
 }
 
 model License {
   id         Int       @id @default(autoincrement())
   code       String?
   idCompany  Int
+  version    Int       @default(0)
   available  Boolean?
   expiryDate DateTime?
   createdAt  DateTime  @default(now())
@@ -291,6 +323,10 @@ model ExchangeRate {
   sales                 Sale[]                   @relation("CalculationRate")
   officialSales         Sale[]                   @relation("OfficialRate")
   productLinks          ProductsExchangeRates[]
+
+  @@index([organizationId])
+  @@index([date])
+  @@index([organizationId, updatedAt])
 }
 
 model Module {
@@ -309,12 +345,16 @@ model Tax {
   name       String?
   percentage Int
   formula    String?
+  version    Int      @default(0)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   organizationId Int
 
   organization Organization @relation(fields: [organizationId], references: [id])
   products     Product[]
+
+  @@index([organizationId])
+  @@index([organizationId, updatedAt])
 }
 
 model Product {
@@ -325,6 +365,7 @@ model Product {
   dollarPrice Float?
   idTax       Int?
   observation String?
+  version     Int          @default(0)
   available   Boolean      @default(true)
   image       String?
   createdAt   DateTime     @default(now())
@@ -337,18 +378,25 @@ model Product {
   purchaseOrderDetails     PurchaseOrderDet[]
   saleDetails              SalesDet[]
   exchangeRateLinks        ProductsExchangeRates[]
+
+  @@index([organizationId])
+  @@index([organizationId, available])
+  @@index([organizationId, updatedAt])
 }
 
 model Batch {
   id          Int      @id @default(autoincrement())
   code        String
   description String?
+  version     Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   organizationId Int
 
   organization Organization @relation(fields: [organizationId], references: [id])
   stocks       Stock[]
+
+  @@index([organizationId])
 }
 
 model Stock {
@@ -357,6 +405,7 @@ model Stock {
   idSupplier Int?
   idBatch    Int?
   existence  Int
+  version    Int      @default(0)
   available  Boolean   @default(true)
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
@@ -367,6 +416,9 @@ model Stock {
   supplier  Supplier?  @relation(fields: [idSupplier], references: [id])
   batch     Batch?     @relation(fields: [idBatch], references: [id])
   stockDets StockDet[]
+
+  @@index([organizationId])
+  @@index([organizationId, available])
 }
 
 model StockDet {
@@ -399,6 +451,7 @@ model PurchaseOrder {
   officialExchangeRateId Int?
   paymentMethod          Int?
   status                 Int?
+  version                Int      @default(0)
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
   organizationId         Int
@@ -407,9 +460,14 @@ model PurchaseOrder {
   supplier                   Supplier               @relation(fields: [idSupplier], references: [id])
   details                   PurchaseOrderDet[]
   accountsPayables          AccountsPayable[]
-  exchangeRateRef           ExchangeRate?      @relation("CalculationRate", fields: [exchangeRateId], references: [id])
+  exchangeRateRef            ExchangeRate?            @relation("CalculationRate", fields: [exchangeRateId], references: [id])
   officialExchangeRateRef   ExchangeRate?      @relation("OfficialRate", fields: [officialExchangeRateId], references: [id])
   withholdingRecords        WithholdingRecord[]
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([date])
+  @@index([code])
 }
 
 model PurchaseOrderDet {
@@ -422,6 +480,7 @@ model PurchaseOrderDet {
   subtotal        Float?   // VED subtotal
   subtotalUsd     Float?   // USD subtotal
   observation     String?
+  version         Int      @default(0)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   organizationId  Int
@@ -429,6 +488,8 @@ model PurchaseOrderDet {
   organization    Organization  @relation(fields: [organizationId], references: [id])
   purchaseOrder   PurchaseOrder @relation(fields: [idPurchaseOrder], references: [id])
   product        Product       @relation(fields: [idProduct], references: [id])
+
+  @@index([organizationId])
 }
 
 // ────────────────────────────────────────────
@@ -444,12 +505,16 @@ model AccountsPayable {
   exchangeRate    Float?
   credit          Float?
   status          Int?
+  version         Int      @default(0)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   organizationId  Int
 
   organization    Organization  @relation(fields: [organizationId], references: [id])
   purchaseOrder   PurchaseOrder @relation(fields: [idPurchaseOrder], references: [id])
+
+  @@index([organizationId])
+  @@index([status])
 }
 
 // ────────────────────────────────────────────
@@ -460,15 +525,16 @@ model WithholdingRecord {
   id                Int      @id @default(autoincrement())
   idSupplier        Int
   idPurchaseOrder   Int?
-  type              String   // "IVA" | "ISLR"
-  percentage        Float    // 75 or 100
-  baseAmount        Float    // VED taxable base
+  type              String
+  percentage        Float
+  baseAmount        Float
   baseAmountUsd     Float?
-  withheldAmount    Float    // VED withheld
+  withheldAmount    Float
   withheldAmountUsd Float?
   exchangeRate      Float?
-  documentNumber    String?  // comprobante de retención
-  period            String?  // tax period "YYYY-MM"
+  documentNumber    String?
+  period            String?
+  version           Int      @default(0)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   organizationId    Int
@@ -476,6 +542,8 @@ model WithholdingRecord {
   organization      Organization    @relation(fields: [organizationId], references: [id])
   supplier          Supplier        @relation(fields: [idSupplier], references: [id])
   purchaseOrder PurchaseOrder? @relation(fields: [idPurchaseOrder], references: [id])
+
+  @@index([organizationId])
 }
 
 // ────────────────────────────────────────────
@@ -495,6 +563,7 @@ model Sale {
   officialExchangeRateId Int?
   paymentMethod          Int?
   status                 Int?
+  version                Int       @default(0)
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
   organizationId         Int
@@ -505,6 +574,11 @@ model Sale {
   accountsReceivables    AccountsReceivable[]
   exchangeRateRef        ExchangeRate?       @relation("CalculationRate", fields: [exchangeRateId], references: [id])
   officialExchangeRateRef ExchangeRate?       @relation("OfficialRate", fields: [officialExchangeRateId], references: [id])
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([date])
+  @@index([code])
 }
 
 model SalesDet {
@@ -517,6 +591,7 @@ model SalesDet {
   subtotal    Float?   // VED subtotal
   subtotalUsd Float?   // USD subtotal
   observation String?
+  version     Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   organizationId Int
@@ -524,6 +599,8 @@ model SalesDet {
   organization Organization @relation(fields: [organizationId], references: [id])
   sale         Sale         @relation(fields: [idSale], references: [id])
   product Product @relation(fields: [idProduct], references: [id])
+
+  @@index([organizationId])
 }
 
 model AccountsReceivable {
@@ -536,12 +613,16 @@ model AccountsReceivable {
   exchangeRate Float?
   credit     Float?
   status     Int?
+  version    Int       @default(0)
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
   organizationId Int
 
   organization Organization @relation(fields: [organizationId], references: [id])
   sale         Sale?        @relation(fields: [idSale], references: [id])
+
+  @@index([organizationId])
+  @@index([status])
 }
 
 // ────────────────────────────────────────────
@@ -586,4 +667,22 @@ model SyncConflict {
   updatedAt       DateTime  @updatedAt
 
   organization    Organization @relation(fields: [organizationId], references: [id])
+}
+
+model AuditLog {
+  id              Int      @id @default(autoincrement())
+  organizationId  Int
+  userId          Int?
+  action          String
+  entity          String
+  entityId        Int?
+  metadata        String?
+  ipAddress       String?
+  createdAt       DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+  @@index([organizationId, createdAt])
+  @@index([entity, entityId])
 }

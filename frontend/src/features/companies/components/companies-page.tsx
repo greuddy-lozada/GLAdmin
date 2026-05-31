@@ -13,6 +13,7 @@ import { useCompanies } from '@/features/companies/hooks/use-companies';
 import { Company, CreateCompanyRequest, UpdateCompanyRequest } from '@/features/companies/models/company.model';
 import { companyService } from '@/features/companies/services/company.service';
 import { useI18n } from '@/i18n';
+import { sileo } from 'sileo';
 import { RoleGuard } from '@/components/ui/role-guard';
 import { useAuth } from '@/providers/auth-provider';
 import { hasMinLevel } from '@/lib/auth/roles';
@@ -81,8 +82,10 @@ export default function CompaniesPage() {
           website: formData.website || null,
         };
         await companyService.update(selectedCompany.id, data);
+        sileo.success({ description: t('companies.updated') });
       } else {
         await companyService.create(formData);
+        sileo.success({ description: t('companies.created') });
       }
       await loadCompanies();
       setFormOpen(false);
@@ -98,6 +101,7 @@ export default function CompaniesPage() {
     setSubmitting(true);
     try {
       await companyService.delete(deleteTarget.id);
+      sileo.success({ description: t('companies.deleted') });
       await loadCompanies();
       setDeleteOpen(false);
       setDeleteTarget(null);

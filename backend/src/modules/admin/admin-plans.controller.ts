@@ -7,11 +7,13 @@ import {
   Param,
   Body,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { CreatePlanDto } from './dto/create-plan.dto';
 import { UpdatePlanDto } from './dto/update-plan.dto';
 import { MinLevel, ROLE_LEVEL } from '../../common/decorators/min-level.decorator';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 @Controller('admin/plans')
 export class AdminPlansController {
@@ -19,8 +21,8 @@ export class AdminPlansController {
 
   @Get()
   @MinLevel(ROLE_LEVEL.master)
-  findAll() {
-    return this.adminService.findAllPlans();
+  findAll(@Query() pagination: PaginationQueryDto) {
+    return this.adminService.findAllPlans(pagination.page, pagination.limit);
   }
 
   @Get(':id')

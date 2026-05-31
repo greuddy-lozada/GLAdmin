@@ -36,6 +36,7 @@ export interface NavGroup {
 
 export const navigationGroups: NavGroup[] = [
   {
+    key: 'main',
     items: [
       { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', minLevel: 40 },
     ],

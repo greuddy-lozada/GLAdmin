@@ -1,4 +1,5 @@
-import { Injectable, NestMiddleware } from '@nestjs/common';
+import { Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { Request, Response, NextFunction } from 'express';
 import { ContextService, TenantContext } from './context.service';
 import { PrismaService } from '../../shared/prisma/prisma.service';
@@ -8,10 +9,11 @@ export class TenantMiddleware implements NestMiddleware {
   constructor(
     private readonly contextService: ContextService,
     private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService,
   ) {}
 
   async use(req: Request, res: Response, next: NextFunction) {
-    const orgId = this.resolveOrgId(req);
+    const orgId = await this.resolveOrgId(req);
     if (!orgId) {
       await this.contextService.run({} as TenantContext, async () => { next(); });
       return;
@@ -42,15 +44,45 @@ export class TenantMiddleware implements NestMiddleware {
     await this.contextService.run(ctx, async () => { next(); });
   }
 
-  private resolveOrgId(req: Request): number | undefined {
+  private extractTokenPayload(req: Request): { sub?: number; orgId?: number } {
+    const authHeader = req.headers['authorization'];
+    if (!authHeader || typeof authHeader !== 'string') return {};
+    const [type, token] = authHeader.split(' ');
+    if (type !== 'Bearer' || !token) return {};
+    try {
+      return this.jwtService.verify(token) as { sub?: number; orgId?: number };
+    } catch {
+      return {};
+    }
+  }
+
+  private async resolveOrgId(req: Request): Promise<number | undefined> {
+    const tokenPayload = this.extractTokenPayload(req);
+    const userId = tokenPayload.sub;
+
     const header = req.headers['x-organization-id'];
-    if (header) return parseInt(header as string, 10);
+    if (header && userId) {
+      const requestedOrgId = parseInt(header as string, 10);
+      if (!isNaN(requestedOrgId)) {
+        const membership = await this.prisma.userOrganization.findUnique({
+          where: {
+            userId_organizationId: {
+              userId,
+              organizationId: requestedOrgId,
+            },
+          },
+        });
+        if (membership) return requestedOrgId;
+      }
+    }
+
+    if (tokenPayload.orgId) return tokenPayload.orgId;
 
     const cookie = req.cookies?.['organization_id'];
-    if (cookie) return parseInt(cookie, 10);
-
-    const jwtOrg = (req as any).user?.orgId;
-    if (jwtOrg) return jwtOrg;
+    if (cookie) {
+      const cookieOrgId = parseInt(cookie, 10);
+      if (!isNaN(cookieOrgId)) return cookieOrgId;
+    }
 
     return undefined;
   }

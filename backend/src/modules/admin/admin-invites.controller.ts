@@ -6,11 +6,13 @@ import {
   Param,
   Body,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { CreateInviteDto } from './dto/create-invite.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { MinLevel, ROLE_LEVEL } from '../../common/decorators/min-level.decorator';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 @Controller('admin/invites')
 export class AdminInvitesController {
@@ -18,8 +20,8 @@ export class AdminInvitesController {
 
   @Get()
   @MinLevel(ROLE_LEVEL.master)
-  findAll() {
-    return this.adminService.findAllInvites();
+  findAll(@Query() pagination: PaginationQueryDto) {
+    return this.adminService.findAllInvites(pagination.page, pagination.limit);
   }
 
   @Post()

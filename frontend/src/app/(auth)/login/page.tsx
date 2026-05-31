@@ -110,8 +110,11 @@ export default function LoginPage() {
 
       {panelOpen && (
         <div
+          role="button"
+          tabIndex={0}
           className="fixed inset-0 z-50"
           onClick={() => setPanelOpen(false)}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setPanelOpen(false); }}
           style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}
         />
       )}

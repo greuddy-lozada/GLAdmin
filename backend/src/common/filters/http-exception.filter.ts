@@ -4,12 +4,15 @@ import {
   ArgumentsHost,
   HttpException,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { I18nService } from '../../shared/i18n/i18n.service';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(HttpExceptionFilter.name);
+
   constructor(private readonly i18n: I18nService) {}
 
   catch(exception: unknown, host: ArgumentsHost) {
@@ -39,7 +42,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
         }
       }
     } else if (exception instanceof Error) {
-      console.error('Unhandled error:', exception);
+      this.logger.error(
+        `Unhandled error: ${exception.message}`,
+        exception.stack,
+      );
+    } else {
+      this.logger.error('Unhandled non-Error exception', String(exception));
     }
 
     const message = this.i18n.translate(messageKey, lang);

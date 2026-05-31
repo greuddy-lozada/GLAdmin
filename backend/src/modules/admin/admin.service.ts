@@ -39,9 +39,9 @@ export interface UserWithRelations {
   }[];
 }
 
-function stripPassword<T>(obj: T): Omit<T, 'password'> {
-  const { password: _pw, ...rest } = obj as any;
-  return rest;
+function stripPassword<T>(obj: T): T {
+  const { password: _pw, ...rest } = obj as T & { password: string };
+  return rest as unknown as T;
 }
 
 function slugify(text: string): string {
@@ -62,13 +62,20 @@ export class AdminService {
 
   // ─── Organizations ───────────────────────────
 
-  async findAllOrgs() {
-    return this.prisma.organization.findMany({
-      include: {
-        plan: true,
-        _count: { select: { userMemberships: true } },
-      },
-    });
+  async findAllOrgs(page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.prisma.organization.findMany({
+        skip,
+        take: limit,
+        include: {
+          plan: true,
+          _count: { select: { userMemberships: true } },
+        },
+      }),
+      this.prisma.organization.count(),
+    ]);
+    return { data, total, page, limit };
   }
 
   async findOneOrg(id: number) {
@@ -211,16 +218,22 @@ export class AdminService {
 
   // ─── Users ───────────────────────────────────
 
-  async findAllUsers() {
-    const users = await this.prisma.user.findMany({
-      include: {
-        role: true,
-        organizations: {
-          include: { organization: true, role: true },
+  async findAllUsers(page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const [users, total] = await Promise.all([
+      this.prisma.user.findMany({
+        skip,
+        take: limit,
+        include: {
+          role: true,
+          organizations: {
+            include: { organization: true, role: true },
+          },
         },
-      },
-    });
-    return users.map((u: UserWithRelations) => stripPassword(u));
+      }),
+      this.prisma.user.count(),
+    ]);
+    return { data: users.map((u: UserWithRelations) => stripPassword(u)), total, page, limit };
   }
 
   async findOneUser(id: number) {
@@ -268,8 +281,13 @@ export class AdminService {
 
   // ─── Plans ───────────────────────────────────
 
-  async findAllPlans() {
-    return this.prisma.plan.findMany();
+  async findAllPlans(page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.prisma.plan.findMany({ skip, take: limit }),
+      this.prisma.plan.count(),
+    ]);
+    return { data, total, page, limit };
   }
 
   async findOnePlan(id: number) {
@@ -343,14 +361,21 @@ export class AdminService {
 
   // ─── Invites ─────────────────────────────────
 
-  async findAllInvites() {
-    return this.prisma.invite.findMany({
-      include: {
-        organization: true,
-        role: true,
-        invitedBy: true,
-      },
-    });
+  async findAllInvites(page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.prisma.invite.findMany({
+        skip,
+        take: limit,
+        include: {
+          organization: true,
+          role: true,
+          invitedBy: true,
+        },
+      }),
+      this.prisma.invite.count(),
+    ]);
+    return { data, total, page, limit };
   }
 
   async createInvite(dto: CreateInviteDto, invitedById: number) {

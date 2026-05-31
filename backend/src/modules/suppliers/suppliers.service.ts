@@ -14,12 +14,35 @@ export class SuppliersService {
   async create(dto: CreateSupplierDto) {
     const ctx = this.contextService?.getCurrent();
     const orgId = ctx?.organizationId;
-    const supplier = await this.prisma.supplier.create({ data: { ...dto, organizationId: orgId! } as any });
+    const supplier = await this.prisma.supplier.create({
+      data: {
+        companyName: dto.companyName,
+        businessName: dto.businessName,
+        fiscalAddress: dto.fiscalAddress,
+        taxId: dto.taxId,
+        firstName: dto.firstName,
+        lastName: dto.lastName,
+        address: dto.address,
+        phoneNumber: dto.phoneNumber,
+        email: dto.email,
+        taxWithholdingAgent: dto.taxWithholdingAgent,
+        organizationId: orgId!,
+      },
+    });
     return { data: supplier, message: 'SUPPLIER.CREATED' };
   }
 
-  async findAll() {
-    return this.prisma.supplier.findMany({ where: { available: true } });
+  async findAll(page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.prisma.supplier.findMany({
+        where: { available: true },
+        skip,
+        take: limit,
+      }),
+      this.prisma.supplier.count({ where: { available: true } }),
+    ]);
+    return { data, total, page, limit };
   }
 
   async findOne(id: number) {

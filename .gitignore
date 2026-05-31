@@ -43,5 +43,3 @@ frontend/.next/
 coverage/
 **/coverage/
 
-# Prisma
-backend/prisma/migrations/

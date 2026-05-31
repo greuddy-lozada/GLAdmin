@@ -76,17 +76,25 @@ export class UsersService {
     return { data: stripPassword(user), message: 'USER.CREATED' };
   }
 
-  async findAll(): Promise<SafeUser[]> {
+  async findAll(page = 1, limit = 20) {
     const organizationId = this.getCurrentOrgId();
+    const skip = (page - 1) * limit;
+    const where = { organizationId };
 
-    const memberships = await this.prisma.userOrganization.findMany({
-      where: { organizationId },
-      include: {
-        user: { include: { role: true } },
-      },
-    });
+    const [memberships, total] = await Promise.all([
+      this.prisma.userOrganization.findMany({
+        where,
+        skip,
+        take: limit,
+        include: {
+          user: { include: { role: true } },
+        },
+      }),
+      this.prisma.userOrganization.count({ where }),
+    ]);
 
-    return memberships.map((m: { user: UserEntity }) => stripPassword(m.user));
+    const data = memberships.map((m: { user: UserEntity }) => stripPassword(m.user));
+    return { data, total, page, limit };
   }
 
   async findById(id: number): Promise<SafeUser> {
@@ -121,13 +129,15 @@ export class UsersService {
     const organizationId = this.getCurrentOrgId();
     const user = await this.findById(id);
 
-    await this.prisma.userOrganization.delete({
-      where: {
-        userId_organizationId: { userId: id, organizationId },
-      },
-    });
+    await this.prisma.$transaction(async (tx) => {
+      await tx.userOrganization.delete({
+        where: {
+          userId_organizationId: { userId: id, organizationId },
+        },
+      });
 
-    await this.userRepository.delete(id);
+      await tx.user.delete({ where: { id } });
+    });
     return { data: stripPassword(user), message: 'USER.DELETED' };
   }
 }

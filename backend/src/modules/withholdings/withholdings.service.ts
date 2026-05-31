@@ -28,17 +28,24 @@ export class WithholdingsService {
         documentNumber: dto.documentNumber,
         period: dto.period,
         organizationId: orgId!,
-      } as any,
+      },
       include: { supplier: true, purchaseOrder: true },
     });
     return { data: record, message: 'WITHHOLDING.CREATED' };
   }
 
-  async findAll() {
-    return this.prisma.withholdingRecord.findMany({
-      include: { supplier: true, purchaseOrder: true },
-      orderBy: { createdAt: 'desc' },
-    });
+  async findAll(page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.prisma.withholdingRecord.findMany({
+        skip,
+        take: limit,
+        include: { supplier: true, purchaseOrder: true },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.withholdingRecord.count(),
+    ]);
+    return { data, total, page, limit };
   }
 
   async findOne(id: number) {

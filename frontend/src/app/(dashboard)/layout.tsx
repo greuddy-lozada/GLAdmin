@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useState, useEffect } from 'react';
+import { ReactNode, useState, useEffect, Suspense } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/providers/auth-provider';
@@ -60,7 +60,16 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     }
   }, [isAuthenticated, router]);
 
-  if (isLoading) return null;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) return null;
 
@@ -104,9 +113,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               {visibleGroups.map((group, gi) => {
                 const GroupIcon = group.key ? groupIconMap[group.key] : undefined;
                 return (
-                <div key={gi}>
+                <div key={group.key}>
                   {group.label && sidebarOpen && (
                     <button
+                      type="button"
                       onClick={() => toggleGroup(gi)}
                       className="flex w-full items-center justify-between px-3 py-1.5 text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold hover:text-foreground transition-colors"
                     >
@@ -221,7 +231,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
         <div className="flex-1 overflow-hidden px-6 md:px-8 pb-6 md:pb-8">
           <div className="max-w-7xl mx-auto h-full">
-            {children}
+            <Suspense fallback={<div className="flex items-center justify-center h-64"><p className="text-muted-foreground">Loading...</p></div>}>
+              {children}
+            </Suspense>
           </div>
         </div>
       </main>

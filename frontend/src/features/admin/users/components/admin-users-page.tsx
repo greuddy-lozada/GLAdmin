@@ -36,7 +36,7 @@ export default function AdminUsersPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    apiClient.get('/roles').then((r) => setRoles(r.data.data || [])).catch(() => {});
+    apiClient.get('/roles').then((r) => setRoles(r.data.data || [])).catch(() => console.warn('Failed to load roles'));
   }, []);
 
   const columns: Column<AdminUser>[] = [

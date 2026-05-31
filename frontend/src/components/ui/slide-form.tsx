@@ -27,8 +27,11 @@ export function SlideForm({ open, title, onClose, children, panel, panelWidth = 
       {children}
       {open && (
         <div
+          role="button"
+          tabIndex={0}
           className="fixed inset-0 z-50"
           onClick={onClose}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClose(); }}
           style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}
         />
       )}

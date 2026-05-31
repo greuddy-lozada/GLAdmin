@@ -14,6 +14,7 @@ import { useSuppliers } from '@/features/suppliers/hooks/use-suppliers';
 import { Supplier, CreateSupplierRequest, UpdateSupplierRequest } from '@/features/suppliers/models/supplier.model';
 import { supplierService } from '@/features/suppliers/services/supplier.service';
 import { useI18n } from '@/i18n';
+import { sileo } from 'sileo';
 import { RoleGuard } from '@/components/ui/role-guard';
 import { useAuth } from '@/providers/auth-provider';
 import { hasMinLevel } from '@/lib/auth/roles';
@@ -102,6 +103,7 @@ export default function SuppliersPage() {
           available: formData.available,
         };
         await supplierService.update(selectedSupplier.id, data);
+        sileo.success({ description: t('suppliers.updated') });
       } else {
         await supplierService.create({
           ...formData,
@@ -109,6 +111,7 @@ export default function SuppliersPage() {
           fiscalAddress: formData.fiscalAddress || undefined,
           taxId: formData.taxId || undefined,
         });
+        sileo.success({ description: t('suppliers.created') });
       }
       await loadSuppliers();
       setFormOpen(false);
@@ -124,6 +127,7 @@ export default function SuppliersPage() {
     setSubmitting(true);
     try {
       await supplierService.delete(deleteTarget.id);
+      sileo.success({ description: t('suppliers.deleted') });
       await loadSuppliers();
       setDeleteOpen(false);
       setDeleteTarget(null);

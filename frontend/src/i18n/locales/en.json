@@ -91,6 +91,7 @@
     "payments": "Payments",
     "transactions": "Transactions",
     "billing": "Billing",
+    "syncConflicts": "Sync Conflicts",
     "org": "Organization",
     "logout": "Log Out",
     "profile": "Profile",
@@ -149,6 +150,9 @@
       "email": "Email",
       "available": "Available"
     },
+    "created": "Customer created successfully",
+    "updated": "Customer updated successfully",
+    "deleted": "Customer deleted successfully",
     "error": {
       "save": "Error saving customer",
       "load": "Error loading customers",
@@ -176,6 +180,9 @@
       "email": "Email",
       "available": "Available"
     },
+    "created": "Supplier created successfully",
+    "updated": "Supplier updated successfully",
+    "deleted": "Supplier deleted successfully",
     "error": {
       "save": "Error saving supplier",
       "load": "Error loading suppliers",
@@ -191,13 +198,16 @@
     "empty": "No companies registered",
     "field": {
       "id": "#",
-      "documentNumber": "Tax ID",
+      "taxId": "Tax ID",
       "name": "Name",
       "address": "Address",
       "phoneNumber": "Phone",
       "email": "Email",
       "website": "Website"
     },
+    "created": "Company created successfully",
+    "updated": "Company updated successfully",
+    "deleted": "Company deleted successfully",
     "error": {
       "save": "Error saving company",
       "load": "Error loading companies",
@@ -244,6 +254,9 @@
       "percentage": "Percentage",
       "formula": "Formula"
     },
+    "created": "Tax created successfully",
+    "updated": "Tax updated successfully",
+    "deleted": "Tax deleted successfully",
     "error": {
       "save": "Error saving tax",
       "load": "Error loading taxes",
@@ -262,6 +275,9 @@
       "code": "Code",
       "description": "Description"
     },
+    "created": "Batch created successfully",
+    "updated": "Batch updated successfully",
+    "deleted": "Batch deleted successfully",
     "error": {
       "save": "Error saving batch",
       "load": "Error loading batches",
@@ -283,6 +299,9 @@
       "existence": "Quantity",
       "available": "Available"
     },
+    "created": "Stock entry created successfully",
+    "updated": "Stock entry updated successfully",
+    "deleted": "Stock entry deleted successfully",
     "error": {
       "save": "Error saving stock entry",
       "load": "Error loading stock",
@@ -338,6 +357,9 @@
       "date": "Date",
       "source": "Source"
     },
+    "created": "Rate created successfully",
+    "updated": "Rate updated successfully",
+    "deleted": "Rate deleted successfully",
     "error": {
       "save": "Error saving rate",
       "load": "Error loading rates",
@@ -370,6 +392,19 @@
       "load": "Error loading withholdings",
       "delete": "Error deleting withholding"
     }
+  },
+  "pos": {
+    "completed": "Sale completed successfully",
+    "loading": "Loading POS...",
+    "searchProducts": "Search products...",
+    "stock": "Stock"
+  },
+  "sync": {
+    "noConflicts": "No conflicts",
+    "table": "Table:",
+    "status": "Status:",
+    "acceptServer": "Accept Server",
+    "acceptLocal": "Accept Local"
   },
   "roles": {
     "title": "Roles",

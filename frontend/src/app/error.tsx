@@ -14,7 +14,7 @@ export default function ErrorPage({
   const { t } = useI18n();
 
   useEffect(() => {
-    console.error(error);
+    console.warn('Page error:', error);
   }, [error]);
 
   return (

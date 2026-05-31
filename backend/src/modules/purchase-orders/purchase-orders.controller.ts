@@ -6,12 +6,14 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
   ParseIntPipe,
 } from '@nestjs/common';
 import { PurchaseOrdersService } from './purchase-orders.service';
 import { CreatePurchaseOrderDto } from './dto/create-purchase-order.dto';
 import { UpdatePurchaseOrderDto } from './dto/update-purchase-order.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 @Controller('purchase-orders')
 export class PurchaseOrdersController {
@@ -25,8 +27,8 @@ export class PurchaseOrdersController {
 
   @Get()
   @Roles('master', 'admin', 'employee')
-  findAll() {
-    return this.purchaseOrdersService.findAll();
+  async findAll(@Query() pagination: PaginationQueryDto) {
+    return this.purchaseOrdersService.findAll(pagination.page, pagination.limit);
   }
 
   @Get(':id')

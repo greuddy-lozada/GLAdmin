@@ -15,17 +15,30 @@ export class StocksService {
     const ctx = this.contextService?.getCurrent();
     const orgId = ctx?.organizationId;
     const stock = await this.prisma.stock.create({
-      data: { ...dto, organizationId: orgId! } as any,
+      data: {
+        idProduct: dto.idProduct,
+        idSupplier: dto.idSupplier,
+        idBatch: dto.idBatch,
+        existence: dto.existence,
+        organizationId: orgId!,
+      },
       include: { product: true, supplier: true, batch: true },
     });
     return { data: stock, message: 'STOCK.CREATED' };
   }
 
-  async findAll() {
-    return this.prisma.stock.findMany({
-      where: { available: true },
-      include: { product: true, supplier: true, batch: true, stockDets: true },
-    });
+  async findAll(page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.prisma.stock.findMany({
+        where: { available: true },
+        include: { product: true, supplier: true, batch: true, stockDets: true },
+        skip,
+        take: limit,
+      }),
+      this.prisma.stock.count({ where: { available: true } }),
+    ]);
+    return { data, total, page, limit };
   }
 
   async findOne(id: number) {

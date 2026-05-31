@@ -6,12 +6,14 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
   ParseIntPipe,
 } from '@nestjs/common';
 import { BatchesService } from './batches.service';
 import { CreateBatchDto } from './dto/create-batch.dto';
 import { UpdateBatchDto } from './dto/update-batch.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 @Controller('batches')
 export class BatchesController {
@@ -25,8 +27,8 @@ export class BatchesController {
 
   @Get()
   @Roles('master', 'admin', 'employee')
-  findAll() {
-    return this.batchesService.findAll();
+  async findAll(@Query() pagination: PaginationQueryDto) {
+    return this.batchesService.findAll(pagination.page, pagination.limit);
   }
 
   @Get(':id')

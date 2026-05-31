@@ -3,6 +3,7 @@ import { PrismaService } from '../../shared/prisma/prisma.service';
 import { ContextService } from '../../modules/tenant/context.service';
 import { CreateExchangeRateDto } from './dto/create-exchange-rate.dto';
 import { UpdateExchangeRateDto } from './dto/update-exchange-rate.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class ExchangeRatesService {
@@ -22,17 +23,24 @@ export class ExchangeRatesService {
         date: dto.date ? new Date(dto.date) : new Date(),
         source: dto.source,
         organizationId: orgId!,
-      } as any,
+      } as unknown as Prisma.ExchangeRateCreateInput,
       include: { currency: true },
     });
     return { data: rate, message: 'EXCHANGE_RATE.CREATED' };
   }
 
-  async findAll() {
-    return this.prisma.exchangeRate.findMany({
-      include: { currency: true },
-      orderBy: { date: 'desc' },
-    });
+  async findAll(page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.prisma.exchangeRate.findMany({
+        skip,
+        take: limit,
+        include: { currency: true },
+        orderBy: { date: 'desc' },
+      }),
+      this.prisma.exchangeRate.count(),
+    ]);
+    return { data, total, page, limit };
   }
 
   async findLatest() {

@@ -116,3 +116,90 @@ const columns: Column<Entity>[] = [
   - `transform: true` — auto-transform types
 - Frontend model interfaces must match backend DTOs.
 - Any field sent by the frontend must have a corresponding decorator in the backend DTO.
+
+---
+
+## Planning & Requirements
+
+- **Why before what before how.** Start with business requirements (the problem, the user, success criteria). Then product requirements (features, flows, priorities). Only then design & technical requirements.
+- **MVP-first.** Strip non-essential features. Build the smallest version that delivers real value and tests a core assumption. Extra ideas go to a "Version 2" log — not the current scope.
+- **Definition of Done (DoD).** Every feature must have a clear, objective checklist before coding starts: code generated, manually tested locally, error handling verified, merged into main.
+- **Trade-offs are deliberate.** Write down the compromise: e.g., slower but cheaper database, faster but more expensive hosting. Never let trade-offs happen by accident.
+- **Cost of Ownership.** Software costs money after launch. Calculate ongoing operational costs: API tokens, database hosting, domain renewals, cloud compute. Document them.
+- **Scope creep is resisted.** If a request arrives mid-sprint, log it for the next cycle. Do not let the MVP scope expand silently.
+
+---
+
+## Thinking Disciplines
+
+- **Edge case thinking.** Before merging, ask: "What if the user clicks twice? What if the network drops mid-upload? What if the input is empty, negative, or absurdly large?"
+- **Production thinking.** Code for failure. Assume the database will go down, the third-party API will timeout, and the user's connection will drop. Handle those paths explicitly.
+- **Technical debt is tracked.** Shortcuts taken to ship faster must be written down in ORCHESTRATOR.md. Untracked debt breaks systems silently.
+- **Right-sized prompting.** Break work into the smallest meaningful units. Ask for one function, one component, one endpoint — not an entire module.
+- **Blast radius.** Before changing a function, ask: "How many other features will break if this fails?" Prefer isolated, narrow-impact code.
+- **Documentation as you go.** Record architectural decisions, API structures, and environment setups while the context is fresh.
+- **Analysis paralysis is a trap.** Recognize when planning becomes procrastination. Ship, observe, iterate.
+- **Rubber ducking.** Explain the problem aloud (or to the AI). Verbalizing frequently reveals the solution before you finish the sentence.
+
+---
+
+## Reliability
+
+- **Never swallow exceptions.** Every `catch` block must either recover, retry, or surface the error to the user/logs. Empty catch blocks are forbidden.
+- **Idempotency for write operations.** A payment retry, a sync push, a form resubmission — performing the operation multiple times must yield the same result as once. Use idempotency keys.
+- **Retry with exponential backoff.** For transient failures (network, rate limits), retry with increasing delays: 1s, 2s, 4s, 8s, then fail permanently.
+- **Rate limiting.** Every public endpoint must have a maximum request threshold per user/IP. Prevents abuse and protects the database.
+- **Timeouts and circuit breakers.** External calls (APIs, databases) must have a deadline. If a service is completely down, stop calling it temporarily to save your own resources.
+- **Graceful degradation.** If a non-essential feature fails (avatar upload, analytics), the rest of the application must remain fully functional.
+- **Webhooks must be secure and idempotent.** Verify signatures, acknowledge receipt immediately, process asynchronously. Replay the same event should not double-process.
+
+---
+
+## Execution (Async & Performance)
+
+- **UI must never block.** Heavy operations (data fetching, file processing, sync) run asynchronously. The user sees a loading state, never a frozen screen.
+- **Cache aggressively.** Store copies of frequently-requested, slow-changing data in fast temporary storage. Invalidate cache when the underlying data changes.
+- **Race conditions are silent corrupters.** Wrap interdependent writes in transactions. Use optimistic locking or version fields for concurrent updates.
+- **Pagination is mandatory.** Every list endpoint must paginate. Never return unbounded datasets. Default page size 20, maximum 100.
+- **Batch operations.** Bundle multiple database writes or API calls into a single transaction block to reduce round-trips and improve throughput.
+- **Database indexes are not optional.** Every column used in `WHERE`, `JOIN`, or `ORDER BY` clauses — especially on large tables — must have a corresponding index.
+- **Long-running processes go to background jobs.** Operations taking more than a few seconds (report generation, bulk email, video processing) run in a separate worker, not on the web server.
+- **Stream large responses.** When returning large datasets or files, use streaming or chunked transfer so the client can start processing immediately.
+
+---
+
+## Infrastructure & DevOps
+
+- **Secrets live in environment variables.** API keys, database passwords, JWT secrets — never in source code, never in git history. Use `.env` files excluded by `.gitignore`.
+- **Migrations are versioned and immutable.** Once a database migration is committed and applied, never edit it retroactively. Create a new migration instead.
+- **Dependency management.** Use a lockfile (`pnpm-lock.yaml`). Audit dependencies periodically for vulnerabilities. Pin exact versions, not ranges.
+- **CI/CD pipeline.** Every push must pass typecheck + lint + tests before it can be merged. Deployments are automated from the main branch.
+- **Backups are tested.** Automated database backups run on a schedule. A restore drill must be performed periodically to confirm backups actually work.
+- **Configuration is separate from code.** Environment-specific settings (URLs, feature flags, limits) live in config files, not hardcoded in logic.
+- **GitHub Issues for every task.** Bugs and features are tracked as GitHub Issues. Pull Requests reference the Issue they close. Use GitHub Projects for roadmap visualization.
+
+---
+
+## Testing & Quality
+
+- **TypeScript strict mode everywhere.** No `any` without explicit justification. Types are the first line of defense against runtime errors.
+- **Automated testing is not optional.** Unit tests for business logic, integration tests for API endpoints, E2E tests for critical user flows.
+- **Regression tests before release.** Run the full test suite before every deployment. A passing suite yesterday does not mean a passing suite today.
+- **Linting with zero warnings.** ESLint must be configured and enforced. Warnings are treated as errors in CI. No bypass comments unless justified in review.
+- **Mock external services in tests.** Tests must never depend on live third-party APIs. Use mocks, stubs, or local emulators for databases, payment gateways, and email services.
+- **Browser DevTools are the debugging foundation.** Master the Network, Console, Elements, and Performance panels. They answer 80% of frontend bugs.
+- **Readiness checklist before launch.** Accessibility audit, SEO metadata, responsive breakpoints, performance scores (Lighthouse), and security headers — all verified.
+
+---
+
+## Observability & Security
+
+- **Structured logging replaces `console.log`.** Logs must include timestamp, severity, context, and a message. Never log secrets, tokens, or PII.
+- **Authentication verifies identity; Authorization verifies permissions.** Keep these concerns separate. AuthN happens once at the boundary. AuthZ checks happen at every sensitive operation.
+- **Security-first coding.** Treat every input field, URL parameter, API payload, and file upload as malicious until validated. Validate type, length, format, and range.
+- **SQL injection is prevented by parameterized queries.** Never concatenate user input into SQL strings. Use your ORM's parameterization (Prisma handles this by default — never use `$queryRaw` with string interpolation).
+- **Audit logging for sensitive operations.** Record who did what and when for: user creation/deletion, role changes, payment operations, data exports. Logs must be append-only and immutable.
+- **PII is encrypted and isolated.** Personally Identifiable Information (email, phone, address, tax ID) must be encrypted at rest. Never log PII. Minimize PII collection to what is strictly necessary.
+- **Rate limiting is a security layer.** Limit login attempts (5/min), password resets (3/hour), and API requests per endpoint. Use short windows for auth, longer windows for data endpoints.
+- **Prompt injection is a real threat.** If any LLM feature is added, inputs must be sandboxed. Never allow user input to alter system instructions. Validate and sanitize all LLM-bound data.
+- **Cost observability.** Monitor API spend, cloud compute, and database usage in real time. Set budget alerts to prevent runaway bills.

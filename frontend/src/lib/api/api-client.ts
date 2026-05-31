@@ -4,6 +4,8 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 const apiClient: AxiosInstance = axios.create({
   baseURL: API_URL,
+  timeout: 15000,
+  timeoutErrorMessage: 'Request timed out',
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -35,11 +37,14 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   return config;
 });
 
+const MAX_RETRIES = 3;
+const INITIAL_BACKOFF_MS = 500;
+
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    if (error.response?.status === 401 && !originalRequest._retry && typeof window !== 'undefined') {
+    if (error.response?.status === 401 && typeof window !== 'undefined') {
       if (isRefreshing) {
         return new Promise<string>((resolve, reject) => {
           pendingQueue.push({ resolve, reject });
@@ -49,27 +54,33 @@ apiClient.interceptors.response.use(
         });
       }
 
-      originalRequest._retry = true;
       isRefreshing = true;
 
-      const refreshToken = localStorage.getItem('refreshToken');
-
-      if (!refreshToken) {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
-        return Promise.reject(error);
-      }
-
       try {
-        const response = await axios.post(`${API_URL}/auth/refresh`, { refreshToken });
-        const { accessToken, refreshToken: newRefresh } = response.data.data;
-        localStorage.setItem('accessToken', accessToken);
-        localStorage.setItem('refreshToken', newRefresh);
-        processQueue(null, accessToken);
-        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-        return apiClient(originalRequest);
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (!refreshToken) throw new Error('No refresh token');
+
+        for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+          if (attempt > 0) {
+            const delay = Math.min(INITIAL_BACKOFF_MS * Math.pow(2, attempt - 1), 4000);
+            const jitter = delay * (0.8 + Math.random() * 0.4);
+            await new Promise(resolve => setTimeout(resolve, jitter));
+          }
+
+          try {
+            const response = await axios.post(`${API_URL}/auth/refresh`, { refreshToken });
+            const { accessToken, refreshToken: newRefresh } = response.data.data;
+            localStorage.setItem('accessToken', accessToken);
+            localStorage.setItem('refreshToken', newRefresh);
+            processQueue(null, accessToken);
+            originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+            return apiClient(originalRequest);
+          } catch {
+            // will retry on next loop iteration
+          }
+        }
+
+        throw new Error('Max refresh retries exceeded');
       } catch (refreshError) {
         processQueue(refreshError, null);
         localStorage.removeItem('accessToken');

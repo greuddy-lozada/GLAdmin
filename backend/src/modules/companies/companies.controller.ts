@@ -6,12 +6,14 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
   ParseIntPipe,
 } from '@nestjs/common';
 import { CompaniesService } from './companies.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 @Controller('companies')
 export class CompaniesController {
@@ -25,8 +27,8 @@ export class CompaniesController {
 
   @Get()
   @Roles('master', 'admin')
-  findAll() {
-    return this.companiesService.findAll();
+  async findAll(@Query() pagination: PaginationQueryDto) {
+    return this.companiesService.findAll(pagination.page, pagination.limit);
   }
 
   @Get(':id')

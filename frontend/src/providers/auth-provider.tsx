@@ -5,6 +5,7 @@ import { User, OrganizationInfo, OrganizationDetail } from '@/features/auth/mode
 import { authService } from '@/features/auth/services/auth.service';
 import { localDb } from '@/lib/sync/db';
 import { networkStatus } from '@/lib/sync/network-status';
+import { syncEngine } from '@/lib/sync/sync-engine';
 import { PinSetup } from '@/features/auth/components/pin-setup';
 import { PinUnlock } from '@/features/auth/components/pin-unlock';
 
@@ -76,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
     setToken(savedToken);
+    networkStatus.start();
     const savedOrgId = localStorage.getItem(ORG_ID_KEY);
     const initAuth = async () => {
       try {
@@ -83,6 +85,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(user);
         if (savedRefresh) {
           scheduleRefresh(savedRefresh, 900);
+        }
+        if (savedOrgId) {
+          syncEngine.start();
         }
       } catch {
         localStorage.removeItem(TOKEN_KEY);
@@ -112,6 +117,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(ORG_ID_KEY, String(response.organization.id));
     }
     scheduleRefresh(response.refreshToken, response.expiresIn);
+    networkStatus.start();
+    syncEngine.start();
     const pinStored = await localDb.syncMetadata.get(`pin_${response.user.id}`);
     if (!pinStored) {
       setShowPinSetup(true);
@@ -129,15 +136,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(USER_KEY, JSON.stringify(response.user));
     localStorage.setItem(ORG_ID_KEY, String(response.organization.id));
     scheduleRefresh(response.refreshToken, response.expiresIn);
+    syncEngine.onOrgSwitch();
   }, [scheduleRefresh]);
 
   const logout = useCallback(async () => {
     try {
       await authService.logout();
-    } catch {
-      // Ignore errors on logout
+    } catch (error) {
+      console.warn('Logout error:', error);
     }
     if (refreshTimeoutRef.current) clearTimeout(refreshTimeoutRef.current);
+    syncEngine.stop();
+    networkStatus.stop();
     setToken(null);
     setUser(null);
     setOrganizations([]);

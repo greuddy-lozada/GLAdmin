@@ -14,12 +14,24 @@ export class TaxesService {
   async create(dto: CreateTaxDto) {
     const ctx = this.contextService?.getCurrent();
     const orgId = ctx?.organizationId;
-    const tax = await this.prisma.tax.create({ data: { ...dto, organizationId: orgId! } as any });
+    const tax = await this.prisma.tax.create({
+      data: {
+        name: dto.name,
+        percentage: dto.percentage,
+        formula: dto.formula,
+        organizationId: orgId!,
+      },
+    });
     return { data: tax, message: 'TAX.CREATED' };
   }
 
-  async findAll() {
-    return this.prisma.tax.findMany();
+  async findAll(page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.prisma.tax.findMany({ skip, take: limit }),
+      this.prisma.tax.count(),
+    ]);
+    return { data, total, page, limit };
   }
 
   async findOne(id: number) {

@@ -21,6 +21,7 @@ import { useStocks } from '@/features/stocks/hooks/use-stocks';
 import { Stock, CreateStockRequest, UpdateStockRequest } from '@/features/stocks/models/stock.model';
 import { stockService } from '@/features/stocks/services/stock.service';
 import { useI18n } from '@/i18n';
+import { sileo } from 'sileo';
 import { RoleGuard } from '@/components/ui/role-guard';
 import { useAuth } from '@/providers/auth-provider';
 import { hasMinLevel } from '@/lib/auth/roles';
@@ -73,9 +74,9 @@ export default function StocksPage() {
   ];
 
   useEffect(() => {
-    apiClient.get('/products').then((r) => setProducts(r.data.data || [])).catch(() => {});
-    apiClient.get('/suppliers').then((r) => setSuppliers(r.data.data || [])).catch(() => {});
-    apiClient.get('/batches').then((r) => setBatches(r.data.data || [])).catch(() => {});
+    apiClient.get('/products').then((r) => setProducts(r.data.data || [])).catch(() => console.warn('Failed to load products'));
+    apiClient.get('/suppliers').then((r) => setSuppliers(r.data.data || [])).catch(() => console.warn('Failed to load suppliers'));
+    apiClient.get('/batches').then((r) => setBatches(r.data.data || [])).catch(() => console.warn('Failed to load batches'));
   }, []);
 
   const openCreate = () => {
@@ -111,8 +112,10 @@ export default function StocksPage() {
           available: formData.available,
         };
         await stockService.update(selectedStock.id, data);
+        sileo.success({ description: t('stocks.updated') });
       } else {
         await stockService.create(formData);
+        sileo.success({ description: t('stocks.created') });
       }
       await loadStocks();
       setFormOpen(false);
@@ -128,6 +131,7 @@ export default function StocksPage() {
     setSubmitting(true);
     try {
       await stockService.delete(deleteTarget.id);
+      sileo.success({ description: t('stocks.deleted') });
       await loadStocks();
       setDeleteOpen(false);
       setDeleteTarget(null);

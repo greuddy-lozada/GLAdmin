@@ -6,12 +6,14 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
   ParseIntPipe,
 } from '@nestjs/common';
 import { TaxesService } from './taxes.service';
 import { CreateTaxDto } from './dto/create-tax.dto';
 import { UpdateTaxDto } from './dto/update-tax.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 @Controller('taxes')
 export class TaxesController {
@@ -25,8 +27,8 @@ export class TaxesController {
 
   @Get()
   @Roles('master', 'admin', 'employee')
-  findAll() {
-    return this.taxesService.findAll();
+  async findAll(@Query() pagination: PaginationQueryDto) {
+    return this.taxesService.findAll(pagination.page, pagination.limit);
   }
 
   @Get(':id')

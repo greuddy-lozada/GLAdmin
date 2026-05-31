@@ -13,6 +13,7 @@ import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 @Controller('products')
 export class ProductsController {
@@ -26,11 +27,13 @@ export class ProductsController {
 
   @Get()
   @Roles('master', 'admin', 'employee')
-  findAll(@Query('includeStock') includeStock?: string) {
+  async findAll(@Query('includeStock') includeStock?: string, @Query() pagination?: PaginationQueryDto) {
+    const page = pagination?.page ?? 1;
+    const limit = pagination?.limit ?? 20;
     if (includeStock === 'true') {
-      return this.productsService.findAllWithStock();
+      return this.productsService.findAllWithStock(page, limit);
     }
-    return this.productsService.findAll();
+    return this.productsService.findAll(page, limit);
   }
 
   @Get(':id')
