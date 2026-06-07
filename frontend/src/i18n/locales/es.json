@@ -253,6 +253,7 @@
       "name": "Nombre",
       "price": "Precio",
       "dollarPrice": "Precio US$",
+      "stock": "Existencia",
       "tax": "Impuesto",
       "observation": "Observación",
       "image": "Imagen",

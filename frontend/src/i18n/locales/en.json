@@ -253,6 +253,7 @@
       "name": "Name",
       "price": "Price",
       "dollarPrice": "US$ Price",
+      "stock": "Stock",
       "tax": "Tax",
       "observation": "Notes",
       "image": "Image",

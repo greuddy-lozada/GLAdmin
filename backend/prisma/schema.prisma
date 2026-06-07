@@ -421,6 +421,7 @@ model Stock {
   idProduct  Int
   idSupplier Int?
   idBatch    Int?
+  idPurchaseOrder Int?
   existence  Int
   version    Int      @default(0)
   available  Boolean   @default(true)
@@ -428,11 +429,12 @@ model Stock {
   updatedAt  DateTime  @updatedAt
   organizationId Int
 
-  organization Organization @relation(fields: [organizationId], references: [id])
-  product      Product      @relation(fields: [idProduct], references: [id])
-  supplier  Supplier?  @relation(fields: [idSupplier], references: [id])
-  batch     Batch?     @relation(fields: [idBatch], references: [id])
-  stockDets StockDet[]
+  organization  Organization  @relation(fields: [organizationId], references: [id])
+  product       Product       @relation(fields: [idProduct], references: [id])
+  supplier      Supplier?     @relation(fields: [idSupplier], references: [id])
+  batch         Batch?        @relation(fields: [idBatch], references: [id])
+  purchaseOrder PurchaseOrder? @relation(fields: [idPurchaseOrder], references: [id])
+  stockDets     StockDet[]
 
   @@index([organizationId])
   @@index([organizationId, available])
@@ -480,6 +482,7 @@ model PurchaseOrder {
   exchangeRateRef            ExchangeRate?            @relation("CalculationRate", fields: [exchangeRateId], references: [id])
   officialExchangeRateRef   ExchangeRate?      @relation("OfficialRate", fields: [officialExchangeRateId], references: [id])
   withholdingRecords        WithholdingRecord[]
+  stocks                    Stock[]
 
   @@index([organizationId])
   @@index([status])

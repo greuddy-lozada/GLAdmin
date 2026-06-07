@@ -26,6 +26,7 @@ import { useAuth } from '@/providers/auth-provider';
 import { hasMinLevel } from '@/lib/auth/roles';
 import { sileo } from 'sileo';
 import apiClient from '@/lib/api/api-client';
+import { exchangeRateService } from '@/features/exchange-rates/services/exchange-rate.service';
 
 export default function ProductsPage() {
   const { products, loading, loadProducts } = useProducts();
@@ -43,6 +44,7 @@ export default function ProductsPage() {
     price: 0,
   });
   const [taxes, setTaxes] = useState<{ id: number; name: string; percentage: number }[]>([]);
+  const [bcvRate, setBcvRate] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
@@ -53,6 +55,11 @@ export default function ProductsPage() {
     { field: 'name', headerName: t('products.field.name') },
     { field: 'price', headerName: t('products.field.price') },
     { field: 'dollarPrice', headerName: t('products.field.dollarPrice') },
+    {
+      field: 'stock',
+      headerName: t('products.field.stock'),
+      render: (row) => row.stock ?? 0,
+    },
     {
       field: 'idTax',
       headerName: t('products.field.tax'),
@@ -66,7 +73,8 @@ export default function ProductsPage() {
   ];
 
   useEffect(() => {
-    apiClient.get('/taxes').then((r) => setTaxes(r.data.data || [])).catch(() => console.warn('Failed to load taxes'));
+    apiClient.get('/taxes').then((r: { data: { data: { id: number; name: string; percentage: number }[] } }) => setTaxes(r.data.data || [])).catch(() => console.warn('Failed to load taxes'));
+    exchangeRateService.getLatest().then((day) => { if (day?.rateBcvUsd) setBcvRate(day.rateBcvUsd); }).catch(() => console.warn('Failed to load BCV rate'));
   }, []);
 
   const openCreate = () => {
@@ -161,7 +169,19 @@ export default function ProductsPage() {
           <div className="space-y-2">
             <Label>{t('products.field.dollarPrice')}</Label>
             <Input type="number" value={formData.dollarPrice ?? ''}
-              onChange={(e) => setFormData({ ...formData, dollarPrice: e.target.value ? Number(e.target.value) : undefined })} />
+              onChange={(e) => {
+                const usd = e.target.value ? Number(e.target.value) : undefined;
+                setFormData({
+                  ...formData,
+                  dollarPrice: usd,
+                  price: usd && bcvRate > 0 ? usd * bcvRate : formData.price,
+                });
+              }} />
+            {bcvRate > 0 && (
+              <span className="text-xs text-muted-foreground">
+                BCV: {bcvRate.toFixed(2)} | {formData.dollarPrice ? `${(formData.dollarPrice * bcvRate).toFixed(2)} VED` : ''}
+              </span>
+            )}
           </div>
           <div className="space-y-2">
             <Label>{t('products.field.tax')}</Label>

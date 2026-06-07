@@ -324,7 +324,8 @@ export default function PurchaseOrdersPage() {
       sileo.success({ description: t('purchaseOrders.deleted') });
       setDeleteOpen(false);
       setDeleteTarget(null);
-    } catch {
+    } catch (error) {
+      console.error(error);
       setError(t('purchaseOrders.error.delete'));
     } finally {
       setSubmitting(false);

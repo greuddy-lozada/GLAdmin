@@ -3,7 +3,7 @@ import { Product, CreateProductRequest, UpdateProductRequest } from '../models/p
 
 export const productService = {
   async getAll(): Promise<Product[]> {
-    const response = await apiClient.get('/products');
+    const response = await apiClient.get('/products?includeStock=true');
     return response.data.data;
   },
 

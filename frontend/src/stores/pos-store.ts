@@ -34,16 +34,19 @@ export const usePosStore = create<PosState>()(
       exchangeRate: 0,
 
       addToCart: (product, taxes) => {
-        const { cart } = get();
+        const { cart, exchangeRate } = get();
         const currentQty = cart.find(item => item.productId === product.id)?.quantity ?? 0;
         if (currentQty + 1 > product.stock) {
           sileo.error({ description: `Stock insuficiente para ${product.name}` });
           return;
         }
 
+        const unitPriceUsd = product.priceUsd || 0;
+        const unitPrice = exchangeRate > 0 && unitPriceUsd > 0 ? unitPriceUsd * exchangeRate : product.price;
+
         const taxInfo = product.taxId ? taxes[product.taxId] : undefined;
-        const taxAmount = taxInfo ? product.price * (taxInfo.percentage / 100) : 0;
-        const taxAmountUsd = taxInfo ? (product.priceUsd || 0) * (taxInfo.percentage / 100) : 0;
+        const taxAmount = taxInfo ? unitPrice * (taxInfo.percentage / 100) : 0;
+        const taxAmountUsd = taxInfo ? unitPriceUsd * (taxInfo.percentage / 100) : 0;
 
         const existing = cart.find(item => item.productId === product.id);
         if (existing) {
@@ -53,10 +56,10 @@ export const usePosStore = create<PosState>()(
                 ? {
                     ...item,
                     quantity: item.quantity + 1,
-                    subtotal: (item.quantity + 1) * item.unitPrice,
-                    subtotalUsd: (item.quantity + 1) * item.unitPriceUsd,
-                    taxAmount: item.taxAmount ? (item.taxAmount / item.quantity) * (item.quantity + 1) : 0,
-                    taxAmountUsd: item.taxAmountUsd ? (item.taxAmountUsd / item.quantity) * (item.quantity + 1) : 0,
+                    subtotal: (item.quantity + 1) * unitPrice,
+                    subtotalUsd: (item.quantity + 1) * unitPriceUsd,
+                    taxAmount: item.taxPercentage ? (item.quantity + 1) * unitPrice * (item.taxPercentage / 100) : 0,
+                    taxAmountUsd: item.taxPercentage ? (item.quantity + 1) * unitPriceUsd * (item.taxPercentage / 100) : 0,
                   }
                 : item
             ),
@@ -70,10 +73,10 @@ export const usePosStore = create<PosState>()(
                 productId: product.id,
                 name: product.name,
                 quantity: 1,
-                unitPrice: product.price,
-                unitPriceUsd: product.priceUsd || 0,
-                subtotal: product.price,
-                subtotalUsd: product.priceUsd || 0,
+                unitPrice,
+                unitPriceUsd,
+                subtotal: unitPrice,
+                subtotalUsd: unitPriceUsd,
                 taxName: taxInfo?.name,
                 taxPercentage: taxInfo?.percentage,
                 taxAmount,

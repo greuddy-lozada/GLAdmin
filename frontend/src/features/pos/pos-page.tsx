@@ -57,7 +57,9 @@ export default function PosPage() {
 
   useEffect(() => {
     loadProducts();
-    localDb.exchangeRateDays.orderBy('updatedAt').last().then((day) => { if (day) setExchangeRate(day.rateParalelo ?? day.rateBcvUsd ?? 0); }).catch(() => {
+    localDb.exchangeRateDays.orderBy('updatedAt').last().then((day) => {
+      if (day) setExchangeRate(day.rateBcvUsd ?? day.rateParalelo ?? 0);
+    }).catch(() => {
       localDb.exchangeRates.orderBy('updatedAt').last().then((rate) => { if (rate) setExchangeRate(rate.rate); }).catch(console.warn);
     });
   }, []);

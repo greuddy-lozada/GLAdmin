@@ -8,6 +8,7 @@ export interface Product {
   observation?: string;
   image?: string;
   available: boolean;
+  stock?: number;
   tax?: {
     id: number;
     name: string;

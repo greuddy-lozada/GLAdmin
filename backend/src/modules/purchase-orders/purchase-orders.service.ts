@@ -76,16 +76,16 @@ export class PurchaseOrdersService {
   }
 
   async update(id: number, dto: UpdatePurchaseOrderDto) {
-    await this.findOne(id);
+    const existing = await this.findOne(id);
     const ctx = this.contextService?.getCurrent();
     const orgId = ctx?.organizationId;
-    const { details, ...header } = dto;
+    const { details: dtoDetails, ...header } = dto;
     const purchaseOrder = await this.prisma.$transaction(async (tx) => {
-      if (details) {
+      if (dtoDetails) {
         await tx.purchaseOrderDet.deleteMany({ where: { idPurchaseOrder: id } });
-        if (details.length > 0) {
+        if (dtoDetails.length > 0) {
           await tx.purchaseOrderDet.createMany({
-            data: details.map((d) => ({
+            data: dtoDetails.map((d) => ({
               idPurchaseOrder: id,
               idProduct: d.idProduct,
               quantity: d.quantity,
@@ -99,11 +99,56 @@ export class PurchaseOrdersService {
           });
         }
       }
-      return tx.purchaseOrder.update({
+
+      const updated = await tx.purchaseOrder.update({
         where: { id },
         data: header,
         include: { supplier: true, details: { include: { product: true } }, exchangeRateRef: true, officialExchangeRateRef: true },
       });
+
+      if (dto.status === 4 && existing.status !== 4) {
+        const finalDetails = dtoDetails || existing.details;
+        for (const det of finalDetails) {
+          const qty = det.quantity ?? 0;
+          if (qty <= 0) continue;
+
+          let stock = await tx.stock.findFirst({
+            where: { idProduct: det.idProduct, idSupplier: existing.idSupplier, organizationId: orgId },
+          });
+
+          if (stock) {
+            stock = await tx.stock.update({
+              where: { id: stock.id },
+              data: {
+                existence: { increment: qty },
+                version: { increment: 1 },
+                idPurchaseOrder: id,
+              },
+            });
+          } else {
+            stock = await tx.stock.create({
+              data: {
+                idProduct: det.idProduct,
+                idSupplier: existing.idSupplier,
+                existence: qty,
+                organizationId: orgId!,
+                idPurchaseOrder: id,
+              },
+            });
+          }
+
+          await tx.stockDet.create({
+            data: {
+              idStock: stock.id,
+              type: 1,
+              quantity: qty,
+              observation: `Ingreso por pedido ${updated.code ?? id}`,
+            },
+          });
+        }
+      }
+
+      return updated;
     });
     return { data: purchaseOrder, message: 'PURCHASE_ORDER.UPDATED' };
   }
@@ -112,6 +157,9 @@ export class PurchaseOrdersService {
     const po = await this.findOne(id);
     await this.prisma.$transaction(async (tx) => {
       await tx.purchaseOrderDet.deleteMany({
+        where: { idPurchaseOrder: id },
+      });
+      await tx.accountsPayable.deleteMany({
         where: { idPurchaseOrder: id },
       });
       await tx.purchaseOrder.delete({ where: { id } });
