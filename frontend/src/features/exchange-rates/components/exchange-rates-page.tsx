@@ -1,23 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DataTable, Column } from '@/components/ui/data-table';
 import { SlideForm } from '@/components/ui/slide-form';
 import { useExchangeRates } from '@/features/exchange-rates/hooks/use-exchange-rates';
-import { ExchangeRate, CreateExchangeRateRequest } from '@/features/exchange-rates/models/exchange-rate.model';
+import { ExchangeRateDay, CreateExchangeRateRequest } from '@/features/exchange-rates/models/exchange-rate.model';
 import { exchangeRateService } from '@/features/exchange-rates/services/exchange-rate.service';
 import { useI18n } from '@/i18n';
 import { sileo } from 'sileo';
@@ -33,41 +26,37 @@ export default function ExchangeRatesPage() {
   const { items, loading, loadItems } = useExchangeRates();
   const { t } = useI18n();
   const [formOpen, setFormOpen] = useState(false);
-  const [latestRate, setLatestRate] = useState<ExchangeRate | null>(null);
-  const [currencies, setCurrencies] = useState<{ id: number; code: string; name: string }[]>([]);
-  const [formData, setFormData] = useState<CreateExchangeRateRequest>({
-    rate: 0,
-    type: 'official',
-    source: 'BCV',
-  });
+  const [selectedItem, setSelectedItem] = useState<ExchangeRateDay | null>(null);
+  const [latestDay, setLatestDay] = useState<ExchangeRateDay | null>(null);
+  const [formData, setFormData] = useState<CreateExchangeRateRequest>({});
   const [submitting, setSubmitting] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState('');
 
+  const refreshLatest = () => {
+    exchangeRateService.getLatest().then(setLatestDay).catch(() => console.warn('Failed to load latest rate'));
+  };
+
   useEffect(() => {
-    exchangeRateService.getLatest().then(setLatestRate).catch(() => console.warn('Failed to load latest rate'));
-    apiClient.get('/currencies').then((r) => setCurrencies(r.data.data || [])).catch(() => console.warn('Failed to load currencies'));
+    refreshLatest();
   }, []);
 
-  const columns: Column<ExchangeRate>[] = [
+  const columns: Column<ExchangeRateDay>[] = [
     { field: 'id', headerName: t('exchangeRates.field.id') },
-    {
-      field: 'type',
-      headerName: t('exchangeRates.field.type'),
-      render: (row) => {
-        const colors: Record<string, string> = { official: 'text-green-600', paralelo: 'text-amber-600', manual: 'text-blue-600' };
-        return <span className={colors[row.type] ?? ''}>{row.type}</span>;
-      },
-    },
-    {
-      field: 'currencyId',
-      headerName: t('exchangeRates.field.currency'),
-      render: (row) => row.currency?.code ?? 'USD',
-    },
-    { field: 'rate', headerName: t('exchangeRates.field.rate') },
     {
       field: 'date',
       headerName: t('exchangeRates.field.date'),
       render: (row) => formatDate(row.date),
+    },
+    {
+      field: 'rateBcvUsd',
+      headerName: t('exchangeRates.field.bcv'),
+      render: (row) => row.rateBcvUsd?.toFixed(2) ?? '—',
+    },
+    {
+      field: 'rateParalelo',
+      headerName: t('exchangeRates.field.paralelo'),
+      render: (row) => row.rateParalelo?.toFixed(2) ?? '—',
     },
     {
       field: 'source',
@@ -77,19 +66,53 @@ export default function ExchangeRatesPage() {
   ];
 
   const openCreate = () => {
+    setSelectedItem(null);
     setError('');
-    setFormData({ rate: 0, type: 'official', source: 'BCV' });
+    setFormData({ date: new Date().toISOString().split('T')[0], source: 'manual' });
     setFormOpen(true);
+  };
+
+  const openEdit = (item: ExchangeRateDay) => {
+    setSelectedItem(item);
+    setError('');
+    setFormData({
+      rateBcvUsd: item.rateBcvUsd ?? undefined,
+      rateParalelo: item.rateParalelo ?? undefined,
+      date: item.date ? item.date.split('T')[0] : undefined,
+      source: item.source ?? undefined,
+    });
+    setFormOpen(true);
+  };
+
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      await apiClient.post('/exchange-rates/sync');
+      sileo.success({ description: t('exchangeRates.synced') });
+      await loadItems();
+      refreshLatest();
+    } catch {
+      sileo.error({ description: t('exchangeRates.error.sync') });
+    } finally {
+      setSyncing(false);
+    }
   };
 
   const handleSave = async () => {
     setError('');
     setSubmitting(true);
     try {
-      await exchangeRateService.create(formData);
-      sileo.success({ description: t('exchangeRates.created') });
+      if (selectedItem) {
+        await exchangeRateService.update(selectedItem.id, formData);
+        sileo.success({ description: t('exchangeRates.updated') });
+      } else {
+        await exchangeRateService.create(formData);
+        sileo.success({ description: t('exchangeRates.created') });
+      }
       await loadItems();
+      refreshLatest();
       setFormOpen(false);
+      setSelectedItem(null);
     } catch {
       setError(t('exchangeRates.error.save'));
     } finally {
@@ -100,49 +123,24 @@ export default function ExchangeRatesPage() {
   return (
     <SlideForm
       open={formOpen}
-      title={t('exchangeRates.new')}
-      onClose={() => setFormOpen(false)}
+      title={selectedItem ? t('exchangeRates.edit') : t('exchangeRates.new')}
+      onClose={() => { setFormOpen(false); setSelectedItem(null); }}
       panel={
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>{t('exchangeRates.field.type')}</Label>
-            <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="official">{t('exchangeRates.type.official')}</SelectItem>
-                <SelectItem value="paralelo">{t('exchangeRates.type.paralelo')}</SelectItem>
-                <SelectItem value="manual">{t('exchangeRates.type.manual')}</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label>{t('exchangeRates.field.date')}</Label>
+            <Input type="date" value={formData.date ?? ''}
+              onChange={(e) => setFormData({ ...formData, date: e.target.value })} required />
           </div>
           <div className="space-y-2">
-            <Label>{t('exchangeRates.field.currency')}</Label>
-            <Select value={String(formData.currencyId ?? '')}
-              onValueChange={(v) => setFormData({ ...formData, currencyId: Number(v) })}>
-              <SelectTrigger><SelectValue placeholder={t('common.selectCurrency')} /></SelectTrigger>
-              <SelectContent>
-                {currencies.map((c) => (
-                  <SelectItem key={c.id} value={String(c.id)}>{c.code} - {c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label>{t('exchangeRates.field.bcv')}</Label>
+            <Input type="number" step="0.01" value={formData.rateBcvUsd ?? ''}
+              onChange={(e) => setFormData({ ...formData, rateBcvUsd: e.target.value === '' ? undefined : Number(e.target.value) })} />
           </div>
           <div className="space-y-2">
-            <Label>{t('exchangeRates.field.rate')}</Label>
-            <Input type="number" step="0.01" value={formData.rate}
-              onChange={(e) => setFormData({ ...formData, rate: Number(e.target.value) })} required />
-          </div>
-          <div className="space-y-2">
-            <Label>{t('exchangeRates.field.source')}</Label>
-            <Select value={formData.source} onValueChange={(v) => setFormData({ ...formData, source: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="BCV">{t('exchangeRates.source.bcv')}</SelectItem>
-                <SelectItem value="dolartoday">{t('exchangeRates.source.dolartoday')}</SelectItem>
-                <SelectItem value="enparalelovzla">{t('exchangeRates.source.enparalelovzla')}</SelectItem>
-                <SelectItem value="manual">Manual</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label>{t('exchangeRates.field.paralelo')}</Label>
+            <Input type="number" step="0.01" value={formData.rateParalelo ?? ''}
+              onChange={(e) => setFormData({ ...formData, rateParalelo: e.target.value === '' ? undefined : Number(e.target.value) })} />
           </div>
           <Button onClick={handleSave} disabled={submitting} className="w-full">
             {submitting ? t('common.saving') : t('common.save')}
@@ -152,12 +150,17 @@ export default function ExchangeRatesPage() {
     >
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
-          {latestRate && (
+          {latestDay && (
             <Badge variant="outline" className="text-sm py-1.5 px-3">
-              BCV: <strong className="mx-1">{latestRate.rate}</strong> Bs./USD
-              {latestRate.date && <span className="ml-2 text-muted-foreground">({formatDate(latestRate.date)})</span>}
+              BCV: <strong className="mx-1">{latestDay.rateBcvUsd?.toFixed(2) ?? '—'}</strong>
+              &nbsp;|&nbsp; Paralelo: <strong className="mx-1">{latestDay.rateParalelo?.toFixed(2) ?? '—'}</strong>
+              <span className="ml-2 text-muted-foreground">({formatDate(latestDay.date)})</span>
             </Badge>
           )}
+          <Button size="sm" variant="outline" onClick={handleSync} disabled={syncing}>
+            <RefreshCw className={`mr-1 h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+            {syncing ? t('common.loading') : t('exchangeRates.sync')}
+          </Button>
         </div>
         <RoleGuard minLevel={40}>
           <Button onClick={openCreate}>
@@ -173,6 +176,7 @@ export default function ExchangeRatesPage() {
         columns={columns}
         rows={items}
         loading={loading}
+        onEdit={(item) => openEdit(item)}
         emptyMessage={t('exchangeRates.empty')}
       />
     </SlideForm>

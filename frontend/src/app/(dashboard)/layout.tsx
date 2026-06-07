@@ -4,6 +4,7 @@ import { ReactNode, useState, useEffect, Suspense } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/providers/auth-provider';
+import { useUiStore } from '@/stores/ui-store';
 import { navigationGroups, navigationConfig } from '@/config/navigation.config';
 import { hasMinLevel } from '@/lib/auth/roles';
 import { useI18n } from '@/i18n';
@@ -57,10 +58,18 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [expandedGroups, setExpandedGroups] = useState<Set<number>>(new Set());
 
   useEffect(() => {
+    if (isLoading) return;
     if (!isAuthenticated) {
       router.replace('/login');
     }
-  }, [isAuthenticated, router]);
+  }, [isLoading, isAuthenticated, router]);
+
+  const setLastVisitedPath = useUiStore(s => s.setLastVisitedPath);
+  useEffect(() => {
+    if (isAuthenticated && pathname) {
+      setLastVisitedPath(pathname);
+    }
+  }, [isAuthenticated, pathname, setLastVisitedPath]);
 
   if (isLoading) {
     return (

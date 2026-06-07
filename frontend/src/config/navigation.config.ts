@@ -18,6 +18,7 @@ import {
   ArrowLeftRight,
   Wallet,
   AlertCircle,
+  Keyboard,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -87,6 +88,7 @@ export const navigationGroups: NavGroup[] = [
     label: 'nav.group.config',
     items: [
       { key: 'settings', label: 'Configuración', icon: Settings, path: '/settings', minLevel: 60 },
+      { key: 'shortcuts', label: 'Shortcuts', icon: Keyboard, path: '/settings/shortcuts', minLevel: 40 },
       { key: 'payments', label: 'Pagos', icon: Wallet, path: '/settings/payments', minLevel: 60 },
       { key: 'transactions', label: 'Transacciones', icon: ArrowLeftRight, path: '/settings/payments/transactions', minLevel: 40 },
       { key: 'billing', label: 'Facturación', icon: CreditCard, path: '/billing', minLevel: 40 },

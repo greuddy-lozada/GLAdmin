@@ -19,32 +19,38 @@ import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 export class ExchangeRatesController {
   constructor(private readonly exchangeRatesService: ExchangeRatesService) {}
 
+  @Post('sync')
+  @Roles('master', 'executive')
+  syncFromApi() {
+    return this.exchangeRatesService.syncFromApi();
+  }
+
   @Post()
-  @Roles('master', 'admin')
+  @Roles('master', 'executive')
   create(@Body() dto: CreateExchangeRateDto) {
     return this.exchangeRatesService.create(dto);
   }
 
   @Get()
-  @Roles('master', 'admin', 'employee')
+  @Roles('master', 'executive', 'employee')
   findAll(@Query() pagination: PaginationQueryDto) {
     return this.exchangeRatesService.findAll(pagination.page, pagination.limit);
   }
 
   @Get('latest')
-  @Roles('master', 'admin', 'employee')
+  @Roles('master', 'executive', 'employee')
   findLatest() {
     return this.exchangeRatesService.findLatest();
   }
 
   @Get(':id')
-  @Roles('master', 'admin', 'employee')
+  @Roles('master', 'executive', 'employee')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.exchangeRatesService.findOne(id);
   }
 
   @Patch(':id')
-  @Roles('master', 'admin')
+  @Roles('master', 'executive')
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateExchangeRateDto,
@@ -53,7 +59,7 @@ export class ExchangeRatesController {
   }
 
   @Delete(':id')
-  @Roles('master', 'admin')
+  @Roles('master', 'executive')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.exchangeRatesService.remove(id);
   }

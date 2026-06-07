@@ -1,17 +1,15 @@
-import { IsNumber, IsString, IsOptional, IsDateString, IsIn } from 'class-validator';
+import { IsNumber, IsString, IsOptional, IsDateString, Min } from 'class-validator';
 
 export class CreateExchangeRateDto {
+  @IsOptional()
   @IsNumber()
-  rate: number;
+  @Min(0)
+  rateBcvUsd?: number;
 
   @IsOptional()
   @IsNumber()
-  currencyId?: number;
-
-  @IsOptional()
-  @IsString()
-  @IsIn(['official', 'paralelo', 'manual'])
-  type?: string;
+  @Min(0)
+  rateParalelo?: number;
 
   @IsOptional()
   @IsDateString()

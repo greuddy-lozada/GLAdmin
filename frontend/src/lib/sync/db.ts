@@ -8,6 +8,7 @@ export interface LocalProduct {
   priceUsd?: number;
   stock: number;
   taxId?: number;
+  code?: string;
   updatedAt: string;
 }
 
@@ -74,6 +75,40 @@ export interface SyncMetadata {
   value: string;
 }
 
+export interface LocalExchangeRate {
+  id: number;
+  rate: number;
+  updatedAt: string;
+}
+
+export interface LocalExchangeRateDay {
+  id: number;
+  date: string;
+  rateBcvUsd: number | null;
+  rateParalelo: number | null;
+  updatedAt: string;
+}
+
+export interface ParkedOrder {
+  id?: number;
+  label: string;
+  cartItems: Array<{ productId: number; name: string; quantity: number; unitPrice: number; unitPriceUsd: number; subtotal: number; subtotalUsd: number }>;
+  customerId?: number;
+  customerName?: string;
+  total: number;
+  totalUsd: number;
+  totalTax: number;
+  totalTaxUsd: number;
+  createdAt: string;
+}
+
+export interface ShortcutBinding {
+  id?: number;
+  shortcutId: string;
+  keys: string;
+  updatedAt: string;
+}
+
 export const localDb = new Dexie('GLAdmin') as Dexie & {
   products: EntityTable<LocalProduct, 'id'>;
   customers: EntityTable<LocalCustomer, 'id'>;
@@ -84,6 +119,10 @@ export const localDb = new Dexie('GLAdmin') as Dexie & {
   suppliers: EntityTable<LocalSupplier, 'id'>;
   companies: EntityTable<LocalCompany, 'id'>;
   taxes: EntityTable<LocalTax, 'id'>;
+  exchangeRates: EntityTable<LocalExchangeRate, 'id'>;
+  exchangeRateDays: EntityTable<LocalExchangeRateDay, 'id'>;
+  parkedOrders: EntityTable<ParkedOrder, 'id'>;
+  shortcutBindings: EntityTable<ShortcutBinding, 'id'>;
 };
 
 localDb.version(1).stores({
@@ -105,4 +144,62 @@ localDb.version(2).stores({
   suppliers: 'id, updatedAt, organizationId',
   companies: 'id, updatedAt, organizationId',
   taxes: 'id, updatedAt, organizationId',
+});
+
+localDb.version(3).stores({
+  products: 'id, updatedAt, organizationId',
+  customers: 'id, updatedAt, organizationId',
+  syncQueue: '++id, status, localTimestamp',
+  stockCache: 'productId',
+  sales: '++id, syncedAt',
+  syncMetadata: 'key',
+  suppliers: 'id, updatedAt, organizationId',
+  companies: 'id, updatedAt, organizationId',
+  taxes: 'id, updatedAt, organizationId',
+  exchangeRates: 'id, updatedAt',
+});
+
+localDb.version(4).stores({
+  products: 'id, updatedAt, organizationId',
+  customers: 'id, updatedAt, organizationId',
+  syncQueue: '++id, status, localTimestamp',
+  stockCache: 'productId',
+  sales: '++id, syncedAt',
+  syncMetadata: 'key',
+  suppliers: 'id, updatedAt, organizationId',
+  companies: 'id, updatedAt, organizationId',
+  taxes: 'id, updatedAt, organizationId',
+  exchangeRates: 'id, updatedAt',
+  parkedOrders: '++id, createdAt',
+});
+
+localDb.version(5).stores({
+  products: 'id, updatedAt, organizationId',
+  customers: 'id, updatedAt, organizationId',
+  syncQueue: '++id, status, localTimestamp',
+  stockCache: 'productId',
+  sales: '++id, syncedAt',
+  syncMetadata: 'key',
+  suppliers: 'id, updatedAt, organizationId',
+  companies: 'id, updatedAt, organizationId',
+  taxes: 'id, updatedAt, organizationId',
+  exchangeRates: 'id, updatedAt',
+  parkedOrders: '++id, createdAt',
+  shortcutBindings: '++id, shortcutId',
+});
+
+localDb.version(6).stores({
+  products: 'id, updatedAt, organizationId',
+  customers: 'id, updatedAt, organizationId',
+  syncQueue: '++id, status, localTimestamp',
+  stockCache: 'productId',
+  sales: '++id, syncedAt',
+  syncMetadata: 'key',
+  suppliers: 'id, updatedAt, organizationId',
+  companies: 'id, updatedAt, organizationId',
+  taxes: 'id, updatedAt, organizationId',
+  exchangeRates: 'id, updatedAt',
+  exchangeRateDays: 'id, updatedAt',
+  parkedOrders: '++id, createdAt',
+  shortcutBindings: '++id, shortcutId',
 });

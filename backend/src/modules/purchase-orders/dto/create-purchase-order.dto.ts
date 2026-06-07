@@ -5,14 +5,17 @@ import {
   IsDateString,
   ValidateNested,
   IsArray,
+  IsInt,
+  IsPositive,
+  Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class PurchaseOrderDetailDto {
-  @IsNumber() idProduct: number;
-  @IsOptional() @IsNumber() quantity?: number;
-  @IsOptional() @IsNumber() unitPrice?: number;
-  @IsOptional() @IsNumber() unitPriceUsd?: number;
+  @IsInt() @IsPositive() idProduct: number;
+  @IsOptional() @IsInt() @Min(1) quantity?: number;
+  @IsOptional() @IsNumber() @Min(0) unitPrice?: number;
+  @IsOptional() @IsNumber() @Min(0) unitPriceUsd?: number;
   @IsOptional() @IsNumber() subtotal?: number;
   @IsOptional() @IsNumber() subtotalUsd?: number;
   @IsOptional() @IsString() observation?: string;

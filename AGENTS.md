@@ -95,6 +95,20 @@ const columns: Column<Entity>[] = [
 - Feature pages must NOT render their own `<h1>` title.
 - Feature pages only render the content area (DataTable, form, etc.).
 
+### Input Focus
+- `autoFocus` en el primer input de formularios críticos (login, PIN, búsquedas POS, ProductSearch, CustomerSearch).
+- `useRef` + `.focus()` programático después de operaciones asíncronas (ej: después de agregar producto, refocar ProductSearch).
+- En POS: CustomerSearch y ProductSearch exponen `inputRef` para atajo de teclado.
+- Priorizar flujo continuo sin mouse — el usuario nunca debe necesitar el mouse para empezar a escribir.
+
+### Keyboard Shortcuts
+- Hook compartido `useHotkey` en `frontend/src/hooks/use-hotkey.ts`. Lookup: `overrides de Dexie` > `defaults` de `shortcuts.ts`.
+- Hotkeys modales (Ctrl/⌘) — nunca interferir con input nativo (inputs/textarea/select). Excepto Escape que siempre funciona.
+- Escape siempre cierra el modal/dialog más cercano.
+- Documentar shortcuts visualmente: tooltip o badge en botones (ej: "Buscar (Ctrl+P)").
+- `preventDefault` para evitar que el browser capture el atajo.
+- Shortcuts se configuran en `frontend/src/config/shortcuts.ts` y son personalizables desde Settings > Shortcuts.
+
 ---
 
 ## Sidebar

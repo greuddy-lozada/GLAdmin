@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/providers/auth-provider';
+import { useUiStore } from '@/stores/ui-store';
 import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
 import { Button } from '@/components/ui/button';
@@ -43,7 +44,10 @@ export default function LoginPage() {
     if (checkingBootstrap) return;
     if (!isLoading && isAuthenticated) {
       const savedOrgId = localStorage.getItem('currentOrgId');
-      router.replace(savedOrgId ? '/dashboard' : '/org-picker');
+      const lastPath = useUiStore.getState().lastVisitedPath;
+      useUiStore.getState().clearLastVisitedPath();
+      const target = savedOrgId && lastPath ? lastPath : savedOrgId ? '/dashboard' : '/org-picker';
+      router.replace(target);
     }
   }, [isLoading, isAuthenticated, checkingBootstrap, router]);
 

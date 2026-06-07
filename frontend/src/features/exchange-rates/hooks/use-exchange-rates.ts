@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { ExchangeRate, CreateExchangeRateRequest, UpdateExchangeRateRequest } from '../models/exchange-rate.model';
+import { ExchangeRateDay, CreateExchangeRateRequest, UpdateExchangeRateRequest } from '../models/exchange-rate.model';
 import { exchangeRateService } from '../services/exchange-rate.service';
 
 export function useExchangeRates() {
-  const [items, setItems] = useState<ExchangeRate[]>([]);
+  const [items, setItems] = useState<ExchangeRateDay[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

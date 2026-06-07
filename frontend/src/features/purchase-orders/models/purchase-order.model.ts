@@ -17,10 +17,13 @@ export interface PurchaseOrder {
   amountUsd?: number;
   exchangeRate?: number;
   exchangeRateId?: number;
+  officialExchangeRate?: number;
+  officialExchangeRateId?: number;
   paymentMethod?: number;
   status?: number;
   createdAt: string;
   updatedAt: string;
+  version: number;
   supplier?: { id: number; companyName: string };
   details?: (PurchaseOrderDetail & { id: number; product?: { id: number; code: string; name: string } })[];
 }
@@ -33,6 +36,8 @@ export interface CreatePurchaseOrderRequest {
   amountUsd?: number;
   exchangeRate?: number;
   exchangeRateId?: number;
+  officialExchangeRate?: number;
+  officialExchangeRateId?: number;
   paymentMethod?: number;
   status?: number;
   details?: {
@@ -54,6 +59,33 @@ export interface UpdatePurchaseOrderRequest {
   amountUsd?: number;
   exchangeRate?: number;
   exchangeRateId?: number;
+  officialExchangeRate?: number;
+  officialExchangeRateId?: number;
   paymentMethod?: number;
   status?: number;
+  details?: {
+    idProduct: number;
+    quantity?: number;
+    unitPrice?: number;
+    unitPriceUsd?: number;
+    subtotal?: number;
+    subtotalUsd?: number;
+    observation?: string;
+  }[];
 }
+
+export enum PurchaseOrderStatus {
+  Draft = 1,
+  Sent = 2,
+  Approved = 3,
+  Received = 4,
+  Cancelled = 5,
+}
+
+export const PURCHASE_ORDER_TRANSITIONS: Record<PurchaseOrderStatus, PurchaseOrderStatus[]> = {
+  [PurchaseOrderStatus.Draft]: [PurchaseOrderStatus.Sent, PurchaseOrderStatus.Cancelled],
+  [PurchaseOrderStatus.Sent]: [PurchaseOrderStatus.Approved, PurchaseOrderStatus.Cancelled],
+  [PurchaseOrderStatus.Approved]: [PurchaseOrderStatus.Received, PurchaseOrderStatus.Cancelled],
+  [PurchaseOrderStatus.Received]: [],
+  [PurchaseOrderStatus.Cancelled]: [],
+};

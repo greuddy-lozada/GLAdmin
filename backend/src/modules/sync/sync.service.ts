@@ -91,6 +91,20 @@ export class SyncService {
       },
     });
 
+    const exchangeRateDays = await this.prisma.exchangeRateDay.findMany({
+      where: {
+        organizationId: orgId,
+        updatedAt: { gt: sinceDate },
+      },
+      select: {
+        id: true,
+        date: true,
+        rateBcvUsd: true,
+        rateParalelo: true,
+        updatedAt: true,
+      },
+    });
+
     const suppliers = await this.prisma.supplier.findMany({
       where: { organizationId: orgId, updatedAt: { gt: sinceDate } },
       select: { id: true, companyName: true, updatedAt: true },
@@ -132,6 +146,7 @@ export class SyncService {
       products: productsWithStock,
       customers,
       exchangeRates,
+      exchangeRateDays,
       suppliers,
       companies,
       taxes,

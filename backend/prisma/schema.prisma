@@ -97,6 +97,7 @@ model Organization {
   sales                 Sale[]
   salesDets             SalesDet[]
   exchangeRates         ExchangeRate[]
+  exchangeRateDays      ExchangeRateDay[]
   withholdingRecords    WithholdingRecord[]
   accountsPayable       AccountsPayable[]
   accountsReceivable    AccountsReceivable[]
@@ -327,6 +328,22 @@ model ExchangeRate {
   @@index([organizationId])
   @@index([date])
   @@index([organizationId, updatedAt])
+}
+
+model ExchangeRateDay {
+  id              Int      @id @default(autoincrement())
+  date            DateTime
+  rateBcvUsd      Float?
+  rateParalelo    Float?
+  source          String?  @default("dolarapi")
+  organizationId  Int
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([organizationId, date])
+  @@map("exchange_rate_days")
 }
 
 model Module {

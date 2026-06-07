@@ -44,3 +44,4 @@ coverage/
 **/coverage/
 specs/
 **/specs/
+.superpowers/

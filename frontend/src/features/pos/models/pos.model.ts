@@ -5,6 +5,20 @@ export enum PaymentMethod {
   Card = 4,
 }
 
+export interface CartItem {
+  productId: number;
+  name: string;
+  quantity: number;
+  unitPrice: number;
+  unitPriceUsd: number;
+  subtotal: number;
+  subtotalUsd: number;
+  taxName?: string;
+  taxPercentage?: number;
+  taxAmount?: number;
+  taxAmountUsd?: number;
+}
+
 export interface SaleItem {
   productId: number;
   quantity: number;
@@ -31,4 +45,17 @@ export interface CreateSaleRequest {
   items: SaleItem[];
   totalTax?: number;
   totalTaxUsd?: number;
+}
+
+export interface ParkedOrder {
+  id?: number;
+  label: string;
+  cartItems: CartItem[];
+  customerId?: number;
+  customerName?: string;
+  total: number;
+  totalUsd: number;
+  totalTax: number;
+  totalTaxUsd: number;
+  createdAt: string;
 }

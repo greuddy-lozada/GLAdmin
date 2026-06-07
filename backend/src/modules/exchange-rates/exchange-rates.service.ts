@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { ContextService } from '../../modules/tenant/context.service';
 import { CreateExchangeRateDto } from './dto/create-exchange-rate.dto';
@@ -12,74 +12,124 @@ export class ExchangeRatesService {
     private readonly contextService: ContextService,
   ) {}
 
-  async create(dto: CreateExchangeRateDto) {
+  private getOrgId(): number {
     const ctx = this.contextService?.getCurrent();
     const orgId = ctx?.organizationId;
-    const rate = await this.prisma.exchangeRate.create({
-      data: {
-        rate: dto.rate,
-        currencyId: dto.currencyId,
-        type: dto.type ?? 'official',
-        date: dto.date ? new Date(dto.date) : new Date(),
-        source: dto.source,
-        organizationId: orgId!,
-      } as unknown as Prisma.ExchangeRateCreateInput,
-      include: { currency: true },
+    if (!orgId) throw new BadRequestException('Organization context required');
+    return orgId;
+  }
+
+  async syncFromApi() {
+    const orgId = this.getOrgId();
+
+    let data: any[];
+    try {
+      const res = await fetch('https://ve.dolarapi.com/v1/dolares', { signal: AbortSignal.timeout(10000) });
+      if (!res.ok) throw new Error(`API responded with ${res.status}`);
+      data = await res.json();
+    } catch {
+      throw new BadRequestException('Failed to fetch exchange rates from external API');
+    }
+
+    const oficial = data.find((d: any) => d.fuente === 'oficial');
+    const paralelo = data.find((d: any) => d.fuente === 'paralelo');
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const day = await this.prisma.exchangeRateDay.upsert({
+      where: { organizationId_date: { organizationId: orgId, date: today } },
+      update: {
+        rateBcvUsd: oficial?.promedio ?? undefined,
+        rateParalelo: paralelo?.promedio ?? undefined,
+        source: 'dolarapi',
+      },
+      create: {
+        date: today,
+        rateBcvUsd: oficial?.promedio ?? null,
+        rateParalelo: paralelo?.promedio ?? null,
+        source: 'dolarapi',
+        organizationId: orgId,
+      },
     });
-    return { data: rate, message: 'EXCHANGE_RATE.CREATED' };
+
+    return { data: day, message: 'EXCHANGE_RATE.SYNCED' };
   }
 
   async findAll(page = 1, limit = 20) {
+    const orgId = this.getOrgId();
     const skip = (page - 1) * limit;
     const [data, total] = await Promise.all([
-      this.prisma.exchangeRate.findMany({
+      this.prisma.exchangeRateDay.findMany({
+        where: { organizationId: orgId },
         skip,
         take: limit,
-        include: { currency: true },
         orderBy: { date: 'desc' },
       }),
-      this.prisma.exchangeRate.count(),
+      this.prisma.exchangeRateDay.count({ where: { organizationId: orgId } }),
     ]);
     return { data, total, page, limit };
   }
 
   async findLatest() {
-    const rate = await this.prisma.exchangeRate.findFirst({
-      where: { type: 'official' },
+    const orgId = this.getOrgId();
+    const day = await this.prisma.exchangeRateDay.findFirst({
+      where: { organizationId: orgId },
       orderBy: { date: 'desc' },
-      include: { currency: true },
     });
-    return { data: rate, message: null };
+    return { data: day, message: null };
   }
 
   async findOne(id: number) {
-    const rate = await this.prisma.exchangeRate.findUnique({
-      where: { id },
-      include: { currency: true },
+    const orgId = this.getOrgId();
+    const day = await this.prisma.exchangeRateDay.findFirst({
+      where: { id, organizationId: orgId },
     });
-    if (!rate) throw new NotFoundException('EXCHANGE_RATE.NOT_FOUND');
-    return rate;
+    if (!day) throw new NotFoundException('EXCHANGE_RATE.NOT_FOUND');
+    return day;
+  }
+
+  async create(dto: CreateExchangeRateDto) {
+    const orgId = this.getOrgId();
+    const date = dto.date ? new Date(dto.date) : new Date();
+    date.setHours(0, 0, 0, 0);
+
+    const day = await this.prisma.exchangeRateDay.create({
+      data: {
+        date,
+        rateBcvUsd: dto.rateBcvUsd ?? null,
+        rateParalelo: dto.rateParalelo ?? null,
+        source: dto.source ?? 'manual',
+        organizationId: orgId,
+      } as unknown as Prisma.ExchangeRateDayCreateInput,
+    });
+    return { data: day, message: 'EXCHANGE_RATE.CREATED' };
   }
 
   async update(id: number, dto: UpdateExchangeRateDto) {
+    const orgId = this.getOrgId();
     await this.findOne(id);
-    const rate = await this.prisma.exchangeRate.update({
+
+    const data: any = {};
+    if (dto.rateBcvUsd !== undefined) data.rateBcvUsd = dto.rateBcvUsd;
+    if (dto.rateParalelo !== undefined) data.rateParalelo = dto.rateParalelo;
+    if (dto.source !== undefined) data.source = dto.source;
+    if (dto.date !== undefined) {
+      const d = new Date(dto.date);
+      d.setHours(0, 0, 0, 0);
+      data.date = d;
+    }
+
+    const day = await this.prisma.exchangeRateDay.update({
       where: { id },
-      data: {
-        rate: dto.rate,
-        currencyId: dto.currencyId,
-        type: dto.type,
-        date: dto.date ? new Date(dto.date) : undefined,
-        source: dto.source,
-      },
-      include: { currency: true },
+      data,
     });
-    return { data: rate, message: 'EXCHANGE_RATE.UPDATED' };
+    return { data: day, message: 'EXCHANGE_RATE.UPDATED' };
   }
 
   async remove(id: number) {
-    const rate = await this.findOne(id);
-    await this.prisma.exchangeRate.delete({ where: { id } });
-    return { data: rate, message: 'EXCHANGE_RATE.DELETED' };
+    const day = await this.findOne(id);
+    await this.prisma.exchangeRateDay.delete({ where: { id } });
+    return { data: day, message: 'EXCHANGE_RATE.DELETED' };
   }
 }

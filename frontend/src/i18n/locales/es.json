@@ -109,7 +109,9 @@
     "adminPlans": "Planes",
     "adminInvites": "Invitaciones",
     "settings": "Configuración",
+    "shortcuts": "Atajos",
     "payments": "Pagos",
+    "pos": "POS",
     "transactions": "Transacciones",
     "billing": "Facturación",
     "syncConflicts": "Conflictos de sincronización",
@@ -342,6 +344,15 @@
     "details": "Detalles",
     "addDetail": "Agregar Producto",
     "detailLabel": "Detalle {{index}}",
+    "items": "ítems",
+    "noDetails": "Sin detalles",
+    "status": {
+      "draft": "Borrador",
+      "sent": "Enviado",
+      "approved": "Aprobado",
+      "received": "Recibido",
+      "cancelled": "Cancelado"
+    },
     "field": {
       "id": "#",
       "supplier": "Proveedor",
@@ -354,7 +365,10 @@
       "status": "Estado",
       "product": "Producto",
       "quantity": "Cantidad",
+      "unitPrice": "Precio Unitario",
+      "unitPriceUsd": "Precio USD",
       "subtotal": "Subtotal",
+      "subtotalUsd": "Subtotal USD",
       "observation": "Observación"
     },
     "error": {
@@ -372,31 +386,27 @@
     "empty": "No hay tasas registradas",
     "field": {
       "id": "#",
-      "rate": "Tasa",
-      "currency": "Moneda",
-      "type": "Tipo",
+      "bcv": "BCV USD",
+      "paralelo": "Paralelo",
       "date": "Fecha",
       "source": "Fuente"
     },
+    "sync": "Sincronizar",
+    "synced": "Tasas sincronizadas exitosamente",
     "created": "Tasa creada exitosamente",
     "updated": "Tasa actualizada exitosamente",
     "deleted": "Tasa eliminada exitosamente",
     "error": {
       "save": "Error al guardar tasa",
       "load": "Error al cargar tasas",
-      "delete": "Error al eliminar tasa"
-    },
-    "type": {
-      "official": "Oficial (BCV)",
-      "paralelo": "Paralelo",
-      "manual": "Manual"
+      "delete": "Error al eliminar tasa",
+      "sync": "Error al sincronizar tasas"
     },
     "source": {
       "bcv": "BCV",
       "dolartoday": "DolarToday",
       "enparalelovzla": "EnParaleloVzla"
-    },
-    "selectRate": "Seleccionar tasa"
+    }
   },
   "withholdings": {
     "title": "Retenciones",
@@ -466,6 +476,51 @@
       "outOfStock": "Sin stock",
       "lowStock": "Stock bajo",
       "insufficient": "Stock insuficiente para {{name}}"
+    },
+    "sales": {
+      "title": "Últimas ventas",
+      "empty": "Sin ventas"
+    },
+    "toolbar": {
+      "undo": "Deshacer"
+    },
+    "customer": {
+      "search": "Buscar cliente...",
+      "noCustomer": "Consumidor final",
+      "quickAdd": "Nuevo",
+      "quickAddTitle": "Agregar cliente",
+      "field": {
+        "firstName": "Nombre",
+        "lastName": "Apellido",
+        "taxId": "Cédula / RIF",
+        "phone": "Teléfono"
+      },
+      "added": "Cliente agregado exitosamente",
+      "error": {
+        "save": "Error al guardar cliente",
+        "search": "Error al buscar clientes"
+      }
+    },
+    "detail": {
+      "empty": "Agregue productos para comenzar la venta",
+      "addProduct": "Buscar o escanear producto..."
+    },
+    "park": {
+      "button": "Poner en espera",
+      "title": "Órdenes en espera",
+      "empty": "Sin órdenes en espera",
+      "item": "Orden #{{n}} — {{count}} ítems",
+      "resume": "Retomar",
+      "delete": "Eliminar",
+      "parked": "Orden #{{n}} en espera",
+      "mergeTitle": "Combinar órdenes",
+      "mergeMessage": "Esta orden tiene {{count}} ítems (Bs. {{total}}). ¿Combinar con el carrito actual?",
+      "error": {
+        "load": "Error al cargar órdenes",
+        "resume": "Error al retomar orden",
+        "delete": "Error al eliminar orden",
+        "park": "Error al poner orden en espera"
+      }
     }
   },
   "sync": {
@@ -689,6 +744,34 @@
       "load": "Error al cargar planes",
       "checkout": "Error al iniciar pago",
       "notConfigured": "Stripe no está configurado. Contacta al administrador."
+    }
+  },
+  "shortcuts": {
+    "title": "Atajos de teclado",
+    "scope": {
+      "pos": "POS",
+      "global": "Global"
+    },
+    "pos": {
+      "searchProduct": "Buscar producto",
+      "searchCustomer": "Buscar cliente",
+      "parkOrder": "Poner en espera",
+      "payment": "Cobrar",
+      "undo": "Deshacer",
+      "refreshProducts": "Refrescar productos",
+      "closeModal": "Cerrar modal",
+      "quickAddCustomer": "Agregar cliente"
+    },
+    "change": "Cambiar",
+    "listening": "Presiona una tecla...",
+    "restoreDefaults": "Restaurar defaults",
+    "default": "Defecto",
+    "restored": "Atajos restaurados a valores por defecto",
+    "saved": "Atajo guardado",
+    "conflict": "La combinación ya está asignada a \"{{existing}}\"",
+    "error": {
+      "save": "Error al guardar el atajo",
+      "load": "Error al cargar atajos"
     }
   }
 }

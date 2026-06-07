@@ -77,11 +77,33 @@ export class PurchaseOrdersService {
 
   async update(id: number, dto: UpdatePurchaseOrderDto) {
     await this.findOne(id);
-    const { details: _details, ...header } = dto;
-    const purchaseOrder = await this.prisma.purchaseOrder.update({
-      where: { id },
-      data: header,
-      include: { supplier: true, details: { include: { product: true } }, exchangeRateRef: true, officialExchangeRateRef: true },
+    const ctx = this.contextService?.getCurrent();
+    const orgId = ctx?.organizationId;
+    const { details, ...header } = dto;
+    const purchaseOrder = await this.prisma.$transaction(async (tx) => {
+      if (details) {
+        await tx.purchaseOrderDet.deleteMany({ where: { idPurchaseOrder: id } });
+        if (details.length > 0) {
+          await tx.purchaseOrderDet.createMany({
+            data: details.map((d) => ({
+              idPurchaseOrder: id,
+              idProduct: d.idProduct,
+              quantity: d.quantity,
+              unitPrice: d.unitPrice,
+              unitPriceUsd: d.unitPriceUsd,
+              subtotal: d.subtotal,
+              subtotalUsd: d.subtotalUsd,
+              observation: d.observation,
+              organizationId: orgId!,
+            })),
+          });
+        }
+      }
+      return tx.purchaseOrder.update({
+        where: { id },
+        data: header,
+        include: { supplier: true, details: { include: { product: true } }, exchangeRateRef: true, officialExchangeRateRef: true },
+      });
     });
     return { data: purchaseOrder, message: 'PURCHASE_ORDER.UPDATED' };
   }

@@ -1,6 +1,7 @@
 import { localDb } from '@/lib/sync/db';
 import { syncQueue } from '@/lib/sync/sync-queue';
-import type { CartItem } from './use-pos';
+import type { CartItem } from '../models/pos.model';
+import { PaymentMethod, type CreateSaleRequest } from '../models/pos.model';
 
 export function useOfflineSale() {
   const createSale = async (
@@ -8,10 +9,10 @@ export function useOfflineSale() {
     total: number,
     totalUsd: number,
     exchangeRate: number,
-    paymentMethod: number,
+    paymentMethod: PaymentMethod,
     customerId?: number,
   ) => {
-    const saleData = {
+    const saleData: CreateSaleRequest = {
       code: `SALE-${Date.now()}`,
       date: new Date().toISOString(),
       amount: total,
@@ -27,7 +28,13 @@ export function useOfflineSale() {
         unitPriceUsd: item.unitPriceUsd,
         subtotal: item.subtotal,
         subtotalUsd: item.subtotalUsd,
+        taxName: item.taxName,
+        taxPercentage: item.taxPercentage,
+        taxAmount: item.taxAmount,
+        taxAmountUsd: item.taxAmountUsd,
       })),
+      totalTax: cart.reduce((s, i) => s + (i.taxAmount || 0), 0),
+      totalTaxUsd: cart.reduce((s, i) => s + (i.taxAmountUsd || 0), 0),
     };
 
     const stockSnapshot: Record<number, number> = {};

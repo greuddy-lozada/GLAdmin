@@ -109,7 +109,9 @@
     "adminPlans": "Plans",
     "adminInvites": "Invitations",
     "settings": "Settings",
+    "shortcuts": "Shortcuts",
     "payments": "Payments",
+    "pos": "POS",
     "transactions": "Transactions",
     "billing": "Billing",
     "syncConflicts": "Sync Conflicts",
@@ -342,6 +344,15 @@
     "details": "Details",
     "addDetail": "Add Product",
     "detailLabel": "Detail {{index}}",
+    "items": "items",
+    "noDetails": "No details",
+    "status": {
+      "draft": "Draft",
+      "sent": "Sent",
+      "approved": "Approved",
+      "received": "Received",
+      "cancelled": "Cancelled"
+    },
     "field": {
       "id": "#",
       "supplier": "Supplier",
@@ -354,7 +365,10 @@
       "status": "Status",
       "product": "Product",
       "quantity": "Quantity",
+      "unitPrice": "Unit Price",
+      "unitPriceUsd": "Unit Price (USD)",
       "subtotal": "Subtotal",
+      "subtotalUsd": "Subtotal (USD)",
       "observation": "Notes"
     },
     "error": {
@@ -372,31 +386,27 @@
     "empty": "No rates registered",
     "field": {
       "id": "#",
-      "rate": "Rate",
-      "currency": "Currency",
-      "type": "Type",
+      "bcv": "BCV USD",
+      "paralelo": "Paralelo",
       "date": "Date",
       "source": "Source"
     },
+    "sync": "Sync",
+    "synced": "Rates synced successfully",
     "created": "Rate created successfully",
     "updated": "Rate updated successfully",
     "deleted": "Rate deleted successfully",
     "error": {
       "save": "Error saving rate",
       "load": "Error loading rates",
-      "delete": "Error deleting rate"
-    },
-    "type": {
-      "official": "Official (BCV)",
-      "paralelo": "Paralelo",
-      "manual": "Manual"
+      "delete": "Error deleting rate",
+      "sync": "Error syncing rates"
     },
     "source": {
       "bcv": "BCV",
       "dolartoday": "DolarToday",
       "enparalelovzla": "EnParaleloVzla"
-    },
-    "selectRate": "Select rate"
+    }
   },
   "withholdings": {
     "title": "Withholdings",
@@ -466,6 +476,51 @@
       "outOfStock": "Out of stock",
       "lowStock": "Low stock",
       "insufficient": "Insufficient stock for {{name}}"
+    },
+    "sales": {
+      "title": "Recent sales",
+      "empty": "No sales"
+    },
+    "toolbar": {
+      "undo": "Undo"
+    },
+    "customer": {
+      "search": "Search customer...",
+      "noCustomer": "Walk-in customer",
+      "quickAdd": "New",
+      "quickAddTitle": "Add customer",
+      "field": {
+        "firstName": "First name",
+        "lastName": "Last name",
+        "taxId": "ID / Tax ID",
+        "phone": "Phone"
+      },
+      "added": "Customer added successfully",
+      "error": {
+        "save": "Error saving customer",
+        "search": "Error searching customers"
+      }
+    },
+    "detail": {
+      "empty": "Add products to start the sale",
+      "addProduct": "Search or scan product..."
+    },
+    "park": {
+      "button": "Park order",
+      "title": "Parked orders",
+      "empty": "No parked orders",
+      "item": "Order #{{n}} — {{count}} items",
+      "resume": "Resume",
+      "delete": "Delete",
+      "parked": "Order #{{n}} parked",
+      "mergeTitle": "Merge orders",
+      "mergeMessage": "This order has {{count}} items (Bs. {{total}}). Merge with current cart?",
+      "error": {
+        "load": "Error loading orders",
+        "resume": "Error resuming order",
+        "delete": "Error deleting order",
+        "park": "Error parking order"
+      }
     }
   },
   "sync": {
@@ -689,6 +744,34 @@
       "load": "Error loading plans",
       "checkout": "Error starting checkout",
       "notConfigured": "Stripe is not configured. Contact the administrator."
+    }
+  },
+  "shortcuts": {
+    "title": "Keyboard shortcuts",
+    "scope": {
+      "pos": "POS",
+      "global": "Global"
+    },
+    "pos": {
+      "searchProduct": "Search product",
+      "searchCustomer": "Search customer",
+      "parkOrder": "Park order",
+      "payment": "Checkout",
+      "undo": "Undo",
+      "refreshProducts": "Refresh products",
+      "closeModal": "Close modal",
+      "quickAddCustomer": "Add customer"
+    },
+    "change": "Change",
+    "listening": "Press a key...",
+    "restoreDefaults": "Restore defaults",
+    "default": "Default",
+    "restored": "Shortcuts restored to defaults",
+    "saved": "Shortcut saved",
+    "conflict": "This combination is already assigned to \"{{existing}}\"",
+    "error": {
+      "save": "Error saving shortcut",
+      "load": "Error loading shortcuts"
     }
   }
 }

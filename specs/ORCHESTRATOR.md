@@ -8,7 +8,6 @@ Master tracker for all specs, implementation plans, and their completion status.
 
 | Spec | Status | Plan | Notes |
 |------|--------|------|-------|
-| `specs/multi-tenant-evaluation.md` | ✅ Complete | — | Gap analysis that led to the design |
 | `docs/superpowers/plans/2026-05-25-multi-tenant.md` | ✅ Complete | — | Approved implementation plan |
 | Phase 1 — Foundation (schema + middleware + seed) | ✅ Complete | Plan §1 | All 5 steps done, typecheck 0 errors |
 | Phase 2 — Auth + Org Picker | ✅ Complete | Plan §2 | Login returns orgs, select-org endpoint, org picker page |
@@ -32,15 +31,39 @@ Master tracker for all specs, implementation plans, and their completion status.
 |------|--------|------|-------|
 | `docs/superpowers/specs/2026-05-25-offline-sync-design.md` | ✅ Complete | — | Approved spec + implementation plan |
 | `docs/superpowers/plans/2026-05-25-offline-sync.md` | ✅ Complete | — | 8-phase implementation plan |
-| Phase 1 — Foundation (Dexie, network-status, queue) | ✅ Complete | Plan §1 | dexie 4.4.3, @serwist/next 9.5.11, 6 stores, sync queue |
+| Phase 1 — Foundation (Dexie, network-status, queue) | ✅ Complete | Plan §1 | dexie 4.4.3, @serwist/turbopack 9.5.11, 6 stores, sync queue |
 | Phase 2 — Backend Sync Module | ✅ Complete | Plan §2 | SyncCursor + SyncConflict models, pull/push/conflicts/health endpoints |
 | Phase 3 — Sync Engine | ✅ Complete | Plan §3 | Pull/push orchestration, BroadcastChannel leader election, beforeunload warning |
 | Phase 4 — POS Backend (Sales module) | ✅ Complete | Plan §4 | Sales CRUD, stock decrement/increment, products with stock endpoint |
 | Phase 5 — POS Frontend | ✅ Complete | Plan §5 | Product grid, cart, payment modal, offline sale flow |
 | Phase 6 — PWA + Hooks | ✅ Complete | Plan §6 | Service worker, manifest, sync indicator, conflict resolution page |
 | Phase 7 — Cross-Module Reuse | ✅ Complete | Plan §7 | Suppliers, companies, taxes in sync pull, org switch handling |
-| Phase 8 — Offline Authentication | ✅ Complete | Plan §8 | PIN setup (SHA-256), PIN unlock, auth flow integration |
+| Phase 8 — Offline Authentication | ✅ Complete | Plan §8 | PIN setup (PBKDF2+salt), PIN unlock, auth flow integration |
 | **Serwist Turbopack Migration** | ✅ Complete | — | Migrated from @serwist/next to @serwist/turbopack for native Turbopack support |
+| **PIN PBKDF2 migration** | ✅ Complete | — | SHA-256 → PBKDF2+salt, PinUnlock/PinSetup refactored to Dialog |
+| **Sync timer fix** | ✅ Complete | — | `scheduleNext()` clears old timer, prevents cascade polling (27→4 req/min) |
+| **TransformInterceptor pagination fix** | ✅ Complete | — | Paginated-response detection flattens double-wrapped responses |
+| **Offline PIN fallback** | ✅ Complete | — | `initAuth()` catch reads saved user + PIN when offline |
+
+---
+
+## Status: POS Improvements (Phase 1-3)
+
+| Spec | Status | Plan | Notes |
+|------|--------|------|-------|
+| `specs/2026-05-31-pos-improvements-design.md` | ✅ Complete | — | Approved design doc |
+| `specs/2026-05-31-pos-improvements-plan.md` | ✅ Complete | — | 3-phase implementation plan |
+| Phase 1 — Essential (models, i18n, search, stock, customer, rate, tax) | ✅ Complete | Plan §1-9 | PaymentMethod enum, 20+ i18n keys, functional search, stock validation, customer select, live exchange rate, IVA calc |
+| Phase 2 — Speed (quantity input, scroll, receipt, low-stock) | ✅ Complete | Plan §10-14 | Numeric qty, cart scroll, receipt dialog, stock indicators |
+| Phase 3 — Advanced (barcode code field, sale history) | ✅ Complete | Plan §15-21 | `code` field wired to sync, barcode scanner, sale history panel |
+
+---
+
+## Status: POS Redesign — "Compra con Detalles"
+
+| Spec | Status | Plan | Notes |
+|------|--------|------|-------|
+| `specs/2026-06-06-pos-redesign.md` | 🔄 In Design | — | Single-column invoice layout, async customer search + quick-add, product search-first, parked orders |
 
 ---
 
@@ -48,8 +71,7 @@ Master tracker for all specs, implementation plans, and their completion status.
 
 | Spec | Status | Notes |
 |------|--------|-------|
-| `specs/audit-fixes.md` | ✅ Complete | Sprint 1-6 done. Score: 71→73/100 |
-| `specs/audit-reglas.md` | 🔄 In Progress | 14/14 High/Critical items implemented. See Priority Matrix below. |
+| `specs/audit-reglas.md` | ✅ Complete | 14/14 High/Critical items implemented. Priority Matrix done. |
 | Sprint 1 - Security blockers | ✅ Complete | Isolation bypass, PIN PBKDF2+salt, JWT secret |
 | Sprint 2 - Sync engine alive | ✅ Complete | start(), beforeunload, leader election, orgId |
 | Sprint 3 - Data integrity | ✅ Complete | Role @unique, refresh O(1), $transaction, DB-agnostic |
@@ -59,9 +81,7 @@ Master tracker for all specs, implementation plans, and their completion status.
 
 ---
 
-## Status: Legacy Specs (from original project setup)
-
-These specs were created during initial project scaffolding. None have been formally implemented — they represent the original vision.
+## Status: Deferred (see deferred-work.md)
 
 | Spec | Status | Notes |
 |------|--------|-------|
@@ -71,15 +91,6 @@ These specs were created during initial project scaffolding. None have been form
 | `specs/multi-currency-venezuela.md` | ⏳ Deferred | In `specs/deferred-work.md` §8 |
 | `specs/observability-monitoring.md` | ⏳ Deferred | In `specs/deferred-work.md` §7 |
 | `specs/api-documentation.md` | ⏳ Deferred | In `specs/deferred-work.md` §6 |
-| `specs/multi-tenant-design.md` | ✅ Superseded | Replaced by multi-tenant implementation |
-| `specs/aceternity-sidebar-migration.md` | ✅ Complete | Sidebar implemented in layout |
-| `specs/shadcn-migration.md` | ✅ Complete | shadcn v4 in use |
-| `specs/design-migration.md` | ✅ Complete | Design system migrated |
-| `specs/layout-fixes.md` | ✅ Complete | Layout fixes applied |
-| `specs/migration-plan.md` | ✅ Complete | Migration completed |
-| `specs/role-permissions.md` | ✅ Complete | Role system implemented |
-| `specs/saas-auth-integration.md` | ⏳ Superseded | Superceded by multi-tenant auth |
-| `docs/superpowers/specs/2026-05-23-dashboard-bento-grid-design.md` | ✅ Complete | BentoGrid implemented in dashboard |
 
 ---
 
@@ -101,5 +112,3 @@ These specs were created during initial project scaffolding. None have been form
 2. Implementation plan → subagent-driven execution (Phase N per subagent)
 3. Each phase verified: `pnpm typecheck` (0 errors) + optional runtime test
 4. ORCHESTRATOR.md updated with phase completion status
-
-opencode -s ses_1af235e89ffeDInGrNuQESgTpE
