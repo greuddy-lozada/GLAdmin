@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronRight, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -50,10 +51,19 @@ interface PurchaseOrderFormData {
   date: string;
   amount: number;
   amountUsd: number;
+  baseAmount: number;
+  baseAmountUsd: number;
+  ivaAmount: number;
+  ivaAmountUsd: number;
   exchangeRate: number;
   exchangeRateId?: number;
+  exchangeRateDayId?: number;
+  manualRate: boolean;
   paymentMethod: number;
   status: number;
+  applyWithholding: boolean;
+  withholdingPercentage: number;
+  withholdingProof: string;
   details: DetailForm[];
 }
 
@@ -74,19 +84,42 @@ export default function PurchaseOrdersPage() {
     date: new Date().toISOString().split('T')[0],
     amount: 0,
     amountUsd: 0,
+    baseAmount: 0,
+    baseAmountUsd: 0,
+    ivaAmount: 0,
+    ivaAmountUsd: 0,
     exchangeRate: 0,
     exchangeRateId: undefined,
+    exchangeRateDayId: undefined,
+    manualRate: false,
     paymentMethod: 1,
     status: 1,
+    applyWithholding: false,
+    withholdingPercentage: 75,
+    withholdingProof: '',
     details: [],
   });
-  const [suppliers, setSuppliers] = useState<{ id: number; companyName: string }[]>([]);
-  const [products, setProducts] = useState<{ id: number; code: string; name: string; price: number; priceUsd: number }[]>([]);
-  const [exchangeRates, setExchangeRates] = useState<{ id: number; rate: number; date: string }[]>([]);
+  const [suppliers, setSuppliers] = useState<{ id: number; companyName: string; taxWithholdingAgent?: boolean }[]>([]);
+  const [companies, setCompanies] = useState<{ id: number; name: string; isWithholdingAgent?: boolean; withholdingPercentage?: number }[]>([]);
+  const [products, setProducts] = useState<{ id: number; code: string; name: string; price: number; priceUsd: number; taxPercentage?: number }[]>([]);
+  const [exchangeRateDays, setExchangeRateDays] = useState<{ id: number; date: string; rateBcvUsd: number | null; rateParalelo: number | null }[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<PurchaseOrder | null>(null);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const orgCompany = companies[0];
+  const isWithholdingAgent = orgCompany?.isWithholdingAgent ?? false;
+
+  const withholdingAmount = formData.applyWithholding
+    ? formData.ivaAmount * (formData.withholdingPercentage / 100)
+    : 0;
+  const withholdingAmountUsd = formData.applyWithholding
+    ? formData.ivaAmountUsd * (formData.withholdingPercentage / 100)
+    : 0;
+  const totalToPay = formData.amount - withholdingAmount;
+  const totalToPayUsd = formData.amountUsd - withholdingAmountUsd;
 
   const columns: Column<PurchaseOrder>[] = [
     { field: 'id', headerName: t('purchaseOrders.field.id') },
@@ -121,6 +154,14 @@ export default function PurchaseOrdersPage() {
       },
     },
     {
+      field: 'withholdingAmount',
+      headerName: t('purchaseOrders.field.withholdingAmount'),
+      render: (row) => {
+        const wr = row.withholdingRecords?.[0];
+        return wr ? `Bs. -${Number(wr.withheldAmount).toFixed(2)}` : '—';
+      },
+    },
+    {
       field: 'details',
       headerName: t('purchaseOrders.details'),
       render: (row) => {
@@ -144,7 +185,8 @@ export default function PurchaseOrdersPage() {
   useEffect(() => {
     apiClient.get('/suppliers').then((r) => setSuppliers(r.data.data || [])).catch(() => console.warn('Failed to load suppliers'));
     apiClient.get('/products').then((r) => setProducts(r.data.data || [])).catch(() => console.warn('Failed to load products'));
-    apiClient.get('/exchange-rates').then((r) => setExchangeRates(r.data.data || [])).catch(() => console.warn('Failed to load exchange rates'));
+    apiClient.get('/companies').then((r) => setCompanies(r.data.data || [])).catch(() => console.warn('Failed to load companies'));
+    apiClient.get('/exchange-rates').then((r) => setExchangeRateDays(r.data.data || [])).catch(() => console.warn('Failed to load exchange rates'));
   }, []);
 
   const openCreate = () => {
@@ -156,10 +198,19 @@ export default function PurchaseOrdersPage() {
       date: new Date().toISOString().split('T')[0],
       amount: 0,
       amountUsd: 0,
+      baseAmount: 0,
+      baseAmountUsd: 0,
+      ivaAmount: 0,
+      ivaAmountUsd: 0,
       exchangeRate: 0,
       exchangeRateId: undefined,
+      exchangeRateDayId: undefined,
+      manualRate: false,
       paymentMethod: 1,
       status: PurchaseOrderStatus.Draft,
+      applyWithholding: isWithholdingAgent,
+      withholdingPercentage: orgCompany?.withholdingPercentage ?? 75,
+      withholdingProof: '',
       details: [],
     });
     setFormOpen(true);
@@ -170,17 +221,27 @@ export default function PurchaseOrdersPage() {
     setError('');
     try {
       const full = await purchaseOrderService.getById(item.id);
-      const er = exchangeRates.find((r) => r.id === full.exchangeRateId);
+      const er = exchangeRateDays.find((r) => r.id === (full.exchangeRateDayId ?? full.exchangeRateId));
+      const wr = full.withholdingRecords?.[0];
       setFormData({
         idSupplier: full.idSupplier,
         code: full.code ?? '',
         date: full.date ? new Date(full.date).toISOString().split('T')[0] : '',
         amount: full.amount ?? 0,
         amountUsd: full.amountUsd ?? 0,
-        exchangeRate: full.exchangeRate ?? er?.rate ?? 0,
+        baseAmount: full.baseAmount ?? 0,
+        baseAmountUsd: full.baseAmountUsd ?? 0,
+        ivaAmount: full.ivaAmount ?? 0,
+        ivaAmountUsd: full.ivaAmountUsd ?? 0,
+        exchangeRate: full.exchangeRate ?? (er ? (er.rateBcvUsd ?? er.rateParalelo ?? 0) : 0),
         exchangeRateId: full.exchangeRateId,
+        exchangeRateDayId: full.exchangeRateDayId,
+        manualRate: !full.exchangeRateDayId && !full.exchangeRateId && (full.exchangeRate ?? 0) > 0,
         paymentMethod: full.paymentMethod ?? 1,
         status: full.status ?? PurchaseOrderStatus.Draft,
+        applyWithholding: !!wr,
+        withholdingPercentage: wr?.percentage ?? 75,
+        withholdingProof: wr?.withholdingProof ?? '',
         details: (full.details || []).map((d) => ({
           idProduct: d.product?.id ?? d.idProduct,
           productName: d.product?.name ?? '',
@@ -199,9 +260,17 @@ export default function PurchaseOrdersPage() {
   };
 
   const recalcHeaderFromDetails = (details: DetailForm[]) => {
-    const amount = details.reduce((s, d) => s + (d.subtotal || 0), 0);
-    const amountUsd = details.reduce((s, d) => s + (d.subtotalUsd || 0), 0);
-    return { amount, amountUsd };
+    const baseAmount = details.reduce((s, d) => s + (d.subtotal || 0), 0);
+    const baseAmountUsd = details.reduce((s, d) => s + (d.subtotalUsd || 0), 0);
+    const ivaAmount = details.reduce((s, d) => {
+      const p = products.find((pr) => pr.id === d.idProduct);
+      return s + (d.subtotal || 0) * ((p?.taxPercentage ?? 0) / 100);
+    }, 0);
+    const ivaAmountUsd = details.reduce((s, d) => {
+      const p = products.find((pr) => pr.id === d.idProduct);
+      return s + (d.subtotalUsd || 0) * ((p?.taxPercentage ?? 0) / 100);
+    }, 0);
+    return { baseAmount, baseAmountUsd, ivaAmount, ivaAmountUsd, amount: baseAmount + ivaAmount, amountUsd: baseAmountUsd + ivaAmountUsd };
   };
 
   const addDetail = () => {
@@ -242,6 +311,7 @@ export default function PurchaseOrdersPage() {
       detail.unitPrice = Number(value);
       detail.subtotal = detail.quantity * detail.unitPrice;
       if (formData.exchangeRate > 0) {
+        detail.unitPriceUsd = detail.unitPrice / formData.exchangeRate;
         detail.subtotalUsd = detail.subtotal / formData.exchangeRate;
       }
     }
@@ -249,6 +319,10 @@ export default function PurchaseOrdersPage() {
     if (field === 'unitPriceUsd') {
       detail.unitPriceUsd = Number(value);
       detail.subtotalUsd = detail.quantity * detail.unitPriceUsd;
+      if (formData.exchangeRate > 0) {
+        detail.unitPrice = detail.unitPriceUsd * formData.exchangeRate;
+        detail.subtotal = detail.quantity * detail.unitPrice;
+      }
     }
 
     updated[index] = detail;
@@ -279,12 +353,29 @@ export default function PurchaseOrdersPage() {
       setError(t('purchaseOrders.error.save'));
       return;
     }
+    if (formData.applyWithholding && !formData.withholdingProof) {
+      setError(t('purchaseOrders.withholdingRequired'));
+      return;
+    }
     setSubmitting(true);
     try {
-      const data = {
-        ...formData,
+      const data: CreatePurchaseOrderRequest = {
         idSupplier: Number(formData.idSupplier),
-        exchangeRateId: formData.exchangeRateId ? Number(formData.exchangeRateId) : undefined,
+        code: formData.code || undefined,
+        date: formData.date || undefined,
+        amount: formData.amount,
+        amountUsd: formData.amountUsd,
+        baseAmount: formData.baseAmount,
+        baseAmountUsd: formData.baseAmountUsd,
+        ivaAmount: formData.ivaAmount,
+        ivaAmountUsd: formData.ivaAmountUsd,
+        exchangeRate: formData.exchangeRate || undefined,
+        exchangeRateDayId: formData.exchangeRateDayId ? Number(formData.exchangeRateDayId) : undefined,
+        paymentMethod: formData.paymentMethod,
+        status: formData.status,
+        applyWithholding: formData.applyWithholding || undefined,
+        withholdingPercentage: formData.applyWithholding ? formData.withholdingPercentage : undefined,
+        withholdingProof: formData.applyWithholding ? formData.withholdingProof : undefined,
         details: formData.details.map((d) => ({
           idProduct: d.idProduct,
           quantity: d.quantity,
@@ -299,7 +390,7 @@ export default function PurchaseOrdersPage() {
         await purchaseOrderService.update(selectedItem.id, {
           ...data,
           idSupplier: undefined,
-          details: data.details.length > 0 ? data.details : undefined,
+          details: data.details && data.details.length > 0 ? data.details : undefined,
         });
       } else {
         await purchaseOrderService.create(data);
@@ -332,9 +423,23 @@ export default function PurchaseOrdersPage() {
     }
   };
 
-  const currentTransitions = selectedItem ? PURCHASE_ORDER_TRANSITIONS[selectedItem.status as PurchaseOrderStatus] ?? [] : [];
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      const res = await apiClient.post('/uploads/proof', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setFormData({ ...formData, withholdingProof: res.data.data.filename });
+    } catch {
+      setError('Error al subir el comprobante');
+    } finally {
+      setUploading(false);
+    }
+  };
 
-  const exchangeRateValue = exchangeRates.find((r) => r.id === formData.exchangeRateId);
+  const currentTransitions = selectedItem ? PURCHASE_ORDER_TRANSITIONS[selectedItem.status as PurchaseOrderStatus] ?? [] : [];
 
   return (
     <SlideForm
@@ -382,36 +487,110 @@ export default function PurchaseOrdersPage() {
             <Input type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} required />
           </div>
           <div className="space-y-2">
-            <Label>{t('purchaseOrders.field.exchangeRate')}</Label>
-            <Select
-              value={String(formData.exchangeRateId ?? '')}
-              onValueChange={(v) => {
-                const er = exchangeRates.find((r) => r.id === Number(v));
-                const rate = er?.rate ?? 0;
-                const newDetails = formData.details.map((d) => ({
-                  ...d,
-                  subtotalUsd: d.unitPrice > 0 && rate > 0 ? d.subtotal / rate : d.subtotalUsd,
-                }));
-                const newAmountUsd = rate > 0 ? formData.amount / rate : formData.amountUsd;
-                setFormData({
-                  ...formData,
-                  exchangeRateId: Number(v),
-                  exchangeRate: rate,
-                  details: newDetails,
-                  amountUsd: newAmountUsd,
-                });
-              }}
-            >
-              <SelectTrigger><SelectValue placeholder={t('exchangeRates.selectRate')} /></SelectTrigger>
-              <SelectContent>
-                {exchangeRates.map((er) => (
-                  <SelectItem key={er.id} value={String(er.id)}>
-                    {er.date ? new Date(er.date).toLocaleDateString() : '—'} — {er.rate} Bs./USD
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-3">
+              <Label>{t('purchaseOrders.field.exchangeRate')}</Label>
+              <div className="flex items-center gap-2">
+                <Switch checked={formData.manualRate} onCheckedChange={(c) => setFormData({ ...formData, manualRate: c })} />
+                <Label className="text-sm font-normal">{t('purchaseOrders.manualRate')}</Label>
+              </div>
+            </div>
+            {formData.manualRate ? (
+              <Input
+                type="number"
+                step="any"
+                value={formData.exchangeRate || ''}
+                onChange={(e) => {
+                  const rate = parseFloat(e.target.value) || 0;
+                  const newDetails = formData.details.map((d) => ({
+                    ...d,
+                    subtotalUsd: d.unitPrice > 0 && rate > 0 ? d.subtotal / rate : d.subtotalUsd,
+                  }));
+                  const newAmountUsd = rate > 0 ? formData.amount / rate : formData.amountUsd;
+                  setFormData({ ...formData, exchangeRate: rate, exchangeRateId: undefined, details: newDetails, amountUsd: newAmountUsd });
+                }}
+              />
+            ) : (
+              <Select
+                value={String(formData.exchangeRateDayId ?? formData.exchangeRateId ?? '')}
+                onValueChange={(v) => {
+                  const day = exchangeRateDays.find((r) => r.id === Number(v));
+                  const rate = day ? (day.rateBcvUsd ?? day.rateParalelo ?? 0) : 0;
+                  const newDetails = formData.details.map((d) => ({
+                    ...d,
+                    subtotalUsd: d.unitPrice > 0 && rate > 0 ? d.subtotal / rate : d.subtotalUsd,
+                  }));
+                  const newAmountUsd = rate > 0 ? formData.amount / rate : formData.amountUsd;
+                  setFormData({
+                    ...formData,
+                    exchangeRateDayId: Number(v),
+                    exchangeRateId: undefined,
+                    exchangeRate: rate,
+                    details: newDetails,
+                    amountUsd: newAmountUsd,
+                  });
+                }}
+              >
+                <SelectTrigger><SelectValue placeholder={t('exchangeRates.selectRate')} /></SelectTrigger>
+                <SelectContent>
+                  {exchangeRateDays.map((d) => {
+                    const displayRate = d.rateBcvUsd ?? d.rateParalelo;
+                    return (
+                      <SelectItem key={d.id} value={String(d.id)}>
+                        {d.date ? new Date(d.date).toLocaleDateString() : '—'} — {displayRate ? `${displayRate} Bs./USD` : '—'}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            )}
           </div>
+
+          {isWithholdingAgent && (
+            <div className="space-y-3 rounded border p-3 bg-muted/20">
+              <div className="flex items-center gap-2">
+                <Switch checked={formData.applyWithholding} onCheckedChange={(c) => setFormData({ ...formData, applyWithholding: c })} />
+                <Label>{t('purchaseOrders.applyWithholding')}</Label>
+              </div>
+              {formData.applyWithholding && (
+                <>
+                  <div className="space-y-2">
+                    <Label>{t('purchaseOrders.withholdingPercentage')}</Label>
+                    <Select value={String(formData.withholdingPercentage)} onValueChange={(v) => setFormData({ ...formData, withholdingPercentage: Number(v) })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="75">{t('purchaseOrders.withholding75')}</SelectItem>
+                        <SelectItem value="100">{t('purchaseOrders.withholding100')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t('purchaseOrders.withholdingProof')}</Label>
+                    {formData.withholdingProof ? (
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="text-muted-foreground truncate flex-1">{formData.withholdingProof}</span>
+                        <Button variant="ghost" size="icon" onClick={() => setFormData({ ...formData, withholdingProof: '' })}>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" disabled={uploading} className="relative">
+                          {uploading ? t('common.saving') : (
+                            <>
+                              <Upload className="mr-2 h-4 w-4" />
+                              {t('purchaseOrders.withholdingProof')}
+                            </>
+                          )}
+                          <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileUpload} />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
           <div className="flex items-center justify-between">
             <Label>{t('purchaseOrders.details')}</Label>
             <Button variant="outline" size="sm" onClick={addDetail}>
@@ -461,12 +640,31 @@ export default function PurchaseOrdersPage() {
             </div>
           ))}
 
-          <div className="flex items-center justify-between border-t pt-4">
-            <span className="text-sm font-semibold">{t('purchaseOrders.field.amount')}</span>
-            <div className="text-right">
-              <div className="text-lg font-bold">Bs. {(formData.amount ?? 0).toFixed(2)}</div>
-              <div className="text-sm text-muted-foreground">USD {(formData.amountUsd ?? 0).toFixed(2)}</div>
+          <div className="border-t pt-4 space-y-1 text-sm">
+            <div className="flex justify-between">
+              <span>{t('purchaseOrders.baseAmount')}</span>
+              <span>Bs. {formData.baseAmount.toFixed(2)} / USD {formData.baseAmountUsd.toFixed(2)}</span>
             </div>
+            <div className="flex justify-between text-muted-foreground">
+              <span>{t('purchaseOrders.ivaAmount')}</span>
+              <span>Bs. {formData.ivaAmount.toFixed(2)} / USD {formData.ivaAmountUsd.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between font-semibold">
+              <span>{t('purchaseOrders.field.amount')}</span>
+              <span>Bs. {formData.amount.toFixed(2)} / USD {formData.amountUsd.toFixed(2)}</span>
+            </div>
+            {formData.applyWithholding && (
+              <>
+                <div className="flex justify-between text-destructive">
+                  <span>{t('purchaseOrders.withholdingAmount')} ({formData.withholdingPercentage}%)</span>
+                  <span>-Bs. {withholdingAmount.toFixed(2)} / -USD {withholdingAmountUsd.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between font-bold text-lg border-t pt-1">
+                  <span>{t('purchaseOrders.totalToPay')}</span>
+                  <span>Bs. {totalToPay.toFixed(2)} / USD {totalToPayUsd.toFixed(2)}</span>
+                </div>
+              </>
+            )}
           </div>
 
           <Button onClick={handleSave} disabled={submitting} className="w-full">

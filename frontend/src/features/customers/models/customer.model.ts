@@ -7,6 +7,9 @@ export interface Customer {
   phoneNumber?: string | null;
   email?: string | null;
   available: boolean;
+  isWithholdingAgent: boolean;
+  withholdingPercentage?: number | null;
+  withholdingProof?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -18,6 +21,9 @@ export interface CreateCustomerRequest {
   address?: string;
   phoneNumber?: string;
   email?: string;
+  isWithholdingAgent?: boolean;
+  withholdingPercentage?: number;
+  withholdingProof?: string;
 }
 
 export interface UpdateCustomerRequest {
@@ -28,4 +34,7 @@ export interface UpdateCustomerRequest {
   phoneNumber?: string;
   email?: string;
   available?: boolean;
+  isWithholdingAgent?: boolean;
+  withholdingPercentage?: number;
+  withholdingProof?: string;
 }

@@ -171,7 +171,10 @@
       "address": "Dirección",
       "phoneNumber": "Teléfono",
       "email": "Correo",
-      "available": "Disponible"
+      "available": "Disponible",
+      "isWithholdingAgent": "Agente de retención",
+      "withholdingPercentage": "Porcentaje de retención",
+      "withholdingProof": "Comprobante de Retención"
     },
     "created": "Cliente creado exitosamente",
     "updated": "Cliente actualizado exitosamente",
@@ -226,7 +229,9 @@
       "address": "Dirección",
       "phoneNumber": "Teléfono",
       "email": "Correo",
-      "website": "Sitio Web"
+      "available": "Disponible",
+      "isWithholdingAgent": "Agente de retención",
+      "withholdingPercentage": "Porcentaje de retención"
     },
     "created": "Empresa creada exitosamente",
     "updated": "Empresa actualizada exitosamente",
@@ -361,7 +366,7 @@
       "date": "Fecha",
       "amount": "Monto (Bs.)",
       "amountUsd": "Monto (USD)",
-      "exchangeRate": "Tasa BCV",
+      "exchangeRate": "Tasa de Cambio",
       "paymentMethod": "Método Pago",
       "status": "Estado",
       "product": "Producto",
@@ -370,13 +375,30 @@
       "unitPriceUsd": "Precio USD",
       "subtotal": "Subtotal",
       "subtotalUsd": "Subtotal USD",
-      "observation": "Observación"
+      "observation": "Observación",
+      "baseAmount": "Base Imponible (Bs.)",
+      "baseAmountUsd": "Base Imponible (USD)",
+      "ivaAmount": "IVA (Bs.)",
+      "ivaAmountUsd": "IVA (USD)",
+      "withholdingAmount": "Retención (Bs.)",
+      "withholdingAmountUsd": "Retención (USD)"
     },
     "error": {
       "save": "Error al guardar pedido",
       "load": "Error al cargar pedidos",
       "delete": "Error al eliminar pedido"
-    }
+    },
+    "manualRate": "Tasa manual",
+    "applyWithholding": "¿Aplicar Retención de IVA?",
+    "withholdingPercentage": "Porcentaje de Retención",
+    "withholding75": "75%",
+    "withholding100": "100%",
+    "withholdingProof": "Adjuntar Comprobante de Retención",
+    "withholdingRequired": "Para registrar una compra con retención, es obligatorio adjuntar el soporte digital del comprobante.",
+    "baseAmount": "Base Imponible",
+    "ivaAmount": "IVA",
+    "withholdingAmount": "Retención",
+    "totalToPay": "Total a Pagar"
   },
   "exchangeRates": {
     "title": "Tasas de Cambio",
@@ -392,6 +414,7 @@
       "date": "Fecha",
       "source": "Fuente"
     },
+    "selectRate": "Seleccionar tasa...",
     "sync": "Sincronizar",
     "synced": "Tasas sincronizadas exitosamente",
     "created": "Tasa creada exitosamente",
@@ -484,6 +507,12 @@
     },
     "toolbar": {
       "undo": "Deshacer"
+    },
+    "withholding": {
+      "agentBadge": "Agente Ret.",
+      "rate": "Retención IVA ({{percentage}}%)",
+      "netToCollect": "Neto a cobrar",
+      "invoiceTotal": "Total factura"
     },
     "customer": {
       "search": "Buscar cliente...",

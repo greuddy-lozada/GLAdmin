@@ -15,8 +15,13 @@ export interface PurchaseOrder {
   date?: string;
   amount?: number;
   amountUsd?: number;
+  baseAmount?: number;
+  baseAmountUsd?: number;
+  ivaAmount?: number;
+  ivaAmountUsd?: number;
   exchangeRate?: number;
   exchangeRateId?: number;
+  exchangeRateDayId?: number;
   officialExchangeRate?: number;
   officialExchangeRateId?: number;
   paymentMethod?: number;
@@ -24,8 +29,9 @@ export interface PurchaseOrder {
   createdAt: string;
   updatedAt: string;
   version: number;
-  supplier?: { id: number; companyName: string };
-  details?: (PurchaseOrderDetail & { id: number; product?: { id: number; code: string; name: string } })[];
+  supplier?: { id: number; companyName: string; taxWithholdingAgent?: boolean };
+  details?: (PurchaseOrderDetail & { id: number; product?: { id: number; code: string; name: string; taxPercentage?: number } })[];
+  withholdingRecords?: { id: number; percentage: number; withheldAmount: number; withheldAmountUsd?: number; withholdingProof?: string }[];
 }
 
 export interface CreatePurchaseOrderRequest {
@@ -34,12 +40,19 @@ export interface CreatePurchaseOrderRequest {
   date?: string;
   amount?: number;
   amountUsd?: number;
+  baseAmount?: number;
+  baseAmountUsd?: number;
+  ivaAmount?: number;
+  ivaAmountUsd?: number;
   exchangeRate?: number;
-  exchangeRateId?: number;
+  exchangeRateDayId?: number;
   officialExchangeRate?: number;
   officialExchangeRateId?: number;
   paymentMethod?: number;
   status?: number;
+  applyWithholding?: boolean;
+  withholdingPercentage?: number;
+  withholdingProof?: string;
   details?: {
     idProduct: number;
     quantity?: number;
@@ -57,12 +70,19 @@ export interface UpdatePurchaseOrderRequest {
   date?: string;
   amount?: number;
   amountUsd?: number;
+  baseAmount?: number;
+  baseAmountUsd?: number;
+  ivaAmount?: number;
+  ivaAmountUsd?: number;
   exchangeRate?: number;
-  exchangeRateId?: number;
+  exchangeRateDayId?: number;
   officialExchangeRate?: number;
   officialExchangeRateId?: number;
   paymentMethod?: number;
   status?: number;
+  applyWithholding?: boolean;
+  withholdingPercentage?: number;
+  withholdingProof?: string;
   details?: {
     idProduct: number;
     quantity?: number;

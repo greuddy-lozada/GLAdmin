@@ -19,6 +19,9 @@ export interface LocalCustomer {
   lastName: string;
   taxId?: string;
   phone?: string;
+  isWithholdingAgent: boolean;
+  withholdingPercentage?: number;
+  withholdingProof?: string;
   updatedAt: string;
 }
 
@@ -58,7 +61,9 @@ export interface LocalSupplier {
 export interface LocalCompany {
   id: number;
   organizationId: number;
-  name: string;
+  companyName: string;
+  isWithholdingAgent?: boolean;
+  withholdingPercentage?: number;
   updatedAt: string;
 }
 

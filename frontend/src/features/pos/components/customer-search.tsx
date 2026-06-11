@@ -8,7 +8,7 @@ import { localDb, type LocalCustomer } from '@/lib/sync/db';
 
 interface CustomerSearchProps {
   value?: number;
-  onChange: (customerId: number | undefined, customerName?: string, customerTaxId?: string) => void;
+  onChange: (customerId: number | undefined, customerName?: string, customerTaxId?: string, withholdingPercentage?: number | null) => void;
 }
 
 export const CustomerSearch = forwardRef<HTMLInputElement, CustomerSearchProps>(
@@ -62,14 +62,14 @@ export const CustomerSearch = forwardRef<HTMLInputElement, CustomerSearchProps>(
 
     const handleSelect = (customer: LocalCustomer) => {
       setSelected(customer);
-      onChange(customer.id, `${customer.firstName} ${customer.lastName}`, customer.taxId);
+      onChange(customer.id, `${customer.firstName} ${customer.lastName}`, customer.taxId, customer.isWithholdingAgent ? customer.withholdingPercentage : null);
       setQuery('');
       setOpen(false);
     };
 
     const handleClear = () => {
       setSelected(null);
-      onChange(undefined);
+      onChange(undefined, undefined, undefined, null);
     };
 
     return (
@@ -78,6 +78,11 @@ export const CustomerSearch = forwardRef<HTMLInputElement, CustomerSearchProps>(
           <div className="flex items-center gap-2 bg-primary/10 rounded-md px-3 py-2">
             <span className="text-sm font-medium">{selected.firstName} {selected.lastName}</span>
             {selected.taxId && <span className="text-xs text-muted-foreground">({selected.taxId})</span>}
+            {selected.isWithholdingAgent && (
+              <span className="text-[10px] font-semibold text-primary border border-primary rounded px-1 leading-none">
+                {t('pos.withholding.agentBadge')}
+              </span>
+            )}
             <button type="button" onClick={handleClear} className="ml-auto text-muted-foreground hover:text-foreground">
               <X className="h-4 w-4" />
             </button>

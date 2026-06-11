@@ -45,3 +45,4 @@ coverage/
 specs/
 **/specs/
 .superpowers/
+.continue/

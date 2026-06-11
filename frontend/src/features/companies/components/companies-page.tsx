@@ -5,6 +5,8 @@ import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DataTable, Column } from '@/components/ui/data-table';
 import { SlideForm } from '@/components/ui/slide-form';
@@ -34,6 +36,8 @@ export default function CompaniesPage() {
     address: '',
     phoneNumber: '',
     email: '',
+    isWithholdingAgent: false,
+    withholdingPercentage: 75,
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -50,7 +54,7 @@ export default function CompaniesPage() {
   const openCreate = () => {
     setSelectedCompany(null);
     setError('');
-    setFormData({ taxId: '', name: '', address: '', phoneNumber: '', email: '' });
+    setFormData({ taxId: '', name: '', address: '', phoneNumber: '', email: '', isWithholdingAgent: false, withholdingPercentage: 75 });
     setFormOpen(true);
   };
 
@@ -64,6 +68,8 @@ export default function CompaniesPage() {
       phoneNumber: company.phoneNumber,
       email: company.email,
       website: company.website ?? '',
+      isWithholdingAgent: company.isWithholdingAgent ?? false,
+      withholdingPercentage: company.withholdingPercentage ?? 75,
     });
     setFormOpen(true);
   };
@@ -80,6 +86,8 @@ export default function CompaniesPage() {
           phoneNumber: formData.phoneNumber,
           email: formData.email,
           website: formData.website || null,
+          isWithholdingAgent: formData.isWithholdingAgent,
+          withholdingPercentage: formData.isWithholdingAgent ? formData.withholdingPercentage : undefined,
         };
         await companyService.update(selectedCompany.id, data);
         sileo.success({ description: t('companies.updated') });
@@ -143,6 +151,22 @@ export default function CompaniesPage() {
             <Label>{t('companies.field.website')}</Label>
             <Input value={formData.website ?? ''} onChange={(e) => setFormData({ ...formData, website: e.target.value })} />
           </div>
+          <div className="flex items-center gap-2">
+            <Switch id="co-is-withholding-agent" checked={formData.isWithholdingAgent ?? false} onCheckedChange={(c) => setFormData({ ...formData, isWithholdingAgent: c })} />
+            <Label htmlFor="co-is-withholding-agent">{t('companies.field.isWithholdingAgent')}</Label>
+          </div>
+          {formData.isWithholdingAgent && (
+            <div className="space-y-2">
+              <Label>{t('companies.field.withholdingPercentage')}</Label>
+              <Select value={String(formData.withholdingPercentage ?? 75)} onValueChange={(v) => setFormData({ ...formData, withholdingPercentage: Number(v) })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="75">75%</SelectItem>
+                  <SelectItem value="100">100%</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <Button onClick={handleSave} disabled={submitting} className="w-full">
             {submitting ? t('common.saving') : t('common.save')}
           </Button>

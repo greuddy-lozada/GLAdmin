@@ -75,6 +75,9 @@ export class SyncService {
         lastName: true,
         idCardNumber: true,
         phoneNumber: true,
+        isWithholdingAgent: true,
+        withholdingPercentage: true,
+        withholdingProof: true,
         updatedAt: true,
       },
     });
@@ -112,7 +115,7 @@ export class SyncService {
 
     const companies = await this.prisma.company.findMany({
       where: { organizationId: orgId, updatedAt: { gt: sinceDate } },
-      select: { id: true, name: true, updatedAt: true },
+      select: { id: true, name: true, isWithholdingAgent: true, withholdingPercentage: true, updatedAt: true },
     });
 
     const taxes = await this.prisma.tax.findMany({

@@ -27,12 +27,15 @@ export default function PosPage() {
     cart, products, loadProducts,
     addToCart, removeFromCart, updateQuantity, clearCart,
     total, totalUsd, totalTax, totalTaxUsd,
+    withholdingPercentage, withholdingAmount, withholdingAmountUsd,
+    netToCollect, netToCollectUsd,
     parkCart, resumeCart, parkRefresh,
     undoLastItem, canUndo,
   } = usePos();
 
   const customerId = usePosStore(s => s.customerId);
   const customerName = usePosStore(s => s.customerName);
+  const customerTaxId = usePosStore(s => s.customerTaxId);
   const exchangeRate = usePosStore(s => s.exchangeRate);
   const setCustomer = usePosStore(s => s.setCustomer);
   const clearCustomer = usePosStore(s => s.clearCustomer);
@@ -90,7 +93,7 @@ export default function PosPage() {
 
   const handlePayment = async (paymentMethod: PaymentMethod) => {
     const saleCode = `SALE-${Date.now()}`;
-    await createSale(cart, total, totalUsd, exchangeRate, paymentMethod, customerId);
+    await createSale(cart, total, totalUsd, exchangeRate, paymentMethod, customerId, withholdingPercentage, withholdingAmount, withholdingAmountUsd);
     setReceipt({ open: true, code: saleCode, itemCount: cart.length, total, totalUsd });
     clearCart();
     clearCustomer();
@@ -101,8 +104,8 @@ export default function PosPage() {
     resumeCart(order);
   };
 
-  const handleQuickAddCustomer = (customer: { id: number; name: string; taxId: string }) => {
-    setCustomer(customer.id, customer.name);
+  const handleQuickAddCustomer = (customer: { id: number; name: string; taxId: string; isWithholdingAgent: boolean; withholdingPercentage?: number | null; withholdingProof?: string }) => {
+    setCustomer(customer.id, customer.name, customer.taxId, customer.isWithholdingAgent ? customer.withholdingPercentage ?? null : null);
   };
 
   useEffect(() => {
@@ -130,14 +133,14 @@ export default function PosPage() {
           <CustomerSearch
             ref={customerSearchRef}
             value={customerId}
-            onChange={(id, name) => setCustomer(id, name)}
+            onChange={(id, name, taxId, withholdingPct) => setCustomer(id, name, taxId, withholdingPct)}
           />
           <QuickAddCustomer key={quickAddKey} open={quickAddOpen} onOpenChange={setQuickAddOpen} onCreated={handleQuickAddCustomer} />
         </div>
 
         <DetailTable ref={productSearchRef} items={cart} onAddToCart={addToCart} onUpdateQuantity={updateQuantity} onRemove={removeFromCart} />
 
-        <SaleSummary total={total} totalUsd={totalUsd} totalTax={totalTax} totalTaxUsd={totalTaxUsd} exchangeRate={exchangeRate} />
+        <SaleSummary total={total} totalUsd={totalUsd} totalTax={totalTax} totalTaxUsd={totalTaxUsd} exchangeRate={exchangeRate} withholdingPercentage={withholdingPercentage} withholdingAmount={withholdingAmount} withholdingAmountUsd={withholdingAmountUsd} netToCollect={netToCollect} netToCollectUsd={netToCollectUsd} />
 
         <div className="mt-4">
           <Button className="w-full" size="lg" onClick={() => setPaymentOpen(true)} disabled={cart.length === 0}>
@@ -150,7 +153,7 @@ export default function PosPage() {
         <SaleHistory />
       </Suspense>
 
-      <PaymentModal open={paymentOpen} onOpenChange={setPaymentOpen} total={total} totalUsd={totalUsd} onPayment={handlePayment} />
+      <PaymentModal open={paymentOpen} onOpenChange={setPaymentOpen} total={total} totalUsd={totalUsd} withholdingAmount={withholdingAmount} withholdingAmountUsd={withholdingAmountUsd} netToCollect={netToCollect} netToCollectUsd={netToCollectUsd} onPayment={handlePayment} />
       <ReceiptDialog open={receipt.open} onClose={() => setReceipt(prev => ({ ...prev, open: false }))} saleCode={receipt.code} itemCount={receipt.itemCount} total={receipt.total} totalUsd={receipt.totalUsd} />
     </div>
   );

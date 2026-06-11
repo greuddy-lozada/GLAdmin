@@ -45,6 +45,9 @@ export interface CreateSaleRequest {
   items: SaleItem[];
   totalTax?: number;
   totalTaxUsd?: number;
+  withholdingPercentage?: number;
+  withholdingAmount?: number;
+  withholdingAmountUsd?: number;
 }
 
 export interface ParkedOrder {

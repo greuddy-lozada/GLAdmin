@@ -6,6 +6,7 @@ import type { CartItem } from '../models/pos.model';
 export function usePos() {
   const cart = usePosStore(s => s.cart);
   const exchangeRate = usePosStore(s => s.exchangeRate);
+  const withholdingPercentage = usePosStore(s => s.withholdingPercentage);
 
   const addToCartAction = usePosStore(s => s.addToCart);
   const removeFromCart = usePosStore(s => s.removeFromCart);
@@ -43,6 +44,17 @@ export function usePos() {
   const totalUsd = useMemo(() => cart.reduce((sum, item) => sum + item.subtotalUsd, 0), [cart]);
   const totalTax = useMemo(() => cart.reduce((sum, item) => sum + (item.taxAmount || 0), 0), [cart]);
   const totalTaxUsd = useMemo(() => cart.reduce((sum, item) => sum + (item.taxAmountUsd || 0), 0), [cart]);
+
+  const withholdingAmount = useMemo(
+    () => withholdingPercentage != null && totalTax > 0 ? totalTax * (withholdingPercentage / 100) : 0,
+    [totalTax, withholdingPercentage],
+  );
+  const withholdingAmountUsd = useMemo(
+    () => withholdingPercentage != null && totalTaxUsd > 0 ? totalTaxUsd * (withholdingPercentage / 100) : 0,
+    [totalTaxUsd, withholdingPercentage],
+  );
+  const netToCollect = useMemo(() => (total + totalTax) - withholdingAmount, [total, totalTax, withholdingAmount]);
+  const netToCollectUsd = useMemo(() => (totalUsd + totalTaxUsd) - withholdingAmountUsd, [totalUsd, totalTaxUsd, withholdingAmountUsd]);
 
   const lastAddedProductId = usePosStore(s => s.lastAddedProductId);
   const canUndo = lastAddedProductId !== null && cart.some(i => i.productId === lastAddedProductId);
@@ -115,6 +127,11 @@ export function usePos() {
     totalUsd,
     totalTax,
     totalTaxUsd,
+    withholdingPercentage,
+    withholdingAmount,
+    withholdingAmountUsd,
+    netToCollect,
+    netToCollectUsd,
     parkCart,
     resumeCart,
     parkRefresh,

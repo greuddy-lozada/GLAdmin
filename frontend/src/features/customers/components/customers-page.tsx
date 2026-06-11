@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, BadgeCheck, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DataTable, Column } from '@/components/ui/data-table';
 import { SlideForm } from '@/components/ui/slide-form';
@@ -18,6 +19,7 @@ import { sileo } from 'sileo';
 import { RoleGuard } from '@/components/ui/role-guard';
 import { useAuth } from '@/providers/auth-provider';
 import { hasMinLevel } from '@/lib/auth/roles';
+import apiClient from '@/lib/api/api-client';
 
 export default function CustomersPage() {
   const { customers, loading, loadCustomers } = useCustomers();
@@ -36,8 +38,12 @@ export default function CustomersPage() {
     address: '',
     phoneNumber: '',
     email: '',
+    isWithholdingAgent: false,
+    withholdingPercentage: 75,
+    withholdingProof: '',
   });
   const [submitting, setSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<Customer | null>(null);
 
@@ -53,12 +59,19 @@ export default function CustomersPage() {
       headerName: t('customers.field.available'),
       render: (row) => (row.available ? t('common.yes') : t('common.no')),
     },
+    {
+      field: 'isWithholdingAgent',
+      headerName: t('customers.field.isWithholdingAgent'),
+      render: (row) => row.isWithholdingAgent
+        ? <span className="inline-flex items-center gap-1 text-xs font-medium text-primary"><BadgeCheck className="h-3.5 w-3.5" />{t('common.yes')}</span>
+        : t('common.no'),
+    },
   ];
 
   const openCreate = () => {
     setSelectedCustomer(null);
     setError('');
-    setFormData({ idCardNumber: '', firstName: '', lastName: '', address: '', phoneNumber: '', email: '' });
+    setFormData({ idCardNumber: '', firstName: '', lastName: '', address: '', phoneNumber: '', email: '', isWithholdingAgent: false, withholdingPercentage: 75, withholdingProof: '' });
     setFormOpen(true);
   };
 
@@ -73,6 +86,9 @@ export default function CustomersPage() {
       phoneNumber: customer.phoneNumber || '',
       email: customer.email || '',
       available: customer.available,
+      isWithholdingAgent: customer.isWithholdingAgent,
+      withholdingPercentage: customer.withholdingPercentage ?? 75,
+      withholdingProof: customer.withholdingProof ?? '',
     });
     setFormOpen(true);
   };
@@ -90,11 +106,17 @@ export default function CustomersPage() {
           phoneNumber: formData.phoneNumber || undefined,
           email: formData.email || undefined,
           available: formData.available,
+          isWithholdingAgent: formData.isWithholdingAgent,
+          withholdingPercentage: formData.isWithholdingAgent ? formData.withholdingPercentage : undefined,
+          withholdingProof: formData.withholdingProof || undefined,
         };
         await customerService.update(selectedCustomer.id, data);
         sileo.success({ description: t('customers.updated') });
       } else {
-        await customerService.create(formData);
+        await customerService.create({
+          ...formData,
+          withholdingProof: formData.withholdingProof || undefined,
+        });
         sileo.success({ description: t('customers.created') });
       }
       await loadCustomers();
@@ -119,6 +141,22 @@ export default function CustomersPage() {
       setError(t('customers.error.delete'));
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      const res = await apiClient.post('/uploads/proof', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setFormData({ ...formData, withholdingProof: res.data.data.filename });
+    } catch {
+      setError('Error al subir el comprobante');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -157,6 +195,47 @@ export default function CustomersPage() {
             <div className="flex items-center gap-2">
               <Switch checked={formData.available ?? true} onCheckedChange={(c) => setFormData({ ...formData, available: c })} />
               <Label>{t('customers.field.available')}</Label>
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <Switch id="is-withholding-agent" checked={formData.isWithholdingAgent ?? false} onCheckedChange={(c) => setFormData({ ...formData, isWithholdingAgent: c })} />
+            <Label htmlFor="is-withholding-agent">{t('customers.field.isWithholdingAgent')}</Label>
+          </div>
+          {formData.isWithholdingAgent && (
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Label>{t('customers.field.withholdingPercentage')}</Label>
+                <Select value={String(formData.withholdingPercentage ?? 75)} onValueChange={(v) => setFormData({ ...formData, withholdingPercentage: Number(v) })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="75">75%</SelectItem>
+                    <SelectItem value="100">100%</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>{t('customers.field.withholdingProof')}</Label>
+                {formData.withholdingProof ? (
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-muted-foreground truncate flex-1">{formData.withholdingProof}</span>
+                    <Button variant="ghost" size="icon" onClick={() => setFormData({ ...formData, withholdingProof: '' })}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" disabled={uploading} className="relative">
+                      {uploading ? t('common.saving') : (
+                        <>
+                          <Upload className="mr-2 h-4 w-4" />
+                          {t('customers.field.withholdingProof')}
+                        </>
+                      )}
+                      <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileUpload} />
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
           )}
           <Button onClick={handleSave} disabled={submitting} className="w-full">

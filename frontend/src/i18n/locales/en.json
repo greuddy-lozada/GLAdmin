@@ -171,7 +171,10 @@
       "address": "Address",
       "phoneNumber": "Phone",
       "email": "Email",
-      "available": "Available"
+      "available": "Available",
+      "isWithholdingAgent": "Withholding Agent",
+      "withholdingPercentage": "Withholding Percentage",
+      "withholdingProof": "Withholding Receipt"
     },
     "created": "Customer created successfully",
     "updated": "Customer updated successfully",
@@ -226,7 +229,9 @@
       "address": "Address",
       "phoneNumber": "Phone",
       "email": "Email",
-      "website": "Website"
+      "available": "Available",
+      "isWithholdingAgent": "Withholding Agent",
+      "withholdingPercentage": "Withholding Percentage"
     },
     "created": "Company created successfully",
     "updated": "Company updated successfully",
@@ -361,7 +366,7 @@
       "date": "Date",
       "amount": "Amount (Bs.)",
       "amountUsd": "Amount (USD)",
-      "exchangeRate": "BCV Rate",
+      "exchangeRate": "Exchange Rate",
       "paymentMethod": "Payment Method",
       "status": "Status",
       "product": "Product",
@@ -370,13 +375,30 @@
       "unitPriceUsd": "Unit Price (USD)",
       "subtotal": "Subtotal",
       "subtotalUsd": "Subtotal (USD)",
-      "observation": "Notes"
+      "observation": "Notes",
+      "baseAmount": "Taxable Base (Bs.)",
+      "baseAmountUsd": "Taxable Base (USD)",
+      "ivaAmount": "IVA (Bs.)",
+      "ivaAmountUsd": "IVA (USD)",
+      "withholdingAmount": "Withholding (Bs.)",
+      "withholdingAmountUsd": "Withholding (USD)"
     },
     "error": {
       "save": "Error saving order",
       "load": "Error loading orders",
       "delete": "Error deleting order"
-    }
+    },
+    "manualRate": "Manual rate",
+    "applyWithholding": "Apply IVA Withholding?",
+    "withholdingPercentage": "Withholding Percentage",
+    "withholding75": "75%",
+    "withholding100": "100%",
+    "withholdingProof": "Attach Withholding Receipt",
+    "withholdingRequired": "To register a purchase with withholding, you must attach the digital withholding receipt.",
+    "baseAmount": "Taxable Base",
+    "ivaAmount": "IVA",
+    "withholdingAmount": "Withholding",
+    "totalToPay": "Total to Pay"
   },
   "exchangeRates": {
     "title": "Exchange Rates",
@@ -392,6 +414,7 @@
       "date": "Date",
       "source": "Source"
     },
+    "selectRate": "Select rate...",
     "sync": "Sync",
     "synced": "Rates synced successfully",
     "created": "Rate created successfully",
@@ -484,6 +507,12 @@
     },
     "toolbar": {
       "undo": "Undo"
+    },
+    "withholding": {
+      "agentBadge": "W/H Agent",
+      "rate": "VAT Withholding ({{percentage}}%)",
+      "netToCollect": "Net to collect",
+      "invoiceTotal": "Invoice total"
     },
     "customer": {
       "search": "Search customer...",

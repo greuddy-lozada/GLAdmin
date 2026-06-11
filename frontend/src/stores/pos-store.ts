@@ -10,6 +10,8 @@ interface PosState {
   cart: CartItem[];
   customerId?: number;
   customerName?: string;
+  customerTaxId?: string;
+  withholdingPercentage: number | null;
   lastAddedProductId: number | null;
   exchangeRate: number;
 
@@ -19,7 +21,7 @@ interface PosState {
   clearCart: () => void;
   undoLastItem: () => void;
   setCart: (items: CartItem[]) => void;
-  setCustomer: (id?: number, name?: string) => void;
+  setCustomer: (id?: number, name?: string, taxId?: string, withholdingPercentage?: number | null) => void;
   clearCustomer: () => void;
   setExchangeRate: (rate: number) => void;
 }
@@ -30,6 +32,8 @@ export const usePosStore = create<PosState>()(
       cart: [],
       customerId: undefined,
       customerName: undefined,
+      customerTaxId: undefined,
+      withholdingPercentage: null,
       lastAddedProductId: null,
       exchangeRate: 0,
 
@@ -156,9 +160,19 @@ export const usePosStore = create<PosState>()(
 
       setCart: (items) => set({ cart: items }),
 
-      setCustomer: (id, name) => set({ customerId: id, customerName: name }),
+      setCustomer: (id, name, taxId, withholdingPct) => set({
+        customerId: id,
+        customerName: name,
+        customerTaxId: taxId,
+        withholdingPercentage: withholdingPct ?? null,
+      }),
 
-      clearCustomer: () => set({ customerId: undefined, customerName: undefined }),
+      clearCustomer: () => set({
+        customerId: undefined,
+        customerName: undefined,
+        customerTaxId: undefined,
+        withholdingPercentage: null,
+      }),
 
       setExchangeRate: (rate) => set({ exchangeRate: rate }),
     }),
@@ -168,6 +182,8 @@ export const usePosStore = create<PosState>()(
         cart: state.cart,
         customerId: state.customerId,
         customerName: state.customerName,
+        customerTaxId: state.customerTaxId,
+        withholdingPercentage: state.withholdingPercentage,
         lastAddedProductId: state.lastAddedProductId,
         exchangeRate: state.exchangeRate,
       }),

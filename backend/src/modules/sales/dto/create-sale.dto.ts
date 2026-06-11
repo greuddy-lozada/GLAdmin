@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsInt, IsNumber, IsDateString, ValidateNested, IsArray } from 'class-validator';
+import { IsString, IsOptional, IsInt, IsNumber, IsDateString, ValidateNested, IsArray, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateSaleItemDto {
@@ -19,6 +19,26 @@ export class CreateSaleItemDto {
 
   @IsNumber()
   subtotalUsd: number;
+
+  @IsOptional()
+  @IsString()
+  taxName?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  taxPercentage?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  taxAmount?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  taxAmountUsd?: number;
 
   @IsOptional()
   @IsString()
@@ -50,6 +70,32 @@ export class CreateSaleDto {
   @IsOptional()
   @IsInt()
   idCustomer?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  totalTax?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  totalTaxUsd?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  withholdingPercentage?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  withholdingAmount?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  withholdingAmountUsd?: number;
 
   @IsArray()
   @ValidateNested({ each: true })

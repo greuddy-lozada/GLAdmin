@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsNumber, Min, Max } from 'class-validator';
 
 export class CreateCustomerDto {
   @IsString()
@@ -25,4 +25,18 @@ export class CreateCustomerDto {
   @IsOptional()
   @IsBoolean()
   available?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  isWithholdingAgent?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  withholdingPercentage?: number;
+
+  @IsOptional()
+  @IsString()
+  withholdingProof?: string;
 }

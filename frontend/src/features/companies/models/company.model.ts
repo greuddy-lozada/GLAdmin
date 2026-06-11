@@ -6,6 +6,8 @@ export interface Company {
   phoneNumber: string;
   email: string;
   website?: string | null;
+  isWithholdingAgent: boolean;
+  withholdingPercentage?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -17,6 +19,8 @@ export interface CreateCompanyRequest {
   phoneNumber: string;
   email: string;
   website?: string | null;
+  isWithholdingAgent?: boolean;
+  withholdingPercentage?: number;
 }
 
 export interface UpdateCompanyRequest {
@@ -26,4 +30,6 @@ export interface UpdateCompanyRequest {
   phoneNumber?: string;
   email?: string;
   website?: string | null;
+  isWithholdingAgent?: boolean;
+  withholdingPercentage?: number;
 }

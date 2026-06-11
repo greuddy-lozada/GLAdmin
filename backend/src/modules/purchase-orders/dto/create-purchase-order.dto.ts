@@ -8,6 +8,8 @@ import {
   IsInt,
   IsPositive,
   Min,
+  IsBoolean,
+  IsIn,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -29,10 +31,18 @@ export class CreatePurchaseOrderDto {
   @IsOptional() @IsNumber() amountUsd?: number;
   @IsOptional() @IsNumber() exchangeRate?: number;
   @IsOptional() @IsNumber() exchangeRateId?: number;
+  @IsOptional() @IsNumber() exchangeRateDayId?: number;
   @IsOptional() @IsNumber() officialExchangeRate?: number;
   @IsOptional() @IsNumber() officialExchangeRateId?: number;
   @IsOptional() @IsNumber() paymentMethod?: number;
   @IsOptional() @IsNumber() status?: number;
+  @IsOptional() @IsNumber() baseAmount?: number;
+  @IsOptional() @IsNumber() baseAmountUsd?: number;
+  @IsOptional() @IsNumber() ivaAmount?: number;
+  @IsOptional() @IsNumber() ivaAmountUsd?: number;
+  @IsOptional() @IsBoolean() applyWithholding?: boolean;
+  @IsOptional() @IsIn([75, 100]) withholdingPercentage?: number;
+  @IsOptional() @IsString() withholdingProof?: string;
 
   @IsOptional()
   @IsArray()

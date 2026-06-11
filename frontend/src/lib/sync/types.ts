@@ -21,11 +21,11 @@ export interface SyncConflict {
 export interface PullResponse {
   data: {
     products: Array<{ id: number; name: string; price: number; priceUsd?: number; stock: number; taxId?: number; code?: string; updatedAt: string }>;
-    customers: Array<{ id: number; firstName: string; lastName: string; taxId?: string; phone?: string; updatedAt: string }>;
+    customers: Array<{ id: number; firstName: string; lastName: string; idCardNumber: string; phoneNumber?: string; isWithholdingAgent?: boolean; withholdingPercentage?: number; withholdingProof?: string; updatedAt: string }>;
     exchangeRates: Array<{ id: number; rate: number; updatedAt: string }>;
     exchangeRateDays: Array<{ id: number; date: string; rateBcvUsd: number | null; rateParalelo: number | null; updatedAt: string }>;
     suppliers: Array<{ id: number; companyName: string; updatedAt: string }>;
-    companies: Array<{ id: number; name: string; updatedAt: string }>;
+    companies: Array<{ id: number; name: string; isWithholdingAgent?: boolean; withholdingPercentage?: number; updatedAt: string }>;
     taxes: Array<{ id: number; name: string; percentage: number; updatedAt: string }>;
     cursor: { lastPullAt: string };
   };

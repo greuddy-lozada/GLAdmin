@@ -8,10 +8,16 @@ interface SaleSummaryProps {
   totalTax: number;
   totalTaxUsd: number;
   exchangeRate: number;
+  withholdingPercentage?: number | null;
+  withholdingAmount?: number;
+  withholdingAmountUsd?: number;
+  netToCollect?: number;
+  netToCollectUsd?: number;
 }
 
-export function SaleSummary({ total, totalUsd, totalTax, totalTaxUsd, exchangeRate }: SaleSummaryProps) {
+export function SaleSummary({ total, totalUsd, totalTax, totalTaxUsd, exchangeRate, withholdingPercentage, withholdingAmount, withholdingAmountUsd, netToCollect, netToCollectUsd }: SaleSummaryProps) {
   const { t, tp } = useI18n();
+  const hasWithholding = withholdingPercentage != null && (withholdingAmount ?? 0) > 0;
 
   return (
     <div className="mt-4 border rounded-lg p-4 space-y-1 bg-muted/30">
@@ -25,6 +31,12 @@ export function SaleSummary({ total, totalUsd, totalTax, totalTaxUsd, exchangeRa
           <span>${totalTax.toFixed(2)} / ${totalTaxUsd.toFixed(2)}</span>
         </div>
       )}
+      {hasWithholding && (
+        <div className="flex justify-between text-sm text-destructive">
+          <span>{tp('pos.withholding.rate', { percentage: String(withholdingPercentage) })}</span>
+          <span>-${(withholdingAmount ?? 0).toFixed(2)} / -${(withholdingAmountUsd ?? 0).toFixed(2)}</span>
+        </div>
+      )}
       <div className="flex justify-between text-lg font-bold pt-2 border-t">
         <span>{t('pos.cart.totalVes')}</span>
         <span>${total.toFixed(2)}</span>
@@ -33,6 +45,12 @@ export function SaleSummary({ total, totalUsd, totalTax, totalTaxUsd, exchangeRa
         <div className="flex justify-between text-sm">
           <span>{t('pos.cart.totalUsd')}</span>
           <span className="text-muted-foreground">${totalUsd.toFixed(2)}</span>
+        </div>
+      )}
+      {hasWithholding && (
+        <div className="flex justify-between text-base font-semibold pt-1 border-t border-dashed">
+          <span>{t('pos.withholding.netToCollect')}</span>
+          <span>${(netToCollect ?? total).toFixed(2)} / ${(netToCollectUsd ?? totalUsd).toFixed(2)}</span>
         </div>
       )}
       {exchangeRate > 0 && (

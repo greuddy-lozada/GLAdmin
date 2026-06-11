@@ -89,8 +89,11 @@ export class SyncEngine {
           organizationId: orgId,
           firstName: customer.firstName,
           lastName: customer.lastName,
-          taxId: customer.taxId,
-          phone: customer.phone,
+          taxId: customer.idCardNumber,
+          phone: customer.phoneNumber,
+          isWithholdingAgent: customer.isWithholdingAgent ?? false,
+          withholdingPercentage: customer.withholdingPercentage ?? undefined,
+          withholdingProof: customer.withholdingProof ?? undefined,
           updatedAt: customer.updatedAt,
         });
       }
@@ -108,7 +111,9 @@ export class SyncEngine {
         await localDb.companies.put({
           id: company.id,
           organizationId: orgId,
-          name: company.name,
+          companyName: company.name,
+          isWithholdingAgent: company.isWithholdingAgent ?? false,
+          withholdingPercentage: company.withholdingPercentage ?? undefined,
           updatedAt: company.updatedAt,
         });
       }

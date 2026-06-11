@@ -11,6 +11,9 @@ export function useOfflineSale() {
     exchangeRate: number,
     paymentMethod: PaymentMethod,
     customerId?: number,
+    withholdingPercentage?: number | null,
+    withholdingAmount?: number,
+    withholdingAmountUsd?: number,
   ) => {
     const saleData: CreateSaleRequest = {
       code: `SALE-${Date.now()}`,
@@ -35,6 +38,9 @@ export function useOfflineSale() {
       })),
       totalTax: cart.reduce((s, i) => s + (i.taxAmount || 0), 0),
       totalTaxUsd: cart.reduce((s, i) => s + (i.taxAmountUsd || 0), 0),
+      withholdingPercentage: withholdingPercentage ?? undefined,
+      withholdingAmount,
+      withholdingAmountUsd,
     };
 
     const stockSnapshot: Record<number, number> = {};

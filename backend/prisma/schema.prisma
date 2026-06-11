@@ -213,6 +213,9 @@ model Customer {
   email        String?
   version      Int      @default(0)
   available    Boolean  @default(true)
+  isWithholdingAgent   Boolean  @default(false)
+  withholdingPercentage Float?   // 75 or 100 — null if not a withholding agent
+  withholdingProof     String?  // uploaded proof document filename
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   organizationId Int
@@ -267,6 +270,8 @@ model Company {
   phoneNumber    String
   email          String
   website        String?
+  isWithholdingAgent   Boolean  @default(false)
+  withholdingPercentage Float?
   version        Int      @default(0)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -341,6 +346,8 @@ model ExchangeRateDay {
   updatedAt       DateTime @updatedAt
 
   organization Organization @relation(fields: [organizationId], references: [id])
+
+  purchaseOrders PurchaseOrder[]
 
   @@unique([organizationId, date])
   @@map("exchange_rate_days")
@@ -462,10 +469,15 @@ model PurchaseOrder {
   idSupplier             Int
   code                   String?
   date                   DateTime?
-  amount                 Float?   // VED total
-  amountUsd              Float?   // USD total
+  amount                 Float?   // VED total (base + IVA)
+  amountUsd              Float?   // USD total (base + IVA)
+  baseAmount             Float?   // Base Imponible (VED) — sum of line subtotals before IVA
+  baseAmountUsd          Float?   // Base Imponible (USD)
+  ivaAmount              Float?   // Total IVA (VED)
+  ivaAmountUsd           Float?   // Total IVA (USD)
   exchangeRate           Float?   // rate used at creation (usually paralelo)
   exchangeRateId         Int?
+  exchangeRateDayId      Int?
   officialExchangeRate   Float?   // official BCV rate for legal reporting
   officialExchangeRateId Int?
   paymentMethod          Int?
@@ -480,6 +492,7 @@ model PurchaseOrder {
   details                   PurchaseOrderDet[]
   accountsPayables          AccountsPayable[]
   exchangeRateRef            ExchangeRate?            @relation("CalculationRate", fields: [exchangeRateId], references: [id])
+  exchangeRateDayRef         ExchangeRateDay?         @relation(fields: [exchangeRateDayId], references: [id])
   officialExchangeRateRef   ExchangeRate?      @relation("OfficialRate", fields: [officialExchangeRateId], references: [id])
   withholdingRecords        WithholdingRecord[]
   stocks                    Stock[]
@@ -554,6 +567,7 @@ model WithholdingRecord {
   exchangeRate      Float?
   documentNumber    String?
   period            String?
+  withholdingProof  String?  // uploaded proof document filename
   version           Int      @default(0)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
@@ -581,6 +595,11 @@ model Sale {
   exchangeRateId         Int?
   officialExchangeRate   Float?    // official BCV rate for legal reporting
   officialExchangeRateId Int?
+  totalTax               Float?    // VED — sum of item IVA
+  totalTaxUsd            Float?    // USD — sum of item IVA
+  withholdingPercentage  Float?    // 75 or 100 — null if no withholding applies
+  withholdingAmount      Float?    // VED — withheld amount
+  withholdingAmountUsd   Float?    // USD — withheld amount
   paymentMethod          Int?
   status                 Int?
   version                Int       @default(0)
@@ -610,6 +629,10 @@ model SalesDet {
   unitPriceUsd Float?  // USD unit price
   subtotal    Float?   // VED subtotal
   subtotalUsd Float?   // USD subtotal
+  taxName     String?  // e.g. "IVA"
+  taxPercentage Float? // e.g. 16
+  taxAmount   Float?   // VED tax amount
+  taxAmountUsd Float?  // USD tax amount
   observation String?
   version     Int      @default(0)
   createdAt   DateTime @default(now())
