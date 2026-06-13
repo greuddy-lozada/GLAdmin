@@ -97,11 +97,11 @@
     "suppliers": "Suppliers",
     "companies": "Companies",
     "products": "Products",
+    "categories": "Categories",
     "taxes": "Taxes",
     "batches": "Batches",
     "stocks": "Stock",
     "purchaseOrders": "Purchase Orders",
-    "withholdings": "Withholdings",
     "exchangeRates": "Exchange Rates",
     "roles": "Roles",
     "adminOrganizations": "Organizations",
@@ -231,7 +231,8 @@
       "email": "Email",
       "available": "Available",
       "isWithholdingAgent": "Withholding Agent",
-      "withholdingPercentage": "Withholding Percentage"
+      "withholdingPercentage": "Withholding Percentage",
+      "website": "Website"
     },
     "created": "Company created successfully",
     "updated": "Company updated successfully",
@@ -252,14 +253,24 @@
     "deleted": "Product deleted successfully",
     "deleteConfirm": "Are you sure you want to delete product {{name}}?",
     "empty": "No products registered",
+    "addBrand": "+ New Brand",
+    "brandPlaceholder": "Brand name",
     "field": {
       "id": "#",
       "code": "Code",
       "name": "Name",
-      "price": "Price",
+      "price": "Price (VED)",
       "dollarPrice": "US$ Price",
+      "baseCost": "Base Cost ($)",
+      "margin": "Margin/Protection (%)",
+      "pvpUsd": "PVP ($)",
+      "pvpVes": "PVP (VES)",
+      "bcvRate": "BCV Rate",
+      "pvpOverride": "Edit PVP manually",
       "stock": "Stock",
       "tax": "Tax",
+      "brand": "Brand",
+      "category": "Category",
       "observation": "Notes",
       "image": "Image",
       "available": "Available"
@@ -268,6 +279,49 @@
       "save": "Error saving product",
       "load": "Error loading products",
       "delete": "Error deleting product"
+    }
+  },
+  "brands": {
+    "title": "Brands",
+    "new": "New Brand",
+    "edit": "Edit Brand",
+    "delete": "Delete Brand",
+    "created": "Brand created successfully",
+    "updated": "Brand updated successfully",
+    "deleted": "Brand deleted successfully",
+    "deleteConfirm": "Are you sure you want to delete brand {{name}}?",
+    "empty": "No brands registered",
+    "field": {
+      "id": "#",
+      "name": "Name",
+      "description": "Description"
+    },
+    "error": {
+      "save": "Error saving brand",
+      "load": "Error loading brands",
+      "delete": "Error deleting brand"
+    }
+  },
+  "categories": {
+    "title": "Categories",
+    "new": "New Category",
+    "edit": "Edit Category",
+    "delete": "Delete Category",
+    "created": "Category created successfully",
+    "updated": "Category updated successfully",
+    "deleted": "Category deleted successfully",
+    "deleteConfirm": "Are you sure you want to delete category {{name}}?",
+    "empty": "No categories registered",
+    "field": {
+      "id": "#",
+      "name": "Name",
+      "description": "Description",
+      "parent": "Parent Category"
+    },
+    "error": {
+      "save": "Error saving category",
+      "load": "Error loading categories",
+      "delete": "Error deleting category"
     }
   },
   "taxes": {
@@ -398,7 +452,15 @@
     "baseAmount": "Taxable Base",
     "ivaAmount": "IVA",
     "withholdingAmount": "Withholding",
-    "totalToPay": "Total to Pay"
+    "totalToPay": "Total to Pay",
+    "receive": "Receive",
+    "receiveTitle": "Receive Products",
+    "receiveDescription": "Enter the quantity to receive for each product in this order.",
+    "receiveConfirm": "Confirm Receipt",
+    "receiveSuccess": "Products received successfully",
+    "ordered": "Ordered",
+    "receivedLabel": "Received",
+    "allReceived": "All products have been fully received."
   },
   "exchangeRates": {
     "title": "Exchange Rates",
@@ -430,37 +492,6 @@
       "bcv": "BCV",
       "dolartoday": "DolarToday",
       "enparalelovzla": "EnParaleloVzla"
-    }
-  },
-  "withholdings": {
-    "title": "Withholdings",
-    "new": "New Withholding",
-    "edit": "Edit Withholding",
-    "delete": "Delete Withholding",
-    "created": "Withholding created successfully",
-    "deleted": "Withholding deleted successfully",
-    "deleteConfirm": "Are you sure you want to delete withholding #{{id}}?",
-    "empty": "No withholdings registered",
-    "field": {
-      "id": "#",
-      "supplier": "Supplier",
-      "purchaseOrder": "Purchase Order",
-      "type": "Type",
-      "percentage": "Percentage",
-      "baseAmount": "Taxable Base (Bs.)",
-      "baseAmountUsd": "Taxable Base (USD)",
-      "withheldAmount": "Withheld Amount",
-      "withheldAmountLabel": "Amount to withhold",
-      "period": "Period"
-    },
-    "error": {
-      "save": "Error saving withholding",
-      "load": "Error loading withholdings",
-      "delete": "Error deleting withholding"
-    },
-    "type": {
-      "IVA": "IVA",
-      "ISLR": "ISLR"
     }
   },
   "pos": {
@@ -533,7 +564,8 @@
     },
     "detail": {
       "empty": "Add products to start the sale",
-      "addProduct": "Search or scan product..."
+      "addProduct": "Search or scan product...",
+      "quantity": "Qty"
     },
     "park": {
       "button": "Park order",

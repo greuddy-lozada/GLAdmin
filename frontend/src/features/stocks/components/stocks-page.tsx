@@ -1,18 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DataTable, Column } from '@/components/ui/data-table';
 import { SlideForm } from '@/components/ui/slide-form';
@@ -41,9 +35,6 @@ export default function StocksPage() {
     idProduct: 0,
     existence: 1,
   });
-  const [products, setProducts] = useState<{ id: number; code: string; name: string }[]>([]);
-  const [suppliers, setSuppliers] = useState<{ id: number; companyName: string }[]>([]);
-  const [batches, setBatches] = useState<{ id: number; code: string }[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<Stock | null>(null);
@@ -72,12 +63,6 @@ export default function StocksPage() {
       render: (row) => (row.available ? t('common.yes') : t('common.no')),
     },
   ];
-
-  useEffect(() => {
-    apiClient.get('/products').then((r) => setProducts(r.data.data || [])).catch(() => console.warn('Failed to load products'));
-    apiClient.get('/suppliers').then((r) => setSuppliers(r.data.data || [])).catch(() => console.warn('Failed to load suppliers'));
-    apiClient.get('/batches').then((r) => setBatches(r.data.data || [])).catch(() => console.warn('Failed to load batches'));
-  }, []);
 
   const openCreate = () => {
     setSelectedStock(null);
@@ -151,38 +136,44 @@ export default function StocksPage() {
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>{t('stocks.field.product')}</Label>
-            <Select value={String(formData.idProduct)} onValueChange={(v) => setFormData({ ...formData, idProduct: Number(v) })}>
-              <SelectTrigger><SelectValue placeholder={t('common.selectProduct')} /></SelectTrigger>
-              <SelectContent>
-                {products.map((product) => (
-                  <SelectItem key={product.id} value={String(product.id)}>{product.code} - {product.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              value={formData.idProduct || undefined}
+              onChange={(v) => setFormData({ ...formData, idProduct: v ?? 0 })}
+              placeholder={t('common.selectProduct')}
+              emptyText="Sin resultados"
+              selectedLabel={selectedStock?.product ? `${selectedStock.product.code} - ${selectedStock.product.name}` : undefined}
+              searchFn={(term) => apiClient.get('/products', { params: { search: term, limit: 10 } }).then(r => r.data.data)}
+              renderItem={(p: { id: number; code: string; name: string }) => `${p.code} - ${p.name}`}
+              getKey={(p: { id: number }) => p.id}
+            />
           </div>
           <div className="space-y-2">
             <Label>{t('stocks.field.supplier')}</Label>
-            <Select value={formData.idSupplier ? String(formData.idSupplier) : ''}
-              onValueChange={(v) => setFormData({ ...formData, idSupplier: v ? Number(v) : undefined })}>
-              <SelectTrigger><SelectValue placeholder={t('common.none')} /></SelectTrigger>
-              <SelectContent>
-                {suppliers.map((supplier) => (
-                  <SelectItem key={supplier.id} value={String(supplier.id)}>{supplier.companyName}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              value={formData.idSupplier}
+              onChange={(v) => setFormData({ ...formData, idSupplier: v })}
+              placeholder={t('common.none')}
+              emptyText="Sin resultados"
+              allowClear
+              selectedLabel={selectedStock?.supplier?.companyName}
+              searchFn={(term) => apiClient.get('/suppliers', { params: { search: term, limit: 10 } }).then(r => r.data.data)}
+              renderItem={(s: { id: number; companyName: string }) => s.companyName}
+              getKey={(s: { id: number }) => s.id}
+            />
           </div>
           <div className="space-y-2">
             <Label>{t('stocks.field.batch')}</Label>
-            <Select value={formData.idBatch ? String(formData.idBatch) : ''}
-              onValueChange={(v) => setFormData({ ...formData, idBatch: v ? Number(v) : undefined })}>
-              <SelectTrigger><SelectValue placeholder={t('common.none')} /></SelectTrigger>
-              <SelectContent>
-                {batches.map((batch) => (
-                  <SelectItem key={batch.id} value={String(batch.id)}>{batch.code}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              value={formData.idBatch}
+              onChange={(v) => setFormData({ ...formData, idBatch: v })}
+              placeholder={t('common.none')}
+              emptyText="Sin resultados"
+              allowClear
+              selectedLabel={selectedStock?.batch?.code}
+              searchFn={(term) => apiClient.get('/batches', { params: { search: term, limit: 10 } }).then(r => r.data.data)}
+              renderItem={(b: { id: number; code: string }) => b.code}
+              getKey={(b: { id: number }) => b.id}
+            />
           </div>
           <div className="space-y-2">
             <Label>{t('stocks.field.existence')}</Label>

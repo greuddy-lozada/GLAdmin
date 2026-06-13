@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { ContextService } from '../tenant/context.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
@@ -10,6 +11,18 @@ export class SalesService {
     private readonly prisma: PrismaService,
     private readonly context: ContextService,
   ) {}
+
+  private async recalcTotalExistence(productId: number, tx?: Prisma.TransactionClient) {
+    const db = tx || this.prisma;
+    const result = await db.stock.aggregate({
+      where: { idProduct: productId },
+      _sum: { existence: true },
+    });
+    await db.product.update({
+      where: { id: productId },
+      data: { totalExistence: result._sum.existence ?? 0 },
+    });
+  }
 
   async create(dto: CreateSaleDto) {
     const orgId = this.context.getCurrent()?.organizationId;
@@ -27,6 +40,11 @@ export class SalesService {
           paymentMethod: dto.paymentMethod,
           status: dto.status,
           idCustomer: dto.idCustomer,
+          totalTax: dto.totalTax,
+          totalTaxUsd: dto.totalTaxUsd,
+          withholdingPercentage: dto.withholdingPercentage,
+          withholdingAmount: dto.withholdingAmount,
+          withholdingAmountUsd: dto.withholdingAmountUsd,
           details: {
             create: dto.items.map((item) => ({
               organizationId: orgId,
@@ -46,11 +64,16 @@ export class SalesService {
         },
       });
 
+      const seen = new Set<number>();
       for (const item of dto.items) {
         await tx.stock.updateMany({
           where: { idProduct: item.productId, organizationId: orgId },
           data: { existence: { decrement: item.quantity } },
         });
+        if (!seen.has(item.productId)) {
+          seen.add(item.productId);
+          await this.recalcTotalExistence(item.productId, tx);
+        }
       }
 
       return sale;
@@ -124,11 +147,16 @@ export class SalesService {
     const sale = await this.findOne(id);
 
     await this.prisma.$transaction(async (tx) => {
+      const seen = new Set<number>();
       for (const item of sale.details) {
         await tx.stock.updateMany({
           where: { idProduct: item.idProduct, organizationId: orgId },
           data: { existence: { increment: item.quantity || 0 } },
         });
+        if (!seen.has(item.idProduct)) {
+          seen.add(item.idProduct);
+          await this.recalcTotalExistence(item.idProduct, tx);
+        }
       }
 
       await tx.sale.delete({

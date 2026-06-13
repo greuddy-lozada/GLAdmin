@@ -27,13 +27,17 @@ export class ProductsController {
 
   @Get()
   @Roles('master', 'admin', 'employee')
-  async findAll(@Query('includeStock') includeStock?: string, @Query() pagination?: PaginationQueryDto) {
+  async findAll(
+    @Query('includeStock') includeStock?: string,
+    @Query() pagination?: PaginationQueryDto,
+  ) {
     const page = pagination?.page ?? 1;
     const limit = pagination?.limit ?? 20;
+    const search = pagination?.search;
     if (includeStock === 'true') {
       return this.productsService.findAllWithStock(page, limit);
     }
-    return this.productsService.findAll(page, limit);
+    return this.productsService.findAll(page, limit, search);
   }
 
   @Get(':id')

@@ -22,7 +22,7 @@ export function DashboardBento() {
   if (!data) return null;
 
   return (
-    <BentoGrid>
+    <BentoGrid className="h-full">
       <BentoGridItem
         title={t('dashboard.analytics.recentOrders')}
         className="md:col-span-3"

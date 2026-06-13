@@ -88,6 +88,8 @@ model Organization {
   suppliers             Supplier[]
   customers             Customer[]
   companies             Company[]
+  brands                Brand[]
+  categories            Category[]
   products              Product[]
   taxes                 Tax[]
   batches               Batch[]
@@ -381,13 +383,56 @@ model Tax {
   @@index([organizationId, updatedAt])
 }
 
+model Brand {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  version     Int       @default(0)
+  available   Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  organizationId Int
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  products     Product[]
+
+  @@index([organizationId])
+  @@index([organizationId, available])
+}
+
+model Category {
+  id          Int        @id @default(autoincrement())
+  name        String
+  description String?
+  idParent    Int?
+  parent      Category?  @relation("CategoryHierarchy", fields: [idParent], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  version     Int        @default(0)
+  available   Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  organizationId Int
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  products     Product[]
+
+  @@index([organizationId])
+  @@index([organizationId, available])
+  @@index([idParent])
+}
+
 model Product {
   id          Int          @id @default(autoincrement())
   code        String
   name        String
-  price       Float        // VED
-  dollarPrice Float?
+  price           Float      // VED
+  dollarPrice      Float?
+  baseCost        Float?       // Costo base en USD
+  margin          Float        @default(20)  // Porcentaje de margen/protección
+  totalExistence  Int          @default(0)
   idTax       Int?
+  idBrand     Int?
+  idCategory  Int?
   observation String?
   version     Int          @default(0)
   available   Boolean      @default(true)
@@ -398,6 +443,8 @@ model Product {
 
   organization             Organization               @relation(fields: [organizationId], references: [id])
   tax                      Tax?                       @relation(fields: [idTax], references: [id])
+  brand                    Brand?                     @relation(fields: [idBrand], references: [id])
+  category                 Category?                  @relation(fields: [idCategory], references: [id])
   stocks                   Stock[]
   purchaseOrderDetails     PurchaseOrderDet[]
   saleDetails              SalesDet[]
@@ -504,19 +551,20 @@ model PurchaseOrder {
 }
 
 model PurchaseOrderDet {
-  id              Int      @id @default(autoincrement())
-  idPurchaseOrder Int
-  idProduct       Int
-  quantity        Int?
-  unitPrice        Float?  // VED unit price
-  unitPriceUsd     Float?  // USD unit price
-  subtotal        Float?   // VED subtotal
-  subtotalUsd     Float?   // USD subtotal
-  observation     String?
-  version         Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  organizationId  Int
+  id               Int      @id @default(autoincrement())
+  idPurchaseOrder  Int
+  idProduct        Int
+  quantity         Int?
+  receivedQuantity Int      @default(0)
+  unitPrice        Float?   // VED unit price
+  unitPriceUsd     Float?   // USD unit price
+  subtotal         Float?   // VED subtotal
+  subtotalUsd      Float?   // USD subtotal
+  observation      String?
+  version          Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  organizationId   Int
 
   organization    Organization  @relation(fields: [organizationId], references: [id])
   purchaseOrder   PurchaseOrder @relation(fields: [idPurchaseOrder], references: [id])

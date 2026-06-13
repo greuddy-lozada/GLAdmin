@@ -102,9 +102,9 @@ export const ProductSearch = forwardRef<HTMLInputElement, ProductSearchProps>(
             {results.map((p, idx) => (
               <button key={p.id} type="button" className={`w-full text-left px-3 py-2 text-sm flex items-center gap-3 ${highlightedIndex === idx ? 'bg-accent' : 'hover:bg-accent'}`} onMouseDown={() => handleSelect(p)}>
                 <span className="flex-1 font-medium">{p.name}</span>
-                <span className="text-muted-foreground">${p.price} | ${p.priceUsd || 0}</span>
+                <span className="text-muted-foreground">$ {(p.priceUsd ?? 0).toFixed(2)} — Bs. {(p.price ?? 0).toFixed(2)}</span>
                 <Badge variant={p.stock <= 5 ? 'outline' : 'secondary'} className={p.stock === 0 ? 'text-destructive' : p.stock <= 5 ? 'text-yellow-600' : ''}>
-                  {p.stock === 0 ? t('pos.stock.outOfStock') : `${t('pos.stock')}: ${p.stock}`}
+                  {p.stock === 0 ? t('pos.stock.outOfStock') : `${t('pos.detail.quantity')}: ${p.stock}`}
                 </Badge>
               </button>
             ))}

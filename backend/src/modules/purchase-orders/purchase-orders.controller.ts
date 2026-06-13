@@ -12,6 +12,7 @@ import {
 import { PurchaseOrdersService } from './purchase-orders.service';
 import { CreatePurchaseOrderDto } from './dto/create-purchase-order.dto';
 import { UpdatePurchaseOrderDto } from './dto/update-purchase-order.dto';
+import { ReceivePurchaseOrderDto } from './dto/receive-purchase-order.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
@@ -44,6 +45,15 @@ export class PurchaseOrdersController {
     @Body() dto: UpdatePurchaseOrderDto,
   ) {
     return this.purchaseOrdersService.update(id, dto);
+  }
+
+  @Post(':id/receive')
+  @Roles('master', 'admin')
+  receive(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: ReceivePurchaseOrderDto,
+  ) {
+    return this.purchaseOrdersService.receive(id, dto);
   }
 
   @Delete(':id')

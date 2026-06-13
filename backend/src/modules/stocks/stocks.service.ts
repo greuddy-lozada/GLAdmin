@@ -11,6 +11,17 @@ export class StocksService {
     private readonly contextService: ContextService,
   ) {}
 
+  private async recalcTotalExistence(productId: number) {
+    const result = await this.prisma.stock.aggregate({
+      where: { idProduct: productId },
+      _sum: { existence: true },
+    });
+    await this.prisma.product.update({
+      where: { id: productId },
+      data: { totalExistence: result._sum.existence ?? 0 },
+    });
+  }
+
   async create(dto: CreateStockDto) {
     const ctx = this.contextService?.getCurrent();
     const orgId = ctx?.organizationId;
@@ -24,6 +35,7 @@ export class StocksService {
       },
       include: { product: true, supplier: true, batch: true },
     });
+    await this.recalcTotalExistence(dto.idProduct);
     return { data: stock, message: 'STOCK.CREATED' };
   }
 
@@ -51,12 +63,15 @@ export class StocksService {
   }
 
   async update(id: number, dto: UpdateStockDto) {
-    await this.findOne(id);
+    const before = await this.findOne(id);
     const stock = await this.prisma.stock.update({
       where: { id },
       data: dto,
       include: { product: true, supplier: true, batch: true },
     });
+    if (dto.existence !== undefined) {
+      await this.recalcTotalExistence(before.idProduct);
+    }
     return { data: stock, message: 'STOCK.UPDATED' };
   }
 
@@ -66,6 +81,7 @@ export class StocksService {
       where: { id },
       data: { available: false },
     });
+    await this.recalcTotalExistence(stock.idProduct);
     return { data: stock, message: 'STOCK.DELETED' };
   }
 }

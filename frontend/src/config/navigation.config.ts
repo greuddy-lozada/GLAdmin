@@ -10,7 +10,6 @@ import {
   Truck,
   ShoppingCart,
   DollarSign,
-  FileText,
   Settings,
   ShieldCheck,
   CreditCard,
@@ -48,7 +47,6 @@ export const navigationGroups: NavGroup[] = [
     items: [
       { key: 'suppliers', label: 'Proveedores', icon: Truck, path: '/suppliers', minLevel: 40 },
       { key: 'purchaseOrders', label: 'Pedidos', icon: ShoppingCart, path: '/purchase-orders', minLevel: 40 },
-      { key: 'withholdings', label: 'Retenciones', icon: FileText, path: '/withholdings', minLevel: 40 },
       { key: 'exchangeRates', label: 'Tasas BCV', icon: DollarSign, path: '/exchange-rates', minLevel: 40 },
     ],
   },
@@ -57,6 +55,7 @@ export const navigationGroups: NavGroup[] = [
     label: 'nav.group.inventario',
     items: [
       { key: 'products', label: 'Productos', icon: Package, path: '/products', minLevel: 40 },
+      { key: 'categories', label: 'Categorías', icon: Tags, path: '/categories', minLevel: 40 },
       { key: 'taxes', label: 'Impuestos', icon: Receipt, path: '/taxes', minLevel: 40 },
       { key: 'batches', label: 'Lotes', icon: Tags, path: '/batches', minLevel: 40 },
       { key: 'stocks', label: 'Inventario', icon: Store, path: '/stocks', minLevel: 40 },

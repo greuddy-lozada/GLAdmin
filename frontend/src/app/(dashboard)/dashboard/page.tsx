@@ -34,8 +34,8 @@ export default function DashboardPage() {
   const { data: stats, isLoading } = useDashboardStats();
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+    <div className="flex flex-col h-full gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 flex-none">
         <StatCard
           icon={<Users className="h-6 w-6" style={{ color: cardStyles[0].fg }} />}
           label={t('dashboard.totalCustomers')}
@@ -61,7 +61,9 @@ export default function DashboardPage() {
           style={cardStyles[3]}
         />
       </div>
-      <DashboardBento />
+      <div className="flex-1 min-h-0">
+        <DashboardBento />
+      </div>
     </div>
   );
 }

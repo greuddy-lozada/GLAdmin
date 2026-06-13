@@ -67,7 +67,7 @@ export class SyncEngine {
         params: since ? { since } : undefined,
       });
 
-      const { products, customers, exchangeRates, exchangeRateDays, suppliers, companies, taxes, cursor } = response.data.data;
+      const { products, customers, exchangeRates, exchangeRateDays, suppliers, companies, taxes, brands, categories, cursor } = response.data.data;
 
       for (const product of products) {
         await localDb.products.put({
@@ -75,9 +75,11 @@ export class SyncEngine {
           organizationId: orgId,
           name: product.name,
           price: product.price,
-          priceUsd: product.priceUsd,
+          priceUsd: product.dollarPrice ?? undefined,
+          baseCost: product.baseCost ?? undefined,
+          margin: product.margin ?? 20,
           stock: product.stock,
-          taxId: product.taxId,
+          taxId: product.idTax ?? undefined,
           code: product.code,
           updatedAt: product.updatedAt,
         });
@@ -125,6 +127,27 @@ export class SyncEngine {
           name: tax.name,
           percentage: tax.percentage,
           updatedAt: tax.updatedAt,
+        });
+      }
+
+      for (const brand of brands) {
+        await localDb.brands.put({
+          id: brand.id,
+          organizationId: orgId,
+          name: brand.name,
+          description: brand.description,
+          updatedAt: brand.updatedAt,
+        });
+      }
+
+      for (const category of categories) {
+        await localDb.categories.put({
+          id: category.id,
+          organizationId: orgId,
+          name: category.name,
+          description: category.description,
+          idParent: category.idParent,
+          updatedAt: category.updatedAt,
         });
       }
 
@@ -357,6 +380,8 @@ export class SyncEngine {
     await localDb.suppliers.clear();
     await localDb.companies.clear();
     await localDb.taxes.clear();
+    await localDb.brands.clear();
+    await localDb.categories.clear();
   }
 
   async onOrgSwitch(): Promise<void> {

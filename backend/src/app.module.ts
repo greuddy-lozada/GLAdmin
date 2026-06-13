@@ -22,13 +22,14 @@ import { CustomersModule } from './modules/customers/customers.module';
 import { SuppliersModule } from './modules/suppliers/suppliers.module';
 import { CompaniesModule } from './modules/companies/companies.module';
 import { TaxesModule } from './modules/taxes/taxes.module';
+import { BrandsModule } from './modules/brands/brands.module';
+import { CategoriesModule } from './modules/categories/categories.module';
 import { BatchesModule } from './modules/batches/batches.module';
 import { StocksModule } from './modules/stocks/stocks.module';
 import { ProductsModule } from './modules/products/products.module';
 import { PurchaseOrdersModule } from './modules/purchase-orders/purchase-orders.module';
 import { CurrenciesModule } from './modules/currencies/currencies.module';
 import { ExchangeRatesModule } from './modules/exchange-rates/exchange-rates.module';
-import { WithholdingsModule } from './modules/withholdings/withholdings.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { PagoMovilModule } from './modules/pago-movil/pago-movil.module';
@@ -74,13 +75,14 @@ if (!jwtSecret) {
     SuppliersModule,
     CompaniesModule,
     TaxesModule,
+    BrandsModule,
+    CategoriesModule,
     BatchesModule,
     StocksModule,
     ProductsModule,
     PurchaseOrdersModule,
     CurrenciesModule,
     ExchangeRatesModule,
-    WithholdingsModule,
     DashboardModule,
     AdminModule,
     PagoMovilModule,

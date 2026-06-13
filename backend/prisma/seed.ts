@@ -105,7 +105,7 @@ async function main() {
         'basic_auth', 'multi_currency', 'basic_reports', 'advanced_reports',
         'suppliers', 'customers', 'products', 'export',
         'api_access', 'audit_log', 'purchase_orders', 'sales',
-        'inventory', 'withholding',
+        'inventory',
       ]),
       maxUsers: 50,
     },
@@ -125,7 +125,7 @@ async function main() {
         'basic_auth', 'multi_currency', 'basic_reports', 'advanced_reports',
         'suppliers', 'customers', 'products', 'export',
         'api_access', 'audit_log', 'purchase_orders', 'sales',
-        'inventory', 'withholding', 'multiple_orgs', 'white_label',
+        'inventory', 'multiple_orgs', 'white_label',
         'priority_support',
       ]),
       maxUsers: 999,
@@ -199,6 +199,69 @@ async function main() {
     create: { id: 3, name: 'Exento', percentage: 0, organizationId: 1 },
   });
   logger.log('Taxes created');
+
+  // ── Categories ──
+  await prisma.category.upsert({
+    where: { id: 1 },
+    update: {},
+    create: { id: 1, name: 'Electrónicos', description: 'Productos electrónicos y tecnología', organizationId: 1 },
+  });
+  await prisma.category.upsert({
+    where: { id: 2 },
+    update: {},
+    create: { id: 2, name: 'Computación', idParent: 1, description: 'Computadoras, laptops y accesorios', organizationId: 1 },
+  });
+  await prisma.category.upsert({
+    where: { id: 3 },
+    update: {},
+    create: { id: 3, name: 'Audio y Video', idParent: 1, description: 'Parlantes, audífonos, proyectores', organizationId: 1 },
+  });
+  await prisma.category.upsert({
+    where: { id: 4 },
+    update: {},
+    create: { id: 4, name: 'Accesorios Tecnológicos', idParent: 1, description: 'Cables, cargadores, fundas', organizationId: 1 },
+  });
+  await prisma.category.upsert({
+    where: { id: 5 },
+    update: {},
+    create: { id: 5, name: 'Hogar', description: 'Artículos para el hogar', organizationId: 1 },
+  });
+  await prisma.category.upsert({
+    where: { id: 6 },
+    update: {},
+    create: { id: 6, name: 'Cocina', idParent: 5, description: 'Utensilios y electrodomésticos de cocina', organizationId: 1 },
+  });
+  await prisma.category.upsert({
+    where: { id: 7 },
+    update: {},
+    create: { id: 7, name: 'Baño', idParent: 5, description: 'Accesorios y productos para el baño', organizationId: 1 },
+  });
+  await prisma.category.upsert({
+    where: { id: 8 },
+    update: {},
+    create: { id: 8, name: 'Ropa y Moda', organizationId: 1 },
+  });
+  await prisma.category.upsert({
+    where: { id: 9 },
+    update: {},
+    create: { id: 9, name: 'Deportes', description: 'Artículos deportivos y fitness', organizationId: 1 },
+  });
+  await prisma.category.upsert({
+    where: { id: 10 },
+    update: {},
+    create: { id: 10, name: 'Alimentos y Bebidas', organizationId: 1 },
+  });
+  await prisma.category.upsert({
+    where: { id: 11 },
+    update: {},
+    create: { id: 11, name: 'Salud y Belleza', organizationId: 1 },
+  });
+  await prisma.category.upsert({
+    where: { id: 12 },
+    update: {},
+    create: { id: 12, name: 'Juguetes', organizationId: 1 },
+  });
+  logger.log('Categories created');
 
   // ── Customers ──
   await prisma.customer.upsert({

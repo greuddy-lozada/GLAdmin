@@ -1,8 +1,22 @@
-import { Controller, Get, Post, Patch, Body, Param, Query, ParseIntPipe, Head, HttpCode } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Body,
+  Param,
+  Query,
+  ParseIntPipe,
+  Head,
+  HttpCode,
+} from '@nestjs/common';
 import { SyncService } from './sync.service';
 import { PushRequestDto } from './dto/push-mutation.dto';
 import { ResolveConflictDto } from './dto/resolve-conflict.dto';
-import { MinLevel, ROLE_LEVEL } from '../../common/decorators/min-level.decorator';
+import {
+  MinLevel,
+  ROLE_LEVEL,
+} from '../../common/decorators/min-level.decorator';
 
 @Controller('sync')
 @MinLevel(ROLE_LEVEL.employee)

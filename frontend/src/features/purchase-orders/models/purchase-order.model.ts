@@ -1,6 +1,8 @@
 export interface PurchaseOrderDetail {
+  id: number;
   idProduct: number;
   quantity?: number;
+  receivedQuantity?: number;
   unitPrice?: number;
   unitPriceUsd?: number;
   subtotal?: number;

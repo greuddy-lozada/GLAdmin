@@ -1,8 +1,10 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { ContextService } from '../../modules/tenant/context.service';
 import { CreatePurchaseOrderDto } from './dto/create-purchase-order.dto';
 import { UpdatePurchaseOrderDto } from './dto/update-purchase-order.dto';
+import { ReceivePurchaseOrderDto } from './dto/receive-purchase-order.dto';
 
 @Injectable()
 export class PurchaseOrdersService {
@@ -10,6 +12,17 @@ export class PurchaseOrdersService {
     private readonly prisma: PrismaService,
     private readonly contextService: ContextService,
   ) {}
+
+  private async recalcTotalExistence(productId: number, tx: Prisma.TransactionClient) {
+    const result = await tx.stock.aggregate({
+      where: { idProduct: productId },
+      _sum: { existence: true },
+    });
+    await tx.product.update({
+      where: { id: productId },
+      data: { totalExistence: result._sum.existence ?? 0 },
+    });
+  }
 
   private get orgId() {
     return this.contextService?.getCurrent()?.organizationId!;
@@ -178,51 +191,78 @@ export class PurchaseOrdersService {
         include: this.include,
       });
 
-      if (dto.status === 4 && existing.status !== 4) {
-        const finalDetails = dtoDetails || existing.details;
-        for (const det of finalDetails) {
-          const qty = det.quantity ?? 0;
-          if (qty <= 0) continue;
-
-          let stock = await tx.stock.findFirst({
-            where: { idProduct: det.idProduct, idSupplier: existing.idSupplier, organizationId: orgId },
-          });
-
-          if (stock) {
-            stock = await tx.stock.update({
-              where: { id: stock.id },
-              data: {
-                existence: { increment: qty },
-                version: { increment: 1 },
-                idPurchaseOrder: id,
-              },
-            });
-          } else {
-            stock = await tx.stock.create({
-              data: {
-                idProduct: det.idProduct,
-                idSupplier: existing.idSupplier,
-                existence: qty,
-                organizationId: orgId,
-                idPurchaseOrder: id,
-              },
-            });
-          }
-
-          await tx.stockDet.create({
-            data: {
-              idStock: stock.id,
-              type: 1,
-              quantity: qty,
-              observation: `Ingreso por pedido ${updated.code ?? id}`,
-            },
-          });
-        }
-      }
-
       return updated;
     });
     return { data: purchaseOrder, message: 'PURCHASE_ORDER.UPDATED' };
+  }
+
+  async receive(id: number, dto: ReceivePurchaseOrderDto) {
+    const existing = await this.findOne(id);
+    if (existing.status === 4) {
+      throw new BadRequestException('PURCHASE_ORDER.ALREADY_RECEIVED');
+    }
+    const orgId = this.orgId;
+
+    await this.prisma.$transaction(async (tx) => {
+      for (const item of dto.details) {
+        const line = existing.details.find((d) => d.id === item.id);
+        if (!line) throw new BadRequestException(`Detail id ${item.id} not found in PO ${id}`);
+
+        const newReceived = line.receivedQuantity + item.quantity;
+        if (newReceived > (line.quantity ?? 0)) {
+          throw new BadRequestException(
+            `Cannot receive ${item.quantity} more for detail ${item.id}: ordered ${line.quantity}, already received ${line.receivedQuantity}`,
+          );
+        }
+
+        await tx.purchaseOrderDet.update({
+          where: { id: item.id },
+          data: { receivedQuantity: newReceived },
+        });
+
+        let stock = await tx.stock.findFirst({
+          where: { idProduct: line.idProduct, idSupplier: existing.idSupplier, organizationId: orgId },
+        });
+
+        if (stock) {
+          stock = await tx.stock.update({
+            where: { id: stock.id },
+            data: {
+              existence: { increment: item.quantity },
+              version: { increment: 1 },
+              idPurchaseOrder: id,
+            },
+          });
+        } else {
+          stock = await tx.stock.create({
+            data: {
+              idProduct: line.idProduct,
+              idSupplier: existing.idSupplier,
+              existence: item.quantity,
+              organizationId: orgId,
+              idPurchaseOrder: id,
+            },
+          });
+        }
+
+        await tx.stockDet.create({
+          data: {
+            idStock: stock.id,
+            type: 1,
+            quantity: item.quantity,
+            observation: `Ingreso parcial por pedido ${existing.code ?? id}`,
+          },
+        });
+      }
+
+      const refreshedLines = await tx.purchaseOrderDet.findMany({ where: { idPurchaseOrder: id } });
+      const allReceived = refreshedLines.every((l) => l.receivedQuantity >= (l.quantity ?? 0));
+      if (allReceived) {
+        await tx.purchaseOrder.update({ where: { id }, data: { status: 4 } });
+      }
+    });
+
+    return this.findOne(id);
   }
 
   async remove(id: number) {

@@ -6,6 +6,8 @@ export interface LocalProduct {
   name: string;
   price: number;
   priceUsd?: number;
+  baseCost?: number;
+  margin: number;
   stock: number;
   taxId?: number;
   code?: string;
@@ -80,6 +82,23 @@ export interface SyncMetadata {
   value: string;
 }
 
+export interface LocalBrand {
+  id: number;
+  organizationId: number;
+  name: string;
+  description?: string;
+  updatedAt: string;
+}
+
+export interface LocalCategory {
+  id: number;
+  organizationId: number;
+  name: string;
+  description?: string;
+  idParent?: number;
+  updatedAt: string;
+}
+
 export interface LocalExchangeRate {
   id: number;
   rate: number;
@@ -124,6 +143,8 @@ export const localDb = new Dexie('GLAdmin') as Dexie & {
   suppliers: EntityTable<LocalSupplier, 'id'>;
   companies: EntityTable<LocalCompany, 'id'>;
   taxes: EntityTable<LocalTax, 'id'>;
+  brands: EntityTable<LocalBrand, 'id'>;
+  categories: EntityTable<LocalCategory, 'id'>;
   exchangeRates: EntityTable<LocalExchangeRate, 'id'>;
   exchangeRateDays: EntityTable<LocalExchangeRateDay, 'id'>;
   parkedOrders: EntityTable<ParkedOrder, 'id'>;
@@ -203,6 +224,24 @@ localDb.version(6).stores({
   suppliers: 'id, updatedAt, organizationId',
   companies: 'id, updatedAt, organizationId',
   taxes: 'id, updatedAt, organizationId',
+  exchangeRates: 'id, updatedAt',
+  exchangeRateDays: 'id, updatedAt',
+  parkedOrders: '++id, createdAt',
+  shortcutBindings: '++id, shortcutId',
+});
+
+localDb.version(7).stores({
+  products: 'id, updatedAt, organizationId',
+  customers: 'id, updatedAt, organizationId',
+  syncQueue: '++id, status, localTimestamp',
+  stockCache: 'productId',
+  sales: '++id, syncedAt',
+  syncMetadata: 'key',
+  suppliers: 'id, updatedAt, organizationId',
+  companies: 'id, updatedAt, organizationId',
+  taxes: 'id, updatedAt, organizationId',
+  brands: 'id, updatedAt, organizationId',
+  categories: 'id, updatedAt, organizationId',
   exchangeRates: 'id, updatedAt',
   exchangeRateDays: 'id, updatedAt',
   parkedOrders: '++id, createdAt',

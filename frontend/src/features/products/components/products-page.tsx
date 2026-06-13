@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,6 +28,14 @@ import { sileo } from 'sileo';
 import apiClient from '@/lib/api/api-client';
 import { exchangeRateService } from '@/features/exchange-rates/services/exchange-rate.service';
 
+function computePvpUsd(baseCost: number, margin: number): number {
+  return baseCost * (1 + margin / 100);
+}
+
+function computePvpVes(pvpUsd: number, bcvRate: number): number {
+  return bcvRate > 0 ? pvpUsd * bcvRate : 0;
+}
+
 export default function ProductsPage() {
   const { products, loading, loadProducts } = useProducts();
   const { t, tp } = useI18n();
@@ -42,19 +50,44 @@ export default function ProductsPage() {
     code: '',
     name: '',
     price: 0,
+    dollarPrice: 0,
+    baseCost: 0,
+    margin: 20,
   });
+  const [pvpOverride, setPvpOverride] = useState(false);
   const [taxes, setTaxes] = useState<{ id: number; name: string; percentage: number }[]>([]);
+  const [brands, setBrands] = useState<{ id: number; name: string }[]>([]);
+  const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
   const [bcvRate, setBcvRate] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
+  const [newBrandName, setNewBrandName] = useState('');
+  const [showNewBrandInput, setShowNewBrandInput] = useState(false);
+
+  const computedPvpUsd = computePvpUsd(formData.baseCost ?? 0, formData.margin ?? 20);
+  const displayPvpUsd = pvpOverride ? (formData.dollarPrice ?? 0) : computedPvpUsd;
+  const displayPvpVes = computePvpVes(displayPvpUsd, bcvRate);
 
   const columns: Column<Product>[] = [
     { field: 'id', headerName: t('products.field.id') },
     { field: 'code', headerName: t('products.field.code') },
     { field: 'name', headerName: t('products.field.name') },
-    { field: 'price', headerName: t('products.field.price') },
-    { field: 'dollarPrice', headerName: t('products.field.dollarPrice') },
+    {
+      field: 'dollarPrice',
+      headerName: t('products.field.pvpUsd'),
+      render: (row) => {
+        if (row.baseCost != null) {
+          return `$${computePvpUsd(row.baseCost, row.margin ?? 20).toFixed(2)}`;
+        }
+        return `$${(row.dollarPrice ?? 0).toFixed(2)}`;
+      },
+    },
+    {
+      field: 'price',
+      headerName: t('products.field.pvpVes'),
+      render: (row) => `Bs. ${(row.price ?? 0).toFixed(2)}`,
+    },
     {
       field: 'stock',
       headerName: t('products.field.stock'),
@@ -66,6 +99,16 @@ export default function ProductsPage() {
       render: (row) => row.tax?.name ?? '',
     },
     {
+      field: 'idBrand',
+      headerName: t('products.field.brand'),
+      render: (row) => row.brand?.name ?? '',
+    },
+    {
+      field: 'idCategory',
+      headerName: t('products.field.category'),
+      render: (row) => row.category?.name ?? '',
+    },
+    {
       field: 'available',
       headerName: t('products.field.available'),
       render: (row) => (row.available ? t('common.yes') : t('common.no')),
@@ -74,24 +117,30 @@ export default function ProductsPage() {
 
   useEffect(() => {
     apiClient.get('/taxes').then((r: { data: { data: { id: number; name: string; percentage: number }[] } }) => setTaxes(r.data.data || [])).catch(() => console.warn('Failed to load taxes'));
+    apiClient.get('/brands').then((r: { data: { data: { id: number; name: string }[] } }) => setBrands(r.data.data || [])).catch(() => console.warn('Failed to load brands'));
+    apiClient.get('/categories').then((r: { data: { data: { id: number; name: string }[] } }) => setCategories(r.data.data || [])).catch(() => console.warn('Failed to load categories'));
     exchangeRateService.getLatest().then((day) => { if (day?.rateBcvUsd) setBcvRate(day.rateBcvUsd); }).catch(() => console.warn('Failed to load BCV rate'));
   }, []);
 
   const openCreate = () => {
     setSelectedProduct(null);
     setError('');
-    setFormData({ code: '', name: '', price: 0 });
+    setPvpOverride(false);
+    setFormData({ code: '', name: '', price: 0, dollarPrice: 0, baseCost: 0, margin: 20 });
     setFormOpen(true);
   };
 
   const openEdit = (product: Product) => {
     setSelectedProduct(product);
     setError('');
+    setPvpOverride(false);
     setFormData({
       code: product.code,
       name: product.name,
       price: product.price,
-      dollarPrice: product.dollarPrice,
+      dollarPrice: product.dollarPrice ?? 0,
+      baseCost: product.baseCost ?? 0,
+      margin: product.margin ?? 20,
       idTax: product.idTax,
       observation: product.observation,
       image: product.image,
@@ -100,25 +149,76 @@ export default function ProductsPage() {
     setFormOpen(true);
   };
 
+  const handleBaseCostChange = (value: number) => {
+    const bc = value;
+    const marginPct = formData.margin ?? 20;
+    const pvpUsd = computePvpUsd(bc, marginPct);
+    setFormData({
+      ...formData,
+      baseCost: bc,
+      dollarPrice: pvpUsd,
+      price: computePvpVes(pvpUsd, bcvRate),
+    });
+  };
+
+  const handleMarginChange = (value: number) => {
+    const marginPct = value;
+    const bc = formData.baseCost ?? 0;
+    const pvpUsd = computePvpUsd(bc, marginPct);
+    setFormData({
+      ...formData,
+      margin: marginPct,
+      dollarPrice: pvpUsd,
+      price: computePvpVes(pvpUsd, bcvRate),
+    });
+  };
+
+  const handleDollarPriceChange = (value: number) => {
+    setFormData({
+      ...formData,
+      dollarPrice: value,
+      price: computePvpVes(value, bcvRate),
+    });
+  };
+
+  const togglePvpOverride = () => {
+    if (pvpOverride) {
+      const recomputed = computePvpUsd(formData.baseCost ?? 0, formData.margin ?? 20);
+      setFormData({
+        ...formData,
+        dollarPrice: recomputed,
+        price: computePvpVes(recomputed, bcvRate),
+      });
+    }
+    setPvpOverride(!pvpOverride);
+  };
+
   const handleSave = async () => {
     setError('');
     setSubmitting(true);
     try {
+      const payload = {
+        ...formData,
+        dollarPrice: displayPvpUsd,
+        price: displayPvpVes,
+      };
       if (selectedProduct) {
         const data: UpdateProductRequest = {
-          code: formData.code,
-          name: formData.name,
-          price: formData.price,
-          dollarPrice: formData.dollarPrice,
-          idTax: formData.idTax,
-          observation: formData.observation,
-          image: formData.image,
-          available: formData.available,
+          code: payload.code,
+          name: payload.name,
+          price: payload.price,
+          dollarPrice: payload.dollarPrice,
+          baseCost: payload.baseCost,
+          margin: payload.margin,
+          idTax: payload.idTax,
+          observation: payload.observation,
+          image: payload.image,
+          available: payload.available,
         };
         await productService.update(selectedProduct.id, data);
         sileo.success({ description: t('products.updated') });
       } else {
-        await productService.create(formData);
+        await productService.create(payload);
         sileo.success({ description: t('products.created') });
       }
       await loadProducts();
@@ -161,27 +261,46 @@ export default function ProductsPage() {
             <Label>{t('products.field.name')}</Label>
             <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
           </div>
-          <div className="space-y-2">
-            <Label>{t('products.field.price')}</Label>
-            <Input type="number" value={formData.price}
-              onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })} required />
-          </div>
-          <div className="space-y-2">
-            <Label>{t('products.field.dollarPrice')}</Label>
-            <Input type="number" value={formData.dollarPrice ?? ''}
-              onChange={(e) => {
-                const usd = e.target.value ? Number(e.target.value) : undefined;
-                setFormData({
-                  ...formData,
-                  dollarPrice: usd,
-                  price: usd && bcvRate > 0 ? usd * bcvRate : formData.price,
-                });
-              }} />
-            {bcvRate > 0 && (
-              <span className="text-xs text-muted-foreground">
-                BCV: {bcvRate.toFixed(2)} | {formData.dollarPrice ? `${(formData.dollarPrice * bcvRate).toFixed(2)} VED` : ''}
-              </span>
-            )}
+          <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
+            <h4 className="text-sm font-medium">{t('products.field.baseCost')}</h4>
+            <div className="space-y-2">
+              <Label>{t('products.field.baseCost')}</Label>
+              <Input type="number" step="0.01" min="0"
+                value={formData.baseCost ?? ''}
+                onChange={(e) => handleBaseCostChange(e.target.value ? Number(e.target.value) : 0)} />
+            </div>
+            <div className="space-y-2">
+              <Label>{t('products.field.margin')}</Label>
+              <Input type="number" step="0.1" min="0"
+                value={formData.margin}
+                onChange={(e) => handleMarginChange(e.target.value ? Number(e.target.value) : 0)} />
+            </div>
+            <div className="flex items-center gap-2 pt-2 border-t">
+              <div className="flex-1 space-y-2">
+                <Label>{t('products.field.pvpUsd')}</Label>
+                <div className="flex items-center gap-2">
+                  <Input type="number" step="0.01" min="0"
+                    value={displayPvpUsd.toFixed(2)}
+                    disabled={!pvpOverride}
+                    onChange={(e) => handleDollarPriceChange(e.target.value ? Number(e.target.value) : 0)}
+                    className={pvpOverride ? 'border-amber-400' : ''} />
+                  <button type="button" onClick={togglePvpOverride}
+                    className={`p-2 rounded-md border transition-colors ${pvpOverride ? 'bg-amber-100 border-amber-400 text-amber-700' : 'bg-muted text-muted-foreground'}`}
+                    title={t('products.field.pvpOverride')}>
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>{t('products.field.pvpVes')}</Label>
+              <Input type="number" value={displayPvpVes.toFixed(2)} disabled />
+              {bcvRate > 0 && (
+                <span className="text-xs text-muted-foreground">
+                  {t('products.field.bcvRate')}: {bcvRate.toFixed(2)} Bs./USD
+                </span>
+              )}
+            </div>
           </div>
           <div className="space-y-2">
             <Label>{t('products.field.tax')}</Label>
@@ -191,6 +310,67 @@ export default function ProductsPage() {
               <SelectContent>
                 {taxes.map((tax) => (
                   <SelectItem key={tax.id} value={String(tax.id)}>{tax.name} ({tax.percentage}%)</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>{t('products.field.brand')}</Label>
+            {showNewBrandInput ? (
+              <div className="flex items-center gap-2">
+                <Input value={newBrandName}
+                  onChange={(e) => setNewBrandName(e.target.value)}
+                  placeholder={t('products.brandPlaceholder')}
+                  autoFocus />
+                <Button size="sm" disabled={!newBrandName.trim() || submitting}
+                  onClick={async () => {
+                    if (!newBrandName.trim()) return;
+                    setSubmitting(true);
+                    try {
+                      const created = await apiClient.post('/brands', { name: newBrandName.trim() });
+                      const brand = created.data.data;
+                      setBrands((prev) => [...prev, { id: brand.id, name: brand.name }]);
+                      setFormData({ ...formData, idBrand: brand.id });
+                      setNewBrandName('');
+                      setShowNewBrandInput(false);
+                    } catch {
+                      setError(t('products.error.save'));
+                    } finally {
+                      setSubmitting(false);
+                    }
+                  }}>
+                  {t('common.save')}
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => { setShowNewBrandInput(false); setNewBrandName(''); }}>
+                  {t('common.cancel')}
+                </Button>
+              </div>
+            ) : (
+              <Select value={formData.idBrand ? String(formData.idBrand) : ''}
+                onValueChange={(v) => {
+                  if (v === '__new__') { setShowNewBrandInput(true); return; }
+                  setFormData({ ...formData, idBrand: v ? Number(v) : undefined });
+                }}>
+                <SelectTrigger><SelectValue placeholder={t('common.none')} /></SelectTrigger>
+                <SelectContent>
+                  {brands.map((brand) => (
+                    <SelectItem key={brand.id} value={String(brand.id)}>{brand.name}</SelectItem>
+                  ))}
+                  <SelectItem value="__new__" className="text-primary font-medium">
+                    <Plus className="h-3 w-3 inline mr-1" />{t('products.addBrand')}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label>{t('products.field.category')}</Label>
+            <Select value={formData.idCategory ? String(formData.idCategory) : ''}
+              onValueChange={(v) => setFormData({ ...formData, idCategory: v ? Number(v) : undefined })}>
+              <SelectTrigger><SelectValue placeholder={t('common.none')} /></SelectTrigger>
+              <SelectContent>
+                {categories.map((cat) => (
+                  <SelectItem key={cat.id} value={String(cat.id)}>{cat.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

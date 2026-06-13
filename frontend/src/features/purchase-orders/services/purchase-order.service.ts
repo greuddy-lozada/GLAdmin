@@ -25,4 +25,9 @@ export const purchaseOrderService = {
   async delete(id: number): Promise<void> {
     await apiClient.delete(`/purchase-orders/${id}`);
   },
+
+  async receive(id: number, details: { id: number; quantity: number }[]): Promise<PurchaseOrder> {
+    const response = await apiClient.post(`/purchase-orders/${id}/receive`, { details });
+    return response.data;
+  },
 };

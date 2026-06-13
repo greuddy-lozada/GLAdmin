@@ -9,9 +9,14 @@ import { CreateSaleDto } from '../sales/dto/create-sale.dto';
 interface SyncProduct {
   id: number;
   name: string;
+  code: string;
   price: number;
   dollarPrice: number | null;
+  baseCost: number | null;
+  margin: number;
   idTax: number | null;
+  idBrand: number | null;
+  idCategory: number | null;
   updatedAt: Date;
   stocks: { existence: number }[];
 }
@@ -19,9 +24,14 @@ interface SyncProduct {
 export interface SyncProductWithStock {
   id: number;
   name: string;
+  code: string;
   price: number;
   dollarPrice: number | null;
+  baseCost: number | null;
+  margin: number;
   idTax: number | null;
+  idBrand: number | null;
+  idCategory: number | null;
   updatedAt: Date;
   stock: number;
 }
@@ -52,9 +62,14 @@ export class SyncService {
       select: {
         id: true,
         name: true,
+        code: true,
         price: true,
         dollarPrice: true,
+        baseCost: true,
+        margin: true,
         idTax: true,
+        idBrand: true,
+        idCategory: true,
         updatedAt: true,
         stocks: {
           select: {
@@ -115,12 +130,28 @@ export class SyncService {
 
     const companies = await this.prisma.company.findMany({
       where: { organizationId: orgId, updatedAt: { gt: sinceDate } },
-      select: { id: true, name: true, isWithholdingAgent: true, withholdingPercentage: true, updatedAt: true },
+      select: {
+        id: true,
+        name: true,
+        isWithholdingAgent: true,
+        withholdingPercentage: true,
+        updatedAt: true,
+      },
     });
 
     const taxes = await this.prisma.tax.findMany({
       where: { organizationId: orgId, updatedAt: { gt: sinceDate } },
       select: { id: true, name: true, percentage: true, updatedAt: true },
+    });
+
+    const brands = await this.prisma.brand.findMany({
+      where: { organizationId: orgId, updatedAt: { gt: sinceDate } },
+      select: { id: true, name: true, description: true, updatedAt: true },
+    });
+
+    const categories = await this.prisma.category.findMany({
+      where: { organizationId: orgId, updatedAt: { gt: sinceDate } },
+      select: { id: true, name: true, description: true, idParent: true, updatedAt: true },
     });
 
     const lastPullAt = new Date();
@@ -138,11 +169,19 @@ export class SyncService {
     const productsWithStock: SyncProductWithStock[] = products.map((p) => ({
       id: p.id,
       name: p.name,
+      code: p.code,
       price: p.price,
       dollarPrice: p.dollarPrice,
+      baseCost: p.baseCost,
+      margin: p.margin,
       idTax: p.idTax,
+      idBrand: p.idBrand,
+      idCategory: p.idCategory,
       updatedAt: p.updatedAt,
-      stock: p.stocks.reduce((sum: number, s: { existence: number }) => sum + s.existence, 0),
+      stock: p.stocks.reduce(
+        (sum: number, s: { existence: number }) => sum + s.existence,
+        0,
+      ),
     }));
 
     return {
@@ -153,6 +192,8 @@ export class SyncService {
       suppliers,
       companies,
       taxes,
+      brands,
+      categories,
       cursor: { lastPullAt: lastPullAt.toISOString() },
     };
   }
@@ -161,7 +202,12 @@ export class SyncService {
     const orgId = this.context.getCurrent()?.organizationId;
     if (!orgId) throw new Error('No organization context');
     const accepted: number[] = [];
-    const conflicts: Array<{ localTimestamp: string; recordId?: number; issue: string; description: string }> = [];
+    const conflicts: Array<{
+      localTimestamp: string;
+      recordId?: number;
+      issue: string;
+      description: string;
+    }> = [];
     const errors: Array<{ localTimestamp: string; error: string }> = [];
 
     for (const mutation of mutations) {
@@ -179,21 +225,28 @@ export class SyncService {
             });
 
             if (!currentStock || currentStock.existence < item.quantity) {
-              const salesSince: SaleWithDetails[] = await this.prisma.sale.findMany({
-                where: {
-                  organizationId: orgId,
-                  createdAt: { gt: new Date(mutation.localTimestamp) },
-                  details: {
-                    some: { idProduct: item.productId },
+              const salesSince: SaleWithDetails[] =
+                await this.prisma.sale.findMany({
+                  where: {
+                    organizationId: orgId,
+                    createdAt: { gt: new Date(mutation.localTimestamp) },
+                    details: {
+                      some: { idProduct: item.productId },
+                    },
                   },
-                },
-                include: { details: true },
-              });
+                  include: { details: true },
+                });
 
-              const consumedSince = salesSince.reduce((sum: number, sale: SaleWithDetails) => {
-                const detail = sale.details.find((d: { idProduct: number; quantity: number }) => d.idProduct === item.productId);
-                return sum + (detail?.quantity || 0);
-              }, 0);
+              const consumedSince = salesSince.reduce(
+                (sum: number, sale: SaleWithDetails) => {
+                  const detail = sale.details.find(
+                    (d: { idProduct: number; quantity: number }) =>
+                      d.idProduct === item.productId,
+                  );
+                  return sum + (detail?.quantity || 0);
+                },
+                0,
+              );
 
               const available = (currentStock?.existence || 0) - consumedSince;
 
@@ -212,7 +265,10 @@ export class SyncService {
                     table: 'sales',
                     recordId: mutation.recordId,
                     localData: JSON.stringify(mutation.data),
-                    serverData: JSON.stringify({ currentStock: currentStock?.existence || 0, consumedSince }),
+                    serverData: JSON.stringify({
+                      currentStock: currentStock?.existence || 0,
+                      consumedSince,
+                    }),
                     localTimestamp: new Date(mutation.localTimestamp),
                     description: `Oversold product ${item.productId}: requested ${item.quantity}, available ${available}`,
                     status: 'pending',
@@ -222,7 +278,6 @@ export class SyncService {
                 break;
               }
             }
-
           }
 
           if (hasConflict) continue;
@@ -236,7 +291,16 @@ export class SyncService {
             paymentMethod: mutation.data.paymentMethod as number,
             status: mutation.data.status as number,
             idCustomer: mutation.data.idCustomer as number,
-            items: (mutation.data.items as Array<{ productId: number; quantity: number; unitPrice: number; unitPriceUsd: number; subtotal: number; subtotalUsd: number }>).map((item) => ({
+            items: (
+              mutation.data.items as Array<{
+                productId: number;
+                quantity: number;
+                unitPrice: number;
+                unitPriceUsd: number;
+                subtotal: number;
+                subtotalUsd: number;
+              }>
+            ).map((item) => ({
               productId: item.productId,
               quantity: item.quantity,
               unitPrice: item.unitPrice,

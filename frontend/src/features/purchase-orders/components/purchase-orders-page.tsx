@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, ChevronDown, ChevronRight, Upload, X } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronRight, Upload, X, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DataTable, Column } from '@/components/ui/data-table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { SlideForm } from '@/components/ui/slide-form';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { usePurchaseOrders } from '@/features/purchase-orders/hooks/use-purchase-orders';
@@ -108,6 +109,9 @@ export default function PurchaseOrdersPage() {
   const [deleteTarget, setDeleteTarget] = useState<PurchaseOrder | null>(null);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [receiveOpen, setReceiveOpen] = useState(false);
+  const [receiveTarget, setReceiveTarget] = useState<PurchaseOrder | null>(null);
+  const [receiveQuantities, setReceiveQuantities] = useState<Record<number, number>>({});
 
   const orgCompany = companies[0];
   const isWithholdingAgent = orgCompany?.isWithholdingAgent ?? false;
@@ -180,6 +184,23 @@ export default function PurchaseOrdersPage() {
         );
       },
     },
+    ...(canEdit ? [{
+      field: 'receive',
+      headerName: '',
+      render: (row: PurchaseOrder) => {
+        if (row.status !== PurchaseOrderStatus.Approved) return null;
+        return (
+          <Button variant="outline" size="sm"
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              openReceive(row);
+            }}>
+            <Package className="h-3 w-3 mr-1" />
+            {t('purchaseOrders.receive')}
+          </Button>
+        );
+      },
+    }] : []),
   ];
 
   useEffect(() => {
@@ -440,6 +461,37 @@ export default function PurchaseOrdersPage() {
   };
 
   const currentTransitions = selectedItem ? PURCHASE_ORDER_TRANSITIONS[selectedItem.status as PurchaseOrderStatus] ?? [] : [];
+
+  const openReceive = async (po: PurchaseOrder) => {
+    const full = await purchaseOrderService.getById(po.id);
+    setReceiveTarget(full);
+    const qtyMap: Record<number, number> = {};
+    for (const d of full.details ?? []) {
+      qtyMap[d.id] = Math.max(0, (d.quantity ?? 0) - (d.receivedQuantity ?? 0));
+    }
+    setReceiveQuantities(qtyMap);
+    setReceiveOpen(true);
+  };
+
+  const handleReceive = async () => {
+    if (!receiveTarget) return;
+    setSubmitting(true);
+    setError('');
+    try {
+      const details = Object.entries(receiveQuantities)
+        .filter(([, qty]) => qty > 0)
+        .map(([id, quantity]) => ({ id: Number(id), quantity }));
+      await purchaseOrderService.receive(receiveTarget.id, details);
+      sileo.success({ description: t('purchaseOrders.receiveSuccess') });
+      await loadItems();
+      setReceiveOpen(false);
+      setReceiveTarget(null);
+    } catch {
+      setError(t('purchaseOrders.error.save'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <SlideForm
@@ -726,6 +778,45 @@ export default function PurchaseOrdersPage() {
           </div>
         );
       })()}
+
+      <Dialog open={receiveOpen} onOpenChange={(o) => { if (!o) { setReceiveOpen(false); setReceiveTarget(null); } }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{t('purchaseOrders.receiveTitle')}</DialogTitle>
+            <DialogDescription>
+              {t('purchaseOrders.receiveDescription')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 max-h-80 overflow-y-auto">
+            {receiveTarget?.details?.filter((d) => (d.quantity ?? 0) > (d.receivedQuantity ?? 0)).map((d) => (
+              <div key={d.id} className="flex items-center gap-3 border rounded p-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{d.product?.name ?? `#${d.idProduct}`}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t('purchaseOrders.ordered')}: {d.quantity} | {t('purchaseOrders.receivedLabel')}: {d.receivedQuantity ?? 0}
+                  </p>
+                </div>
+                <div className="w-24">
+                  <Input type="number" min={0} max={(d.quantity ?? 0) - (d.receivedQuantity ?? 0)}
+                    value={receiveQuantities[d.id] ?? 0}
+                    onChange={(e) => setReceiveQuantities({ ...receiveQuantities, [d.id]: Math.min(Number(e.target.value), (d.quantity ?? 0) - (d.receivedQuantity ?? 0)) })} />
+                </div>
+              </div>
+            ))}
+            {receiveTarget?.details?.every((d) => (d.quantity ?? 0) <= (d.receivedQuantity ?? 0)) && (
+              <p className="text-sm text-muted-foreground text-center py-4">{t('purchaseOrders.allReceived')}</p>
+            )}
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => { setReceiveOpen(false); setReceiveTarget(null); }}>
+              {t('common.cancel')}
+            </Button>
+            <Button onClick={handleReceive} disabled={submitting}>
+              {submitting ? t('common.saving') : t('purchaseOrders.receiveConfirm')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <ConfirmDialog
         open={deleteOpen}

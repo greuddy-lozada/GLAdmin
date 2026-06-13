@@ -1,4 +1,11 @@
-import { IsString, IsOptional, IsInt, IsIn, IsObject, IsDateString } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsInt,
+  IsIn,
+  IsObject,
+  IsDateString,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class PushMutationDto {

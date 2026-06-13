@@ -4,7 +4,13 @@ export interface Product {
   name: string;
   price: number;
   dollarPrice?: number;
+  baseCost?: number;
+  margin: number;
   idTax?: number;
+  idBrand?: number;
+  idCategory?: number;
+  brand?: { id: number; name: string };
+  category?: { id: number; name: string };
   observation?: string;
   image?: string;
   available: boolean;
@@ -23,7 +29,11 @@ export interface CreateProductRequest {
   name: string;
   price: number;
   dollarPrice?: number;
+  baseCost?: number;
+  margin?: number;
   idTax?: number;
+  idBrand?: number;
+  idCategory?: number;
   observation?: string;
   image?: string;
 }
@@ -33,7 +43,11 @@ export interface UpdateProductRequest {
   name?: string;
   price?: number;
   dollarPrice?: number;
+  baseCost?: number;
+  margin?: number;
   idTax?: number;
+  idBrand?: number;
+  idCategory?: number;
   observation?: string;
   image?: string;
   available?: boolean;

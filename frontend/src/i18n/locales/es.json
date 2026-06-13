@@ -97,11 +97,11 @@
     "suppliers": "Proveedores",
     "companies": "Empresas",
     "products": "Productos",
+    "categories": "Categorías",
     "taxes": "Impuestos",
     "batches": "Lotes",
     "stocks": "Inventario",
     "purchaseOrders": "Pedidos",
-    "withholdings": "Retenciones",
     "exchangeRates": "Tasas de Cambio",
     "roles": "Roles",
     "adminOrganizations": "Organizaciones",
@@ -231,7 +231,8 @@
       "email": "Correo",
       "available": "Disponible",
       "isWithholdingAgent": "Agente de retención",
-      "withholdingPercentage": "Porcentaje de retención"
+      "withholdingPercentage": "Porcentaje de retención",
+      "website": "Sitio web"
     },
     "created": "Empresa creada exitosamente",
     "updated": "Empresa actualizada exitosamente",
@@ -252,14 +253,24 @@
     "deleted": "Producto eliminado exitosamente",
     "deleteConfirm": "¿Está seguro de eliminar el producto {{name}}?",
     "empty": "No hay productos registrados",
+    "addBrand": "+ Nueva Marca",
+    "brandPlaceholder": "Nombre de la marca",
     "field": {
       "id": "#",
       "code": "Código",
       "name": "Nombre",
-      "price": "Precio",
+      "price": "Precio (VED)",
       "dollarPrice": "Precio US$",
+      "baseCost": "Costo Base ($)",
+      "margin": "Margen/Protección (%)",
+      "pvpUsd": "PVP ($)",
+      "pvpVes": "PVP (VES)",
+      "bcvRate": "Tasa BCV",
+      "pvpOverride": "Editar PVP manualmente",
       "stock": "Existencia",
       "tax": "Impuesto",
+      "brand": "Marca",
+      "category": "Categoría",
       "observation": "Observación",
       "image": "Imagen",
       "available": "Disponible"
@@ -268,6 +279,49 @@
       "save": "Error al guardar producto",
       "load": "Error al cargar productos",
       "delete": "Error al eliminar producto"
+    }
+  },
+  "brands": {
+    "title": "Marcas",
+    "new": "Nueva Marca",
+    "edit": "Editar Marca",
+    "delete": "Eliminar Marca",
+    "created": "Marca creada exitosamente",
+    "updated": "Marca actualizada exitosamente",
+    "deleted": "Marca eliminada exitosamente",
+    "deleteConfirm": "¿Está seguro de eliminar la marca {{name}}?",
+    "empty": "No hay marcas registradas",
+    "field": {
+      "id": "#",
+      "name": "Nombre",
+      "description": "Descripción"
+    },
+    "error": {
+      "save": "Error al guardar la marca",
+      "load": "Error al cargar marcas",
+      "delete": "Error al eliminar la marca"
+    }
+  },
+  "categories": {
+    "title": "Categorías",
+    "new": "Nueva Categoría",
+    "edit": "Editar Categoría",
+    "delete": "Eliminar Categoría",
+    "created": "Categoría creada exitosamente",
+    "updated": "Categoría actualizada exitosamente",
+    "deleted": "Categoría eliminada exitosamente",
+    "deleteConfirm": "¿Está seguro de eliminar la categoría {{name}}?",
+    "empty": "No hay categorías registradas",
+    "field": {
+      "id": "#",
+      "name": "Nombre",
+      "description": "Descripción",
+      "parent": "Categoría Padre"
+    },
+    "error": {
+      "save": "Error al guardar la categoría",
+      "load": "Error al cargar categorías",
+      "delete": "Error al eliminar la categoría"
     }
   },
   "taxes": {
@@ -398,7 +452,15 @@
     "baseAmount": "Base Imponible",
     "ivaAmount": "IVA",
     "withholdingAmount": "Retención",
-    "totalToPay": "Total a Pagar"
+    "totalToPay": "Total a Pagar",
+    "receive": "Recibir",
+    "receiveTitle": "Recibir Productos",
+    "receiveDescription": "Ingrese la cantidad a recibir para cada producto de este pedido.",
+    "receiveConfirm": "Confirmar Recepción",
+    "receiveSuccess": "Productos recibidos exitosamente",
+    "ordered": "Pedido",
+    "receivedLabel": "Recibido",
+    "allReceived": "Todos los productos han sido recibidos completamente."
   },
   "exchangeRates": {
     "title": "Tasas de Cambio",
@@ -430,37 +492,6 @@
       "bcv": "BCV",
       "dolartoday": "DolarToday",
       "enparalelovzla": "EnParaleloVzla"
-    }
-  },
-  "withholdings": {
-    "title": "Retenciones",
-    "new": "Nueva Retención",
-    "edit": "Editar Retención",
-    "delete": "Eliminar Retención",
-    "created": "Retención creada exitosamente",
-    "deleted": "Retención eliminada exitosamente",
-    "deleteConfirm": "¿Está seguro de eliminar la retención #{{id}}?",
-    "empty": "No hay retenciones registradas",
-    "field": {
-      "id": "#",
-      "supplier": "Proveedor",
-      "purchaseOrder": "Orden de Compra",
-      "type": "Tipo",
-      "percentage": "Porcentaje",
-      "baseAmount": "Base Imponible (Bs.)",
-      "baseAmountUsd": "Base Imponible (USD)",
-      "withheldAmount": "Monto Retenido",
-      "withheldAmountLabel": "Monto a retener",
-      "period": "Período"
-    },
-    "error": {
-      "save": "Error al guardar retención",
-      "load": "Error al cargar retenciones",
-      "delete": "Error al eliminar retención"
-    },
-    "type": {
-      "IVA": "IVA",
-      "ISLR": "ISLR"
     }
   },
   "pos": {
@@ -533,7 +564,8 @@
     },
     "detail": {
       "empty": "Agregue productos para comenzar la venta",
-      "addProduct": "Buscar o escanear producto..."
+      "addProduct": "Buscar o escanear producto...",
+      "quantity": "Cant."
     },
     "park": {
       "button": "Poner en espera",

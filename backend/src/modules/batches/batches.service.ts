@@ -19,11 +19,15 @@ export class BatchesService {
     return { data: batch, message: 'BATCH.CREATED' };
   }
 
-  async findAll(page = 1, limit = 20) {
+  async findAll(page = 1, limit = 20, search?: string) {
     const skip = (page - 1) * limit;
+    const where: Prisma.BatchWhereInput = {};
+    if (search) {
+      where.code = { contains: search };
+    }
     const [data, total] = await Promise.all([
-      this.prisma.batch.findMany({ skip, take: limit }),
-      this.prisma.batch.count(),
+      this.prisma.batch.findMany({ where, skip, take: limit }),
+      this.prisma.batch.count({ where }),
     ]);
     return { data, total, page, limit };
   }

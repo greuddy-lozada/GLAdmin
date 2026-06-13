@@ -3,6 +3,7 @@ import { PrismaService } from '../../shared/prisma/prisma.service';
 import { ContextService } from '../../modules/tenant/context.service';
 import { CreateSupplierDto } from './dto/create-supplier.dto';
 import { UpdateSupplierDto } from './dto/update-supplier.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class SuppliersService {
@@ -32,15 +33,15 @@ export class SuppliersService {
     return { data: supplier, message: 'SUPPLIER.CREATED' };
   }
 
-  async findAll(page = 1, limit = 20) {
+  async findAll(page = 1, limit = 20, search?: string) {
     const skip = (page - 1) * limit;
+    const where: Prisma.SupplierWhereInput = { available: true };
+    if (search) {
+      where.companyName = { contains: search };
+    }
     const [data, total] = await Promise.all([
-      this.prisma.supplier.findMany({
-        where: { available: true },
-        skip,
-        take: limit,
-      }),
-      this.prisma.supplier.count({ where: { available: true } }),
+      this.prisma.supplier.findMany({ where, skip, take: limit }),
+      this.prisma.supplier.count({ where }),
     ]);
     return { data, total, page, limit };
   }

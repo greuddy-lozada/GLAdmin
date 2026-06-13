@@ -12,7 +12,6 @@ export type FeatureFlag =
   | 'purchase_orders'
   | 'sales'
   | 'inventory'
-  | 'withholding'
   | 'multiple_orgs'
   | 'white_label'
   | 'priority_support';
