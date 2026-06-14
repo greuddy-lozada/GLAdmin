@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'GLAdmin POS',
-    short_name: 'GLAdmin',
+    name: 'Cuadra POS',
+    short_name: 'Cuadra',
     description: 'Inventory and Point of Sale system',
     start_url: '/dashboard',
     display: 'standalone',

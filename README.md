@@ -1,4 +1,4 @@
-# GLAdmin
+# Cuadra
 
 Sistema de Gestión Administrativa — Administrative Management System.
 
@@ -7,7 +7,7 @@ Sistema de Gestión Administrativa — Administrative Management System.
 Monorepo with pnpm workspaces:
 
 ```
-GLAdmin/
+Cuadra/
   backend/       # NestJS 11 + Prisma 6 + SQLite
   frontend/      # Next.js 16 (App Router) + shadcn/ui + Tailwind v4
   specs/         # Migration plan and specs

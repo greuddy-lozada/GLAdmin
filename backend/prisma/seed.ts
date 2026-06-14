@@ -36,7 +36,7 @@ async function main() {
     update: {},
     create: {
       id: 1,
-      email: 'admin@gladmin.com',
+      email: 'admin@cuadra.app',
       userName: 'glozada',
       firstName: 'Greuddy',
       lastName: 'Lozada',
@@ -340,11 +340,11 @@ async function main() {
     create: {
       id: 1,
       taxId: 'J-40123456-7',
-      name: 'GLAdmin Solutions C.A.',
-      address: 'Av. Abraham Lincoln, Torre GLAdmin, Caracas',
+      name: 'Cuadra Solutions C.A.',
+      address: 'Av. Abraham Lincoln, Torre Cuadra, Caracas',
       phoneNumber: '0212-555-0000',
-      email: 'info@gladmin.com',
-      website: 'https://gladmin.com',
+      email: 'info@cuadra.app',
+      website: 'https://cuadra.app',
       organizationId: 1,
     },
   });
@@ -375,6 +375,31 @@ async function main() {
     where: { id: 5 },
     update: {},
     create: { id: 5, code: 'PROD-005', name: 'Webcam HD 1080p', price: 3200, dollarPrice: 55, idTax: 2, available: true, organizationId: 1 },
+  });
+  await prisma.product.upsert({
+    where: { id: 6 },
+    update: {},
+    create: { id: 6, code: 'PROD-006', name: 'USB Cable Type-C 1m', price: 400, idTax: 3, available: true, organizationId: 1, idCategory: 4 },
+  });
+  await prisma.product.upsert({
+    where: { id: 7 },
+    update: {},
+    create: { id: 7, code: 'PROD-007', name: 'Cargador Pared 20W USB-C', price: 1800, dollarPrice: 30, idTax: 2, available: true, organizationId: 1, idCategory: 4 },
+  });
+  await prisma.product.upsert({
+    where: { id: 8 },
+    update: {},
+    create: { id: 8, code: 'PROD-008', name: 'Olla de Presión 6L', price: 6500, idTax: 1, available: true, organizationId: 1, idCategory: 6 },
+  });
+  await prisma.product.upsert({
+    where: { id: 9 },
+    update: {},
+    create: { id: 9, code: 'PROD-009', name: 'Set de Sartenes Antiadherentes', price: 9200, dollarPrice: 155, idTax: 1, available: true, organizationId: 1, idCategory: 6 },
+  });
+  await prisma.product.upsert({
+    where: { id: 10 },
+    update: {},
+    create: { id: 10, code: 'PROD-010', name: 'Camiseta Deportiva M/L', price: 1500, idTax: 3, available: true, organizationId: 1, idCategory: 8 },
   });
   logger.log('Products created');
 
@@ -407,6 +432,32 @@ async function main() {
     update: {},
     create: { id: 3, idProduct: 3, idSupplier: 2, idBatch: 2, existence: 50, organizationId: 1 },
   });
+  // ── Low-stock entries for testing alerts (existence <= 5) ──
+  await prisma.stock.upsert({
+    where: { id: 4 },
+    update: {},
+    create: { id: 4, idProduct: 4, idSupplier: 2, existence: 3, organizationId: 1 },
+  });
+  await prisma.stock.upsert({
+    where: { id: 5 },
+    update: {},
+    create: { id: 5, idProduct: 5, idSupplier: 1, existence: 0, organizationId: 1 },
+  });
+  await prisma.stock.upsert({
+    where: { id: 6 },
+    update: {},
+    create: { id: 6, idProduct: 6, idSupplier: 2, existence: 2, organizationId: 1 },
+  });
+  await prisma.stock.upsert({
+    where: { id: 7 },
+    update: {},
+    create: { id: 7, idProduct: 7, idSupplier: 1, existence: 4, organizationId: 1 },
+  });
+  await prisma.stock.upsert({
+    where: { id: 8 },
+    update: {},
+    create: { id: 8, idProduct: 3, idSupplier: 1, existence: 20, organizationId: 1 },
+  });
   logger.log('Stocks created');
 
   // ── Purchase Order (multi-currency) ──
@@ -429,7 +480,24 @@ async function main() {
       organizationId: 1,
     },
   });
-  logger.log('Purchase order created');
+  // ── Purchase Order 2 (received, for testing) ──
+  await prisma.purchaseOrder.upsert({
+    where: { id: 2 },
+    update: {},
+    create: {
+      id: 2,
+      idSupplier: 2,
+      code: 'OC-2025-002',
+      date: new Date('2025-02-01'),
+      amount: 35000,
+      amountUsd: 486.11,
+      exchangeRate: 72.00,
+      paymentMethod: 1,
+      status: 4,
+      organizationId: 1,
+    },
+  });
+  logger.log('Purchase orders created');
 
   // ── Purchase Order Details (multi-currency) ──
   await prisma.purchaseOrderDet.upsert({
@@ -441,6 +509,16 @@ async function main() {
     where: { id: 2 },
     update: {},
     create: { id: 2, idPurchaseOrder: 1, idProduct: 2, quantity: 10, unitPrice: 3000, unitPriceUsd: 3000 / 72.00, subtotal: 30000, subtotalUsd: 30000 / 72.00, organizationId: 1 },
+  });
+  await prisma.purchaseOrderDet.upsert({
+    where: { id: 3 },
+    update: {},
+    create: { id: 3, idPurchaseOrder: 2, idProduct: 4, quantity: 10, receivedQuantity: 10, unitPrice: 1500, unitPriceUsd: 20.83, subtotal: 15000, subtotalUsd: 208.33, organizationId: 1 },
+  });
+  await prisma.purchaseOrderDet.upsert({
+    where: { id: 4 },
+    update: {},
+    create: { id: 4, idPurchaseOrder: 2, idProduct: 5, quantity: 20, receivedQuantity: 20, unitPrice: 1000, unitPriceUsd: 13.89, subtotal: 20000, subtotalUsd: 277.78, organizationId: 1 },
   });
   logger.log('Purchase order details created');
 
@@ -461,6 +539,20 @@ async function main() {
     },
   });
   logger.log('Accounts payable created');
+
+  // ── Backfill totalExistence for all products ──
+  const products = await prisma.product.findMany({ select: { id: true } });
+  for (const p of products) {
+    const result = await prisma.stock.aggregate({
+      where: { idProduct: p.id },
+      _sum: { existence: true },
+    });
+    await prisma.product.update({
+      where: { id: p.id },
+      data: { totalExistence: result._sum.existence ?? 0 },
+    });
+  }
+  logger.log('totalExistence backfilled');
 
   logger.log('✅ Seed completed successfully');
 }

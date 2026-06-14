@@ -1,9 +1,9 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { join } from 'path';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -12,9 +12,12 @@ async function bootstrap() {
 
   app.use(cookieParser());
 
-  app.useStaticAssets(join(process.cwd(), 'uploads'), {
-    prefix: '/uploads',
-  });
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: 'same-origin' },
+      contentSecurityPolicy: false,
+    }),
+  );
 
   app.enableCors({
     origin: process.env.FRONTEND_URL ?? 'http://localhost:3000',
@@ -32,8 +35,9 @@ async function bootstrap() {
     }),
   );
 
+  const logger = new Logger('Bootstrap');
   const port = process.env.PORT ?? 4000;
   await app.listen(port);
-  console.log(`Backend running on http://localhost:${port}`);
+  logger.log(`Backend running on http://localhost:${port}`);
 }
-bootstrap();
+void bootstrap();

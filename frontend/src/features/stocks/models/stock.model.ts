@@ -29,6 +29,13 @@ export interface CreateStockRequest {
   existence: number;
 }
 
+export interface StockAlert {
+  id: number;
+  name: string;
+  price: number;
+  totalExistence: number;
+}
+
 export interface UpdateStockRequest {
   idProduct?: number;
   idSupplier?: number;

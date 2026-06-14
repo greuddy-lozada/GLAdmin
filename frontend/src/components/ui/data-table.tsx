@@ -109,6 +109,7 @@ export function DataTable<T extends { id: number }>({
     });
   }
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: rows,
     columns: tableColumns,

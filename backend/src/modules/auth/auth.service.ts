@@ -11,6 +11,7 @@ import { AuthFactory } from './auth.factory';
 import { LoginDto } from './dto/login.dto';
 import { RefreshDto } from './dto/refresh.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { AuditLogService } from '../audit-log/audit-log.service';
 
 interface UserOrganizationWithRelations {
   userId: number;
@@ -42,6 +43,7 @@ export class AuthService {
     private readonly userRepository: UserRepository,
     private readonly authFactory: AuthFactory,
     private readonly prisma: PrismaService,
+    private readonly auditLog: AuditLogService,
   ) {}
 
   async login(dto: LoginDto) {
@@ -52,14 +54,35 @@ export class AuthService {
 
     const isPasswordValid = await bcrypt.compare(dto.password, user.password);
     if (!isPasswordValid) {
+      await this.auditLog
+        .log({
+          organizationId: 0,
+          userId: user.id,
+          action: 'LOGIN_FAILED',
+          entity: 'User',
+          entityId: user.id,
+          metadata: { reason: 'wrong_password', email: dto.email },
+        })
+        .catch(() => {});
       throw new UnauthorizedException('AUTH.INVALID_CREDENTIALS');
     }
 
     if (!user.isActive) {
+      await this.auditLog
+        .log({
+          organizationId: 0,
+          userId: user.id,
+          action: 'LOGIN_FAILED',
+          entity: 'User',
+          entityId: user.id,
+          metadata: { reason: 'inactive_user', email: dto.email },
+        })
+        .catch(() => {});
       throw new UnauthorizedException('AUTH.USER_INACTIVE');
     }
 
-    const { raw, hash, tokenId } = await this.authFactory.generateRefreshToken();
+    const { raw, hash, tokenId } =
+      await this.authFactory.generateRefreshToken();
 
     await this.prisma.refreshToken.create({
       data: {
@@ -76,6 +99,16 @@ export class AuthService {
     });
 
     const organizations = await this.getUserOrgs(user.id);
+
+    this.auditLog
+      .log({
+        organizationId: organizations[0]?.id ?? 0,
+        userId: user.id,
+        action: 'LOGIN_SUCCESS',
+        entity: 'User',
+        entityId: user.id,
+      })
+      .catch(() => {});
     const loginResponse = this.authFactory.createLoginResponse(user, raw);
 
     if (organizations.length === 0) {
@@ -107,7 +140,11 @@ export class AuthService {
             name: org.name,
             slug: org.slug,
             plan: org.plan
-              ? { name: org.plan.name, label: org.plan.label, features: org.plan.features }
+              ? {
+                  name: org.plan.name,
+                  label: org.plan.label,
+                  features: org.plan.features,
+                }
               : null,
           },
         },
@@ -148,7 +185,8 @@ export class AuthService {
 
     await this.prisma.refreshToken.deleteMany({ where: { userId } });
 
-    const { raw, hash, tokenId } = await this.authFactory.generateRefreshToken();
+    const { raw, hash, tokenId } =
+      await this.authFactory.generateRefreshToken();
     await this.prisma.refreshToken.create({
       data: {
         tokenId,
@@ -206,7 +244,10 @@ export class AuthService {
       throw new UnauthorizedException('AUTH.INVALID_REFRESH_TOKEN');
     }
 
-    const isValid = await this.authFactory.compareRefreshToken(rawSecret, token.tokenHash);
+    const isValid = await this.authFactory.compareRefreshToken(
+      rawSecret,
+      token.tokenHash,
+    );
     if (!isValid) {
       throw new UnauthorizedException('AUTH.INVALID_REFRESH_TOKEN');
     }
@@ -217,7 +258,11 @@ export class AuthService {
       where: { id: token.id },
     });
 
-    const { raw, hash, tokenId: newTokenId } = await this.authFactory.generateRefreshToken();
+    const {
+      raw,
+      hash,
+      tokenId: newTokenId,
+    } = await this.authFactory.generateRefreshToken();
     await this.prisma.refreshToken.create({
       data: {
         tokenId: newTokenId,
@@ -259,7 +304,10 @@ export class AuthService {
       throw new NotFoundException('AUTH.USER_NOT_FOUND');
     }
 
-    const isOldPasswordValid = await bcrypt.compare(dto.oldPassword, user.password);
+    const isOldPasswordValid = await bcrypt.compare(
+      dto.oldPassword,
+      user.password,
+    );
     if (!isOldPasswordValid) {
       throw new ForbiddenException('AUTH.INVALID_OLD_PASSWORD');
     }
@@ -278,20 +326,25 @@ export class AuthService {
   }
 
   private async getUserOrgs(userId: number) {
-    const userOrgs: UserOrganizationWithRelations[] = await this.prisma.userOrganization.findMany({
-      where: { userId },
-      include: {
-        organization: { include: { plan: true } },
-        role: true,
-      },
-    });
+    const userOrgs: UserOrganizationWithRelations[] =
+      await this.prisma.userOrganization.findMany({
+        where: { userId },
+        include: {
+          organization: { include: { plan: true } },
+          role: true,
+        },
+      });
 
     return userOrgs.map((uo) => ({
       id: uo.organization.id,
       name: uo.organization.name,
       slug: uo.organization.slug,
       plan: uo.organization.plan
-        ? { name: uo.organization.plan.name, label: uo.organization.plan.label, features: uo.organization.plan.features }
+        ? {
+            name: uo.organization.plan.name,
+            label: uo.organization.plan.label,
+            features: uo.organization.plan.features,
+          }
         : null,
       role: uo.role.slug,
     }));

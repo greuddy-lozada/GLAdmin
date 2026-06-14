@@ -21,7 +21,7 @@ export default function BillingPage() {
 
     const result = await subscribe(planId, orgId);
     if (result?.url) {
-      window.location.href = result.url;
+      setTimeout(() => { window.location.href = result.url; }, 0);
     }
   };
 

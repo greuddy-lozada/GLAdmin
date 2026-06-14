@@ -1,18 +1,61 @@
 import {
   Controller,
+  Get,
   Post,
+  Param,
+  Res,
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  NotFoundException,
+  StreamableFile,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
+import type { Response } from 'express';
 import { extname, join } from 'path';
-import { MinLevel, ROLE_LEVEL } from '../../common/decorators/min-level.decorator';
+import {
+  createReadStream,
+  existsSync,
+  openSync,
+  readSync,
+  closeSync,
+  unlinkSync,
+} from 'fs';
+import {
+  MinLevel,
+  ROLE_LEVEL,
+} from '../../common/decorators/min-level.decorator';
 
 const UPLOAD_DIR = join(process.cwd(), 'uploads');
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+const ALLOWED_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'application/pdf',
+];
+
+const MAGIC_BYTES: Record<string, number[][]> = {
+  'image/jpeg': [[0xff, 0xd8, 0xff]],
+  'image/png': [[0x89, 0x50, 0x4e, 0x47]],
+  'image/webp': [[0x52, 0x49, 0x46, 0x46]],
+  'application/pdf': [[0x25, 0x50, 0x44, 0x46]],
+};
+
+function validateMagicBytes(filePath: string, mimeType: string): boolean {
+  const signatures = MAGIC_BYTES[mimeType];
+  if (!signatures) return true;
+
+  const fd = openSync(filePath, 'r');
+  const buffer = Buffer.alloc(8);
+  readSync(fd, buffer, 0, 8, 0);
+  closeSync(fd);
+
+  return signatures.some((sig) =>
+    buffer.subarray(0, sig.length).equals(Buffer.from(sig)),
+  );
+}
 
 @Controller('uploads')
 @MinLevel(ROLE_LEVEL.employee)
@@ -32,7 +75,12 @@ export class UploadsController {
         if (ALLOWED_TYPES.includes(file.mimetype)) {
           cb(null, true);
         } else {
-          cb(new BadRequestException('Invalid file type. Allowed: JPEG, PNG, WebP, PDF'), false);
+          cb(
+            new BadRequestException(
+              'Invalid file type. Allowed: JPEG, PNG, WebP, PDF',
+            ),
+            false,
+          );
         }
       },
     }),
@@ -41,6 +89,14 @@ export class UploadsController {
     if (!file) {
       throw new BadRequestException('File is required');
     }
+
+    if (!validateMagicBytes(file.path, file.mimetype)) {
+      unlinkSync(file.path);
+      throw new BadRequestException(
+        'File content does not match its declared type',
+      );
+    }
+
     return {
       data: {
         filename: file.filename,
@@ -50,5 +106,26 @@ export class UploadsController {
       },
       message: 'UPLOAD.SUCCESS',
     };
+  }
+
+  @Get(':filename')
+  serveFile(
+    @Param('filename') filename: string,
+    @Res({ passthrough: true }) _res: Response,
+  ) {
+    const filePath = join(UPLOAD_DIR, filename);
+
+    const resolvedPath = filePath.replace(/\\/g, '/');
+    const resolvedDir = UPLOAD_DIR.replace(/\\/g, '/');
+    if (!resolvedPath.startsWith(resolvedDir)) {
+      throw new BadRequestException('Invalid file path');
+    }
+
+    if (!existsSync(filePath)) {
+      throw new NotFoundException('File not found');
+    }
+
+    const file = createReadStream(filePath);
+    return new StreamableFile(file);
   }
 }

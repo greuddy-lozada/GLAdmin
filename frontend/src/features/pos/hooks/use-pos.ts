@@ -5,7 +5,6 @@ import type { CartItem } from '../models/pos.model';
 
 export function usePos() {
   const cart = usePosStore(s => s.cart);
-  const exchangeRate = usePosStore(s => s.exchangeRate);
   const withholdingPercentage = usePosStore(s => s.withholdingPercentage);
 
   const addToCartAction = usePosStore(s => s.addToCart);

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { ContextService } from '../../modules/tenant/context.service';
 import { CreateExchangeRateDto } from './dto/create-exchange-rate.dto';
@@ -22,17 +26,26 @@ export class ExchangeRatesService {
   async syncFromApi() {
     const orgId = this.getOrgId();
 
-    let data: any[];
-    try {
-      const res = await fetch('https://ve.dolarapi.com/v1/dolares', { signal: AbortSignal.timeout(10000) });
-      if (!res.ok) throw new Error(`API responded with ${res.status}`);
-      data = await res.json();
-    } catch {
-      throw new BadRequestException('Failed to fetch exchange rates from external API');
+    interface DolarApiRate {
+      fuente: string;
+      promedio: number;
     }
 
-    const oficial = data.find((d: any) => d.fuente === 'oficial');
-    const paralelo = data.find((d: any) => d.fuente === 'paralelo');
+    let data: DolarApiRate[];
+    try {
+      const res = await fetch('https://ve.dolarapi.com/v1/dolares', {
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!res.ok) throw new Error(`API responded with ${res.status}`);
+      data = (await res.json()) as DolarApiRate[];
+    } catch {
+      throw new BadRequestException(
+        'Failed to fetch exchange rates from external API',
+      );
+    }
+
+    const oficial = data.find((d) => d.fuente === 'oficial');
+    const paralelo = data.find((d) => d.fuente === 'paralelo');
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -107,10 +120,10 @@ export class ExchangeRatesService {
   }
 
   async update(id: number, dto: UpdateExchangeRateDto) {
-    const orgId = this.getOrgId();
+    this.getOrgId();
     await this.findOne(id);
 
-    const data: any = {};
+    const data: Partial<Prisma.ExchangeRateDayUpdateInput> = {};
     if (dto.rateBcvUsd !== undefined) data.rateBcvUsd = dto.rateBcvUsd;
     if (dto.rateParalelo !== undefined) data.rateParalelo = dto.rateParalelo;
     if (dto.source !== undefined) data.source = dto.source;

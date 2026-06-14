@@ -10,7 +10,10 @@ import {
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { MinLevel, ROLE_LEVEL } from '../../common/decorators/min-level.decorator';
+import {
+  MinLevel,
+  ROLE_LEVEL,
+} from '../../common/decorators/min-level.decorator';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 @Controller('admin/users')
@@ -31,10 +34,7 @@ export class AdminUsersController {
 
   @Patch(':id')
   @MinLevel(ROLE_LEVEL.master)
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateUserDto,
-  ) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateUserDto) {
     return this.adminService.updateUser(id, dto);
   }
 

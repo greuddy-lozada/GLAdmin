@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { ContextService } from '../../modules/tenant/context.service';
@@ -13,7 +17,10 @@ export class PurchaseOrdersService {
     private readonly contextService: ContextService,
   ) {}
 
-  private async recalcTotalExistence(productId: number, tx: Prisma.TransactionClient) {
+  private async recalcTotalExistence(
+    productId: number,
+    tx: Prisma.TransactionClient,
+  ) {
     const result = await tx.stock.aggregate({
       where: { idProduct: productId },
       _sum: { existence: true },
@@ -24,8 +31,11 @@ export class PurchaseOrdersService {
     });
   }
 
-  private get orgId() {
-    return this.contextService?.getCurrent()?.organizationId!;
+  private get orgId(): number {
+    const ctx = this.contextService?.getCurrent();
+    const id = ctx?.organizationId;
+    if (!id) throw new Error('No organization context');
+    return id;
   }
 
   private include = {
@@ -39,18 +49,32 @@ export class PurchaseOrdersService {
 
   async create(dto: CreatePurchaseOrderDto) {
     const orgId = this.orgId;
-    const { details, applyWithholding, withholdingPercentage, withholdingProof, ...header } = dto;
+    const {
+      details,
+      applyWithholding,
+      withholdingPercentage,
+      withholdingProof,
+      ...header
+    } = dto;
 
     if (applyWithholding) {
-      const orgCompany = await this.prisma.company.findFirst({ where: { organizationId: orgId } });
+      const orgCompany = await this.prisma.company.findFirst({
+        where: { organizationId: orgId },
+      });
       if (!orgCompany?.isWithholdingAgent) {
-        throw new BadRequestException('La organización no es agente de retención');
+        throw new BadRequestException(
+          'La organización no es agente de retención',
+        );
       }
       if (!withholdingPercentage) {
-        throw new BadRequestException('Debe especificar un porcentaje de retención (75 o 100)');
+        throw new BadRequestException(
+          'Debe especificar un porcentaje de retención (75 o 100)',
+        );
       }
       if (!withholdingProof) {
-        throw new BadRequestException('Debe adjuntar el comprobante de retención');
+        throw new BadRequestException(
+          'Debe adjuntar el comprobante de retención',
+        );
       }
     }
 
@@ -82,8 +106,10 @@ export class PurchaseOrdersService {
                 percentage: withholdingPercentage!,
                 baseAmount: dto.ivaAmount ?? 0,
                 baseAmountUsd: dto.ivaAmountUsd ?? 0,
-                withheldAmount: (dto.ivaAmount ?? 0) * (withholdingPercentage! / 100),
-                withheldAmountUsd: (dto.ivaAmountUsd ?? 0) * (withholdingPercentage! / 100),
+                withheldAmount:
+                  (dto.ivaAmount ?? 0) * (withholdingPercentage! / 100),
+                withheldAmountUsd:
+                  (dto.ivaAmountUsd ?? 0) * (withholdingPercentage! / 100),
                 withholdingProof: withholdingProof,
                 organizationId: orgId,
               },
@@ -98,7 +124,11 @@ export class PurchaseOrdersService {
   async findAll(page = 1, limit = 20) {
     const skip = (page - 1) * limit;
     const [data, total] = await Promise.all([
-      this.prisma.purchaseOrder.findMany({ skip, take: limit, include: this.include }),
+      this.prisma.purchaseOrder.findMany({
+        skip,
+        take: limit,
+        include: this.include,
+      }),
       this.prisma.purchaseOrder.count(),
     ]);
     return { data, total, page, limit };
@@ -119,24 +149,40 @@ export class PurchaseOrdersService {
   async update(id: number, dto: UpdatePurchaseOrderDto) {
     const existing = await this.findOne(id);
     const orgId = this.orgId;
-    const { details: dtoDetails, applyWithholding, withholdingPercentage, withholdingProof, ...header } = dto;
+    const {
+      details: dtoDetails,
+      applyWithholding,
+      withholdingPercentage,
+      withholdingProof,
+      ...header
+    } = dto;
 
     if (applyWithholding) {
-      const orgCompany = await this.prisma.company.findFirst({ where: { organizationId: orgId } });
+      const orgCompany = await this.prisma.company.findFirst({
+        where: { organizationId: orgId },
+      });
       if (!orgCompany?.isWithholdingAgent) {
-        throw new BadRequestException('La organización no es agente de retención');
+        throw new BadRequestException(
+          'La organización no es agente de retención',
+        );
       }
       if (!withholdingPercentage && !existing.withholdingRecords?.length) {
-        throw new BadRequestException('Debe especificar un porcentaje de retención (75 o 100)');
+        throw new BadRequestException(
+          'Debe especificar un porcentaje de retención (75 o 100)',
+        );
       }
       if (!withholdingProof && !existing.withholdingRecords?.length) {
-        throw new BadRequestException('Debe adjuntar el comprobante de retención');
+        throw new BadRequestException(
+          'Debe adjuntar el comprobante de retención',
+        );
       }
     }
 
     const purchaseOrder = await this.prisma.$transaction(async (tx) => {
       if (dtoDetails) {
-        await tx.purchaseOrderDet.deleteMany({ where: { idPurchaseOrder: id } });
+        await tx.purchaseOrderDet.deleteMany({
+          where: { idPurchaseOrder: id },
+        });
         if (dtoDetails.length > 0) {
           await tx.purchaseOrderDet.createMany({
             data: dtoDetails.map((d) => ({
@@ -158,7 +204,8 @@ export class PurchaseOrdersService {
         const existingRecord = existing.withholdingRecords?.[0];
         if (applyWithholding) {
           const pct = withholdingPercentage ?? existingRecord?.percentage ?? 75;
-          const proof = withholdingProof ?? existingRecord?.withholdingProof ?? '';
+          const proof =
+            withholdingProof ?? existingRecord?.withholdingProof ?? '';
           const baseAmt = dto.ivaAmount ?? existing.ivaAmount ?? 0;
           const baseAmtUsd = dto.ivaAmountUsd ?? existing.ivaAmountUsd ?? 0;
           const data = {
@@ -174,13 +221,18 @@ export class PurchaseOrdersService {
             organizationId: orgId,
           };
           if (existingRecord) {
-            await tx.withholdingRecord.update({ where: { id: existingRecord.id }, data });
+            await tx.withholdingRecord.update({
+              where: { id: existingRecord.id },
+              data,
+            });
           } else {
             await tx.withholdingRecord.create({ data });
           }
         } else {
           if (existingRecord) {
-            await tx.withholdingRecord.delete({ where: { id: existingRecord.id } });
+            await tx.withholdingRecord.delete({
+              where: { id: existingRecord.id },
+            });
           }
         }
       }
@@ -206,7 +258,10 @@ export class PurchaseOrdersService {
     await this.prisma.$transaction(async (tx) => {
       for (const item of dto.details) {
         const line = existing.details.find((d) => d.id === item.id);
-        if (!line) throw new BadRequestException(`Detail id ${item.id} not found in PO ${id}`);
+        if (!line)
+          throw new BadRequestException(
+            `Detail id ${item.id} not found in PO ${id}`,
+          );
 
         const newReceived = line.receivedQuantity + item.quantity;
         if (newReceived > (line.quantity ?? 0)) {
@@ -221,7 +276,11 @@ export class PurchaseOrdersService {
         });
 
         let stock = await tx.stock.findFirst({
-          where: { idProduct: line.idProduct, idSupplier: existing.idSupplier, organizationId: orgId },
+          where: {
+            idProduct: line.idProduct,
+            idSupplier: existing.idSupplier,
+            organizationId: orgId,
+          },
         });
 
         if (stock) {
@@ -255,8 +314,12 @@ export class PurchaseOrdersService {
         });
       }
 
-      const refreshedLines = await tx.purchaseOrderDet.findMany({ where: { idPurchaseOrder: id } });
-      const allReceived = refreshedLines.every((l) => l.receivedQuantity >= (l.quantity ?? 0));
+      const refreshedLines = await tx.purchaseOrderDet.findMany({
+        where: { idPurchaseOrder: id },
+      });
+      const allReceived = refreshedLines.every(
+        (l) => l.receivedQuantity >= (l.quantity ?? 0),
+      );
       if (allReceived) {
         await tx.purchaseOrder.update({ where: { id }, data: { status: 4 } });
       }

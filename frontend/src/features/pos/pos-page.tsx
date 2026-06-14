@@ -35,7 +35,6 @@ export default function PosPage() {
 
   const customerId = usePosStore(s => s.customerId);
   const customerName = usePosStore(s => s.customerName);
-  const customerTaxId = usePosStore(s => s.customerTaxId);
   const exchangeRate = usePosStore(s => s.exchangeRate);
   const setCustomer = usePosStore(s => s.setCustomer);
   const clearCustomer = usePosStore(s => s.clearCustomer);
@@ -65,7 +64,7 @@ export default function PosPage() {
     }).catch(() => {
       localDb.exchangeRates.orderBy('updatedAt').last().then((rate) => { if (rate) setExchangeRate(rate.rate); }).catch(console.warn);
     });
-  }, []);
+  }, [loadProducts, setExchangeRate]);
 
   const handlePark = async () => {
     const result = await parkCart(customerId, customerName);

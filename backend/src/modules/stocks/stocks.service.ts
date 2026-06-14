@@ -22,6 +22,21 @@ export class StocksService {
     });
   }
 
+  async getAlerts(threshold = 5) {
+    const ctx = this.contextService?.getCurrent();
+    const orgId = ctx?.organizationId;
+    return this.prisma.product.findMany({
+      where: {
+        organizationId: orgId!,
+        available: true,
+        totalExistence: { lte: threshold },
+      },
+      select: { id: true, name: true, price: true, totalExistence: true },
+      orderBy: { totalExistence: 'asc' },
+      take: 10,
+    });
+  }
+
   async create(dto: CreateStockDto) {
     const ctx = this.contextService?.getCurrent();
     const orgId = ctx?.organizationId;
@@ -44,7 +59,12 @@ export class StocksService {
     const [data, total] = await Promise.all([
       this.prisma.stock.findMany({
         where: { available: true },
-        include: { product: true, supplier: true, batch: true, stockDets: true },
+        include: {
+          product: true,
+          supplier: true,
+          batch: true,
+          stockDets: true,
+        },
         skip,
         take: limit,
       }),

@@ -1,10 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '@/lib/api/api-client';
-import type { DashboardAnalytics } from '../models/dashboard-analytics.model';
+import type { DashboardAnalytics, SalesAnalytics } from '../models/dashboard-analytics.model';
 
 async function fetchDashboardAnalytics(): Promise<DashboardAnalytics> {
-  const res = await apiClient.get('/dashboard/analytics');
-  return res.data.data as DashboardAnalytics;
+  const [analyticsRes, salesRes] = await Promise.all([
+    apiClient.get('/dashboard/analytics'),
+    apiClient.get('/dashboard/sales-analytics'),
+  ]);
+  return {
+    ...analyticsRes.data.data,
+    salesAnalytics: salesRes.data.data as SalesAnalytics,
+  };
 }
 
 export function useDashboardAnalytics() {

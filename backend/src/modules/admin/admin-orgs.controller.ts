@@ -13,7 +13,10 @@ import { AdminService } from './admin.service';
 import { CreateOrgDto } from './dto/create-org.dto';
 import { UpdateOrgDto } from './dto/update-org.dto';
 import { AssignUserOrgDto } from './dto/assign-user-org.dto';
-import { MinLevel, ROLE_LEVEL } from '../../common/decorators/min-level.decorator';
+import {
+  MinLevel,
+  ROLE_LEVEL,
+} from '../../common/decorators/min-level.decorator';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 @Controller('admin/orgs')
@@ -40,10 +43,7 @@ export class AdminOrgsController {
 
   @Patch(':id')
   @MinLevel(ROLE_LEVEL.master)
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateOrgDto,
-  ) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateOrgDto) {
     return this.adminService.updateOrg(id, dto);
   }
 

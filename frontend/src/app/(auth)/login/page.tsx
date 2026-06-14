@@ -70,7 +70,7 @@ export default function LoginPage() {
               transition={{ duration: 0.6, ease: 'easeOut' }}
             >
               <h1 className="text-5xl md:text-6xl font-heading font-extrabold text-white leading-[1.1] tracking-tight">
-                GLAdmin
+                Cuadra
               </h1>
               <p className="mt-4 text-lg md:text-xl text-white/80 leading-relaxed max-w-lg font-light">
                 Control total de tu negocio con gestión multi-moneda, inventario,
@@ -132,7 +132,7 @@ export default function LoginPage() {
       >
         <div style={{ width: 500 }} className="h-full bg-card text-foreground shadow-xl">
           <div className="flex items-center justify-between px-6 py-5 border-b border-border">
-            <span className="text-lg font-heading font-bold text-foreground">GLAdmin</span>
+            <span className="text-lg font-heading font-bold text-foreground">Cuadra</span>
             <Button variant="ghost" size="icon" onClick={() => setPanelOpen(false)}>
               <X className="h-4 w-4" />
             </Button>

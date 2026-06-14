@@ -112,16 +112,11 @@ export function QuickAddCustomer({ onCreated, open: externalOpen, onOpenChange }
 
   return (
     <>
-      <Button size="sm" variant="ghost" onClick={() => { reset(); setOpen(true); }}>
-        <Plus className="h-4 w-4" /> {t('pos.customer.quickAdd')}
-      </Button>
       <SlideForm
         open={open}
         title={t('pos.customer.quickAddTitle')}
         onClose={() => setOpen(false)}
-        children={null}
-        panel={
-          <div className="space-y-4">
+        panel={<div className="space-y-4">
             <div className="space-y-2"><Label>{t('pos.customer.field.firstName')}</Label><Input autoFocus value={firstName} onChange={(e) => setFirstName(e.target.value)} required /></div>
             <div className="space-y-2"><Label>{t('pos.customer.field.lastName')}</Label><Input value={lastName} onChange={(e) => setLastName(e.target.value)} required /></div>
             <div className="space-y-2"><Label>{t('pos.customer.field.taxId')}</Label><Input value={taxId} onChange={(e) => setTaxId(e.target.value)} required /></div>
@@ -171,9 +166,12 @@ export function QuickAddCustomer({ onCreated, open: externalOpen, onOpenChange }
             <Button onClick={handleSave} disabled={saving} className="w-full">
               {saving ? t('common.saving') : t('common.save')}
             </Button>
-          </div>
-        }
-      />
+          </div>}
+      >
+        <Button size="sm" variant="ghost" onClick={() => { reset(); setOpen(true); }}>
+          <Plus className="h-4 w-4" /> {t('pos.customer.quickAdd')}
+        </Button>
+      </SlideForm>
     </>
   );
 }

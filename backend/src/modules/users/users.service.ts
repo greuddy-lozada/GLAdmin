@@ -93,7 +93,9 @@ export class UsersService {
       this.prisma.userOrganization.count({ where }),
     ]);
 
-    const data = memberships.map((m: { user: UserEntity }) => stripPassword(m.user));
+    const data = memberships.map((m: { user: UserEntity }) =>
+      stripPassword(m.user),
+    );
     return { data, total, page, limit };
   }
 

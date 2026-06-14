@@ -38,7 +38,7 @@
     }
   },
   "auth": {
-    "title": "GLAdmin",
+    "title": "Cuadra",
     "loginButton": "INGRESAR",
     "loggingIn": "Ingresando...",
     "email": "Correo Electrónico",
@@ -87,7 +87,13 @@
       "date": "Fecha",
       "orders": "Órdenes",
       "stockAlertNone": "Sin alertas de stock",
-      "noOrders": "Sin órdenes recientes"
+      "noOrders": "Sin órdenes recientes",
+      "recentSales": "Ventas Recientes",
+      "salesTrends": "Tendencia de Ventas",
+      "customer": "Cliente",
+      "noSales": "Sin ventas recientes",
+      "totalSales": "Total Ventas",
+      "totalRevenue": "Ingresos Totales"
     }
   },
   "nav": {
@@ -706,7 +712,7 @@
     }
   },
   "bootstrap": {
-    "title": "Bienvenido a GLAdmin",
+    "title": "Bienvenido a Cuadra",
     "subtitle": "Configura tu organización para comenzar",
     "step": {
       "org": "Organización",

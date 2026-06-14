@@ -1,7 +1,12 @@
 import apiClient from '@/lib/api/api-client';
-import { Stock, CreateStockRequest, UpdateStockRequest } from '../models/stock.model';
+import { Stock, StockAlert, CreateStockRequest, UpdateStockRequest } from '../models/stock.model';
 
 export const stockService = {
+  async getAlerts(threshold = 5): Promise<StockAlert[]> {
+    const res = await apiClient.get('/stocks/alerts', { params: { threshold } });
+    return res.data.data;
+  },
+
   async getAll(): Promise<Stock[]> {
     const response = await apiClient.get('/stocks');
     return response.data.data;

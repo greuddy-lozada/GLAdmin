@@ -68,7 +68,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default function PagoMovilTransactionsPage() {
-  const { items, loading, error, loadItems, createItem, reviewItem } = usePagoMovilTransactions();
+  const { items, loading, error, createItem, reviewItem } = usePagoMovilTransactions();
   const { t, tp } = useI18n();
   const [formOpen, setFormOpen] = useState(false);
   const [reviewDialog, setReviewDialog] = useState<{ open: boolean; id: number; action: 'approved' | 'rejected' }>({ open: false, id: 0, action: 'approved' });
@@ -146,7 +146,8 @@ export default function PagoMovilTransactionsPage() {
 
   const handleRemoveProof = () => {
     setFormData((prev) => {
-      const { proofImage: _, ...rest } = prev;
+      const rest = { ...prev };
+      delete rest.proofImage;
       return rest;
     });
   };

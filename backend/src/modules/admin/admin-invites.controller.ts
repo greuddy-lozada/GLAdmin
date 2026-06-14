@@ -11,7 +11,10 @@ import {
 import { AdminService } from './admin.service';
 import { CreateInviteDto } from './dto/create-invite.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { MinLevel, ROLE_LEVEL } from '../../common/decorators/min-level.decorator';
+import {
+  MinLevel,
+  ROLE_LEVEL,
+} from '../../common/decorators/min-level.decorator';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 @Controller('admin/invites')
@@ -26,10 +29,7 @@ export class AdminInvitesController {
 
   @Post()
   @MinLevel(ROLE_LEVEL.master)
-  create(
-    @Body() dto: CreateInviteDto,
-    @CurrentUser('id') userId: number,
-  ) {
+  create(@Body() dto: CreateInviteDto, @CurrentUser('id') userId: number) {
     return this.adminService.createInvite(dto, userId);
   }
 

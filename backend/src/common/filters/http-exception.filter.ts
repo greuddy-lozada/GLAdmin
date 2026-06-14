@@ -18,7 +18,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
-    const request = ctx.getRequest();
+    const request: { headers: Record<string, string | string[] | undefined> } =
+      ctx.getRequest();
     const lang = this.resolveLang(request);
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;

@@ -1,4 +1,4 @@
-# GLAdmin — Project Conventions
+# Cuadra — Project Conventions
 
 ## Stack
 

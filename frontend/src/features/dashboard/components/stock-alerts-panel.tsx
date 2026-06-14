@@ -1,15 +1,21 @@
+import { useQuery } from '@tanstack/react-query';
 import { useI18n } from '@/i18n';
-import { AlertTriangle } from 'lucide-react';
-import type { StockAlert } from '../models/dashboard-analytics.model';
+import { AlertTriangle, Loader2 } from 'lucide-react';
+import { stockService } from '@/features/stocks/services/stock.service';
 
-interface Props {
-  alerts: StockAlert[];
-}
-
-export function StockAlertsPanel({ alerts }: Props) {
+export function StockAlertsPanel() {
   const { t } = useI18n();
+  const { data: alerts, isLoading } = useQuery({
+    queryKey: ['stock-alerts'],
+    queryFn: () => stockService.getAlerts(),
+    refetchInterval: 30_000,
+  });
 
-  if (alerts.length === 0) {
+  if (isLoading) {
+    return <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />;
+  }
+
+  if (!alerts || alerts.length === 0) {
     return <span className="text-sm text-muted-foreground">{t('dashboard.analytics.stockAlertNone')}</span>;
   }
 
@@ -19,7 +25,7 @@ export function StockAlertsPanel({ alerts }: Props) {
         <div key={a.id} className="flex items-center gap-2 text-sm">
           <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" />
           <span className="truncate">{a.name}</span>
-          <span className="ml-auto font-medium text-destructive">{a.existence}</span>
+          <span className="ml-auto font-medium text-destructive">{a.totalExistence}</span>
         </div>
       ))}
     </div>

@@ -31,6 +31,12 @@ export class StocksController {
     return this.stocksService.findAll(pagination.page, pagination.limit);
   }
 
+  @Get('alerts')
+  @Roles('master', 'admin', 'employee')
+  getAlerts(@Query('threshold') threshold?: string) {
+    return this.stocksService.getAlerts(threshold ? Number(threshold) : 5);
+  }
+
   @Get(':id')
   @Roles('master', 'admin', 'employee')
   findOne(@Param('id', ParseIntPipe) id: number) {

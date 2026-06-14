@@ -151,7 +151,13 @@ export class SyncService {
 
     const categories = await this.prisma.category.findMany({
       where: { organizationId: orgId, updatedAt: { gt: sinceDate } },
-      select: { id: true, name: true, description: true, idParent: true, updatedAt: true },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        idParent: true,
+        updatedAt: true,
+      },
     });
 
     const lastPullAt = new Date();

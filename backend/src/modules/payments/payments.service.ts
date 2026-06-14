@@ -7,12 +7,18 @@ import {
 import Stripe from 'stripe';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 
+interface StripeWebhookEvent {
+  id: string;
+  type: string;
+  data: { object: Record<string, unknown> };
+}
+
 function getStripeInstance() {
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key) {
     return null;
   }
-  return new Stripe(key, { apiVersion: '2025-04-30' as any });
+  return new Stripe(key, { apiVersion: '2026-04-22.dahlia' });
 }
 
 @Injectable()
@@ -59,23 +65,25 @@ export class PaymentsService {
       });
 
       return { url: session.url, sessionId: session.id };
-    } catch (err: any) {
+    } catch (err) {
       throw new InternalServerErrorException(
-        err?.message ?? 'BILLING.CHECKOUT_ERROR',
+        err instanceof Error ? err.message : 'BILLING.CHECKOUT_ERROR',
       );
     }
   }
 
-  async handleWebhook(event: any) {
+  async handleWebhook(event: StripeWebhookEvent) {
     if (this.processedEvents.has(event.id)) {
       return;
     }
     this.processedEvents.add(event.id);
 
     if (event.type === 'checkout.session.completed') {
-      const session = event.data.object;
-      const organizationId = Number(session.metadata?.organizationId);
-      const planId = Number(session.metadata?.planId);
+      const object = event.data.object as {
+        metadata?: { organizationId?: string; planId?: string };
+      };
+      const organizationId = Number(object.metadata?.organizationId);
+      const planId = Number(object.metadata?.planId);
 
       if (!organizationId || !planId) return;
 

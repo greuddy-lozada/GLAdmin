@@ -38,6 +38,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [showPinUnlock, setShowPinUnlock] = useState(false);
   const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const refreshTimer = useRef<((rt: string, ei: number) => void) | null>(null);
+
   const scheduleRefresh = useCallback((refreshToken: string, expiresIn: number) => {
     if (refreshTimeoutRef.current) clearTimeout(refreshTimeoutRef.current);
     const refreshMs = (expiresIn - 60) * 1000;
@@ -48,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setToken(res.accessToken);
         localStorage.setItem(TOKEN_KEY, res.accessToken);
         localStorage.setItem(REFRESH_KEY, res.refreshToken);
-        scheduleRefresh(res.refreshToken, res.expiresIn);
+        refreshTimer.current?.(res.refreshToken, res.expiresIn);
       } catch {
         const savedUser = localStorage.getItem(USER_KEY);
         const parsed = savedUser ? JSON.parse(savedUser) as User : null;
@@ -68,6 +70,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }, refreshMs);
   }, []);
+
+  useEffect(() => {
+    refreshTimer.current = scheduleRefresh;
+  }, [scheduleRefresh]);
 
   useEffect(() => {
     const savedToken = localStorage.getItem(TOKEN_KEY);

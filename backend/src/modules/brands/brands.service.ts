@@ -11,8 +11,11 @@ export class BrandsService {
     private readonly contextService: ContextService,
   ) {}
 
-  private get orgId() {
-    return this.contextService?.getCurrent()?.organizationId!;
+  private get orgId(): number {
+    const ctx = this.contextService?.getCurrent();
+    const id = ctx?.organizationId;
+    if (!id) throw new Error('No organization context');
+    return id;
   }
 
   async create(dto: CreateBrandDto) {
@@ -26,7 +29,12 @@ export class BrandsService {
     const skip = (page - 1) * limit;
     const where = { organizationId: this.orgId, available: true };
     const [data, total] = await Promise.all([
-      this.prisma.brand.findMany({ where, skip, take: limit, orderBy: { name: 'asc' } }),
+      this.prisma.brand.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { name: 'asc' },
+      }),
       this.prisma.brand.count({ where }),
     ]);
     return { data, total, page, limit };
@@ -48,7 +56,10 @@ export class BrandsService {
 
   async remove(id: number) {
     const brand = await this.findOne(id);
-    await this.prisma.brand.update({ where: { id }, data: { available: false } });
+    await this.prisma.brand.update({
+      where: { id },
+      data: { available: false },
+    });
     return { data: brand, message: 'BRAND.DELETED' };
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common';
+import { Injectable, NestMiddleware } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request, Response, NextFunction } from 'express';
 import { ContextService, TenantContext } from './context.service';
@@ -15,7 +15,9 @@ export class TenantMiddleware implements NestMiddleware {
   async use(req: Request, res: Response, next: NextFunction) {
     const orgId = await this.resolveOrgId(req);
     if (!orgId) {
-      await this.contextService.run({} as TenantContext, async () => { next(); });
+      await this.contextService.run({} as TenantContext, async () => {
+        next();
+      });
       return;
     }
 
@@ -25,14 +27,18 @@ export class TenantMiddleware implements NestMiddleware {
     });
 
     if (!org) {
-      await this.contextService.run({} as TenantContext, async () => { next(); });
+      await this.contextService.run({} as TenantContext, async () => {
+        next();
+      });
       return;
     }
 
     let features: string[] = [];
     try {
       features = org.plan ? JSON.parse(org.plan.features) : [];
-    } catch { features = []; }
+    } catch {
+      features = [];
+    }
 
     const ctx: TenantContext = {
       organizationId: org.id,
@@ -41,7 +47,9 @@ export class TenantMiddleware implements NestMiddleware {
       planFeatures: features,
     };
 
-    await this.contextService.run(ctx, async () => { next(); });
+    await this.contextService.run(ctx, async () => {
+      next();
+    });
   }
 
   private extractTokenPayload(req: Request): { sub?: number; orgId?: number } {
@@ -80,7 +88,7 @@ export class TenantMiddleware implements NestMiddleware {
 
     const cookie = req.cookies?.['organization_id'];
     if (cookie) {
-      const cookieOrgId = parseInt(cookie, 10);
+      const cookieOrgId = parseInt(String(cookie), 10);
       if (!isNaN(cookieOrgId)) return cookieOrgId;
     }
 

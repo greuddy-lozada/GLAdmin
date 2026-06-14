@@ -34,7 +34,11 @@ export class AuthFactory {
     return this.jwtService.sign(payload, { expiresIn: '15m' });
   }
 
-  async generateRefreshToken(): Promise<{ raw: string; hash: string; tokenId: string }> {
+  async generateRefreshToken(): Promise<{
+    raw: string;
+    hash: string;
+    tokenId: string;
+  }> {
     const tokenId = crypto.randomUUID();
     const raw = crypto.randomBytes(32).toString('hex');
     const hash = await bcrypt.hash(raw, 10);
@@ -49,7 +53,10 @@ export class AuthFactory {
     return bcrypt.compare(raw, hash);
   }
 
-  createLoginResponse(user: UserEntity, refreshToken: string): {
+  createLoginResponse(
+    user: UserEntity,
+    refreshToken: string,
+  ): {
     user: {
       id: number;
       firstName: string;

@@ -1,8 +1,8 @@
 {
-  "name": "gladmin",
+  "name": "cuadra",
   "private": true,
   "version": "1.0.0",
-  "description": "GLAdmin - Administrative management system",
+  "description": "Cuadra - Administrative management system",
   "scripts": {
     "dev:backend": "pnpm --filter backend start:dev",
     "dev:frontend": "pnpm --filter frontend dev",

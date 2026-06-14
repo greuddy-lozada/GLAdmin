@@ -28,7 +28,11 @@ export class SuppliersController {
   @Get()
   @Roles('master', 'admin', 'employee')
   async findAll(@Query() pagination: PaginationQueryDto) {
-    return this.suppliersService.findAll(pagination.page, pagination.limit, pagination.search);
+    return this.suppliersService.findAll(
+      pagination.page,
+      pagination.limit,
+      pagination.search,
+    );
   }
 
   @Get(':id')

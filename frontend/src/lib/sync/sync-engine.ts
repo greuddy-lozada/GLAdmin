@@ -81,6 +81,8 @@ export class SyncEngine {
           stock: product.stock,
           taxId: product.idTax ?? undefined,
           code: product.code,
+          brandId: product.idBrand ?? undefined,
+          categoryId: product.idCategory ?? undefined,
           updatedAt: product.updatedAt,
         });
       }
@@ -289,7 +291,7 @@ export class SyncEngine {
     if (this.broadcastChannel) return;
 
     this.tabId = this.generateTabId();
-    this.broadcastChannel = new BroadcastChannel('gladmin-sync');
+    this.broadcastChannel = new BroadcastChannel('cuadra-sync');
 
     this.broadcastChannel.onmessage = (event) => {
       const { type, tabId } = event.data;

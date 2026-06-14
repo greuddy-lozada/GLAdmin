@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -23,7 +22,7 @@ interface PaymentModalProps {
   onPayment: (paymentMethod: PaymentMethod) => void;
 }
 
-export function PaymentModal({ open, onOpenChange, total, totalUsd, withholdingAmount, withholdingAmountUsd, netToCollect, netToCollectUsd, onPayment }: PaymentModalProps) {
+export function PaymentModal({ open, onOpenChange, total, totalUsd, withholdingAmount, netToCollect, netToCollectUsd, onPayment }: PaymentModalProps) {
   const { t } = useI18n();
   const hasWithholding = (withholdingAmount ?? 0) > 0;
 
@@ -48,7 +47,7 @@ export function PaymentModal({ open, onOpenChange, total, totalUsd, withholdingA
         <div className="space-y-4">
           <div className="text-center">
             <div className="text-2xl font-bold">${(hasWithholding ? (netToCollect ?? total) : total).toFixed(2)} VES</div>
-            <div className="text-lg text-muted-foreground">${(hasWithholding ? (netToCollectUsd ?? totalUsd) : totalUsd).toFixed(2)} USD</div>
+            <div className="text-lg text-muted-foreground">${(netToCollectUsd ?? totalUsd).toFixed(2)} USD</div>
             {hasWithholding && (
               <div className="text-xs text-muted-foreground mt-1">
                 {t('pos.withholding.invoiceTotal')}: ${total.toFixed(2)} VES

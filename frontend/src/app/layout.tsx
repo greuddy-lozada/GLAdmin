@@ -8,7 +8,7 @@ import { I18nProvider } from '@/i18n/i18n-provider';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'GLAdmin',
+  title: 'Cuadra',
   description: 'Sistema de Gestión Administrativa',
 };
 

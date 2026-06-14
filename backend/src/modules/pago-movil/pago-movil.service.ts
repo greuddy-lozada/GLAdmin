@@ -10,7 +10,10 @@ import {
   CreatePagoMovilConfigDto,
   UpdatePagoMovilConfigDto,
 } from './pago-movil-config.dto';
-import { CreatePagoMovilTransactionDto, ReviewPagoMovilTransactionDto } from './pago-movil-transaction.dto';
+import {
+  CreatePagoMovilTransactionDto,
+  ReviewPagoMovilTransactionDto,
+} from './pago-movil-transaction.dto';
 
 @Injectable()
 export class PagoMovilService {
@@ -67,7 +70,9 @@ export class PagoMovilService {
         ...(dto.phoneNumber !== undefined && { phoneNumber: dto.phoneNumber }),
         ...(dto.bankId !== undefined && { bankId: dto.bankId }),
         ...(dto.idNumber !== undefined && { idNumber: dto.idNumber }),
-        ...(dto.exchangeRate !== undefined && { exchangeRate: dto.exchangeRate }),
+        ...(dto.exchangeRate !== undefined && {
+          exchangeRate: dto.exchangeRate,
+        }),
         ...(dto.isActive !== undefined && { isActive: dto.isActive }),
       },
     });
@@ -96,7 +101,9 @@ export class PagoMovilService {
     return this.prisma.pagoMovilTransaction.findMany({
       where,
       orderBy: { createdAt: 'desc' },
-      include: { user: { select: { id: true, firstName: true, lastName: true } } },
+      include: {
+        user: { select: { id: true, firstName: true, lastName: true } },
+      },
     });
   }
 
@@ -107,7 +114,9 @@ export class PagoMovilService {
       where: { organizationId },
     });
     if (!config || !config.isActive) {
-      throw new BadRequestException('PagoMovil is not configured or is inactive');
+      throw new BadRequestException(
+        'PagoMovil is not configured or is inactive',
+      );
     }
 
     return this.prisma.pagoMovilTransaction.create({
@@ -129,13 +138,19 @@ export class PagoMovilService {
     const organizationId = this.getOrgId();
     const tx = await this.prisma.pagoMovilTransaction.findFirst({
       where: { id, organizationId },
-      include: { user: { select: { id: true, firstName: true, lastName: true } } },
+      include: {
+        user: { select: { id: true, firstName: true, lastName: true } },
+      },
     });
     if (!tx) throw new NotFoundException('Transaction not found');
     return tx;
   }
 
-  async reviewTransaction(id: number, dto: ReviewPagoMovilTransactionDto, reviewedBy: number) {
+  async reviewTransaction(
+    id: number,
+    dto: ReviewPagoMovilTransactionDto,
+    reviewedBy: number,
+  ) {
     const organizationId = this.getOrgId();
     const tx = await this.prisma.pagoMovilTransaction.findFirst({
       where: { id, organizationId },

@@ -17,4 +17,10 @@ export class DashboardController {
   getAnalytics() {
     return this.dashboardService.getAnalytics();
   }
+
+  @Get('sales-analytics')
+  @Roles('master', 'admin', 'employee')
+  getSalesAnalytics() {
+    return this.dashboardService.getSalesAnalytics();
+  }
 }

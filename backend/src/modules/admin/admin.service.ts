@@ -29,13 +29,34 @@ export interface UserWithRelations {
   createdAt: Date;
   updatedAt: Date;
   currentOrganizationId: number | null;
-  role: { id: number; name: string; slug: string; createdAt: Date; updatedAt: Date };
+  role: {
+    id: number;
+    name: string;
+    slug: string;
+    createdAt: Date;
+    updatedAt: Date;
+  };
   organizations: {
     userId: number;
     organizationId: number;
     roleId: number;
-    organization: { id: number; name: string; slug: string; isActive: boolean; settings: string | null; planId: number | null; createdAt: Date; updatedAt: Date };
-    role: { id: number; name: string; slug: string; createdAt: Date; updatedAt: Date };
+    organization: {
+      id: number;
+      name: string;
+      slug: string;
+      isActive: boolean;
+      settings: string | null;
+      planId: number | null;
+      createdAt: Date;
+      updatedAt: Date;
+    };
+    role: {
+      id: number;
+      name: string;
+      slug: string;
+      createdAt: Date;
+      updatedAt: Date;
+    };
   }[];
 }
 
@@ -233,7 +254,12 @@ export class AdminService {
       }),
       this.prisma.user.count(),
     ]);
-    return { data: users.map((u: UserWithRelations) => stripPassword(u)), total, page, limit };
+    return {
+      data: users.map((u: UserWithRelations) => stripPassword(u)),
+      total,
+      page,
+      limit,
+    };
   }
 
   async findOneUser(id: number) {

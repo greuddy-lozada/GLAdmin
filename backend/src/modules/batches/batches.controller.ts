@@ -28,7 +28,11 @@ export class BatchesController {
   @Get()
   @Roles('master', 'admin', 'employee')
   async findAll(@Query() pagination: PaginationQueryDto) {
-    return this.batchesService.findAll(pagination.page, pagination.limit, pagination.search);
+    return this.batchesService.findAll(
+      pagination.page,
+      pagination.limit,
+      pagination.search,
+    );
   }
 
   @Get(':id')

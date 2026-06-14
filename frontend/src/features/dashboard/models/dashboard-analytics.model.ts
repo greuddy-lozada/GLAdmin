@@ -6,35 +6,27 @@ export interface RecentOrder {
   supplierName: string;
 }
 
-export interface TopProduct {
+export interface RecentSale {
   id: number;
-  name: string;
-  price: number;
-  existence: number;
+  code: string | null;
+  date: string | null;
+  amount: number | null;
+  customerName: string;
 }
 
-export interface StockAlert {
-  id: number;
-  name: string;
-  price: number;
-  existence: number;
-}
-
-export interface TopSupplier {
-  id: number;
-  companyName: string;
-  orderCount: number;
-}
-
-export interface MonthlyOrder {
+export interface MonthlySale {
   month: string;
   count: number;
 }
 
+export interface SalesAnalytics {
+  recentSales: RecentSale[];
+  monthlySales: MonthlySale[];
+  totalSales: number;
+  totalRevenue: number;
+}
+
 export interface DashboardAnalytics {
   recentOrders: RecentOrder[];
-  topProducts: TopProduct[];
-  stockAlerts: StockAlert[];
-  topSuppliers: TopSupplier[];
-  monthlyOrders: MonthlyOrder[];
+  salesAnalytics: SalesAnalytics;
 }

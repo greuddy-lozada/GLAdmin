@@ -111,7 +111,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
             <div className="relative min-h-[44px]">
               <div className={`transition-all duration-300 ${sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-                <h2 className="text-lg font-bold text-foreground">GLAdmin</h2>
+                <h2 className="text-lg font-bold text-foreground">Cuadra</h2>
                 <p className="text-xs text-muted-foreground">
                   {user?.firstName} {user?.lastName}
                 </p>

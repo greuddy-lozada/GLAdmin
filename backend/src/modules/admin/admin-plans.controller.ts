@@ -12,7 +12,10 @@ import {
 import { AdminService } from './admin.service';
 import { CreatePlanDto } from './dto/create-plan.dto';
 import { UpdatePlanDto } from './dto/update-plan.dto';
-import { MinLevel, ROLE_LEVEL } from '../../common/decorators/min-level.decorator';
+import {
+  MinLevel,
+  ROLE_LEVEL,
+} from '../../common/decorators/min-level.decorator';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 @Controller('admin/plans')
@@ -39,10 +42,7 @@ export class AdminPlansController {
 
   @Patch(':id')
   @MinLevel(ROLE_LEVEL.master)
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdatePlanDto,
-  ) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdatePlanDto) {
     return this.adminService.updatePlan(id, dto);
   }
 

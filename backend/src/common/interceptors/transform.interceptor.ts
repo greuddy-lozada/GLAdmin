@@ -28,7 +28,8 @@ export class TransformInterceptor<T> implements NestInterceptor<
     const lang = this.resolveLang(context);
 
     return next.handle().pipe(
-      map((responseBody) => {
+      map((body: unknown) => {
+        const responseBody = body as Record<string, unknown> | null;
         const statusCode = context.switchToHttp().getResponse().statusCode;
 
         if (responseBody === null || responseBody === undefined) {
@@ -36,7 +37,7 @@ export class TransformInterceptor<T> implements NestInterceptor<
         }
 
         if (Array.isArray(responseBody)) {
-          return { data: responseBody, message: null, statusCode };
+          return { data: responseBody as T, message: null, statusCode };
         }
 
         if (
@@ -48,7 +49,7 @@ export class TransformInterceptor<T> implements NestInterceptor<
           'limit' in responseBody
         ) {
           return {
-            data: responseBody.data,
+            data: responseBody.data as T,
             total: responseBody.total,
             page: responseBody.page,
             limit: responseBody.limit,
@@ -62,19 +63,19 @@ export class TransformInterceptor<T> implements NestInterceptor<
           'data' in responseBody &&
           'message' in responseBody
         ) {
-          const msg = responseBody.message
-            ? this.i18n.translate(responseBody.message, lang)
+          const msg = (responseBody.message as string)
+            ? this.i18n.translate(responseBody.message as string, lang)
             : null;
-          return { data: responseBody.data, message: msg, statusCode };
+          return { data: responseBody.data as T, message: msg, statusCode };
         }
 
         if (typeof responseBody === 'object' && 'message' in responseBody) {
-          const msg = this.i18n.translate(responseBody.message, lang);
+          const msg = this.i18n.translate(responseBody.message as string, lang);
           const { message: _, ...rest } = responseBody;
           return { data: rest as T, message: msg, statusCode };
         }
 
-        return { data: responseBody, message: null, statusCode };
+        return { data: responseBody as T, message: null, statusCode };
       }),
     );
   }

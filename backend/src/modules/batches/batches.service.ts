@@ -15,7 +15,12 @@ export class BatchesService {
   async create(dto: CreateBatchDto) {
     const ctx = this.contextService?.getCurrent();
     const orgId = ctx?.organizationId;
-    const batch = await this.prisma.batch.create({ data: { ...dto, organizationId: orgId! } as unknown as Prisma.BatchCreateInput });
+    const batch = await this.prisma.batch.create({
+      data: {
+        ...dto,
+        organizationId: orgId!,
+      } as unknown as Prisma.BatchCreateInput,
+    });
     return { data: batch, message: 'BATCH.CREATED' };
   }
 

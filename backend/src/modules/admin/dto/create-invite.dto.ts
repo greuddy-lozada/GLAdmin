@@ -1,4 +1,4 @@
-import { IsString, IsInt, IsEmail } from 'class-validator';
+import { IsInt, IsEmail } from 'class-validator';
 
 export class CreateInviteDto {
   @IsEmail()

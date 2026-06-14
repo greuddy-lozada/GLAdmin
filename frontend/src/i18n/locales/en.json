@@ -38,7 +38,7 @@
     }
   },
   "auth": {
-    "title": "GLAdmin",
+    "title": "Cuadra",
     "loginButton": "SIGN IN",
     "loggingIn": "Signing in...",
     "email": "Email",
@@ -87,7 +87,13 @@
       "date": "Date",
       "orders": "Orders",
       "stockAlertNone": "No stock alerts",
-      "noOrders": "No recent orders"
+      "noOrders": "No recent orders",
+      "recentSales": "Recent Sales",
+      "salesTrends": "Sales Trends",
+      "customer": "Customer",
+      "noSales": "No recent sales",
+      "totalSales": "Total Sales",
+      "totalRevenue": "Total Revenue"
     }
   },
   "nav": {
@@ -706,7 +712,7 @@
     }
   },
   "bootstrap": {
-    "title": "Welcome to GLAdmin",
+    "title": "Welcome to Cuadra",
     "subtitle": "Set up your organization to get started",
     "step": {
       "org": "Organization",

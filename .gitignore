@@ -46,3 +46,4 @@ specs/
 **/specs/
 .superpowers/
 .continue/
+.codegraph/

@@ -1,17 +1,13 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Patch,
-  Delete,
-  Body,
-} from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body } from '@nestjs/common';
 import { PagoMovilService } from './pago-movil.service';
 import {
   CreatePagoMovilConfigDto,
   UpdatePagoMovilConfigDto,
 } from './pago-movil-config.dto';
-import { MinLevel, ROLE_LEVEL } from '../../common/decorators/min-level.decorator';
+import {
+  MinLevel,
+  ROLE_LEVEL,
+} from '../../common/decorators/min-level.decorator';
 
 @Controller('pago-movil/config')
 export class PagoMovilConfigController {

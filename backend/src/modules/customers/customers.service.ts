@@ -15,7 +15,12 @@ export class CustomersService {
   async create(dto: CreateCustomerDto) {
     const ctx = this.contextService?.getCurrent();
     const orgId = ctx?.organizationId;
-    const customer = await this.prisma.customer.create({ data: { ...dto, organizationId: orgId! } as unknown as Prisma.CustomerCreateInput });
+    const customer = await this.prisma.customer.create({
+      data: {
+        ...dto,
+        organizationId: orgId!,
+      } as unknown as Prisma.CustomerCreateInput,
+    });
     return { data: customer, message: 'CUSTOMER.CREATED' };
   }
 

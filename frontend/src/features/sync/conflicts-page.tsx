@@ -11,16 +11,16 @@ export default function ConflictsPage() {
   const [conflicts, setConflicts] = useState<SyncConflict[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadConflicts();
-  }, []);
-
   const loadConflicts = async () => {
     setLoading(true);
     const data = await conflictResolver.getConflicts();
     setConflicts(data);
     setLoading(false);
   };
+
+  useEffect(() => {
+    loadConflicts();
+  }, []);
 
   const handleResolve = async (id: number, status: 'resolved_server' | 'resolved_local') => {
     await conflictResolver.resolveConflict(id, status);

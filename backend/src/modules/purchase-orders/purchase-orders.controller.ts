@@ -29,7 +29,10 @@ export class PurchaseOrdersController {
   @Get()
   @Roles('master', 'admin', 'employee')
   async findAll(@Query() pagination: PaginationQueryDto) {
-    return this.purchaseOrdersService.findAll(pagination.page, pagination.limit);
+    return this.purchaseOrdersService.findAll(
+      pagination.page,
+      pagination.limit,
+    );
   }
 
   @Get(':id')

@@ -56,10 +56,12 @@ if (!jwtSecret) {
       load: [appConfig, jwtConfig, databaseConfig],
       isGlobal: true,
     }),
-    ThrottlerModule.forRoot([{
-      ttl: 60000,
-      limit: 100,
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
     JwtModule.register({
       global: true,
       secret: jwtSecret,
@@ -123,8 +125,6 @@ if (!jwtSecret) {
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(TenantMiddleware)
-      .forRoutes('*');
+    consumer.apply(TenantMiddleware).forRoutes('*');
   }
 }

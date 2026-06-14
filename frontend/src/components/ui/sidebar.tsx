@@ -123,7 +123,7 @@ export const MobileSidebar = ({
         )}
         {...props}
       >
-        <span className="font-semibold">GLAdmin</span>
+        <span className="font-semibold">Cuadra</span>
         <div className="flex justify-end z-20 w-full">
           <button
             type="button"

@@ -1,4 +1,14 @@
-import { IsString, IsOptional, IsInt, IsNumber, IsDateString, ValidateNested, IsArray, Min, Max } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsInt,
+  IsNumber,
+  IsDateString,
+  ValidateNested,
+  IsArray,
+  Min,
+  Max,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateSaleItemDto {

@@ -12,7 +12,10 @@ export class SalesService {
     private readonly context: ContextService,
   ) {}
 
-  private async recalcTotalExistence(productId: number, tx?: Prisma.TransactionClient) {
+  private async recalcTotalExistence(
+    productId: number,
+    tx?: Prisma.TransactionClient,
+  ) {
     const db = tx || this.prisma;
     const result = await db.stock.aggregate({
       where: { idProduct: productId },

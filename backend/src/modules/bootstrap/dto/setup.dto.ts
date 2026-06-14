@@ -12,7 +12,7 @@ export class SetupDto {
   adminEmail: string;
 
   @IsString()
-  @MinLength(6)
+  @MinLength(8)
   adminPassword: string;
 
   @IsString()

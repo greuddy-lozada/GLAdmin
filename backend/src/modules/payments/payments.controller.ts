@@ -10,8 +10,17 @@ import type { Request } from 'express';
 import Stripe from 'stripe';
 import { PaymentsService } from './payments.service';
 import { CreateCheckoutSessionDto } from './create-checkout-session.dto';
-import { MinLevel, ROLE_LEVEL } from '../../common/decorators/min-level.decorator';
+import {
+  MinLevel,
+  ROLE_LEVEL,
+} from '../../common/decorators/min-level.decorator';
 import { Public } from '../../common/decorators/public.decorator';
+
+interface StripeWebhookEvent {
+  id: string;
+  type: string;
+  data: { object: Record<string, unknown> };
+}
 
 @Controller('payments')
 export class PaymentsController {
@@ -20,7 +29,10 @@ export class PaymentsController {
   @Post('create-checkout-session')
   @MinLevel(ROLE_LEVEL.master)
   createCheckoutSession(@Body() dto: CreateCheckoutSessionDto) {
-    return this.paymentsService.createCheckoutSession(dto.planId, dto.organizationId);
+    return this.paymentsService.createCheckoutSession(
+      dto.planId,
+      dto.organizationId,
+    );
   }
 
   @Post('stripe-webhook')
@@ -43,12 +55,16 @@ export class PaymentsController {
       throw new BadRequestException('Stripe webhook secret not configured');
     }
 
-    const stripe = new Stripe(key, { apiVersion: '2025-04-30' as any });
-    const rawBody = (req as any).rawBody;
+    const stripe = new Stripe(key, { apiVersion: '2026-04-22.dahlia' });
+    const rawBody = (req as Request & { rawBody: Buffer }).rawBody;
 
-    let event: any;
+    let event: StripeWebhookEvent;
     try {
-      event = stripe.webhooks.constructEvent(rawBody, signature, endpointSecret);
+      event = stripe.webhooks.constructEvent(
+        rawBody,
+        signature,
+        endpointSecret,
+      ) as unknown as StripeWebhookEvent;
     } catch {
       throw new BadRequestException('Invalid stripe signature');
     }

@@ -11,6 +11,8 @@ export interface LocalProduct {
   stock: number;
   taxId?: number;
   code?: string;
+  brandId?: number;
+  categoryId?: number;
   updatedAt: string;
 }
 
@@ -133,7 +135,7 @@ export interface ShortcutBinding {
   updatedAt: string;
 }
 
-export const localDb = new Dexie('GLAdmin') as Dexie & {
+export const localDb = new Dexie('Cuadra') as Dexie & {
   products: EntityTable<LocalProduct, 'id'>;
   customers: EntityTable<LocalCustomer, 'id'>;
   syncQueue: EntityTable<SyncQueueItem, 'id'>;

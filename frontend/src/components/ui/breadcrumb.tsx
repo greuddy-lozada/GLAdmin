@@ -3,7 +3,6 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronRight, Home } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { useI18n } from '@/i18n';
 import { navigationConfig } from '@/config/navigation.config';
 

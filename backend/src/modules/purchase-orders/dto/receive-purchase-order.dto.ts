@@ -1,4 +1,10 @@
-import { IsArray, ValidateNested, IsInt, Min, ArrayMinSize } from 'class-validator';
+import {
+  IsArray,
+  ValidateNested,
+  IsInt,
+  Min,
+  ArrayMinSize,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 class ReceiveDetailDto {

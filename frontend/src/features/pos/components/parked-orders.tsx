@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ChevronDown, ChevronUp, Pause } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -57,14 +57,21 @@ export function ParkedOrders({ currentCartCount, onResume, refreshTrigger }: Par
     }
   };
 
-  const formatRelative = (dateStr: string) => {
-    const diff = Date.now() - new Date(dateStr).getTime();
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 30000);
+    return () => clearInterval(id);
+  }, []);
+
+  const formatRelative = useCallback((dateStr: string) => {
+    const diff = now - new Date(dateStr).getTime();
     const mins = Math.floor(diff / 60000);
     if (mins < 1) return 'ahora';
     if (mins < 60) return `hace ${mins} min`;
     const hrs = Math.floor(mins / 60);
     return `hace ${hrs} h`;
-  };
+  }, [now]);
 
   return (
     <>
