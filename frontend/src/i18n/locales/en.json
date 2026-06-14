@@ -525,7 +525,13 @@
       "card": "Card",
       "customer": "Customer",
       "searchCustomer": "Search customer...",
-      "noCustomer": "No customer"
+      "noCustomer": "No customer",
+      "vesSection": "Payment in Bolivares",
+      "usdSection": "Payment in USD",
+      "method": "Method",
+      "amountVes": "Amount Bs.",
+      "amountUsd": "Amount USD",
+      "confirm": "Confirm payment"
     },
     "receipt": {
       "title": "Sale completed",

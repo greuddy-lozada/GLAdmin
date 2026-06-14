@@ -55,6 +55,17 @@ export class CreateSaleItemDto {
   observation?: string;
 }
 
+export class CreateSalePaymentDto {
+  @IsInt()
+  method: number;
+
+  @IsNumber()
+  amount: number;
+
+  @IsString()
+  currency: string;
+}
+
 export class CreateSaleDto {
   @IsString()
   code: string;
@@ -71,6 +82,7 @@ export class CreateSaleDto {
   @IsNumber()
   exchangeRate: number;
 
+  @IsOptional()
   @IsInt()
   paymentMethod: number;
 
@@ -111,4 +123,10 @@ export class CreateSaleDto {
   @ValidateNested({ each: true })
   @Type(() => CreateSaleItemDto)
   items: CreateSaleItemDto[];
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateSalePaymentDto)
+  payments?: CreateSalePaymentDto[];
 }

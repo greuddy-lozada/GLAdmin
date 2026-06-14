@@ -17,7 +17,7 @@ import { ParkedOrders } from './components/parked-orders';
 import { PaymentModal } from './components/payment-modal';
 import { ReceiptDialog } from './components/receipt-dialog';
 import { SaleHistory } from './components/sale-history';
-import { PaymentMethod } from './models/pos.model';
+import { PaymentMethod, type SalePayment } from './models/pos.model';
 import type { ParkedOrder } from '@/lib/sync/db';
 import { localDb } from '@/lib/sync/db';
 
@@ -90,9 +90,10 @@ export default function PosPage() {
   useHotkey('pos.closeModal', handleCloseModal);
   useHotkey('pos.quickAddCustomer', openQuickAdd);
 
-  const handlePayment = async (paymentMethod: PaymentMethod) => {
+  const handlePayment = async (payments: SalePayment[]) => {
     const saleCode = `SALE-${Date.now()}`;
-    await createSale(cart, total, totalUsd, exchangeRate, paymentMethod, customerId, withholdingPercentage, withholdingAmount, withholdingAmountUsd);
+    const primaryMethod = payments.length === 1 ? payments[0].method : PaymentMethod.Mixed;
+    await createSale(cart, total, totalUsd, exchangeRate, primaryMethod, customerId, withholdingPercentage, withholdingAmount, withholdingAmountUsd, payments);
     setReceipt({ open: true, code: saleCode, itemCount: cart.length, total, totalUsd });
     clearCart();
     clearCustomer();
@@ -152,7 +153,7 @@ export default function PosPage() {
         <SaleHistory />
       </Suspense>
 
-      <PaymentModal open={paymentOpen} onOpenChange={setPaymentOpen} total={total} totalUsd={totalUsd} withholdingAmount={withholdingAmount} withholdingAmountUsd={withholdingAmountUsd} netToCollect={netToCollect} netToCollectUsd={netToCollectUsd} onPayment={handlePayment} />
+      <PaymentModal open={paymentOpen} onOpenChange={setPaymentOpen} total={total} totalUsd={totalUsd} totalTax={totalTax} totalTaxUsd={totalTaxUsd} exchangeRate={exchangeRate} withholdingAmount={withholdingAmount} withholdingAmountUsd={withholdingAmountUsd} netToCollect={netToCollect} netToCollectUsd={netToCollectUsd} onPayment={handlePayment} />
       <ReceiptDialog open={receipt.open} onClose={() => setReceipt(prev => ({ ...prev, open: false }))} saleCode={receipt.code} itemCount={receipt.itemCount} total={receipt.total} totalUsd={receipt.totalUsd} />
     </div>
   );

@@ -45,8 +45,8 @@ export const usePosStore = create<PosState>()(
           return;
         }
 
-        const unitPriceUsd = product.priceUsd || 0;
-        const unitPrice = exchangeRate > 0 && unitPriceUsd > 0 ? unitPriceUsd * exchangeRate : product.price;
+        const unitPriceUsd = product.priceUsd || (exchangeRate > 0 ? product.price / exchangeRate : 0);
+        const unitPrice = exchangeRate > 0 && product.priceUsd ? unitPriceUsd * exchangeRate : product.price;
 
         const taxInfo = product.taxId ? taxes[product.taxId] : undefined;
         const taxAmount = taxInfo ? unitPrice * (taxInfo.percentage / 100) : 0;

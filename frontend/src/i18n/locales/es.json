@@ -525,7 +525,13 @@
       "card": "Tarjeta",
       "customer": "Cliente",
       "searchCustomer": "Buscar cliente...",
-      "noCustomer": "Sin cliente"
+      "noCustomer": "Sin cliente",
+      "vesSection": "Pago en Bolívares",
+      "usdSection": "Pago en Dólares",
+      "method": "Método",
+      "amountVes": "Monto Bs.",
+      "amountUsd": "Monto USD",
+      "confirm": "Confirmar pago"
     },
     "receipt": {
       "title": "Venta completada",

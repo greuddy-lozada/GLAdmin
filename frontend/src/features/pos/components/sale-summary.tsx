@@ -39,18 +39,18 @@ export function SaleSummary({ total, totalUsd, totalTax, totalTaxUsd, exchangeRa
       )}
       <div className="flex justify-between text-lg font-bold pt-2 border-t">
         <span>{t('pos.cart.totalVes')}</span>
-        <span>${total.toFixed(2)}</span>
+        <span>${(total + totalTax).toFixed(2)}</span>
       </div>
-      {totalUsd > 0 && (
+      {(totalUsd + totalTaxUsd) > 0 && (
         <div className="flex justify-between text-sm">
           <span>{t('pos.cart.totalUsd')}</span>
-          <span className="text-muted-foreground">${totalUsd.toFixed(2)}</span>
+          <span className="text-muted-foreground">${(totalUsd + totalTaxUsd).toFixed(2)}</span>
         </div>
       )}
       {hasWithholding && (
         <div className="flex justify-between text-base font-semibold pt-1 border-t border-dashed">
           <span>{t('pos.withholding.netToCollect')}</span>
-          <span>${(netToCollect ?? total).toFixed(2)} / ${(netToCollectUsd ?? totalUsd).toFixed(2)}</span>
+          <span>${(netToCollect ?? total + totalTax).toFixed(2)} / ${(netToCollectUsd ?? totalUsd + totalTaxUsd).toFixed(2)}</span>
         </div>
       )}
       {exchangeRate > 0 && (

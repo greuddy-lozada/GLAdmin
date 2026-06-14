@@ -3,6 +3,7 @@ export enum PaymentMethod {
   PagoMovil = 2,
   Transfer = 3,
   Card = 4,
+  Mixed = 5,
 }
 
 export interface CartItem {
@@ -32,6 +33,12 @@ export interface SaleItem {
   taxAmountUsd?: number;
 }
 
+export interface SalePayment {
+  method: PaymentMethod;
+  amount: number;
+  currency: 'VES' | 'USD';
+}
+
 export interface CreateSaleRequest {
   code: string;
   date: string;
@@ -48,6 +55,7 @@ export interface CreateSaleRequest {
   withholdingPercentage?: number;
   withholdingAmount?: number;
   withholdingAmountUsd?: number;
+  payments?: SalePayment[];
 }
 
 export interface ParkedOrder {

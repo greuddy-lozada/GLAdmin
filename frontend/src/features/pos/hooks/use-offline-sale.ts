@@ -1,7 +1,7 @@
 import { localDb } from '@/lib/sync/db';
 import { syncQueue } from '@/lib/sync/sync-queue';
 import type { CartItem } from '../models/pos.model';
-import { PaymentMethod, type CreateSaleRequest } from '../models/pos.model';
+import { PaymentMethod, type CreateSaleRequest, type SalePayment } from '../models/pos.model';
 
 export function useOfflineSale() {
   const createSale = async (
@@ -14,6 +14,7 @@ export function useOfflineSale() {
     withholdingPercentage?: number | null,
     withholdingAmount?: number,
     withholdingAmountUsd?: number,
+    payments?: SalePayment[],
   ) => {
     const saleData: CreateSaleRequest = {
       code: `SALE-${Date.now()}`,
@@ -41,6 +42,7 @@ export function useOfflineSale() {
       withholdingPercentage: withholdingPercentage ?? undefined,
       withholdingAmount,
       withholdingAmountUsd,
+      payments,
     };
 
     const stockSnapshot: Record<number, number> = {};

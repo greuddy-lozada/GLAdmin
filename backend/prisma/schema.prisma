@@ -108,6 +108,7 @@ model Organization {
   pagoMovilTransactions PagoMovilTransaction[]
   syncCursors           SyncCursor[]
   syncConflicts         SyncConflict[]
+  salePayments          SalePayment[]
   auditLogs             AuditLog[]
 }
 
@@ -658,6 +659,7 @@ model Sale {
   organization               Organization        @relation(fields: [organizationId], references: [id])
   customer                   Customer?           @relation(fields: [idCustomer], references: [id])
   details                SalesDet[]
+  payments               SalePayment[]
   accountsReceivables    AccountsReceivable[]
   exchangeRateRef        ExchangeRate?       @relation("CalculationRate", fields: [exchangeRateId], references: [id])
   officialExchangeRateRef ExchangeRate?       @relation("OfficialRate", fields: [officialExchangeRateId], references: [id])
@@ -692,6 +694,26 @@ model SalesDet {
   product Product @relation(fields: [idProduct], references: [id])
 
   @@index([organizationId])
+}
+
+// ────────────────────────────────────────────
+// SALE PAYMENTS (Slice 3 — Partial/differential payments)
+// Multi-currency: each payment has its own method, amount, and currency
+// ────────────────────────────────────────────
+model SalePayment {
+  id             Int      @id @default(autoincrement())
+  saleId         Int
+  method         Int      // PaymentMethod enum: Cash=1, PagoMovil=2, Transfer=3, Card=4
+  amount         Float    // Amount in the specified currency
+  currency       String   // 'VES' | 'USD'
+  createdAt      DateTime @default(now())
+  organizationId Int
+
+  sale         Sale         @relation(fields: [saleId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+  @@index([saleId])
 }
 
 model AccountsReceivable {

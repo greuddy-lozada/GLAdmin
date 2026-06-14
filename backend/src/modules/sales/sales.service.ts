@@ -60,10 +60,21 @@ export class SalesService {
               observation: item.observation,
             })),
           },
+          payments: dto.payments?.length
+            ? {
+                create: dto.payments.map((p) => ({
+                  organizationId: orgId,
+                  method: p.method,
+                  amount: p.amount,
+                  currency: p.currency,
+                })),
+              }
+            : undefined,
         },
         include: {
           details: true,
           customer: true,
+          payments: true,
         },
       });
 
