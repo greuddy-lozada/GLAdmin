@@ -24,6 +24,8 @@ export class FeatureGuard implements CanActivate {
     if (!requiredFeature) return true;
 
     const request = context.switchToHttp().getRequest();
+    if (request.user?.role === 'master') return true;
+
     const orgId = request.user?.orgId;
 
     if (!orgId) {

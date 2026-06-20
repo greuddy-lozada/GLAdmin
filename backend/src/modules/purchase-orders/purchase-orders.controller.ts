@@ -14,9 +14,11 @@ import { CreatePurchaseOrderDto } from './dto/create-purchase-order.dto';
 import { UpdatePurchaseOrderDto } from './dto/update-purchase-order.dto';
 import { ReceivePurchaseOrderDto } from './dto/receive-purchase-order.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { PlanLevel } from '../../common/decorators/plan-level.decorator';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 @Controller('purchase-orders')
+@PlanLevel('professional')
 export class PurchaseOrdersController {
   constructor(private readonly purchaseOrdersService: PurchaseOrdersService) {}
 

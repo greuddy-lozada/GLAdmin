@@ -63,7 +63,7 @@ Master tracker for all specs, implementation plans, and their completion status.
 
 | Spec | Status | Plan | Notes |
 |------|--------|------|-------|
-| `specs/2026-06-06-pos-redesign.md` | 🔄 In Design | — | Single-column invoice layout, async customer search + quick-add, product search-first, parked orders |
+| `specs/2026-06-06-pos-redesign.md` | ✅ Complete | — | Single-column invoice layout, async customer search + quick-add, product search-first, parked orders. All 7 components created, old components removed, i18n keys, useHotkey integration |
 
 ---
 
@@ -91,6 +91,21 @@ Master tracker for all specs, implementation plans, and their completion status.
 | `specs/multi-currency-venezuela.md` | ⏳ Deferred | In `specs/deferred-work.md` §8 |
 | `specs/observability-monitoring.md` | ⏳ Deferred | In `specs/deferred-work.md` §7 |
 | `specs/api-documentation.md` | ⏳ Deferred | In `specs/deferred-work.md` §6 |
+
+---
+
+---
+
+## Status: Subscription Payments (Pago Móvil + Cash USD)
+
+| Spec | Status | Plan | Notes |
+|------|--------|------|-------|
+| `specs/2026-06-17-subscription-payments.md` | 🔄 In Progress | — | Replaces Stripe with Pago Móvil + Cash USD for subscriptions |
+| Phase 1 — Prisma model + migration | ✅ Complete | — | SubscriptionPayment model + SQLite migration |
+| Phase 2 — Backend module | ✅ Complete | — | Controller, service, DTOs, SubscriptionsModule |
+| Phase 3 — Frontend billing forms | ✅ Complete | — | BillingPagoMovil, BillingCash, SlideForm method selector |
+| Phase 4 — Admin review page | ✅ Complete | — | Admin approve/reject page at /admin/subscription-payments |
+| Phase 5 — i18n | ✅ Complete | — | 25+ keys in es.json + en.json |
 
 ---
 

@@ -8,13 +8,13 @@ import { useI18n } from '@/i18n';
 import { useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Sun, Moon, LogOut } from 'lucide-react';
+import { Sun, Moon, Languages, LogOut } from 'lucide-react';
 
 export function UserNav() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const { user, logout } = useAuth();
-  const { t } = useI18n();
+  const { t, locale, setLocale } = useI18n();
   const { theme, setTheme } = useTheme();
   const router = useRouter();
 
@@ -68,6 +68,14 @@ export function UserNav() {
             >
               {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               {theme === 'dark' ? t('nav.lightMode') : t('nav.darkMode')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setLocale(locale === 'es' ? 'en' : 'es')}
+              className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+            >
+              <Languages className="h-4 w-4" />
+              {locale === 'es' ? 'English' : 'Español'}
             </button>
             <div className="h-px bg-border my-1" />
             <button

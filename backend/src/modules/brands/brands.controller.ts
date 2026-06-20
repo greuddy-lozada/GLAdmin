@@ -13,9 +13,11 @@ import { BrandsService } from './brands.service';
 import { CreateBrandDto } from './dto/create-brand.dto';
 import { UpdateBrandDto } from './dto/update-brand.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { PlanLevel } from '../../common/decorators/plan-level.decorator';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 @Controller('brands')
+@PlanLevel('starter')
 export class BrandsController {
   constructor(private readonly brandsService: BrandsService) {}
 

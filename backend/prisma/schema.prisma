@@ -45,7 +45,8 @@ model User {
   currentOrganization    Organization?             @relation("CurrentOrg", fields: [currentOrganizationId], references: [id])
   organizations          UserOrganization[]
   invites                Invite[]                  @relation("InvitedBy")
-  pagoMovilTransactions  PagoMovilTransaction[]
+  pagoMovilTransactions     PagoMovilTransaction[]
+  reviewedSubscriptionPayments SubscriptionPayment[]  @relation("Reviewer")
 }
 
 model RefreshToken {
@@ -110,6 +111,7 @@ model Organization {
   syncConflicts         SyncConflict[]
   salePayments          SalePayment[]
   auditLogs             AuditLog[]
+  subscriptionPayments  SubscriptionPayment[]
 }
 
 model Plan {
@@ -126,7 +128,36 @@ model Plan {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  organizations Organization[]
+  organizations        Organization[]
+  subscriptionPayments SubscriptionPayment[]
+}
+
+model SubscriptionPayment {
+  id                Int      @id @default(autoincrement())
+  organizationId    Int
+  planId            Int
+  method            String   // 'pago_movil' | 'cash_usd'
+  amountUsd         Float    // plan.amount / 100
+  status            String   @default("pending") // pending | approved | rejected
+
+  // Pago Móvil specific
+  bankId            String?
+  phoneNumber       String?
+  reference         String?
+  proofImage        String?
+
+  reviewedBy        Int?
+  reviewedAt        DateTime?
+  notes             String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  plan         Plan         @relation(fields: [planId], references: [id])
+  reviewer     User?        @relation("Reviewer", fields: [reviewedBy], references: [id])
+
+  @@index([organizationId])
+  @@index([status])
 }
 
 model UserOrganization {

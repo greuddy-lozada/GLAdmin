@@ -19,6 +19,7 @@ import {
   AlertCircle,
   Keyboard,
 } from 'lucide-react';
+import type { FeatureFlag } from '@/lib/feature-flags';
 
 export interface NavItem {
   key: string;
@@ -26,6 +27,7 @@ export interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
   path: string;
   minLevel: number;
+  requiredFeature?: FeatureFlag;
 }
 
 export interface NavGroup {
@@ -45,8 +47,8 @@ export const navigationGroups: NavGroup[] = [
     key: 'compras',
     label: 'nav.group.compras',
     items: [
-      { key: 'suppliers', label: 'Proveedores', icon: Truck, path: '/suppliers', minLevel: 40 },
-      { key: 'purchaseOrders', label: 'Pedidos', icon: ShoppingCart, path: '/purchase-orders', minLevel: 40 },
+      { key: 'suppliers', label: 'Proveedores', icon: Truck, path: '/suppliers', minLevel: 40, requiredFeature: 'suppliers' },
+      { key: 'purchaseOrders', label: 'Pedidos', icon: ShoppingCart, path: '/purchase-orders', minLevel: 40, requiredFeature: 'purchase_orders' },
       { key: 'exchangeRates', label: 'Tasas BCV', icon: DollarSign, path: '/exchange-rates', minLevel: 40 },
     ],
   },
@@ -54,11 +56,11 @@ export const navigationGroups: NavGroup[] = [
     key: 'inventario',
     label: 'nav.group.inventario',
     items: [
-      { key: 'products', label: 'Productos', icon: Package, path: '/products', minLevel: 40 },
-      { key: 'categories', label: 'Categorías', icon: Tags, path: '/categories', minLevel: 40 },
-      { key: 'taxes', label: 'Impuestos', icon: Receipt, path: '/taxes', minLevel: 40 },
-      { key: 'batches', label: 'Lotes', icon: Tags, path: '/batches', minLevel: 40 },
-      { key: 'stocks', label: 'Inventario', icon: Store, path: '/stocks', minLevel: 40 },
+      { key: 'products', label: 'Productos', icon: Package, path: '/products', minLevel: 40, requiredFeature: 'products' },
+      { key: 'categories', label: 'Categorías', icon: Tags, path: '/categories', minLevel: 40, requiredFeature: 'products' },
+      { key: 'taxes', label: 'Impuestos', icon: Receipt, path: '/taxes', minLevel: 40, requiredFeature: 'products' },
+      { key: 'batches', label: 'Lotes', icon: Tags, path: '/batches', minLevel: 40, requiredFeature: 'inventory' },
+      { key: 'stocks', label: 'Inventario', icon: Store, path: '/stocks', minLevel: 40, requiredFeature: 'inventory' },
     ],
   },
   {
@@ -80,6 +82,7 @@ export const navigationGroups: NavGroup[] = [
       { key: 'adminUsers', label: 'Usuarios Admin', icon: Users, path: '/admin/users', minLevel: 80 },
       { key: 'adminPlans', label: 'Planes', icon: CreditCard, path: '/admin/plans', minLevel: 80 },
       { key: 'adminInvites', label: 'Invitaciones', icon: Mail, path: '/admin/invites', minLevel: 80 },
+      { key: 'adminSubscriptionPayments', label: 'Suscripciones', icon: CreditCard, path: '/admin/subscription-payments', minLevel: 80 },
     ],
   },
   {

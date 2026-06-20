@@ -13,9 +13,11 @@ import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { PlanLevel } from '../../common/decorators/plan-level.decorator';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 @Controller('products')
+@PlanLevel('starter')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 

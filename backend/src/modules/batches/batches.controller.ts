@@ -13,9 +13,11 @@ import { BatchesService } from './batches.service';
 import { CreateBatchDto } from './dto/create-batch.dto';
 import { UpdateBatchDto } from './dto/update-batch.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { PlanLevel } from '../../common/decorators/plan-level.decorator';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 @Controller('batches')
+@PlanLevel('professional')
 export class BatchesController {
   constructor(private readonly batchesService: BatchesService) {}
 

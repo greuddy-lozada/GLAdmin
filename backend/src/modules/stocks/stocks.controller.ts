@@ -13,9 +13,11 @@ import { StocksService } from './stocks.service';
 import { CreateStockDto } from './dto/create-stock.dto';
 import { UpdateStockDto } from './dto/update-stock.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { PlanLevel } from '../../common/decorators/plan-level.decorator';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 @Controller('stocks')
+@PlanLevel('professional')
 export class StocksController {
   constructor(private readonly stocksService: StocksService) {}
 

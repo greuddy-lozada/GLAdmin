@@ -13,9 +13,11 @@ import { SuppliersService } from './suppliers.service';
 import { CreateSupplierDto } from './dto/create-supplier.dto';
 import { UpdateSupplierDto } from './dto/update-supplier.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { PlanLevel } from '../../common/decorators/plan-level.decorator';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 @Controller('suppliers')
+@PlanLevel('starter')
 export class SuppliersController {
   constructor(private readonly suppliersService: SuppliersService) {}
 

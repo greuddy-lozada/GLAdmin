@@ -13,6 +13,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { AuthGuard } from './common/guards/auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { FeatureGuard } from './common/guards/feature.guard';
+import { PlanLevelGuard } from './common/guards/plan-level.guard';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
 import { UsersModule } from './modules/users/users.module';
@@ -40,6 +41,7 @@ import { SalesModule } from './modules/sales/sales.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
 import { HealthModule } from './modules/health/health.module';
 import { AuditLogModule } from './modules/audit-log/audit-log.module';
+import { SubscriptionsModule } from './modules/subscriptions/subscription-payments.module';
 
 import appConfig from './core/config/app.config';
 import jwtConfig from './core/config/jwt.config';
@@ -95,6 +97,7 @@ if (!jwtSecret) {
     UploadsModule,
     HealthModule,
     AuditLogModule,
+    SubscriptionsModule,
   ],
   providers: [
     {
@@ -112,6 +115,10 @@ if (!jwtSecret) {
     {
       provide: APP_GUARD,
       useClass: FeatureGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: PlanLevelGuard,
     },
     {
       provide: APP_GUARD,

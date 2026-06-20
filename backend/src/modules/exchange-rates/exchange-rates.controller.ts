@@ -13,9 +13,11 @@ import { ExchangeRatesService } from './exchange-rates.service';
 import { CreateExchangeRateDto } from './dto/create-exchange-rate.dto';
 import { UpdateExchangeRateDto } from './dto/update-exchange-rate.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { PlanLevel } from '../../common/decorators/plan-level.decorator';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 @Controller('exchange-rates')
+@PlanLevel('free')
 export class ExchangeRatesController {
   constructor(private readonly exchangeRatesService: ExchangeRatesService) {}
 

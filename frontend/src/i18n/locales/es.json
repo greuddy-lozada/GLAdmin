@@ -19,6 +19,7 @@
     "loading": "Cargando...",
     "new": "Nuevo",
     "search": "Buscar",
+    "refresh": "Actualizar",
     "rowsPerPage": "Filas por página:",
     "previous": "Anterior",
     "next": "Siguiente",
@@ -35,7 +36,8 @@
       "save": "Error al guardar",
       "load": "Error al cargar",
       "delete": "Error al eliminar"
-    }
+    },
+    "upgrade_required": "Esta función requiere un plan superior. Actualiza tu plan para acceder."
   },
   "auth": {
     "title": "Cuadra",
@@ -114,6 +116,7 @@
     "adminUsers": "Usuarios Admin",
     "adminPlans": "Planes",
     "adminInvites": "Invitaciones",
+    "adminSubscriptionPayments": "Suscripciones",
     "settings": "Configuración",
     "shortcuts": "Atajos",
     "payments": "Pagos",
@@ -811,9 +814,23 @@
     "subscribe": "Suscribirse",
     "perMonth": "/mes",
     "perYear": "/año",
-    "features": "Características",
+    "features": "Módulos incluidos",
     "success": "Suscripción procesada exitosamente",
     "canceled": "Suscripción cancelada",
+    "feature": {
+      "suppliers": "Proveedores",
+      "customers": "Clientes",
+      "products": "Productos, Categorías, Impuestos",
+      "export": "Exportación de datos",
+      "purchase_orders": "Pedidos de Compra",
+      "sales": "POS y Ventas",
+      "inventory": "Lotes e Inventario",
+      "api_access": "API Access",
+      "audit_log": "Auditoría",
+      "multiple_orgs": "Multi-empresa",
+      "white_label": "White Label",
+      "priority_support": "Soporte Prioritario"
+    },
     "error": {
       "load": "Error al cargar planes",
       "checkout": "Error al iniciar pago",
@@ -846,6 +863,54 @@
     "error": {
       "save": "Error al guardar el atajo",
       "load": "Error al cargar atajos"
+    }
+  },
+  "subscription": {
+    "payment": {
+      "pagoMovil": "Pago Móvil",
+      "cashUsd": "Efectivo USD",
+      "pagoMovilTitle": "Pago con Pago Móvil",
+      "cashTitle": "Pago en Efectivo USD",
+      "depositTo": "Depositar a:",
+      "bank": "Banco",
+      "phone": "Teléfono",
+      "amountToPay": "Monto a pagar",
+      "yourBank": "Tu banco de origen",
+      "selectBank": "Selecciona tu banco",
+      "yourPhone": "Tu número de teléfono",
+      "reference": "Número de referencia",
+      "proofImage": "Comprobante (opcional)",
+      "submit": "Enviar solicitud",
+      "cashInstructions": "Entrega el monto en efectivo USD al administrador del sistema. Una vez recibido, el administrador activará el plan.",
+      "cashSubmit": "Solicitar cambio de plan",
+      "submitted": "Solicitud enviada. Espera la confirmación del administrador.",
+      "atRate": "a tasa",
+      "error": {
+        "referenceRequired": "El número de referencia es obligatorio",
+        "create": "Error al crear la solicitud",
+        "upload": "Error al subir el comprobante"
+      }
+    },
+    "admin": {
+      "field": {
+        "organization": "Organización",
+        "plan": "Plan",
+        "method": "Método",
+        "amount": "Monto",
+        "status": "Estado",
+        "createdAt": "Fecha"
+      },
+      "approve": "Aprobar",
+      "reject": "Rechazar",
+      "approved": "Suscripción aprobada",
+      "rejected": "Suscripción rechazada",
+      "filterPending": "Pendientes",
+      "filterAll": "Todas",
+      "empty": "No hay solicitudes de suscripción",
+      "error": {
+        "load": "Error al cargar solicitudes",
+        "review": "Error al revisar la solicitud"
+      }
     }
   }
 }

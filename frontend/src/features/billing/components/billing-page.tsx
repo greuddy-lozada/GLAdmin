@@ -1,5 +1,8 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { Banknote, DollarSign } from 'lucide-react';
 import { useAuth } from '@/providers/auth-provider';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,22 +10,48 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useI18n } from '@/i18n';
 import { useBilling } from '../hooks/use-billing';
+import { BillingPagoMovil } from './billing-pago-movil';
+import { BillingCash } from './billing-cash';
+import type { Plan } from '../models/billing.model';
+
+const FEATURE_TO_KEY: Record<string, string> = {
+  suppliers: 'billing.feature.suppliers',
+  customers: 'billing.feature.customers',
+  products: 'billing.feature.products',
+  export: 'billing.feature.export',
+  purchase_orders: 'billing.feature.purchase_orders',
+  sales: 'billing.feature.sales',
+  inventory: 'billing.feature.inventory',
+  api_access: 'billing.feature.api_access',
+  audit_log: 'billing.feature.audit_log',
+  multiple_orgs: 'billing.feature.multiple_orgs',
+  white_label: 'billing.feature.white_label',
+  priority_support: 'billing.feature.priority_support',
+};
+
+const BASE_FEATURES = new Set(['basic_auth', 'multi_currency', 'basic_reports', 'advanced_reports']);
 
 export default function BillingPage() {
   const { t } = useI18n();
   const { currentOrg } = useAuth();
-  const { plans, loading, checkoutLoading, error, subscribe } = useBilling();
+  const { plans, loading, error } = useBilling();
 
   const currentPlanName = currentOrg?.plan?.name;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
-  const handleSubscribe = async (planId: number) => {
-    const orgId = currentOrg?.id;
-    if (!orgId) return;
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+  const [pagoMovilOpen, setPagoMovilOpen] = useState(false);
+  const [cashOpen, setCashOpen] = useState(false);
 
-    const result = await subscribe(planId, orgId);
-    if (result?.url) {
-      setTimeout(() => { window.location.href = result.url; }, 0);
-    }
+  const handlePagoMovil = (plan: Plan) => {
+    setSelectedPlan(plan);
+    setPagoMovilOpen(true);
+  };
+
+  const handleCash = (plan: Plan) => {
+    setSelectedPlan(plan);
+    setCashOpen(true);
   };
 
   const parseFeatures = (features: string): string[] => {
@@ -36,28 +65,32 @@ export default function BillingPage() {
 
   if (loading) {
     return (
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {[1, 2, 3].map((i) => (
-          <Card key={i} className="flex flex-col animate-pulse">
-            <CardHeader>
-              <div className="h-6 w-24 bg-muted rounded" />
-              <div className="h-8 w-32 bg-muted rounded mt-2" />
-            </CardHeader>
-            <CardContent className="flex-1">
-              <div className="space-y-2">
-                <div className="h-4 w-full bg-muted rounded" />
-                <div className="h-4 w-3/4 bg-muted rounded" />
-                <div className="h-4 w-1/2 bg-muted rounded" />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="h-full flex flex-col gap-4">
+        <div className="flex-1 overflow-y-auto">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="flex flex-col animate-pulse">
+                <CardHeader className="p-4 pb-0">
+                  <div className="h-5 w-20 bg-muted rounded" />
+                  <div className="h-7 w-28 bg-muted rounded mt-1" />
+                </CardHeader>
+                <CardContent className="flex-1 p-4 pt-2">
+                  <div className="space-y-1.5">
+                    <div className="h-3 w-full bg-muted rounded" />
+                    <div className="h-3 w-3/4 bg-muted rounded" />
+                    <div className="h-3 w-1/2 bg-muted rounded" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="h-full flex flex-col gap-4">
       {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
 
       {!loading && plans.length === 0 && !error && (
@@ -67,58 +100,74 @@ export default function BillingPage() {
       )}
 
       {!loading && plans.length > 0 && (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {plans
-            .filter((p) => p.isActive)
-            .map((plan) => {
-              const isCurrent = currentPlanName === plan.name;
-              const features = parseFeatures(plan.features);
+        <div className="flex-1 overflow-y-auto">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {plans
+              .filter((p) => p.isActive)
+              .map((plan) => {
+                const isCurrent = currentPlanName === plan.name;
+                const features = parseFeatures(plan.features)
+                  .filter((f) => !BASE_FEATURES.has(f) && FEATURE_TO_KEY[f])
+                  .map((f) => t(FEATURE_TO_KEY[f]));
+                const price = plan.amount / 100;
 
-              return (
-                <Card key={plan.id} className={`flex flex-col ${isCurrent ? 'ring-2 ring-primary' : ''}`}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-xl">{plan.label}</CardTitle>
-                      {isCurrent && (
-                        <Badge>{t('billing.currentPlan')}</Badge>
-                      )}
-                    </div>
-                    <CardDescription className="text-2xl font-bold text-foreground mt-2">
-                      ${plan.amount / 100}
-                      <span className="text-sm font-normal text-muted-foreground">
-                        {plan.interval === 'month' ? t('billing.perMonth') : t('billing.perYear')}
-                      </span>
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="flex-1 flex flex-col gap-4">
-                    {features.length > 0 && (
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground mb-2">{t('billing.features')}</p>
-                        <ul className="space-y-1">
-                          {features.map((f: string, i: number) => (
-                            <li key={i} className="text-sm flex items-center gap-2">
-                              <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                              {f}
+                return (
+                  <Card key={plan.id} className={`flex flex-col ${isCurrent ? 'ring-2 ring-primary' : ''}`}>
+                    <CardHeader className="p-3 pb-0">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-base">{plan.label}</CardTitle>
+                        {isCurrent && <Badge className="text-[10px] h-5">{t('billing.currentPlan')}</Badge>}
+                      </div>
+                      <CardDescription className="text-lg font-bold text-foreground mt-0.5">
+                        ${price}
+                        <span className="text-[11px] font-normal text-muted-foreground">
+                          {plan.interval === 'monthly' ? t('billing.perMonth') : t('billing.perYear')}
+                        </span>
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex-1 flex flex-col gap-1.5 p-3 pt-1.5">
+                      {features.length > 0 && (
+                        <ul className="space-y-0">
+                          {features.map((label: string, i: number) => (
+                            <li key={i} className="text-[11px] text-muted-foreground">
+                              {label}
                             </li>
                           ))}
                         </ul>
+                      )}
+                      <div className="mt-auto space-y-1">
+                        {isCurrent ? (
+                          <Button className="w-full" variant="outline" disabled size="sm">
+                            {t('billing.currentPlan')}
+                          </Button>
+                        ) : (
+                          <>
+                            <Button className="w-full" size="sm" onClick={() => handlePagoMovil(plan)}>
+                              <Banknote className="mr-1.5 h-3.5 w-3.5" />
+                              {t('subscription.payment.pagoMovil')}
+                            </Button>
+                            <Button className="w-full" variant="outline" size="sm" onClick={() => handleCash(plan)}>
+                              <DollarSign className="mr-1.5 h-3.5 w-3.5" />
+                              {t('subscription.payment.cashUsd')}
+                            </Button>
+                          </>
+                        )}
                       </div>
-                    )}
-                    <div className="mt-auto">
-                      <Button
-                        className="w-full"
-                        variant={isCurrent ? 'outline' : 'default'}
-                        disabled={isCurrent || checkoutLoading}
-                        onClick={() => handleSubscribe(plan.id)}
-                      >
-                        {checkoutLoading ? t('common.loading') : isCurrent ? t('billing.currentPlan') : t('billing.subscribe')}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+          </div>
         </div>
+      )}
+
+      {mounted && pagoMovilOpen && selectedPlan && createPortal(
+        <BillingPagoMovil plan={selectedPlan} open={pagoMovilOpen} onOpenChange={setPagoMovilOpen} />,
+        document.body,
+      )}
+      {mounted && cashOpen && selectedPlan && createPortal(
+        <BillingCash plan={selectedPlan} open={cashOpen} onOpenChange={setCashOpen} />,
+        document.body,
       )}
     </div>
   );

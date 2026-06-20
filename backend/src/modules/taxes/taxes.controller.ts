@@ -13,9 +13,11 @@ import { TaxesService } from './taxes.service';
 import { CreateTaxDto } from './dto/create-tax.dto';
 import { UpdateTaxDto } from './dto/update-tax.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { PlanLevel } from '../../common/decorators/plan-level.decorator';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 @Controller('taxes')
+@PlanLevel('starter')
 export class TaxesController {
   constructor(private readonly taxesService: TaxesService) {}
 

@@ -13,9 +13,11 @@ import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { PlanLevel } from '../../common/decorators/plan-level.decorator';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 @Controller('categories')
+@PlanLevel('starter')
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 

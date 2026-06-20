@@ -1,8 +1,10 @@
 import { Controller, Get } from '@nestjs/common';
 import { DashboardService } from './dashboard.service';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { PlanLevel } from '../../common/decorators/plan-level.decorator';
 
 @Controller('dashboard')
+@PlanLevel('free')
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 

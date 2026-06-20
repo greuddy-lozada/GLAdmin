@@ -17,9 +17,11 @@ import {
   MinLevel,
   ROLE_LEVEL,
 } from '../../common/decorators/min-level.decorator';
+import { PlanLevel } from '../../common/decorators/plan-level.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @Controller('pago-movil/transactions')
+@PlanLevel('professional')
 export class PagoMovilTransactionController {
   constructor(private readonly pagoMovilService: PagoMovilService) {}
 

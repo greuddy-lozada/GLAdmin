@@ -19,6 +19,7 @@
     "loading": "Loading...",
     "new": "New",
     "search": "Search",
+    "refresh": "Refresh",
     "rowsPerPage": "Rows per page:",
     "previous": "Previous",
     "next": "Next",
@@ -35,7 +36,8 @@
       "save": "Error saving",
       "load": "Error loading",
       "delete": "Error deleting"
-    }
+    },
+    "upgrade_required": "This feature requires a higher plan. Upgrade your plan to access."
   },
   "auth": {
     "title": "Cuadra",
@@ -114,6 +116,7 @@
     "adminUsers": "Users (Admin)",
     "adminPlans": "Plans",
     "adminInvites": "Invitations",
+    "adminSubscriptionPayments": "Subscriptions",
     "settings": "Settings",
     "shortcuts": "Shortcuts",
     "payments": "Payments",
@@ -811,9 +814,23 @@
     "subscribe": "Subscribe",
     "perMonth": "/month",
     "perYear": "/year",
-    "features": "Features",
+    "features": "Included modules",
     "success": "Subscription processed successfully",
     "canceled": "Subscription canceled",
+    "feature": {
+      "suppliers": "Suppliers",
+      "customers": "Customers",
+      "products": "Products, Categories, Taxes",
+      "export": "Data Export",
+      "purchase_orders": "Purchase Orders",
+      "sales": "POS & Sales",
+      "inventory": "Batches & Inventory",
+      "api_access": "API Access",
+      "audit_log": "Audit Log",
+      "multiple_orgs": "Multi-organization",
+      "white_label": "White Label",
+      "priority_support": "Priority Support"
+    },
     "error": {
       "load": "Error loading plans",
       "checkout": "Error starting checkout",
@@ -846,6 +863,54 @@
     "error": {
       "save": "Error saving shortcut",
       "load": "Error loading shortcuts"
+    }
+  },
+  "subscription": {
+    "payment": {
+      "pagoMovil": "Pago Móvil",
+      "cashUsd": "Cash USD",
+      "pagoMovilTitle": "Pay with Pago Móvil",
+      "cashTitle": "Pay with Cash USD",
+      "depositTo": "Deposit to:",
+      "bank": "Bank",
+      "phone": "Phone",
+      "amountToPay": "Amount to pay",
+      "yourBank": "Your bank",
+      "selectBank": "Select your bank",
+      "yourPhone": "Your phone number",
+      "reference": "Reference number",
+      "proofImage": "Proof (optional)",
+      "submit": "Submit request",
+      "cashInstructions": "Deliver the USD cash amount to the system administrator. Once received, the admin will activate the plan.",
+      "cashSubmit": "Request plan change",
+      "submitted": "Request submitted. Waiting for admin confirmation.",
+      "atRate": "at rate",
+      "error": {
+        "referenceRequired": "Reference number is required",
+        "create": "Error creating request",
+        "upload": "Error uploading proof"
+      }
+    },
+    "admin": {
+      "field": {
+        "organization": "Organization",
+        "plan": "Plan",
+        "method": "Method",
+        "amount": "Amount",
+        "status": "Status",
+        "createdAt": "Date"
+      },
+      "approve": "Approve",
+      "reject": "Reject",
+      "approved": "Subscription approved",
+      "rejected": "Subscription rejected",
+      "filterPending": "Pending",
+      "filterAll": "All",
+      "empty": "No subscription requests",
+      "error": {
+        "load": "Error loading requests",
+        "review": "Error reviewing request"
+      }
     }
   }
 }

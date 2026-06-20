@@ -70,8 +70,8 @@ export function DataTable<T extends { id: number }>({
 
   const tableColumns = useMemo(
     () =>
-      columns.map((col) => ({
-        id: String(col.field),
+      columns.map((col, i) => ({
+        id: String(col.field ?? i),
         header: col.headerName,
         accessorFn: (row: T) => {
           const val = row[col.field as keyof T];
@@ -129,8 +129,8 @@ export function DataTable<T extends { id: number }>({
         <Table>
           <TableHeader>
             <TableRow>
-              {columns.map((col) => (
-                <TableHead key={String(col.field)} style={{ width: col.width }}>
+              {columns.map((col, i) => (
+                <TableHead key={String(col.field ?? col.headerName ?? i)} style={{ width: col.width }}>
                   {col.headerName}
                 </TableHead>
               ))}
@@ -140,8 +140,8 @@ export function DataTable<T extends { id: number }>({
           <TableBody>
             {Array.from({ length: 5 }).map((_, i) => (
               <TableRow key={i}>
-                {columns.map((col) => (
-                  <TableCell key={String(col.field)}>
+                {columns.map((col, i) => (
+                  <TableCell key={String(col.field ?? col.headerName ?? i)}>
                     <Skeleton className="h-5 w-full" />
                   </TableCell>
                 ))}

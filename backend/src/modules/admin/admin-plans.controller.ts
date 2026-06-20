@@ -23,7 +23,7 @@ export class AdminPlansController {
   constructor(private readonly adminService: AdminService) {}
 
   @Get()
-  @MinLevel(ROLE_LEVEL.master)
+  @MinLevel(ROLE_LEVEL.employee)
   findAll(@Query() pagination: PaginationQueryDto) {
     return this.adminService.findAllPlans(pagination.page, pagination.limit);
   }

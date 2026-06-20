@@ -13,9 +13,11 @@ import { CustomersService } from './customers.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { PlanLevel } from '../../common/decorators/plan-level.decorator';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 @Controller('customers')
+@PlanLevel('free')
 export class CustomersController {
   constructor(private readonly customersService: CustomersService) {}
 
