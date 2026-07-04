@@ -18,7 +18,6 @@ import { SlideForm } from '@/components/ui/slide-form';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useCategories } from '@/features/categories/hooks/use-categories';
 import { Category, CreateCategoryRequest } from '@/features/categories/models/category.model';
-import { categoryService } from '@/features/categories/services/category.service';
 import { useI18n } from '@/i18n';
 import { RoleGuard } from '@/components/ui/role-guard';
 import { useAuth } from '@/providers/auth-provider';
@@ -27,7 +26,7 @@ import { sileo } from 'sileo';
 import apiClient from '@/lib/api/api-client';
 
 export default function CategoriesPage() {
-  const { categories, loading, loadCategories } = useCategories();
+  const { items: categories, isLoading: loading, create, update, remove } = useCategories();
   const { t, tp } = useI18n();
   const { user } = useAuth();
   const role = user?.role?.slug ?? 'employee';
@@ -37,7 +36,6 @@ export default function CategoriesPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [formData, setFormData] = useState<CreateCategoryRequest>({ name: '', description: '' });
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
   const [allCategories, setAllCategories] = useState<{ id: number; name: string }[]>([]);
@@ -69,40 +67,35 @@ export default function CategoriesPage() {
     setFormOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     setError('');
-    setSubmitting(true);
-    try {
-      if (selectedCategory) {
-        await categoryService.update(selectedCategory.id, formData);
-        sileo.success({ description: t('categories.updated') });
-      } else {
-        await categoryService.create(formData);
-        sileo.success({ description: t('categories.created') });
-      }
-      await loadCategories();
-      setFormOpen(false);
-    } catch {
-      setError(t('categories.error.save'));
-    } finally {
-      setSubmitting(false);
+    setFormOpen(false);
+    const isEdit = !!selectedCategory;
+    if (isEdit) {
+      update.mutate(
+        { id: selectedCategory!.id, data: formData },
+        {
+          onSuccess: () => sileo.success({ description: t('categories.updated') }),
+          onError: () => { setError(t('categories.error.save')); setFormOpen(true); },
+        },
+      );
+    } else {
+      create.mutate(formData, {
+        onSuccess: () => sileo.success({ description: t('categories.created') }),
+        onError: () => { setError(t('categories.error.save')); setFormOpen(true); },
+      });
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!deleteTarget) return;
-    setSubmitting(true);
-    try {
-      await categoryService.delete(deleteTarget.id);
-      sileo.success({ description: t('categories.deleted') });
-      await loadCategories();
-      setDeleteOpen(false);
-      setDeleteTarget(null);
-    } catch {
-      setError(t('categories.error.delete'));
-    } finally {
-      setSubmitting(false);
-    }
+    const targetId = deleteTarget.id;
+    setDeleteOpen(false);
+    setDeleteTarget(null);
+    remove.mutate(targetId, {
+      onSuccess: () => sileo.success({ description: t('categories.deleted') }),
+      onError: () => { setError(t('categories.error.delete')); setDeleteOpen(true); },
+    });
   };
 
   return (
@@ -132,8 +125,8 @@ export default function CategoriesPage() {
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={handleSave} disabled={submitting} className="w-full">
-            {submitting ? t('common.saving') : t('common.save')}
+          <Button onClick={handleSave} disabled={create.isPending || update.isPending} className="w-full">
+            {create.isPending || update.isPending ? t('common.saving') : t('common.save')}
           </Button>
         </div>
       }
@@ -168,7 +161,7 @@ export default function CategoriesPage() {
         confirmLabel={t('common.delete')}
         onConfirm={handleDelete}
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
-        loading={submitting}
+        loading={remove.isPending}
       />
     </SlideForm>
   );

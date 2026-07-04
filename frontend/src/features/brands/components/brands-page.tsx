@@ -11,7 +11,6 @@ import { SlideForm } from '@/components/ui/slide-form';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useBrands } from '@/features/brands/hooks/use-brands';
 import { Brand, CreateBrandRequest } from '@/features/brands/models/brand.model';
-import { brandService } from '@/features/brands/services/brand.service';
 import { useI18n } from '@/i18n';
 import { RoleGuard } from '@/components/ui/role-guard';
 import { useAuth } from '@/providers/auth-provider';
@@ -19,7 +18,7 @@ import { hasMinLevel } from '@/lib/auth/roles';
 import { sileo } from 'sileo';
 
 export default function BrandsPage() {
-  const { brands, loading, loadBrands } = useBrands();
+  const { items: brands, isLoading: loading, create, update, remove } = useBrands();
   const { t, tp } = useI18n();
   const { user } = useAuth();
   const role = user?.role?.slug ?? 'employee';
@@ -29,7 +28,6 @@ export default function BrandsPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
   const [formData, setFormData] = useState<CreateBrandRequest>({ name: '', description: '' });
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<Brand | null>(null);
 
@@ -53,40 +51,35 @@ export default function BrandsPage() {
     setFormOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     setError('');
-    setSubmitting(true);
-    try {
-      if (selectedBrand) {
-        await brandService.update(selectedBrand.id, formData);
-        sileo.success({ description: t('brands.updated') });
-      } else {
-        await brandService.create(formData);
-        sileo.success({ description: t('brands.created') });
-      }
-      await loadBrands();
-      setFormOpen(false);
-    } catch {
-      setError(t('brands.error.save'));
-    } finally {
-      setSubmitting(false);
+    setFormOpen(false);
+    const isEdit = !!selectedBrand;
+    if (isEdit) {
+      update.mutate(
+        { id: selectedBrand!.id, data: formData },
+        {
+          onSuccess: () => sileo.success({ description: t('brands.updated') }),
+          onError: () => { setError(t('brands.error.save')); setFormOpen(true); },
+        },
+      );
+    } else {
+      create.mutate(formData, {
+        onSuccess: () => sileo.success({ description: t('brands.created') }),
+        onError: () => { setError(t('brands.error.save')); setFormOpen(true); },
+      });
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!deleteTarget) return;
-    setSubmitting(true);
-    try {
-      await brandService.delete(deleteTarget.id);
-      sileo.success({ description: t('brands.deleted') });
-      await loadBrands();
-      setDeleteOpen(false);
-      setDeleteTarget(null);
-    } catch {
-      setError(t('brands.error.delete'));
-    } finally {
-      setSubmitting(false);
-    }
+    const targetId = deleteTarget.id;
+    setDeleteOpen(false);
+    setDeleteTarget(null);
+    remove.mutate(targetId, {
+      onSuccess: () => sileo.success({ description: t('brands.deleted') }),
+      onError: () => { setError(t('brands.error.delete')); setDeleteOpen(true); },
+    });
   };
 
   return (
@@ -104,8 +97,8 @@ export default function BrandsPage() {
             <Label>{t('brands.field.description')}</Label>
             <Input value={formData.description ?? ''} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
           </div>
-          <Button onClick={handleSave} disabled={submitting} className="w-full">
-            {submitting ? t('common.saving') : t('common.save')}
+          <Button onClick={handleSave} disabled={create.isPending || update.isPending} className="w-full">
+            {create.isPending || update.isPending ? t('common.saving') : t('common.save')}
           </Button>
         </div>
       }
@@ -140,7 +133,7 @@ export default function BrandsPage() {
         confirmLabel={t('common.delete')}
         onConfirm={handleDelete}
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
-        loading={submitting}
+        loading={remove.isPending}
       />
     </SlideForm>
   );

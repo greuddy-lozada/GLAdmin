@@ -1,72 +1,27 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useOptimisticCrud } from '@/hooks/use-optimistic-crud';
 import { Tax, CreateTaxRequest, UpdateTaxRequest } from '../models/tax.model';
 import { taxService } from '../services/tax.service';
 
+function buildOptimistic(data: CreateTaxRequest, tempId: number): Tax {
+  return {
+    id: tempId,
+    name: data.name,
+    percentage: data.percentage,
+    formula: data.formula ?? null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+}
+
 export function useTaxes() {
-  const [taxes, setTaxes] = useState<Tax[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadTaxes = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await taxService.getAll();
-      setTaxes(data);
-    } catch {
-      setError('Error al cargar impuestos');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadTaxes();
-  }, [loadTaxes]);
-
-  const createTax = useCallback(async (data: CreateTaxRequest) => {
-    setLoading(true);
-    try {
-      await taxService.create(data);
-      await loadTaxes();
-      return true;
-    } catch {
-      setError('Error al crear impuesto');
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, [loadTaxes]);
-
-  const updateTax = useCallback(async (id: number, data: UpdateTaxRequest) => {
-    setLoading(true);
-    try {
-      await taxService.update(id, data);
-      await loadTaxes();
-      return true;
-    } catch {
-      setError('Error al actualizar impuesto');
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, [loadTaxes]);
-
-  const deleteTax = useCallback(async (id: number) => {
-    setLoading(true);
-    try {
-      await taxService.delete(id);
-      await loadTaxes();
-      return true;
-    } catch {
-      setError('Error al eliminar impuesto');
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, [loadTaxes]);
-
-  return { taxes, loading, error, loadTaxes, createTax, updateTax, deleteTax };
+  return useOptimisticCrud<Tax, CreateTaxRequest, UpdateTaxRequest>({
+    queryKey: ['taxes'],
+    queryFn: () => taxService.getAll(),
+    createFn: (data) => taxService.create(data),
+    updateFn: (id, data) => taxService.update(id, data),
+    deleteFn: (id) => taxService.delete(id),
+    buildOptimistic,
+  });
 }

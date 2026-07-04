@@ -11,7 +11,6 @@ import { SlideForm } from '@/components/ui/slide-form';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useTaxes } from '@/features/taxes/hooks/use-taxes';
 import { Tax, CreateTaxRequest, UpdateTaxRequest } from '@/features/taxes/models/tax.model';
-import { taxService } from '@/features/taxes/services/tax.service';
 import { useI18n } from '@/i18n';
 import { sileo } from 'sileo';
 import { RoleGuard } from '@/components/ui/role-guard';
@@ -19,7 +18,7 @@ import { useAuth } from '@/providers/auth-provider';
 import { hasMinLevel } from '@/lib/auth/roles';
 
 export default function TaxesPage() {
-  const { taxes, loading, loadTaxes } = useTaxes();
+  const { items: taxes, isLoading: loading, create, update, remove } = useTaxes();
   const { t, tp } = useI18n();
   const { user } = useAuth();
   const role = user?.role?.slug ?? 'employee';
@@ -28,11 +27,7 @@ export default function TaxesPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selectedTax, setSelectedTax] = useState<Tax | null>(null);
-  const [formData, setFormData] = useState<CreateTaxRequest>({
-    name: '',
-    percentage: 0,
-  });
-  const [submitting, setSubmitting] = useState(false);
+  const [formData, setFormData] = useState<CreateTaxRequest>({ name: '', percentage: 0 });
   const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<Tax | null>(null);
 
@@ -57,53 +52,40 @@ export default function TaxesPage() {
   const openEdit = (tax: Tax) => {
     setSelectedTax(tax);
     setError('');
-    setFormData({
-      name: tax.name,
-      percentage: tax.percentage,
-      formula: tax.formula ?? '',
-    });
+    setFormData({ name: tax.name, percentage: tax.percentage, formula: tax.formula ?? '' });
     setFormOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     setError('');
-    setSubmitting(true);
-    try {
-      if (selectedTax) {
-        const data: UpdateTaxRequest = {
-          name: formData.name,
-          percentage: formData.percentage,
-          formula: formData.formula || null,
-        };
-        await taxService.update(selectedTax.id, data);
-        sileo.success({ description: t('taxes.updated') });
-      } else {
-        await taxService.create(formData);
-        sileo.success({ description: t('taxes.created') });
-      }
-      await loadTaxes();
-      setFormOpen(false);
-    } catch {
-      setError(t('taxes.error.save'));
-    } finally {
-      setSubmitting(false);
+    setFormOpen(false);
+    const isEdit = !!selectedTax;
+    if (isEdit) {
+      const data: UpdateTaxRequest = { name: formData.name, percentage: formData.percentage, formula: formData.formula || null };
+      update.mutate(
+        { id: selectedTax!.id, data },
+        {
+          onSuccess: () => sileo.success({ description: t('taxes.updated') }),
+          onError: () => { setError(t('taxes.error.save')); setFormOpen(true); },
+        },
+      );
+    } else {
+      create.mutate(formData, {
+        onSuccess: () => sileo.success({ description: t('taxes.created') }),
+        onError: () => { setError(t('taxes.error.save')); setFormOpen(true); },
+      });
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!deleteTarget) return;
-    setSubmitting(true);
-    try {
-      await taxService.delete(deleteTarget.id);
-      sileo.success({ description: t('taxes.deleted') });
-      await loadTaxes();
-      setDeleteOpen(false);
-      setDeleteTarget(null);
-    } catch {
-      setError(t('taxes.error.delete'));
-    } finally {
-      setSubmitting(false);
-    }
+    const targetId = deleteTarget.id;
+    setDeleteOpen(false);
+    setDeleteTarget(null);
+    remove.mutate(targetId, {
+      onSuccess: () => sileo.success({ description: t('taxes.deleted') }),
+      onError: () => { setError(t('taxes.error.delete')); setDeleteOpen(true); },
+    });
   };
 
   return (
@@ -119,15 +101,14 @@ export default function TaxesPage() {
           </div>
           <div className="space-y-2">
             <Label>{t('taxes.field.percentage')}</Label>
-            <Input type="number" value={formData.percentage}
-              onChange={(e) => setFormData({ ...formData, percentage: Number(e.target.value) })} required />
+            <Input type="number" value={String(formData.percentage)} onChange={(e) => setFormData({ ...formData, percentage: Number(e.target.value) })} />
           </div>
           <div className="space-y-2">
             <Label>{t('taxes.field.formula')}</Label>
-            <Input value={formData.formula ?? ''} onChange={(e) => setFormData({ ...formData, formula: e.target.value })} />
+            <Input value={formData.formula ?? ''} onChange={(e) => setFormData({ ...formData, formula: e.target.value || null })} />
           </div>
-          <Button onClick={handleSave} disabled={submitting} className="w-full">
-            {submitting ? t('common.saving') : t('common.save')}
+          <Button onClick={handleSave} disabled={create.isPending || update.isPending} className="w-full">
+            {create.isPending || update.isPending ? t('common.saving') : t('common.save')}
           </Button>
         </div>
       }
@@ -148,10 +129,7 @@ export default function TaxesPage() {
         rows={taxes}
         loading={loading}
         onEdit={canEdit ? openEdit : undefined}
-        onDelete={canDelete ? (tax) => {
-          setDeleteTarget(tax);
-          setDeleteOpen(true);
-        } : undefined}
+        onDelete={canDelete ? (tax) => { setDeleteTarget(tax); setDeleteOpen(true); } : undefined}
         emptyMessage={t('taxes.empty')}
       />
 
@@ -162,7 +140,7 @@ export default function TaxesPage() {
         confirmLabel={t('common.delete')}
         onConfirm={handleDelete}
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
-        loading={submitting}
+        loading={remove.isPending}
       />
     </SlideForm>
   );
