@@ -9,33 +9,37 @@ import {
 } from 'class-validator';
 
 export class CreateUserDto {
-  @IsString()
-  @MinLength(2)
-  @MaxLength(20)
+  @IsString({ message: 'El nombre debe ser texto' })
+  @MinLength(2, { message: 'El nombre debe tener al menos 2 caracteres' })
+  @MaxLength(20, { message: 'El nombre debe tener máximo 20 caracteres' })
   firstName: string;
 
-  @IsString()
-  @MinLength(2)
-  @MaxLength(20)
+  @IsString({ message: 'El apellido debe ser texto' })
+  @MinLength(2, { message: 'El apellido debe tener al menos 2 caracteres' })
+  @MaxLength(20, { message: 'El apellido debe tener máximo 20 caracteres' })
   lastName: string;
 
-  @IsString()
-  @MinLength(4)
-  @MaxLength(30)
+  @IsString({ message: 'El nombre de usuario debe ser texto' })
+  @MinLength(4, {
+    message: 'El nombre de usuario debe tener al menos 4 caracteres',
+  })
+  @MaxLength(30, {
+    message: 'El nombre de usuario debe tener máximo 30 caracteres',
+  })
   userName: string;
 
-  @IsString()
-  @MinLength(5)
-  @MaxLength(25)
+  @IsString({ message: 'La contraseña debe ser texto' })
+  @MinLength(5, { message: 'La contraseña debe tener al menos 5 caracteres' })
+  @MaxLength(25, { message: 'La contraseña debe tener máximo 25 caracteres' })
   password: string;
 
-  @IsEmail()
+  @IsEmail({}, { message: 'Ingrese un correo electrónico válido' })
   email: string;
 
-  @IsNumber()
+  @IsNumber({}, { message: 'El rol es obligatorio' })
   idRole: number;
 
   @IsOptional()
-  @IsBoolean()
+  @IsBoolean({ message: 'Estado activo debe ser verdadero o falso' })
   isActive?: boolean;
 }

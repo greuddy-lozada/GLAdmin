@@ -36,8 +36,8 @@ export function ReceiptDialog({ open, onClose, saleCode, itemCount, total, total
         <div className="text-center space-y-2">
           <p className="text-sm text-muted-foreground font-mono">{saleCode}</p>
           <p>{tp('pos.receipt.items', { count: String(itemCount) })}</p>
-          <div className="text-lg font-bold">${total.toFixed(2)} VES</div>
-          <div className="text-sm text-muted-foreground">${totalUsd.toFixed(2)} USD</div>
+          <div className="text-lg font-bold tabular-nums text-primary">${total.toFixed(2)} VES</div>
+          <div className="text-sm text-muted-foreground tabular-nums">${totalUsd.toFixed(2)} USD</div>
           <p className="text-xs text-muted-foreground">{t('pos.receipt.autoClose')}</p>
         </div>
         <Button onClick={onClose} className="w-full">{t('pos.receipt.close')}</Button>

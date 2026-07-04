@@ -6,12 +6,15 @@ import { ContextService } from '../tenant/context.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
 import { UpdateSaleDto } from './dto/update-sale.dto';
 import { AppException } from '../../common/errors';
+import { SaleStatus, SALE_STATUS_META } from '../../common/types/statuses';
+import { AuditLogService } from '../audit-log/audit-log.service';
 
 @Injectable()
 export class SalesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly context: ContextService,
+    private readonly auditLog: AuditLogService,
   ) {}
 
   private async recalcTotalExistence(
@@ -33,8 +36,8 @@ export class SalesService {
     const orgId = this.context.getCurrent()?.organizationId;
     if (!orgId) throw new Error('No organization context');
 
-    return this.prisma.$transaction(async (tx) => {
-      const sale = await tx.sale.create({
+    const sale = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.sale.create({
         data: {
           organizationId: orgId,
           code: dto.code,
@@ -43,7 +46,7 @@ export class SalesService {
           amountUsd: dto.amountUsd,
           exchangeRate: dto.exchangeRate,
           paymentMethod: dto.paymentMethod,
-          status: dto.status,
+          status: SaleStatus.DRAFT,
           idCustomer: dto.idCustomer,
           totalTax: dto.totalTax,
           totalTaxUsd: dto.totalTaxUsd,
@@ -88,12 +91,22 @@ export class SalesService {
         });
         if (!seen.has(item.productId)) {
           seen.add(item.productId);
-          await this.recalcTotalExistence(item.productId, tx);
         }
       }
+      for (const productId of seen) {
+        await this.recalcTotalExistence(productId, tx);
+      }
 
-      return sale;
+      return created;
     });
+
+    await this.auditLog.log({
+      organizationId: orgId,
+      action: 'CREATE',
+      entity: 'Sale',
+      entityId: sale.id,
+    });
+    return sale;
   }
 
   async findAll(page = 1, limit = 20) {
@@ -140,7 +153,10 @@ export class SalesService {
       where: { id, organizationId: orgId },
     });
     if (!existing) throw new AppException('SALE_002', HttpStatus.NOT_FOUND);
-    if (existing.status !== 0) {
+    if (
+      existing.status &&
+      !SALE_STATUS_META[existing.status as SaleStatus]?.isMutable
+    ) {
       throw new AppException('SALE_001', HttpStatus.FORBIDDEN);
     }
 
@@ -160,6 +176,12 @@ export class SalesService {
       },
     });
 
+    await this.auditLog.log({
+      organizationId: orgId,
+      action: 'UPDATE',
+      entity: 'Sale',
+      entityId: id,
+    });
     return sale;
   }
 
@@ -177,8 +199,10 @@ export class SalesService {
         });
         if (!seen.has(item.idProduct)) {
           seen.add(item.idProduct);
-          await this.recalcTotalExistence(item.idProduct, tx);
         }
+      }
+      for (const productId of seen) {
+        await this.recalcTotalExistence(productId, tx);
       }
 
       await tx.sale.delete({
@@ -186,6 +210,12 @@ export class SalesService {
       });
     });
 
+    await this.auditLog.log({
+      organizationId: orgId,
+      action: 'DELETE',
+      entity: 'Sale',
+      entityId: id,
+    });
     return sale;
   }
 }

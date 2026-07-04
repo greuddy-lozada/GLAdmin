@@ -18,7 +18,7 @@ build/
 *.txt
 # Environment variables (Sensitive)
 .env*
-!*/.env.example
+!*/.env*.example
 
 # Vite specific (legacy client)
 .vite/

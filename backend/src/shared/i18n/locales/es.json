@@ -88,5 +88,19 @@
     "INTERNAL_ERROR": "Error interno del servidor",
     "UNAUTHORIZED": "No autorizado",
     "FORBIDDEN": "Acceso denegado"
+  },
+  "VALIDATION": {
+    "IS_STRING": "Este campo debe ser texto",
+    "IS_EMAIL": "Debe ser un correo electrónico válido",
+    "IS_NOT_EMPTY": "Este campo es obligatorio",
+    "MIN_LENGTH": "Debe tener al menos {{min}} caracteres",
+    "MAX_LENGTH": "Debe tener máximo {{max}} caracteres",
+    "MIN": "Debe ser al menos {{min}}",
+    "MAX": "Debe ser máximo {{max}}",
+    "IS_INT": "Debe ser un número entero",
+    "IS_NUMBER": "Debe ser un número",
+    "IS_DATE_STRING": "Debe ser una fecha válida",
+    "IS_ARRAY": "Debe ser una lista",
+    "IS_POSITIVE": "Debe ser un número positivo"
   }
 }

@@ -44,7 +44,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
         messageKey = (resp.message as string) || exception.message;
 
         if (Array.isArray(resp.message)) {
-          details = resp.message;
+          details = (resp.message as string[]).map((m) =>
+            this.i18n.translate(m, lang),
+          );
           messageKey = 'COMMON.VALIDATION_ERROR';
         } else if (resp.details) {
           details = resp.details;

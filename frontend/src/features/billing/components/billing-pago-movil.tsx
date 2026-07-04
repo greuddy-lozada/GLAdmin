@@ -148,7 +148,7 @@ export function BillingPagoMovil({ plan, open, onOpenChange }: BillingPagoMovilP
                 <a href={proofImage} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline truncate flex-1 inline-flex items-center gap-1">
                   <Eye className="h-4 w-4" /> {proofImage.split('/').pop()}
                 </a>
-                <Button type="button" variant="ghost" size="icon" onClick={() => setProofImage('')}>
+                <Button type="button" variant="ghost" size="icon" onClick={() => setProofImage('')} aria-label={t('common.delete')}>
                   <X className="h-4 w-4" />
                 </Button>
               </div>

@@ -7,12 +7,18 @@ import { CreatePurchaseOrderDto } from './dto/create-purchase-order.dto';
 import { UpdatePurchaseOrderDto } from './dto/update-purchase-order.dto';
 import { ReceivePurchaseOrderDto } from './dto/receive-purchase-order.dto';
 import { AppException } from '../../common/errors';
+import {
+  PurchaseOrderStatus,
+  PURCHASE_ORDER_STATUS_META,
+} from '../../common/types/statuses';
+import { AuditLogService } from '../../modules/audit-log/audit-log.service';
 
 @Injectable()
 export class PurchaseOrdersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly contextService: ContextService,
+    private readonly auditLog: AuditLogService,
   ) {}
 
   private async recalcTotalExistence(
@@ -73,6 +79,7 @@ export class PurchaseOrdersService {
     const purchaseOrder = await this.prisma.purchaseOrder.create({
       data: {
         ...header,
+        status: 'DRAFT',
         idSupplier: dto.idSupplier,
         date: dto.date ? new Date(dto.date) : undefined,
         organizationId: orgId,
@@ -110,6 +117,12 @@ export class PurchaseOrdersService {
       },
       include: this.include,
     });
+    await this.auditLog.log({
+      organizationId: orgId,
+      action: 'CREATE',
+      entity: 'PurchaseOrder',
+      entityId: purchaseOrder.id,
+    });
     return { data: purchaseOrder, message: 'PURCHASE_ORDER.CREATED' };
   }
 
@@ -143,7 +156,11 @@ export class PurchaseOrdersService {
 
   async update(id: number, dto: UpdatePurchaseOrderDto) {
     const existing = await this.findOne(id);
-    if (existing.status === 4) {
+    if (
+      existing.status &&
+      !PURCHASE_ORDER_STATUS_META[existing.status as PurchaseOrderStatus]
+        ?.isMutable
+    ) {
       throw new AppException('PO_001', HttpStatus.FORBIDDEN);
     }
     const orgId = this.orgId;
@@ -215,17 +232,52 @@ export class PurchaseOrdersService {
 
       return updated;
     });
+    await this.auditLog.log({
+      organizationId: orgId,
+      action: 'UPDATE',
+      entity: 'PurchaseOrder',
+      entityId: id,
+    });
     return { data: purchaseOrder, message: 'PURCHASE_ORDER.UPDATED' };
   }
 
   async receive(id: number, dto: ReceivePurchaseOrderDto) {
     const existing = await this.findOne(id);
-    if (existing.status === 4) {
+    if (existing.status === PurchaseOrderStatus.RECEIVED) {
       throw new AppException('PO_003', HttpStatus.BAD_REQUEST);
     }
     const orgId = this.orgId;
 
     await this.prisma.$transaction(async (tx) => {
+      const productIds = [
+        ...new Set(
+          dto.details
+            .map((item) => {
+              const line = existing.details.find((d) => d.id === item.id);
+              return line?.idProduct;
+            })
+            .filter(Boolean),
+        ),
+      ] as number[];
+
+      const existingStocks = await tx.stock.findMany({
+        where: {
+          idProduct: { in: productIds },
+          idSupplier: existing.idSupplier,
+          organizationId: orgId,
+        },
+      });
+      const stockByProduct = new Map(
+        existingStocks.map((s) => [s.idProduct, s]),
+      );
+
+      const stockDetsToCreate: {
+        idStock: number;
+        type: number;
+        quantity: number;
+        observation: string;
+      }[] = [];
+
       for (const item of dto.details) {
         const line = existing.details.find((d) => d.id === item.id);
         if (!line) throw new AppException('PO_007', HttpStatus.BAD_REQUEST);
@@ -240,13 +292,7 @@ export class PurchaseOrdersService {
           data: { receivedQuantity: newReceived },
         });
 
-        let stock = await tx.stock.findFirst({
-          where: {
-            idProduct: line.idProduct,
-            idSupplier: existing.idSupplier,
-            organizationId: orgId,
-          },
-        });
+        let stock = stockByProduct.get(line.idProduct);
 
         if (stock) {
           stock = await tx.stock.update({
@@ -267,16 +313,19 @@ export class PurchaseOrdersService {
               idPurchaseOrder: id,
             },
           });
+          stockByProduct.set(line.idProduct, stock);
         }
 
-        await tx.stockDet.create({
-          data: {
-            idStock: stock.id,
-            type: 1,
-            quantity: item.quantity,
-            observation: `Ingreso parcial por pedido ${existing.code ?? id}`,
-          },
+        stockDetsToCreate.push({
+          idStock: stock.id,
+          type: 1,
+          quantity: item.quantity,
+          observation: `Ingreso parcial por pedido ${existing.code ?? id}`,
         });
+      }
+
+      if (stockDetsToCreate.length > 0) {
+        await tx.stockDet.createMany({ data: stockDetsToCreate });
       }
 
       const refreshedLines = await tx.purchaseOrderDet.findMany({
@@ -286,11 +335,21 @@ export class PurchaseOrdersService {
         (l) => l.receivedQuantity >= (l.quantity ?? 0),
       );
       if (allReceived) {
-        await tx.purchaseOrder.update({ where: { id }, data: { status: 4 } });
+        await tx.purchaseOrder.update({
+          where: { id },
+          data: { status: PurchaseOrderStatus.RECEIVED },
+        });
       }
     });
 
-    return this.findOne(id);
+    const result = await this.findOne(id);
+    await this.auditLog.log({
+      organizationId: orgId,
+      action: 'RECEIVE',
+      entity: 'PurchaseOrder',
+      entityId: id,
+    });
+    return result;
   }
 
   async remove(id: number) {
@@ -300,6 +359,12 @@ export class PurchaseOrdersService {
       await tx.purchaseOrderDet.deleteMany({ where: { idPurchaseOrder: id } });
       await tx.accountsPayable.deleteMany({ where: { idPurchaseOrder: id } });
       await tx.purchaseOrder.delete({ where: { id } });
+    });
+    await this.auditLog.log({
+      organizationId: this.orgId,
+      action: 'DELETE',
+      entity: 'PurchaseOrder',
+      entityId: id,
     });
     return { data: po, message: 'PURCHASE_ORDER.DELETED' };
   }

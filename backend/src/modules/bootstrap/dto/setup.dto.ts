@@ -1,23 +1,32 @@
-import { IsString, IsEmail, MinLength, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsEmail,
+  MinLength,
+  IsOptional,
+  IsNotEmpty,
+} from 'class-validator';
 
 export class SetupDto {
-  @IsString()
+  @IsString({ message: 'VALIDATION.IS_STRING' })
+  @IsNotEmpty({ message: 'VALIDATION.IS_NOT_EMPTY' })
   organizationName: string;
 
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'VALIDATION.IS_STRING' })
   organizationSlug?: string;
 
-  @IsEmail()
+  @IsEmail({}, { message: 'VALIDATION.IS_EMAIL' })
   adminEmail: string;
 
-  @IsString()
-  @MinLength(8)
+  @IsString({ message: 'VALIDATION.IS_STRING' })
+  @MinLength(8, { message: 'La contraseña debe tener al menos 8 caracteres' })
   adminPassword: string;
 
-  @IsString()
+  @IsString({ message: 'VALIDATION.IS_STRING' })
+  @IsNotEmpty({ message: 'VALIDATION.IS_NOT_EMPTY' })
   firstName: string;
 
-  @IsString()
+  @IsString({ message: 'VALIDATION.IS_STRING' })
+  @IsNotEmpty({ message: 'VALIDATION.IS_NOT_EMPTY' })
   lastName: string;
 }

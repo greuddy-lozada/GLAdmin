@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useI18n } from '@/i18n';
-import { AlertTriangle, Loader2 } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { stockService } from '@/features/stocks/services/stock.service';
 
 export function StockAlertsPanel() {
@@ -12,7 +13,7 @@ export function StockAlertsPanel() {
   });
 
   if (isLoading) {
-    return <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />;
+    return <Skeleton className="h-8 w-full" />;
   }
 
   if (!alerts || alerts.length === 0) {

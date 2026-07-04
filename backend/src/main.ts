@@ -15,13 +15,30 @@ async function bootstrap() {
   app.use(
     helmet({
       crossOriginResourcePolicy: { policy: 'same-origin' },
-      contentSecurityPolicy: false,
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", 'data:', 'blob:'],
+          fontSrc: ["'self'"],
+          connectSrc: ["'self'"],
+        },
+      },
+      hsts: {
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true,
+      },
+      referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+      xContentTypeOptions: true,
+      xFrameOptions: { action: 'deny' },
     }),
   );
 
   app.enableCors({
     origin: process.env.FRONTEND_URL ?? 'http://localhost:3000',
-    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'HEAD'],
+    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'HEAD'],
     credentials: true,
   });
 

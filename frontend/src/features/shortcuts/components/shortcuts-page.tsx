@@ -8,6 +8,7 @@ import { defaultShortcuts, type ShortcutEntry } from '@/config/shortcuts';
 import { localDb } from '@/lib/sync/db';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const scopeOrder = ['pos', 'global'];
 
@@ -106,8 +107,9 @@ export default function ShortcutsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">{t('common.loading')}</p>
+      <div className="space-y-4 p-6">
+        <Skeleton className="h-48 w-full" />
+        <Skeleton className="h-48 w-full" />
       </div>
     );
   }

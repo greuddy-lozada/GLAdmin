@@ -104,6 +104,7 @@ export default function LoginPage() {
                 size="icon"
                 onClick={() => setPanelOpen(true)}
                 className="h-14 w-14 rounded-full shadow-lg shadow-black/20 hover:shadow-xl hover:shadow-black/30 transition-shadow"
+                aria-label="Iniciar sesión"
               >
                 <LogIn className="h-6 w-6" />
               </Button>
@@ -133,7 +134,7 @@ export default function LoginPage() {
         <div style={{ width: 500 }} className="h-full bg-card text-foreground shadow-xl">
           <div className="flex items-center justify-between px-6 py-5 border-b border-border">
             <span className="text-lg font-heading font-bold text-foreground">Cuadra</span>
-            <Button variant="ghost" size="icon" onClick={() => setPanelOpen(false)}>
+            <Button variant="ghost" size="icon" onClick={() => setPanelOpen(false)} aria-label="Cerrar">
               <X className="h-4 w-4" />
             </Button>
           </div>

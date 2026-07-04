@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense, useRef } from 'react';
 import { sileo } from 'sileo';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useI18n } from '@/i18n';
 import { useHotkey } from '@/hooks/use-hotkey';
 import { usePosStore } from '@/stores/pos-store';
@@ -126,7 +127,7 @@ export default function PosPage() {
 
   return (
     <div className="container mx-auto p-6 max-w-3xl">
-      <Suspense fallback={<div className="flex items-center justify-center h-64"><p className="text-muted-foreground">{t('pos.loading')}</p></div>}>
+      <Suspense fallback={<div className="space-y-4 p-6"><Skeleton className="h-10 w-full" /><Skeleton className="h-12 w-full" /><Skeleton className="h-64 w-full" /></div>}>
         <PosToolbar exchangeRate={exchangeRate} onPark={handlePark} onUndo={undoLastItem} canUndo={canUndo} hasItems={cart.length > 0} />
 
         <div className="flex items-center gap-2 mb-4">

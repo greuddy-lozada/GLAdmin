@@ -1,4 +1,4 @@
-// Prisma schema for GLAdmin
+// Prisma schema for Cuadra
 // Multi-currency enabled — all financial transactions store
 // VED (Bolívares) + USD amounts + exchange rate at time of record
 
@@ -11,34 +11,43 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ────────────────────────────────────────────
+// ROLE
+// ────────────────────────────────────────────
 model Role {
-  id        Int      @id @default(autoincrement())
-  name      String
-  slug      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        Int      @id @default(autoincrement()) @map("id")
+  name      String   @map("name")
+  slug      String   @unique @map("slug")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   users              User[]
   userOrganizations  UserOrganization[]
   invites            Invite[]
+
+  @@map("roles")
 }
 
+// ────────────────────────────────────────────
+// USER
+// ────────────────────────────────────────────
 model User {
-  id                 Int       @id @default(autoincrement())
-  email              String    @unique
-  userName           String    @unique
-  password           String
-  firstName          String
-  lastName           String
-  idRole             Int
-  mustChangePassword Boolean   @default(false)
-  lastLogin          DateTime?
-  isActive           Boolean   @default(true)
-  version            Int       @default(0)
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  id                 Int       @id @default(autoincrement()) @map("id")
+  email              String    @unique @map("email")
+  userName           String    @unique @map("user_name")
+  password           String    @map("password")
+  firstName          String    @map("first_name")
+  lastName           String    @map("last_name")
+  idRole             Int       @map("id_role")
+  mustChangePassword Boolean   @default(false) @map("must_change_password")
+  lastLogin          DateTime? @map("last_login")
+  isActive           Boolean   @default(true) @map("is_active")
+  version            Int       @default(0) @map("version")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+  deletedAt          DateTime? @map("deleted_at")
 
-  currentOrganizationId  Int?
+  currentOrganizationId  Int? @map("current_organization_id")
 
   role                   Role                      @relation(fields: [idRole], references: [id])
   refreshTokens          RefreshToken[]
@@ -47,41 +56,59 @@ model User {
   invites                Invite[]                  @relation("InvitedBy")
   pagoMovilTransactions     PagoMovilTransaction[]
   reviewedSubscriptionPayments SubscriptionPayment[]  @relation("Reviewer")
+
+  @@map("users")
+  @@index([idRole])
+  @@index([currentOrganizationId])
+  @@index([deletedAt])
 }
 
+// ────────────────────────────────────────────
+// REFRESH TOKEN
+// ────────────────────────────────────────────
 model RefreshToken {
-  id         Int      @id @default(autoincrement())
-  tokenId    String   @unique
-  tokenHash  String
-  userId     Int
-  deviceInfo String?
-  expiresAt  DateTime
-  createdAt  DateTime @default(now())
+  id         Int      @id @default(autoincrement()) @map("id")
+  tokenId    String   @unique @map("token_id")
+  tokenHash  String   @map("token_hash")
+  userId     Int      @map("user_id")
+  deviceInfo String?  @map("device_info")
+  expiresAt  DateTime @map("expires_at")
+  createdAt  DateTime @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id])
+
+  @@map("refresh_tokens")
+  @@index([userId])
+  @@index([expiresAt])
 }
 
+// ────────────────────────────────────────────
+// PERMISSION
+// ────────────────────────────────────────────
 model Permission {
-  id        Int      @id @default(autoincrement())
-  name      String?
-  slug      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        Int      @id @default(autoincrement()) @map("id")
+  name      String?  @map("name")
+  slug      String?  @map("slug")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("permissions")
 }
 
 // ────────────────────────────────────────────
 // ORGANIZATION (Multi-tenant core)
 // ────────────────────────────────────────────
 model Organization {
-  id        Int      @id @default(autoincrement())
-  name      String
-  slug      String   @unique
-  version   Int      @default(0)
-  isActive  Boolean  @default(true)
-  settings  String?
-  planId    Int?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        Int       @id @default(autoincrement()) @map("id")
+  name      String    @map("name")
+  slug      String    @unique @map("slug")
+  version   Int       @default(0) @map("version")
+  isActive  Boolean   @default(true) @map("is_active")
+  settings  String?   @map("settings")
+  planId    Int?      @map("plan_id")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
 
   plan                  Plan?                    @relation(fields: [planId], references: [id])
   users                 User[]                   @relation("CurrentOrg")
@@ -112,249 +139,309 @@ model Organization {
   salePayments          SalePayment[]
   auditLogs             AuditLog[]
   subscriptionPayments  SubscriptionPayment[]
+
+  @@map("organizations")
+  @@index([planId])
+  @@index([deletedAt])
 }
 
+// ────────────────────────────────────────────
+// PLAN
+// ────────────────────────────────────────────
 model Plan {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  label     String
-  amount    Int
-  currency  String   @default("usd")
-  interval  String
-  features  String
-  maxUsers  Int      @default(5)
-  version   Int      @default(0)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        Int      @id @default(autoincrement()) @map("id")
+  name      String   @unique @map("name")
+  label     String   @map("label")
+  amount    Int      @map("amount")
+  currency  String   @default("usd") @map("currency")
+  interval  String   @map("interval")
+  features  String   @map("features")
+  maxUsers  Int      @default(5) @map("max_users")
+  version   Int      @default(0) @map("version")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
 
   organizations        Organization[]
   subscriptionPayments SubscriptionPayment[]
+
+  @@map("plans")
+  @@index([deletedAt])
 }
 
+// ────────────────────────────────────────────
+// SUBSCRIPTION PAYMENT
+// ────────────────────────────────────────────
 model SubscriptionPayment {
-  id                Int      @id @default(autoincrement())
-  organizationId    Int
-  planId            Int
-  method            String   // 'pago_movil' | 'cash_usd'
-  amountUsd         Float    // plan.amount / 100
-  status            String   @default("pending") // pending | approved | rejected
+  id                Int       @id @default(autoincrement()) @map("id")
+  organizationId    Int       @map("organization_id")
+  planId            Int       @map("plan_id")
+  method            String    @map("method")
+  amountUsd         Float     @map("amount_usd")
+  status            String    @default("pending") @map("status")
 
-  // Pago Móvil specific
-  bankId            String?
-  phoneNumber       String?
-  reference         String?
-  proofImage        String?
+  bankId            String?   @map("bank_id")
+  phoneNumber       String?   @map("phone_number")
+  reference         String?   @map("reference")
+  proofImage        String?   @map("proof_image")
 
-  reviewedBy        Int?
-  reviewedAt        DateTime?
-  notes             String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  reviewedBy        Int?      @map("reviewed_by")
+  reviewedAt        DateTime? @map("reviewed_at")
+  notes             String?   @map("notes")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  deletedAt         DateTime? @map("deleted_at")
 
   organization Organization @relation(fields: [organizationId], references: [id])
   plan         Plan         @relation(fields: [planId], references: [id])
   reviewer     User?        @relation("Reviewer", fields: [reviewedBy], references: [id])
 
+  @@map("subscription_payments")
   @@index([organizationId])
+  @@index([planId])
+  @@index([reviewedBy])
   @@index([status])
+  @@index([deletedAt])
 }
 
+// ────────────────────────────────────────────
+// USER ORGANIZATION (M:N pivot)
+// ────────────────────────────────────────────
 model UserOrganization {
-  userId         Int
-  organizationId Int
-  roleId         Int
+  userId         Int @map("user_id")
+  organizationId Int @map("organization_id")
+  roleId         Int @map("role_id")
 
   user         User         @relation(fields: [userId], references: [id])
   organization Organization @relation(fields: [organizationId], references: [id])
   role         Role         @relation(fields: [roleId], references: [id])
 
   @@id([userId, organizationId])
-
+  @@map("user_organizations")
   @@index([organizationId])
+  @@index([roleId])
 }
 
+// ────────────────────────────────────────────
+// INVITE
+// ────────────────────────────────────────────
 model Invite {
-  id             Int      @id @default(autoincrement())
-  code           String   @unique
-  email          String
-  organizationId Int
-  roleId         Int
-  invitedById    Int
-  expiresAt      DateTime
-  version        Int      @default(0)
-  used           Boolean  @default(false)
-  createdAt      DateTime @default(now())
+  id             Int      @id @default(autoincrement()) @map("id")
+  code           String   @unique @map("code")
+  email          String   @map("email")
+  organizationId Int      @map("organization_id")
+  roleId         Int      @map("role_id")
+  invitedById    Int      @map("invited_by_id")
+  expiresAt      DateTime @map("expires_at")
+  version        Int      @default(0) @map("version")
+  used           Boolean  @default(false) @map("used")
+  createdAt      DateTime @default(now()) @map("created_at")
 
   organization Organization @relation(fields: [organizationId], references: [id])
   role         Role         @relation(fields: [roleId], references: [id])
   invitedBy    User         @relation("InvitedBy", fields: [invitedById], references: [id])
 
+  @@map("invites")
   @@index([organizationId])
+  @@index([roleId])
+  @@index([invitedById])
+  @@index([email])
+  @@index([expiresAt])
 }
 
+// ────────────────────────────────────────────
+// PAGO MOVIL CONFIG
+// ────────────────────────────────────────────
 model PagoMovilConfig {
-  id             Int      @id @default(autoincrement())
-  organizationId Int      @unique
-  phoneNumber    String
-  bankId         String
-  idNumber       String
-  exchangeRate   Float
-  version        Int      @default(0)
-  isActive       Boolean  @default(true)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id             Int      @id @default(autoincrement()) @map("id")
+  organizationId Int      @unique @map("organization_id")
+  phoneNumber    String   @map("phone_number")
+  bankId         String   @map("bank_id")
+  idNumber       String   @map("id_number")
+  exchangeRate   Float    @map("exchange_rate")
+  version        Int      @default(0) @map("version")
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   organization    Organization @relation(fields: [organizationId], references: [id])
 
+  @@map("pago_movil_configs")
   @@index([organizationId])
 }
 
+// ────────────────────────────────────────────
+// PAGO MOVIL TRANSACTION
+// ────────────────────────────────────────────
 model PagoMovilTransaction {
-  id             Int      @id @default(autoincrement())
-  organizationId Int
-  userId         Int
-  amountVes      Float
-  amountUsd      Float
-  bankId         String
-  phoneNumber    String
-  reference      String
-  proofImage     String?
-  version        Int      @default(0)
-  status         String   @default("pending")
-  reviewedBy     Int?
-  reviewedAt     DateTime?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id             Int       @id @default(autoincrement()) @map("id")
+  organizationId Int       @map("organization_id")
+  userId         Int       @map("user_id")
+  amountVes      Float     @map("amount_ves")
+  amountUsd      Float     @map("amount_usd")
+  bankId         String    @map("bank_id")
+  phoneNumber    String    @map("phone_number")
+  reference      String    @map("reference")
+  proofImage     String?   @map("proof_image")
+  version        Int       @default(0) @map("version")
+  status         String    @default("pending") @map("status")
+  reviewedBy     Int?      @map("reviewed_by")
+  reviewedAt     DateTime? @map("reviewed_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
   organization Organization @relation(fields: [organizationId], references: [id])
   user         User         @relation(fields: [userId], references: [id])
 
+  @@map("pago_movil_transactions")
   @@index([organizationId])
+  @@index([userId])
+  @@index([reviewedBy])
   @@index([status])
 }
 
 // ────────────────────────────────────────────
-// CUSTOMER (Slice 3 — Ventas)
+// CUSTOMER
 // ────────────────────────────────────────────
 model Customer {
-  id           Int      @id @default(autoincrement())
-  idCardNumber String
-  firstName    String
-  lastName     String
-  address      String?
-  phoneNumber  String?
-  email        String?
-  version      Int      @default(0)
-  available    Boolean  @default(true)
-  isWithholdingAgent   Boolean  @default(false)
-  withholdingPercentage Float?   // 75 or 100 — null if not a withholding agent
-  withholdingProof     String?  // uploaded proof document filename
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  organizationId Int
+  id                   Int       @id @default(autoincrement()) @map("id")
+  idCardNumber         String    @map("id_card_number")
+  firstName            String    @map("first_name")
+  lastName             String    @map("last_name")
+  address              String?   @map("address")
+  phoneNumber          String?   @map("phone_number")
+  email                String?   @map("email")
+  version              Int       @default(0) @map("version")
+  available            Boolean   @default(true) @map("available")
+  isWithholdingAgent   Boolean   @default(false) @map("is_withholding_agent")
+  withholdingPercentage Float?   @map("withholding_percentage")
+  withholdingProof     String?   @map("withholding_proof")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+  deletedAt            DateTime? @map("deleted_at")
+  organizationId       Int       @map("organization_id")
 
   organization Organization @relation(fields: [organizationId], references: [id])
   sales        Sale[]
 
+  @@map("customers")
   @@index([organizationId])
   @@index([organizationId, available])
   @@index([organizationId, updatedAt])
+  @@index([deletedAt])
 }
 
 // ────────────────────────────────────────────
-// SUPPLIER (Slice 1 — Compras)
+// SUPPLIER
 // ────────────────────────────────────────────
 model Supplier {
-  id                Int      @id @default(autoincrement())
-  companyName       String
-  businessName      String?
-  fiscalAddress     String?
-  taxId             String?
-  firstName         String?
-  lastName          String?
-  address           String?
-  phoneNumber       String?
-  email             String?
-  taxWithholdingAgent Boolean @default(false)
-  version           Int      @default(0)
-  available         Boolean  @default(true)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  organizationId    Int
+  id                 Int       @id @default(autoincrement()) @map("id")
+  companyName        String    @map("company_name")
+  businessName       String?   @map("business_name")
+  fiscalAddress      String?   @map("fiscal_address")
+  taxId              String?   @map("tax_id")
+  firstName          String?   @map("first_name")
+  lastName           String?   @map("last_name")
+  address            String?   @map("address")
+  phoneNumber        String?   @map("phone_number")
+  email              String?   @map("email")
+  taxWithholdingAgent Boolean  @default(false) @map("tax_withholding_agent")
+  version            Int       @default(0) @map("version")
+  available          Boolean   @default(true) @map("available")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+  deletedAt          DateTime? @map("deleted_at")
+  organizationId     Int       @map("organization_id")
 
   organization      Organization          @relation(fields: [organizationId], references: [id])
   stocks            Stock[]
   purchaseOrders    PurchaseOrder[]
   withholdingRecords WithholdingRecord[]
 
+  @@map("suppliers")
   @@index([organizationId])
   @@index([organizationId, available])
   @@index([organizationId, updatedAt])
+  @@index([deletedAt])
 }
 
 // ────────────────────────────────────────────
 // COMPANY
 // ────────────────────────────────────────────
 model Company {
-  id             Int      @id @default(autoincrement())
-  taxId          String   @default("")
-  name           String
-  address        String
-  phoneNumber    String
-  email          String
-  website        String?
-  isWithholdingAgent   Boolean  @default(false)
-  withholdingPercentage Float?
-  version        Int      @default(0)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  organizationId Int
+  id                    Int       @id @default(autoincrement()) @map("id")
+  taxId                 String    @default("") @map("tax_id")
+  name                  String    @map("name")
+  address               String    @map("address")
+  phoneNumber           String    @map("phone_number")
+  email                 String    @map("email")
+  website               String?   @map("website")
+  isWithholdingAgent    Boolean   @default(false) @map("is_withholding_agent")
+  withholdingPercentage Float?    @map("withholding_percentage")
+  version               Int       @default(0) @map("version")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+  deletedAt             DateTime? @map("deleted_at")
+  organizationId        Int       @map("organization_id")
 
   organization Organization @relation(fields: [organizationId], references: [id])
   licenses     License[]
 
+  @@map("companies")
   @@index([organizationId])
   @@index([organizationId, updatedAt])
+  @@index([deletedAt])
 }
 
+// ────────────────────────────────────────────
+// LICENSE
+// ────────────────────────────────────────────
 model License {
-  id         Int       @id @default(autoincrement())
-  code       String?
-  idCompany  Int
-  version    Int       @default(0)
-  available  Boolean?
-  expiryDate DateTime?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  id         Int       @id @default(autoincrement()) @map("id")
+  code       String?   @map("code")
+  idCompany  Int       @map("id_company")
+  version    Int       @default(0) @map("version")
+  available  Boolean?  @map("available")
+  expiryDate DateTime? @map("expiry_date")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
 
   company Company @relation(fields: [idCompany], references: [id])
+
+  @@map("licenses")
+  @@index([idCompany])
 }
 
 // ────────────────────────────────────────────
-// CURRENCY / EXCHANGE RATE (Transversal)
+// CURRENCY
 // ────────────────────────────────────────────
 model Currency {
-  id        Int      @id @default(autoincrement())
-  code      String?
-  name      String?
-  symbol    String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        Int      @id @default(autoincrement()) @map("id")
+  code      String?  @map("code")
+  name      String?  @map("name")
+  symbol    String?  @map("symbol")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   exchangeRates ExchangeRate[]
+
+  @@map("currencies")
 }
 
+// ────────────────────────────────────────────
+// EXCHANGE RATE
+// ────────────────────────────────────────────
 model ExchangeRate {
-  id         Int      @id @default(autoincrement())
-  rate       Float    // VED per 1 unit of foreign currency
-  currencyId Int?     // which currency (USD, EUR, etc.)
-  type       String   @default("official") // "official" | "paralelo" | "manual"
-  date       DateTime // date the rate was recorded
-  source     String?  // "BCV", "dolartoday", "enparalelovzla", "manual"
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  organizationId Int
+  id             Int      @id @default(autoincrement()) @map("id")
+  rate           Float    @map("rate")
+  currencyId     Int?     @map("currency_id")
+  type           String   @default("official") @map("type")
+  date           DateTime @map("date")
+  source         String?  @map("source")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  organizationId Int      @map("organization_id")
 
   organization          Organization             @relation(fields: [organizationId], references: [id])
   currency              Currency?                @relation(fields: [currencyId], references: [id])
@@ -364,114 +451,143 @@ model ExchangeRate {
   officialSales         Sale[]                   @relation("OfficialRate")
   productLinks          ProductsExchangeRates[]
 
+  @@map("exchange_rates")
   @@index([organizationId])
+  @@index([currencyId])
   @@index([date])
   @@index([organizationId, updatedAt])
 }
 
+// ────────────────────────────────────────────
+// EXCHANGE RATE DAY
+// ────────────────────────────────────────────
 model ExchangeRateDay {
-  id              Int      @id @default(autoincrement())
-  date            DateTime
-  rateBcvUsd      Float?
-  rateParalelo    Float?
-  source          String?  @default("dolarapi")
-  organizationId  Int
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id              Int      @id @default(autoincrement()) @map("id")
+  date            DateTime @map("date")
+  rateBcvUsd      Float?   @map("rate_bcv_usd")
+  rateParalelo    Float?   @map("rate_paralelo")
+  source          String?  @default("dolarapi") @map("source")
+  organizationId  Int      @map("organization_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
   organization Organization @relation(fields: [organizationId], references: [id])
-
   purchaseOrders PurchaseOrder[]
 
   @@unique([organizationId, date])
   @@map("exchange_rate_days")
-}
-
-model Module {
-  id        Int      @id @default(autoincrement())
-  name      String?
-  available Boolean?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  @@index([organizationId])
 }
 
 // ────────────────────────────────────────────
-// TAX / PRODUCT (Slice 2 — Inventario)
+// MODULE
+// ────────────────────────────────────────────
+model Module {
+  id        Int      @id @default(autoincrement()) @map("id")
+  name      String?  @map("name")
+  available Boolean? @map("available")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("modules")
+}
+
+// ────────────────────────────────────────────
+// TAX
 // ────────────────────────────────────────────
 model Tax {
-  id         Int      @id @default(autoincrement())
-  name       String?
-  percentage Int
-  formula    String?
-  version    Int      @default(0)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  organizationId Int
+  id             Int       @id @default(autoincrement()) @map("id")
+  name           String?   @map("name")
+  percentage     Int       @map("percentage")
+  formula        String?   @map("formula")
+  version        Int       @default(0) @map("version")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at")
+  organizationId Int       @map("organization_id")
 
   organization Organization @relation(fields: [organizationId], references: [id])
   products     Product[]
 
+  @@map("taxes")
   @@index([organizationId])
   @@index([organizationId, updatedAt])
+  @@index([deletedAt])
 }
 
+// ────────────────────────────────────────────
+// BRAND
+// ────────────────────────────────────────────
 model Brand {
-  id          Int       @id @default(autoincrement())
-  name        String
-  description String?
-  version     Int       @default(0)
-  available   Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  organizationId Int
+  id             Int       @id @default(autoincrement()) @map("id")
+  name           String    @map("name")
+  description    String?   @map("description")
+  version        Int       @default(0) @map("version")
+  available      Boolean   @default(true) @map("available")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at")
+  organizationId Int       @map("organization_id")
 
   organization Organization @relation(fields: [organizationId], references: [id])
   products     Product[]
 
+  @@map("brands")
   @@index([organizationId])
   @@index([organizationId, available])
+  @@index([deletedAt])
 }
 
+// ────────────────────────────────────────────
+// CATEGORY
+// ────────────────────────────────────────────
 model Category {
-  id          Int        @id @default(autoincrement())
-  name        String
-  description String?
-  idParent    Int?
-  parent      Category?  @relation("CategoryHierarchy", fields: [idParent], references: [id])
-  children    Category[] @relation("CategoryHierarchy")
-  version     Int        @default(0)
-  available   Boolean    @default(true)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  organizationId Int
+  id             Int        @id @default(autoincrement()) @map("id")
+  name           String     @map("name")
+  description    String?    @map("description")
+  idParent       Int?       @map("id_parent")
+  parent         Category?  @relation("CategoryHierarchy", fields: [idParent], references: [id])
+  children       Category[] @relation("CategoryHierarchy")
+  version        Int        @default(0) @map("version")
+  available      Boolean    @default(true) @map("available")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+  deletedAt      DateTime?  @map("deleted_at")
+  organizationId Int        @map("organization_id")
 
   organization Organization @relation(fields: [organizationId], references: [id])
   products     Product[]
 
+  @@map("categories")
   @@index([organizationId])
   @@index([organizationId, available])
   @@index([idParent])
+  @@index([deletedAt])
 }
 
+// ────────────────────────────────────────────
+// PRODUCT
+// ────────────────────────────────────────────
 model Product {
-  id          Int          @id @default(autoincrement())
-  code        String
-  name        String
-  price           Float      // VED
-  dollarPrice      Float?
-  baseCost        Float?       // Costo base en USD
-  margin          Float        @default(20)  // Porcentaje de margen/protección
-  totalExistence  Int          @default(0)
-  idTax       Int?
-  idBrand     Int?
-  idCategory  Int?
-  observation String?
-  version     Int          @default(0)
-  available   Boolean      @default(true)
-  image       String?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  organizationId Int
+  id              Int          @id @default(autoincrement()) @map("id")
+  code            String       @map("code")
+  name            String       @map("name")
+  price           Float        @map("price")
+  dollarPrice     Float?       @map("dollar_price")
+  baseCost        Float?       @map("base_cost")
+  margin          Float        @default(20) @map("margin")
+  totalExistence  Int          @default(0) @map("total_existence")
+  idTax           Int?         @map("id_tax")
+  idBrand         Int?         @map("id_brand")
+  idCategory      Int?         @map("id_category")
+  observation     String?      @map("observation")
+  version         Int          @default(0) @map("version")
+  available       Boolean      @default(true) @map("available")
+  image           String?      @map("image")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+  deletedAt       DateTime?    @map("deleted_at")
+  organizationId  Int          @map("organization_id")
 
   organization             Organization               @relation(fields: [organizationId], references: [id])
   tax                      Tax?                       @relation(fields: [idTax], references: [id])
@@ -482,38 +598,55 @@ model Product {
   saleDetails              SalesDet[]
   exchangeRateLinks        ProductsExchangeRates[]
 
+  @@map("products")
   @@index([organizationId])
   @@index([organizationId, available])
   @@index([organizationId, updatedAt])
+  @@index([idTax])
+  @@index([idBrand])
+  @@index([idCategory])
+  @@index([code])
+  @@index([deletedAt])
 }
 
+// ────────────────────────────────────────────
+// BATCH
+// ────────────────────────────────────────────
 model Batch {
-  id          Int      @id @default(autoincrement())
-  code        String
-  description String?
-  version     Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  organizationId Int
+  id             Int       @id @default(autoincrement()) @map("id")
+  code           String    @map("code")
+  description    String?   @map("description")
+  version        Int       @default(0) @map("version")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at")
+  organizationId Int       @map("organization_id")
 
   organization Organization @relation(fields: [organizationId], references: [id])
   stocks       Stock[]
 
+  @@map("batches")
   @@index([organizationId])
+  @@index([code])
+  @@index([deletedAt])
 }
 
+// ────────────────────────────────────────────
+// STOCK
+// ────────────────────────────────────────────
 model Stock {
-  id         Int       @id @default(autoincrement())
-  idProduct  Int
-  idSupplier Int?
-  idBatch    Int?
-  idPurchaseOrder Int?
-  existence  Int
-  version    Int      @default(0)
-  available  Boolean   @default(true)
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  organizationId Int
+  id              Int       @id @default(autoincrement()) @map("id")
+  idProduct       Int       @map("id_product")
+  idSupplier      Int?      @map("id_supplier")
+  idBatch         Int?      @map("id_batch")
+  idPurchaseOrder Int?      @map("id_purchase_order")
+  existence       Int       @map("existence")
+  version         Int       @default(0) @map("version")
+  available       Boolean   @default(true) @map("available")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
+  organizationId  Int       @map("organization_id")
 
   organization  Organization  @relation(fields: [organizationId], references: [id])
   product       Product       @relation(fields: [idProduct], references: [id])
@@ -522,311 +655,386 @@ model Stock {
   purchaseOrder PurchaseOrder? @relation(fields: [idPurchaseOrder], references: [id])
   stockDets     StockDet[]
 
+  @@map("stocks")
   @@index([organizationId])
   @@index([organizationId, available])
+  @@index([idProduct])
+  @@index([idSupplier])
+  @@index([idBatch])
+  @@index([idPurchaseOrder])
+  @@index([deletedAt])
 }
 
+// ────────────────────────────────────────────
+// STOCK DETAIL
+// ────────────────────────────────────────────
 model StockDet {
-  id          Int       @id @default(autoincrement())
-  idStock     Int
-  type        Int       // 1 = entry, -1 = exit
-  quantity    Int
-  expiryDate  DateTime?
-  observation String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id          Int       @id @default(autoincrement()) @map("id")
+  idStock     Int       @map("id_stock")
+  type        Int       @map("type")
+  quantity    Int       @map("quantity")
+  expiryDate  DateTime? @map("expiry_date")
+  observation String?   @map("observation")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
   stock Stock @relation(fields: [idStock], references: [id])
+
+  @@map("stock_details")
+  @@index([idStock])
 }
 
 // ────────────────────────────────────────────
-// PURCHASE ORDERS (Slice 1 — Compras)
-// Multi-currency: amount in VED + amountUsd + exchangeRate + officialExchangeRate
+// PURCHASE ORDER
 // ────────────────────────────────────────────
 model PurchaseOrder {
-  id                     Int      @id @default(autoincrement())
-  idSupplier             Int
-  code                   String?
-  date                   DateTime?
-  amount                 Float?   // VED total (base + IVA)
-  amountUsd              Float?   // USD total (base + IVA)
-  baseAmount             Float?   // Base Imponible (VED) — sum of line subtotals before IVA
-  baseAmountUsd          Float?   // Base Imponible (USD)
-  ivaAmount              Float?   // Total IVA (VED)
-  ivaAmountUsd           Float?   // Total IVA (USD)
-  exchangeRate           Float?   // rate used at creation (usually paralelo)
-  exchangeRateId         Int?
-  exchangeRateDayId      Int?
-  officialExchangeRate   Float?   // official BCV rate for legal reporting
-  officialExchangeRateId Int?
-  paymentMethod          Int?
-  status                 Int?
-  version                Int      @default(0)
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
-  organizationId         Int
+  id                     Int                  @id @default(autoincrement()) @map("id")
+  idSupplier             Int                  @map("id_supplier")
+  code                   String?              @map("code")
+  date                   DateTime?            @map("date")
+  amount                 Float?               @map("amount")
+  amountUsd              Float?               @map("amount_usd")
+  baseAmount             Float?               @map("base_amount")
+  baseAmountUsd          Float?               @map("base_amount_usd")
+  ivaAmount              Float?               @map("iva_amount")
+  ivaAmountUsd           Float?               @map("iva_amount_usd")
+  exchangeRate           Float?               @map("exchange_rate")
+  exchangeRateId         Int?                 @map("exchange_rate_id")
+  exchangeRateDayId      Int?                 @map("exchange_rate_day_id")
+  officialExchangeRate   Float?               @map("official_exchange_rate")
+  officialExchangeRateId Int?                 @map("official_exchange_rate_id")
+  paymentMethod          Int?                 @map("payment_method")
+  status                 String?              @default("DRAFT")
+  version                Int                  @default(0) @map("version")
+  createdAt              DateTime             @default(now()) @map("created_at")
+  updatedAt              DateTime             @updatedAt @map("updated_at")
+  deletedAt              DateTime?            @map("deleted_at")
+  annulledAt             DateTime?            @map("annulled_at")
+  annulmentReason        String?              @map("annulment_reason")
+  organizationId         Int                  @map("organization_id")
 
   organization               Organization           @relation(fields: [organizationId], references: [id])
   supplier                   Supplier               @relation(fields: [idSupplier], references: [id])
-  details                   PurchaseOrderDet[]
-  accountsPayables          AccountsPayable[]
-  exchangeRateRef            ExchangeRate?            @relation("CalculationRate", fields: [exchangeRateId], references: [id])
-  exchangeRateDayRef         ExchangeRateDay?         @relation(fields: [exchangeRateDayId], references: [id])
-  officialExchangeRateRef   ExchangeRate?      @relation("OfficialRate", fields: [officialExchangeRateId], references: [id])
-  withholdingRecords        WithholdingRecord[]
-  stocks                    Stock[]
+  details                    PurchaseOrderDet[]
+  accountsPayables           AccountsPayable[]
+  exchangeRateRef            ExchangeRate?          @relation("CalculationRate", fields: [exchangeRateId], references: [id])
+  exchangeRateDayRef         ExchangeRateDay?       @relation(fields: [exchangeRateDayId], references: [id])
+  officialExchangeRateRef    ExchangeRate?          @relation("OfficialRate", fields: [officialExchangeRateId], references: [id])
+  withholdingRecords         WithholdingRecord[]
+  stocks                     Stock[]
 
+  @@map("purchase_orders")
   @@index([organizationId])
+  @@index([idSupplier])
+  @@index([exchangeRateId])
+  @@index([exchangeRateDayId])
+  @@index([officialExchangeRateId])
   @@index([status])
   @@index([date])
   @@index([code])
-}
-
-model PurchaseOrderDet {
-  id               Int      @id @default(autoincrement())
-  idPurchaseOrder  Int
-  idProduct        Int
-  quantity         Int?
-  receivedQuantity Int      @default(0)
-  unitPrice        Float?   // VED unit price
-  unitPriceUsd     Float?   // USD unit price
-  subtotal         Float?   // VED subtotal
-  subtotalUsd      Float?   // USD subtotal
-  observation      String?
-  version          Int      @default(0)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  organizationId   Int
-
-  organization    Organization  @relation(fields: [organizationId], references: [id])
-  purchaseOrder   PurchaseOrder @relation(fields: [idPurchaseOrder], references: [id])
-  product        Product       @relation(fields: [idProduct], references: [id])
-
-  @@index([organizationId])
+  @@index([deletedAt])
 }
 
 // ────────────────────────────────────────────
-// ACCOUNTS PAYABLE (Slice 1 — CXP)
+// PURCHASE ORDER DETAIL
+// ────────────────────────────────────────────
+model PurchaseOrderDet {
+  id               Int      @id @default(autoincrement()) @map("id")
+  idPurchaseOrder  Int      @map("id_purchase_order")
+  idProduct        Int      @map("id_product")
+  quantity         Int?     @map("quantity")
+  receivedQuantity Int      @default(0) @map("received_quantity")
+  unitPrice        Float?   @map("unit_price")
+  unitPriceUsd     Float?   @map("unit_price_usd")
+  subtotal         Float?   @map("subtotal")
+  subtotalUsd      Float?   @map("subtotal_usd")
+  observation      String?  @map("observation")
+  version          Int      @default(0) @map("version")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  organizationId   Int      @map("organization_id")
+
+  organization    Organization  @relation(fields: [organizationId], references: [id])
+  purchaseOrder   PurchaseOrder @relation(fields: [idPurchaseOrder], references: [id])
+  product         Product       @relation(fields: [idProduct], references: [id])
+
+  @@map("purchase_order_details")
+  @@index([organizationId])
+  @@index([idPurchaseOrder])
+  @@index([idProduct])
+}
+
+// ────────────────────────────────────────────
+// ACCOUNTS PAYABLE (CXP)
 // ────────────────────────────────────────────
 model AccountsPayable {
-  id              Int      @id @default(autoincrement())
-  idPurchaseOrder Int
-  dueDate         DateTime?
-  issueDate       DateTime?
-  amount          Float?   // VED
-  amountUsd       Float?   // USD
-  exchangeRate    Float?
-  credit          Float?
-  status          Int?
-  version         Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  organizationId  Int
+  id              Int       @id @default(autoincrement()) @map("id")
+  idPurchaseOrder Int       @map("id_purchase_order")
+  dueDate         DateTime? @map("due_date")
+  issueDate       DateTime? @map("issue_date")
+  amount          Float?    @map("amount")
+  amountUsd       Float?    @map("amount_usd")
+  exchangeRate    Float?    @map("exchange_rate")
+  credit          Float?    @map("credit")
+  status          Int?      @map("status")
+  version         Int       @default(0) @map("version")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
+  organizationId  Int       @map("organization_id")
 
   organization    Organization  @relation(fields: [organizationId], references: [id])
   purchaseOrder   PurchaseOrder @relation(fields: [idPurchaseOrder], references: [id])
 
+  @@map("accounts_payable")
   @@index([organizationId])
+  @@index([idPurchaseOrder])
   @@index([status])
+  @@index([deletedAt])
 }
 
 // ────────────────────────────────────────────
-// TAX WITHHOLDING (Slice 1 — Retenciones)
-// IVA e ISLR (75%/100%)
+// TAX WITHHOLDING RECORD
 // ────────────────────────────────────────────
 model WithholdingRecord {
-  id                Int      @id @default(autoincrement())
-  idSupplier        Int
-  idPurchaseOrder   Int?
-  type              String
-  percentage        Float
-  baseAmount        Float
-  baseAmountUsd     Float?
-  withheldAmount    Float
-  withheldAmountUsd Float?
-  exchangeRate      Float?
-  documentNumber    String?
-  period            String?
-  withholdingProof  String?  // uploaded proof document filename
-  version           Int      @default(0)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  organizationId    Int
+  id                Int       @id @default(autoincrement()) @map("id")
+  idSupplier        Int       @map("id_supplier")
+  idPurchaseOrder   Int?      @map("id_purchase_order")
+  type              String    @map("type")
+  percentage        Float     @map("percentage")
+  baseAmount        Float     @map("base_amount")
+  baseAmountUsd     Float?    @map("base_amount_usd")
+  withheldAmount    Float     @map("withheld_amount")
+  withheldAmountUsd Float?    @map("withheld_amount_usd")
+  exchangeRate      Float?    @map("exchange_rate")
+  documentNumber    String?   @map("document_number")
+  period            String?   @map("period")
+  withholdingProof  String?   @map("withholding_proof")
+  version           Int       @default(0) @map("version")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  deletedAt         DateTime? @map("deleted_at")
+  organizationId    Int       @map("organization_id")
 
-  organization      Organization    @relation(fields: [organizationId], references: [id])
-  supplier          Supplier        @relation(fields: [idSupplier], references: [id])
-  purchaseOrder PurchaseOrder? @relation(fields: [idPurchaseOrder], references: [id])
+  organization   Organization    @relation(fields: [organizationId], references: [id])
+  supplier       Supplier        @relation(fields: [idSupplier], references: [id])
+  purchaseOrder  PurchaseOrder?  @relation(fields: [idPurchaseOrder], references: [id])
 
+  @@map("withholding_records")
   @@index([organizationId])
+  @@index([idSupplier])
+  @@index([idPurchaseOrder])
+  @@index([deletedAt])
 }
 
 // ────────────────────────────────────────────
-// SALES (Slice 3 — Ventas)
-// Multi-currency
+// SALE
 // ────────────────────────────────────────────
 model Sale {
-  id                     Int       @id @default(autoincrement())
-  idCustomer             Int?
-  code                   String?
-  date                   DateTime?
-  amount                 Float?    // VED total
-  amountUsd              Float?    // USD total
-  exchangeRate           Float?
-  exchangeRateId         Int?
-  officialExchangeRate   Float?    // official BCV rate for legal reporting
-  officialExchangeRateId Int?
-  totalTax               Float?    // VED — sum of item IVA
-  totalTaxUsd            Float?    // USD — sum of item IVA
-  withholdingPercentage  Float?    // 75 or 100 — null if no withholding applies
-  withholdingAmount      Float?    // VED — withheld amount
-  withholdingAmountUsd   Float?    // USD — withheld amount
-  paymentMethod          Int?
-  status                 Int?
-  version                Int       @default(0)
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
-  organizationId         Int
+  id                     Int        @id @default(autoincrement()) @map("id")
+  idCustomer             Int?       @map("id_customer")
+  code                   String?    @map("code")
+  date                   DateTime?  @map("date")
+  amount                 Float?     @map("amount")
+  amountUsd              Float?     @map("amount_usd")
+  exchangeRate           Float?     @map("exchange_rate")
+  exchangeRateId         Int?       @map("exchange_rate_id")
+  officialExchangeRate   Float?     @map("official_exchange_rate")
+  officialExchangeRateId Int?       @map("official_exchange_rate_id")
+  totalTax               Float?     @map("total_tax")
+  totalTaxUsd            Float?     @map("total_tax_usd")
+  withholdingPercentage  Float?     @map("withholding_percentage")
+  withholdingAmount      Float?     @map("withholding_amount")
+  withholdingAmountUsd   Float?     @map("withholding_amount_usd")
+  paymentMethod          Int?       @map("payment_method")
+  status                 String?   @default("DRAFT")
+  version                Int        @default(0) @map("version")
+  createdAt              DateTime   @default(now()) @map("created_at")
+  updatedAt              DateTime   @updatedAt @map("updated_at")
+  deletedAt              DateTime?  @map("deleted_at")
+  annulledAt             DateTime?  @map("annulled_at")
+  annulmentReason        String?    @map("annulment_reason")
+  organizationId         Int        @map("organization_id")
 
   organization               Organization        @relation(fields: [organizationId], references: [id])
   customer                   Customer?           @relation(fields: [idCustomer], references: [id])
-  details                SalesDet[]
-  payments               SalePayment[]
-  accountsReceivables    AccountsReceivable[]
-  exchangeRateRef        ExchangeRate?       @relation("CalculationRate", fields: [exchangeRateId], references: [id])
-  officialExchangeRateRef ExchangeRate?       @relation("OfficialRate", fields: [officialExchangeRateId], references: [id])
+  details                    SalesDet[]
+  payments                   SalePayment[]
+  accountsReceivables        AccountsReceivable[]
+  exchangeRateRef            ExchangeRate?       @relation("CalculationRate", fields: [exchangeRateId], references: [id])
+  officialExchangeRateRef    ExchangeRate?       @relation("OfficialRate", fields: [officialExchangeRateId], references: [id])
 
+  @@map("sales")
   @@index([organizationId])
+  @@index([idCustomer])
+  @@index([exchangeRateId])
+  @@index([officialExchangeRateId])
   @@index([status])
   @@index([date])
   @@index([code])
+  @@index([deletedAt])
 }
 
+// ────────────────────────────────────────────
+// SALE DETAIL
+// ────────────────────────────────────────────
 model SalesDet {
-  id          Int      @id @default(autoincrement())
-  idSale      Int
-  idProduct   Int
-  quantity    Int?
-  unitPrice    Float?  // VED unit price
-  unitPriceUsd Float?  // USD unit price
-  subtotal    Float?   // VED subtotal
-  subtotalUsd Float?   // USD subtotal
-  taxName     String?  // e.g. "IVA"
-  taxPercentage Float? // e.g. 16
-  taxAmount   Float?   // VED tax amount
-  taxAmountUsd Float?  // USD tax amount
-  observation String?
-  version     Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  organizationId Int
+  id             Int      @id @default(autoincrement()) @map("id")
+  idSale         Int      @map("id_sale")
+  idProduct      Int      @map("id_product")
+  quantity       Int?     @map("quantity")
+  unitPrice      Float?   @map("unit_price")
+  unitPriceUsd   Float?   @map("unit_price_usd")
+  subtotal       Float?   @map("subtotal")
+  subtotalUsd    Float?   @map("subtotal_usd")
+  taxName        String?  @map("tax_name")
+  taxPercentage  Float?   @map("tax_percentage")
+  taxAmount      Float?   @map("tax_amount")
+  taxAmountUsd   Float?   @map("tax_amount_usd")
+  observation    String?  @map("observation")
+  version        Int      @default(0) @map("version")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  organizationId Int      @map("organization_id")
 
   organization Organization @relation(fields: [organizationId], references: [id])
   sale         Sale         @relation(fields: [idSale], references: [id])
-  product Product @relation(fields: [idProduct], references: [id])
+  product      Product      @relation(fields: [idProduct], references: [id])
 
+  @@map("sale_details")
   @@index([organizationId])
+  @@index([idSale])
+  @@index([idProduct])
 }
 
 // ────────────────────────────────────────────
-// SALE PAYMENTS (Slice 3 — Partial/differential payments)
-// Multi-currency: each payment has its own method, amount, and currency
+// SALE PAYMENT
 // ────────────────────────────────────────────
 model SalePayment {
-  id             Int      @id @default(autoincrement())
-  saleId         Int
-  method         Int      // PaymentMethod enum: Cash=1, PagoMovil=2, Transfer=3, Card=4
-  amount         Float    // Amount in the specified currency
-  currency       String   // 'VES' | 'USD'
-  createdAt      DateTime @default(now())
-  organizationId Int
+  id             Int      @id @default(autoincrement()) @map("id")
+  saleId         Int      @map("sale_id")
+  method         Int      @map("method")
+  amount         Float    @map("amount")
+  currency       String   @map("currency")
+  createdAt      DateTime @default(now()) @map("created_at")
+  organizationId Int      @map("organization_id")
 
   sale         Sale         @relation(fields: [saleId], references: [id])
   organization Organization @relation(fields: [organizationId], references: [id])
 
+  @@map("sale_payments")
   @@index([organizationId])
   @@index([saleId])
 }
 
+// ────────────────────────────────────────────
+// ACCOUNTS RECEIVABLE
+// ────────────────────────────────────────────
 model AccountsReceivable {
-  id         Int       @id @default(autoincrement())
-  idSale     Int?
-  dueDate    DateTime?
-  issueDate  DateTime?
-  amount     Float?    // VED
-  amountUsd  Float?    // USD
-  exchangeRate Float?
-  credit     Float?
-  status     Int?
-  version    Int       @default(0)
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  organizationId Int
+  id             Int       @id @default(autoincrement()) @map("id")
+  idSale         Int?      @map("id_sale")
+  dueDate        DateTime? @map("due_date")
+  issueDate      DateTime? @map("issue_date")
+  amount         Float?    @map("amount")
+  amountUsd      Float?    @map("amount_usd")
+  exchangeRate   Float?    @map("exchange_rate")
+  credit         Float?    @map("credit")
+  status         Int?      @map("status")
+  version        Int       @default(0) @map("version")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at")
+  organizationId Int       @map("organization_id")
 
   organization Organization @relation(fields: [organizationId], references: [id])
   sale         Sale?        @relation(fields: [idSale], references: [id])
 
+  @@map("accounts_receivable")
   @@index([organizationId])
+  @@index([idSale])
   @@index([status])
+  @@index([deletedAt])
 }
 
 // ────────────────────────────────────────────
 // PRODUCT EXCHANGE RATE LINKS
 // ────────────────────────────────────────────
 model ProductsExchangeRates {
-  id              Int      @id @default(autoincrement())
-  idProduct       Int
-  idExchangeRate  Int
-  value           Float?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             Int      @id @default(autoincrement()) @map("id")
+  idProduct      Int      @map("id_product")
+  idExchangeRate Int      @map("id_exchange_rate")
+  value          Float?   @map("value")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   product      Product      @relation(fields: [idProduct], references: [id])
   exchangeRate ExchangeRate @relation(fields: [idExchangeRate], references: [id])
+
+  @@map("products_exchange_rates")
+  @@index([idProduct])
+  @@index([idExchangeRate])
 }
 
+// ────────────────────────────────────────────
+// SYNC CURSOR
+// ────────────────────────────────────────────
 model SyncCursor {
-  id              Int      @id @default(autoincrement())
-  organizationId  Int      @unique
-  lastPullAt      DateTime
-  lastPushAt      DateTime
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id              Int      @id @default(autoincrement()) @map("id")
+  organizationId  Int      @unique @map("organization_id")
+  lastPullAt      DateTime @map("last_pull_at")
+  lastPushAt      DateTime @map("last_push_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
   organization    Organization @relation(fields: [organizationId], references: [id])
+
+  @@map("sync_cursors")
 }
 
+// ────────────────────────────────────────────
+// SYNC CONFLICT
+// ────────────────────────────────────────────
 model SyncConflict {
-  id              Int       @id @default(autoincrement())
-  organizationId  Int
-  table           String
-  recordId        Int?
-  localData       String
-  serverData      String
-  localTimestamp   DateTime
-  description     String
-  status          String    @default("pending")
-  resolvedBy      Int?
-  resolvedAt      DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id              Int       @id @default(autoincrement()) @map("id")
+  organizationId  Int       @map("organization_id")
+  table           String    @map("table")
+  recordId        Int?      @map("record_id")
+  localData       String    @map("local_data")
+  serverData      String    @map("server_data")
+  localTimestamp  DateTime  @map("local_timestamp")
+  description     String    @map("description")
+  status          String    @default("pending") @map("status")
+  resolvedBy      Int?      @map("resolved_by")
+  resolvedAt      DateTime? @map("resolved_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
   organization    Organization @relation(fields: [organizationId], references: [id])
+
+  @@map("sync_conflicts")
+  @@index([organizationId])
+  @@index([resolvedBy])
 }
 
+// ────────────────────────────────────────────
+// AUDIT LOG
+// ────────────────────────────────────────────
 model AuditLog {
-  id              Int      @id @default(autoincrement())
-  organizationId  Int
-  userId          Int?
-  action          String
-  entity          String
-  entityId        Int?
-  metadata        String?
-  ipAddress       String?
-  createdAt       DateTime @default(now())
+  id              Int      @id @default(autoincrement()) @map("id")
+  organizationId  Int      @map("organization_id")
+  userId          Int?     @map("user_id")
+  action          String   @map("action")
+  entity          String   @map("entity")
+  entityId        Int?     @map("entity_id")
+  metadata        String?  @map("metadata")
+  ipAddress       String?  @map("ip_address")
+  createdAt       DateTime @default(now()) @map("created_at")
 
   organization Organization @relation(fields: [organizationId], references: [id])
 
+  @@map("audit_logs")
   @@index([organizationId])
   @@index([organizationId, createdAt])
+  @@index([userId])
   @@index([entity, entityId])
 }

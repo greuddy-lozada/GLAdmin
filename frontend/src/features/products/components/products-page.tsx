@@ -82,11 +82,13 @@ export default function ProductsPage() {
         }
         return `$${(row.dollarPrice ?? 0).toFixed(2)}`;
       },
+      isNumeric: true,
     },
     {
       field: 'price',
       headerName: t('products.field.pvpVes'),
       render: (row) => `Bs. ${(row.price ?? 0).toFixed(2)}`,
+      isNumeric: true,
     },
     {
       field: 'stock',
@@ -398,6 +400,7 @@ export default function ProductsPage() {
         </div>
       }
     >
+      <div className="max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <RoleGuard minLevel={60}>
           <Button onClick={openCreate}>
@@ -430,6 +433,7 @@ export default function ProductsPage() {
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
         loading={submitting}
       />
+      </div>
     </SlideForm>
   );
 }

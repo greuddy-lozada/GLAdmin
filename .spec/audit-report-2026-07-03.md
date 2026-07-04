@@ -261,3 +261,64 @@
 ---
 
 *Generado automáticamente contra las reglas de `.spec/`. Archivos de reglas: architecture.md, security.md, database.md, api-conventions.md, testing.md, performance.md, design-system.md, git-hygiene.md, AGENTS.md*
+
+---
+
+## 📋 Implementation Log
+
+### Fase 1 — Seguridad Crítica ✅ Completado (2026-07-03)
+
+| Fix | ID | Archivo | Cambio | Verificación |
+|---|---|---|---|---|
+| Data leak multi-tenant | SEC-05 | `purchase-orders.service.ts:124` | `findAll()` ahora filtra por `organizationId` en `where` y `count` | ✅ |
+| Inmutabilidad Sales | SEC-01 | `sales.service.ts:137` | `update()` verifica `existing.status !== 0` → `ForbiddenException` | ✅ |
+| Inmutabilidad PurchaseOrders | SEC-02 | `purchase-orders.service.ts:153` | `update()` verifica `existing.status === 4` → `ForbiddenException` | ✅ |
+| DTOs financieros | SEC-07 | `update-sale.dto.ts`, `update-purchase-order.dto.ts` | DTOs explícitos sin `amount`, `exchangeRate`, `ivaAmount`, `status`. Servicios solo aplican campos seguros. | ✅ |
+| JWT expiry | SEC-08 | `app.module.ts:70` | `expiresIn: '15m'` | ✅ |
+
+**Resultado:** `pnpm typecheck` ✅ 0 errores | `pnpm lint` ✅ 0 warnings
+
+---
+
+### Fase 2 — Contratos de API ✅ Completado (2026-07-03)
+
+| Fix | ID | Archivo | Cambio | Verificación |
+|---|---|---|---|---|
+| Response format | API-01 | `transform.interceptor.ts` | `{ data, meta? }` — calcula `totalPages` automático. Sin `message` ni `statusCode` en top-level. | ✅ |
+| Error format + codes | API-02 | `http-exception.filter.ts` | `{ error: { code, message, details? } }` — extrae `code` de la excepción. | ✅ |
+| Pagination DTO | API-03 | `pagination-query.dto.ts` | Agregados `sort` (default `createdAt`), `order` (`asc`/`desc`, default `desc`). Interfaz `PaginatedMeta`. | ✅ |
+| Error codes system | API-04 | `common/errors/` | 20 códigos (`SALE_001`–`SALE_002`, `PO_001`–`PO_008`, `AUTH_001`–`AUTH_003`, etc.). Clase `AppException`. Integrado en `sales.service.ts` y `purchase-orders.service.ts`. | ✅ |
+
+**Resultado:** `pnpm typecheck` ✅ 0 errores | `pnpm lint` ✅ 0 warnings
+
+---
+
+### Fase 3 — Base de Datos ✅ Completado (2026-07-03)
+
+#### Decisión de diseño: `as const` + strings en vez de Prisma enums
+
+| Criterio | Prisma Enum | `as const` + String ✅ |
+|---|---|---|
+| Agregar/quitar status | Migración de BD | Solo modificar objeto TS |
+| Metadata (label, isMutable, color) | Imposible | `STATUS_META` en mismo archivo |
+| Compartir con frontend | Duplicar manual | Copiar archivo o extraer package |
+| Guard de inmutabilidad | `status === DRAFT \|\| status === ...` | `STATUS_META[status].isMutable` |
+| SQLite nativo | Simulado con CHECK | String + app validation |
+
+#### Archivos creados/modificados
+
+| # | Archivo | Cambio | Verificación |
+|---|---|---|---|
+| 1 | `prisma/schema.prisma` | 38 modelos con `@@map()` snake_case, `@map()` en ~400 columnas, `deletedAt` en 18 modelos financieros, ~50 FK indexes, `status` como `String @default("DRAFT")`, `annulledAt` + `annulmentReason` en Sale y PurchaseOrder | ✅ |
+| 2 | `src/common/types/statuses.ts` | `SaleStatus` y `PurchaseOrderStatus` como `as const`. `SALE_STATUS_META` y `PURCHASE_ORDER_STATUS_META` con `isMutable`, `label`. | ✅ |
+| 3 | `purchase-orders.service.ts` | `status === 4` → `!PURCHASE_ORDER_STATUS_META[status].isMutable`. `status: 4` → `status: PurchaseOrderStatus.RECEIVED`. `status: 'DRAFT'` en create. | ✅ |
+| 4 | `sales.service.ts` | `status !== 0` → `!SALE_STATUS_META[status].isMutable`. `status: SaleStatus.DRAFT` en create. | ✅ |
+| 5 | `prisma/seed.ts` | `status: 2` → `status: 'ISSUED'`, `status: 4` → `status: 'RECEIVED'` | ✅ |
+| 6 | `migrations/20260704035806_add_snake_case_soft_delete_indexes/` | Migración generada con todos los cambios de schema. Seed ejecutado exitosamente. | ✅ |
+| 7 | `.spec/system/database-migration-plan.md` | Plan documentado para futura migración UUIDs + PostgreSQL. | ✅ |
+
+#### DB-01 (UUIDs) y DB-07 (PostgreSQL) — Postergados con plan documentado
+
+Razón: Migrar 38 modelos de `Int @id` a `String @id @default(uuid())` rompe ~300 archivos (ParseIntPipe, tipos number, DataTable genérico). Plan completo en `.spec/system/database-migration-plan.md`.
+
+**Resultado:** `pnpm typecheck` ✅ 0 errores | `pnpm lint` ✅ 0 warnings | `prisma db seed` ✅ exitoso

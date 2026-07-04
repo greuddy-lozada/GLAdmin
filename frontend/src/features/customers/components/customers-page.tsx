@@ -218,7 +218,7 @@ export default function CustomersPage() {
                 {formData.withholdingProof ? (
                   <div className="flex items-center gap-2 text-sm">
                     <span className="text-muted-foreground truncate flex-1">{formData.withholdingProof}</span>
-                    <Button variant="ghost" size="icon" onClick={() => setFormData({ ...formData, withholdingProof: '' })}>
+                    <Button variant="ghost" size="icon" onClick={() => setFormData({ ...formData, withholdingProof: '' })} aria-label={t('common.delete')}>
                       <X className="h-4 w-4" />
                     </Button>
                   </div>

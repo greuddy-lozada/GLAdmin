@@ -30,6 +30,7 @@ export interface Column<T> {
   render?: (row: T) => ReactNode;
   sortable?: boolean;
   width?: number;
+  isNumeric?: boolean;
 }
 
 interface DataTableProps<T> {
@@ -81,6 +82,7 @@ export function DataTable<T extends { id: number }>({
           col.render ? col.render(info.row.original) : String(info.getValue() ?? ''),
         enableSorting: col.sortable !== false,
         size: col.width,
+        meta: { isNumeric: col.isNumeric },
       })),
     [columns],
   );
@@ -93,12 +95,12 @@ export function DataTable<T extends { id: number }>({
       cell: (info: { row: { original: T } }) => (
         <div className="flex justify-end gap-1">
           {onEdit && (
-            <Button variant="ghost" size="icon" onClick={() => onEdit(info.row.original)}>
+            <Button variant="ghost" size="icon" onClick={() => onEdit(info.row.original)} aria-label={t('common.edit')}>
               <Pencil className="h-4 w-4" />
             </Button>
           )}
           {onDelete && (
-            <Button variant="ghost" size="icon" onClick={() => onDelete(info.row.original)}>
+            <Button variant="ghost" size="icon" onClick={() => onDelete(info.row.original)} aria-label={t('common.delete')}>
               <Trash2 className="h-4 w-4 text-destructive" />
             </Button>
           )}
@@ -106,6 +108,7 @@ export function DataTable<T extends { id: number }>({
       ),
       enableSorting: false,
       size: undefined,
+      meta: { isNumeric: undefined },
     });
   }
 
@@ -195,11 +198,14 @@ export function DataTable<T extends { id: number }>({
         <TableBody>
           {table.getRowModel().rows.map((row) => (
             <TableRow key={row.id}>
-              {row.getVisibleCells().map((cell) => (
-                <TableCell key={cell.id}>
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </TableCell>
-              ))}
+              {row.getVisibleCells().map((cell) => {
+                const isNumeric = (cell.column.columnDef.meta as { isNumeric?: boolean } | undefined)?.isNumeric;
+                return (
+                  <TableCell key={cell.id} className={isNumeric ? 'text-right tabular-nums' : ''}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                );
+              })}
             </TableRow>
           ))}
         </TableBody>

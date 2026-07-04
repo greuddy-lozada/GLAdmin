@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useI18n } from '@/i18n';
 import { conflictResolver } from '@/lib/sync/conflict-resolver';
 import type { SyncConflict } from '@/lib/sync/types';
@@ -28,7 +29,13 @@ export default function ConflictsPage() {
   };
 
   if (loading) {
-    return <div>{t('common.loading')}</div>;
+    return (
+      <div className="container mx-auto p-6 space-y-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-24 w-full" />
+        ))}
+      </div>
+    );
   }
 
   return (

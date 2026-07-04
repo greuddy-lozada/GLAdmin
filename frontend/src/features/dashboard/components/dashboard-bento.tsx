@@ -1,4 +1,5 @@
 import { useI18n } from '@/i18n';
+import { Skeleton } from '@/components/ui/skeleton';
 import { BentoGrid, BentoGridItem } from '@/components/ui/bento-grid';
 import { useDashboardAnalytics } from '../hooks/use-dashboard-analytics';
 import { RecentOrdersPanel } from './recent-orders-panel';
@@ -11,8 +12,12 @@ export function DashboardBento() {
 
   if (isLoading) {
     return (
-      <div className="text-center py-12">
-        <p className="text-sm text-muted-foreground">{t('common.loading')}</p>
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+          <Skeleton className="h-48 md:col-span-4" />
+          <Skeleton className="h-48 md:col-span-2" />
+        </div>
+        <Skeleton className="h-64 w-full" />
       </div>
     );
   }

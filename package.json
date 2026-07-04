@@ -13,9 +13,25 @@
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
-    "clean": "pnpm -r clean"
+    "clean": "pnpm -r clean",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "pnpm exec eslint --fix --max-warnings 0",
+      "pnpm exec prettier --write"
+    ],
+    "*.{json,md,css}": [
+      "pnpm exec prettier --write"
+    ]
   },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.0",
+    "@commitlint/config-conventional": "^21.2.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.8"
   }
 }

@@ -45,7 +45,7 @@ export function SlideForm({ open, title, onClose, children, panel, panelWidth = 
         <div style={{ width: panelWidth }} className="h-full bg-card text-foreground shadow-xl">
           <div className="flex items-center justify-between px-6 py-5 border-b border-border">
             <h2 className="text-lg font-semibold">{title}</h2>
-            <Button variant="ghost" size="icon" onClick={onClose}>
+            <Button variant="ghost" size="icon" onClick={onClose} aria-label="Cerrar">
               <X className="h-4 w-4" />
             </Button>
           </div>

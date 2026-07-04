@@ -136,11 +136,13 @@ export default function PurchaseOrdersPage() {
       field: 'amount',
       headerName: t('purchaseOrders.field.amount'),
       render: (row) => (row.amount != null ? `Bs. ${Number(row.amount).toFixed(2)}` : '-'),
+      isNumeric: true,
     },
     {
       field: 'amountUsd',
       headerName: t('purchaseOrders.field.amountUsd'),
       render: (row) => (row.amountUsd != null ? `USD ${Number(row.amountUsd).toFixed(2)}` : '-'),
+      isNumeric: true,
     },
     {
       field: 'date',
@@ -619,7 +621,7 @@ export default function PurchaseOrdersPage() {
                     {formData.withholdingProof ? (
                       <div className="flex items-center gap-2 text-sm">
                         <span className="text-muted-foreground truncate flex-1">{formData.withholdingProof}</span>
-                        <Button variant="ghost" size="icon" onClick={() => setFormData({ ...formData, withholdingProof: '' })}>
+                        <Button variant="ghost" size="icon" onClick={() => setFormData({ ...formData, withholdingProof: '' })} aria-label={t('common.delete')}>
                           <X className="h-4 w-4" />
                         </Button>
                       </div>
@@ -652,7 +654,7 @@ export default function PurchaseOrdersPage() {
             <div key={index} className="space-y-2 rounded border p-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">{tp('purchaseOrders.detailLabel', { index: String(index + 1) })}</span>
-                <Button variant="ghost" size="icon" onClick={() => removeDetail(index)}>
+                <Button variant="ghost" size="icon" onClick={() => removeDetail(index)} aria-label={t('common.delete')}>
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
               </div>
@@ -694,25 +696,25 @@ export default function PurchaseOrdersPage() {
           <div className="border-t pt-4 space-y-1 text-sm">
             <div className="flex justify-between">
               <span>{t('purchaseOrders.baseAmount')}</span>
-              <span>Bs. {formData.baseAmount.toFixed(2)} / USD {formData.baseAmountUsd.toFixed(2)}</span>
+              <span className="tabular-nums">Bs. {formData.baseAmount.toFixed(2)} / USD {formData.baseAmountUsd.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-muted-foreground">
               <span>{t('purchaseOrders.ivaAmount')}</span>
-              <span>Bs. {formData.ivaAmount.toFixed(2)} / USD {formData.ivaAmountUsd.toFixed(2)}</span>
+              <span className="tabular-nums">Bs. {formData.ivaAmount.toFixed(2)} / USD {formData.ivaAmountUsd.toFixed(2)}</span>
             </div>
             <div className="flex justify-between font-semibold">
               <span>{t('purchaseOrders.field.amount')}</span>
-              <span>Bs. {formData.amount.toFixed(2)} / USD {formData.amountUsd.toFixed(2)}</span>
+              <span className="tabular-nums">Bs. {formData.amount.toFixed(2)} / USD {formData.amountUsd.toFixed(2)}</span>
             </div>
             {formData.applyWithholding && (
               <>
                 <div className="flex justify-between text-destructive">
                   <span>{t('purchaseOrders.withholdingAmount')} ({formData.withholdingPercentage}%)</span>
-                  <span>-Bs. {withholdingAmount.toFixed(2)} / -USD {withholdingAmountUsd.toFixed(2)}</span>
+                  <span className="tabular-nums">-Bs. {withholdingAmount.toFixed(2)} / -USD {withholdingAmountUsd.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between font-bold text-lg border-t pt-1">
                   <span>{t('purchaseOrders.totalToPay')}</span>
-                  <span>Bs. {totalToPay.toFixed(2)} / USD {totalToPayUsd.toFixed(2)}</span>
+                  <span className="tabular-nums text-primary">Bs. {totalToPay.toFixed(2)} / USD {totalToPayUsd.toFixed(2)}</span>
                 </div>
               </>
             )}
@@ -724,6 +726,7 @@ export default function PurchaseOrdersPage() {
         </div>
       }
     >
+      <div className="max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <RoleGuard minLevel={60}>
           <Button onClick={openCreate}>
@@ -826,6 +829,7 @@ export default function PurchaseOrdersPage() {
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
         loading={submitting}
       />
+      </div>
     </SlideForm>
   );
 }

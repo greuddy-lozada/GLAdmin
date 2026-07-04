@@ -88,5 +88,19 @@
     "INTERNAL_ERROR": "Internal server error",
     "UNAUTHORIZED": "Unauthorized",
     "FORBIDDEN": "Forbidden"
+  },
+  "VALIDATION": {
+    "IS_STRING": "This field must be text",
+    "IS_EMAIL": "Must be a valid email address",
+    "IS_NOT_EMPTY": "This field is required",
+    "MIN_LENGTH": "Must be at least {{min}} characters",
+    "MAX_LENGTH": "Must be at most {{max}} characters",
+    "MIN": "Must be at least {{min}}",
+    "MAX": "Must be at most {{max}}",
+    "IS_INT": "Must be an integer",
+    "IS_NUMBER": "Must be a number",
+    "IS_DATE_STRING": "Must be a valid date",
+    "IS_ARRAY": "Must be a list",
+    "IS_POSITIVE": "Must be a positive number"
   }
 }

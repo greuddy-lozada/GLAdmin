@@ -476,7 +476,7 @@ async function main() {
       officialExchangeRate: 60.50,
       officialExchangeRateId: 1,
       paymentMethod: 1,
-      status: 2,
+      status: 'ISSUED',
       organizationId: 1,
     },
   });
@@ -493,7 +493,7 @@ async function main() {
       amountUsd: 486.11,
       exchangeRate: 72.00,
       paymentMethod: 1,
-      status: 4,
+      status: 'RECEIVED',
       organizationId: 1,
     },
   });

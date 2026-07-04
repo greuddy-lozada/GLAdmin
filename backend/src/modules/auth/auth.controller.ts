@@ -6,7 +6,7 @@ import {
   HttpCode,
   UseGuards,
 } from '@nestjs/common';
-import { ThrottlerGuard, Throttle, SkipThrottle } from '@nestjs/throttler';
+import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshDto } from './dto/refresh.dto';
@@ -15,7 +15,6 @@ import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @Controller('auth')
-@SkipThrottle()
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 

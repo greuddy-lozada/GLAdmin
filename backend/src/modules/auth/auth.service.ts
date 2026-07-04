@@ -312,7 +312,7 @@ export class AuthService {
       throw new ForbiddenException('AUTH.INVALID_OLD_PASSWORD');
     }
 
-    const salt = await bcrypt.genSalt(10);
+    const salt = await bcrypt.genSalt(12);
     const hashedPassword = await bcrypt.hash(dto.newPassword, salt);
 
     await this.prisma.user.update({
