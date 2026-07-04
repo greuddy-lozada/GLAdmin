@@ -23,6 +23,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Pencil, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { useI18n } from '@/i18n';
+import { cn } from '@/lib/utils';
 
 export interface Column<T> {
   field: keyof T | string;
@@ -31,6 +32,7 @@ export interface Column<T> {
   sortable?: boolean;
   width?: number;
   isNumeric?: boolean;
+  responsive?: 'always' | 'desktop';
 }
 
 interface DataTableProps<T> {
@@ -82,7 +84,7 @@ export function DataTable<T extends { id: number }>({
           col.render ? col.render(info.row.original) : String(info.getValue() ?? ''),
         enableSorting: col.sortable !== false,
         size: col.width,
-        meta: { isNumeric: col.isNumeric },
+        meta: { isNumeric: col.isNumeric, responsive: col.responsive ?? 'always' },
       })),
     [columns],
   );
@@ -108,7 +110,7 @@ export function DataTable<T extends { id: number }>({
       ),
       enableSorting: false,
       size: undefined,
-      meta: { isNumeric: undefined },
+      meta: { isNumeric: undefined, responsive: 'always' as const },
     });
   }
 
@@ -133,7 +135,7 @@ export function DataTable<T extends { id: number }>({
           <TableHeader>
             <TableRow>
               {columns.map((col, i) => (
-                <TableHead key={String(col.field ?? col.headerName ?? i)} style={{ width: col.width }}>
+                <TableHead key={String(col.field ?? col.headerName ?? i)} style={{ width: col.width }} className={col.responsive === 'desktop' ? 'hidden md:table-cell' : ''}>
                   {col.headerName}
                 </TableHead>
               ))}
@@ -144,7 +146,7 @@ export function DataTable<T extends { id: number }>({
             {Array.from({ length: 5 }).map((_, i) => (
               <TableRow key={i}>
                 {columns.map((col, i) => (
-                  <TableCell key={String(col.field ?? col.headerName ?? i)}>
+                  <TableCell key={String(col.field ?? col.headerName ?? i)} className={col.responsive === 'desktop' ? 'hidden md:table-cell' : ''}>
                     <Skeleton className="h-5 w-full" />
                   </TableCell>
                 ))}
@@ -173,14 +175,19 @@ export function DataTable<T extends { id: number }>({
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
+              {headerGroup.headers.map((header) => {
+                const meta = (header.column.columnDef.meta as { isNumeric?: boolean; responsive?: string } | undefined) || {};
+                return (
                 <TableHead
                   key={header.id}
                   style={{ width: header.getSize() }}
                   className={
-                    header.column.getCanSort()
-                      ? 'cursor-pointer select-none'
-                      : ''
+                    cn(
+                      header.column.getCanSort()
+                        ? 'cursor-pointer select-none'
+                        : '',
+                      meta?.responsive === 'desktop' ? 'hidden md:table-cell' : '',
+                    )
                   }
                   onClick={header.column.getToggleSortingHandler()}
                 >
@@ -191,7 +198,8 @@ export function DataTable<T extends { id: number }>({
                     )}
                   </div>
                 </TableHead>
-              ))}
+                );
+              })}
             </TableRow>
           ))}
         </TableHeader>
@@ -199,9 +207,11 @@ export function DataTable<T extends { id: number }>({
           {table.getRowModel().rows.map((row) => (
             <TableRow key={row.id}>
               {row.getVisibleCells().map((cell) => {
-                const isNumeric = (cell.column.columnDef.meta as { isNumeric?: boolean } | undefined)?.isNumeric;
+                const meta = (cell.column.columnDef.meta as { isNumeric?: boolean; responsive?: string } | undefined);
+                const isNumeric = meta?.isNumeric;
+                const responsiveClass = meta?.responsive === 'desktop' ? 'hidden md:table-cell' : '';
                 return (
-                  <TableCell key={cell.id} className={isNumeric ? 'text-right tabular-nums' : ''}>
+                  <TableCell key={cell.id} className={cn(isNumeric ? 'text-right tabular-nums' : '', responsiveClass)}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 );
