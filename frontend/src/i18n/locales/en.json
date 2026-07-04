@@ -911,6 +911,17 @@
         "load": "Error loading requests",
         "review": "Error reviewing request"
       }
-    }
+    },
+    "banner": {
+      "pastDue": "Your {{plan}} subscription expired on {{date}}. Renew before {{graceEnd}} to keep your plan.",
+      "renew": "Renew",
+      "renewPrompt": "Renew to keep your current plan."
+    },
+    "status": {
+      "inactive": "Your current plan is Free. Upgrade to access more features.",
+      "active": "{{plan}} plan active until {{date}}.",
+      "pastDue": "Your subscription expired on {{date}}."
+    },
+    "downgraded": "Your subscription has been downgraded to the Free plan. Your data is safe."
   }
 }

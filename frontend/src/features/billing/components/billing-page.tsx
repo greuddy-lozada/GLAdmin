@@ -32,7 +32,7 @@ const FEATURE_TO_KEY: Record<string, string> = {
 const BASE_FEATURES = new Set(['basic_auth', 'multi_currency', 'basic_reports', 'advanced_reports']);
 
 export default function BillingPage() {
-  const { t } = useI18n();
+  const { t, tp } = useI18n();
   const { currentOrg } = useAuth();
   const { plans, loading, error } = useBilling();
 
@@ -92,6 +92,30 @@ export default function BillingPage() {
   return (
     <div className="h-full flex flex-col gap-4">
       {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
+
+      {currentOrg && currentOrg.subscriptionStatus !== 'inactive' && (
+        <Alert>
+          <AlertDescription>
+            {currentOrg.subscriptionStatus === 'active' && currentOrg.subscriptionExpiresAt
+              ? tp('subscription.status.active', {
+                  plan: currentOrg.plan?.label ?? '',
+                  date: new Date(currentOrg.subscriptionExpiresAt).toLocaleDateString('es-VE'),
+                })
+              : currentOrg.subscriptionStatus === 'past_due' && currentOrg.subscriptionExpiresAt
+                ? tp('subscription.status.pastDue', {
+                    date: new Date(currentOrg.subscriptionExpiresAt).toLocaleDateString('es-VE'),
+                  })
+                : null}
+          </AlertDescription>
+        </Alert>
+      )}
+      {currentOrg && currentOrg.subscriptionStatus === 'inactive' && (
+        <Alert>
+          <AlertDescription>
+            {t('subscription.status.inactive')}
+          </AlertDescription>
+        </Alert>
+      )}
 
       {!loading && plans.length === 0 && !error && (
         <Alert>

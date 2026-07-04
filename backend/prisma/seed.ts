@@ -146,6 +146,8 @@ async function main() {
       isActive: true,
       settings: JSON.stringify({ requireInvite: false, allowPublicSignup: false }),
       planId: freePlan!.id,
+      subscriptionStatus: 'inactive',
+      subscriptionExpiresAt: null,
     },
   });
   logger.log('Default organization created');

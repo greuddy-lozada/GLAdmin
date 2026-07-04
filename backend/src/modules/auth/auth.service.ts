@@ -12,6 +12,7 @@ import { LoginDto } from './dto/login.dto';
 import { RefreshDto } from './dto/refresh.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { AuditLogService } from '../audit-log/audit-log.service';
+import { SubscriptionLifecycleService } from '../subscriptions/subscription-lifecycle.service';
 
 interface UserOrganizationWithRelations {
   userId: number;
@@ -27,6 +28,8 @@ interface UserOrganizationWithRelations {
       label: string;
       features: string;
     } | null;
+    subscriptionStatus: string;
+    subscriptionExpiresAt: Date | null;
   };
   role: {
     id: number;
@@ -44,6 +47,7 @@ export class AuthService {
     private readonly authFactory: AuthFactory,
     private readonly prisma: PrismaService,
     private readonly auditLog: AuditLogService,
+    private readonly subscriptionLifecycle: SubscriptionLifecycleService,
   ) {}
 
   async login(dto: LoginDto) {
@@ -146,6 +150,8 @@ export class AuthService {
                   features: org.plan.features,
                 }
               : null,
+            subscriptionStatus: org.subscriptionStatus,
+            subscriptionExpiresAt: org.subscriptionExpiresAt,
           },
         },
         message: 'AUTH.LOGIN_SUCCESS',
@@ -172,6 +178,23 @@ export class AuthService {
     if (!membership) {
       throw new ForbiddenException('AUTH.NOT_ORG_MEMBER');
     }
+
+    this.subscriptionLifecycle
+      .evaluateSubscription(organizationId)
+      .catch((err) => {
+        this.auditLog
+          .log({
+            organizationId,
+            userId,
+            action: 'SUBSCRIPTION_EVAL_FAILED',
+            entity: 'Organization',
+            entityId: organizationId,
+            metadata: {
+              error: err instanceof Error ? err.message : String(err),
+            },
+          })
+          .catch(() => {});
+      });
 
     await this.prisma.user.update({
       where: { id: userId },
@@ -220,6 +243,8 @@ export class AuthService {
                 features: membership.organization.plan.features,
               }
             : null,
+          subscriptionStatus: membership.organization.subscriptionStatus,
+          subscriptionExpiresAt: membership.organization.subscriptionExpiresAt,
         },
       },
       message: 'AUTH.ORG_SELECTED',
@@ -347,6 +372,8 @@ export class AuthService {
           }
         : null,
       role: uo.role.slug,
+      subscriptionStatus: uo.organization.subscriptionStatus,
+      subscriptionExpiresAt: uo.organization.subscriptionExpiresAt,
     }));
   }
 }

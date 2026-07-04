@@ -10,6 +10,7 @@ import {
   CreateSubscriptionPaymentDto,
   ReviewSubscriptionPaymentDto,
 } from './subscription-payment.dto';
+import { SUBSCRIPTION_STATUS, SUBSCRIPTION_DURATION_DAYS } from './constants';
 
 @Injectable()
 export class SubscriptionPaymentService {
@@ -120,9 +121,36 @@ export class SubscriptionPaymentService {
       });
 
       if (dto.status === 'approved') {
+        const org = await tx.organization.findUnique({
+          where: { id: payment.organizationId },
+          select: { subscriptionStatus: true, subscriptionExpiresAt: true },
+        });
+
+        const now = new Date();
+        let newExpiresAt: Date;
+
+        if (
+          org?.subscriptionStatus === SUBSCRIPTION_STATUS.ACTIVE &&
+          org?.subscriptionExpiresAt &&
+          org.subscriptionExpiresAt > now
+        ) {
+          newExpiresAt = new Date(
+            org.subscriptionExpiresAt.getTime() +
+              SUBSCRIPTION_DURATION_DAYS * 86400000,
+          );
+        } else {
+          newExpiresAt = new Date(
+            now.getTime() + SUBSCRIPTION_DURATION_DAYS * 86400000,
+          );
+        }
+
         await tx.organization.update({
           where: { id: payment.organizationId },
-          data: { planId: payment.planId },
+          data: {
+            planId: payment.planId,
+            subscriptionStatus: SUBSCRIPTION_STATUS.ACTIVE,
+            subscriptionExpiresAt: newExpiresAt,
+          },
         });
       }
 

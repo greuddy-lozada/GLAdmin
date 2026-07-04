@@ -911,6 +911,17 @@
         "load": "Error al cargar solicitudes",
         "review": "Error al revisar la solicitud"
       }
-    }
+    },
+    "banner": {
+      "pastDue": "Tu suscripción de {{plan}} venció el {{date}}. Renueva antes del {{graceEnd}} para mantener tu plan.",
+      "renew": "Renovar",
+      "renewPrompt": "Renueva para mantener tu plan actual."
+    },
+    "status": {
+      "inactive": "Tu plan actual es Free. Mejora tu plan para acceder a más funcionalidades.",
+      "active": "Plan {{plan}} activo hasta el {{date}}.",
+      "pastDue": "Tu suscripción venció el {{date}}."
+    },
+    "downgraded": "Tu suscripción ha sido degradada al plan Free. Tus datos están intactos."
   }
 }

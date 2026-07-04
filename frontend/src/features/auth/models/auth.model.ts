@@ -34,6 +34,8 @@ export interface OrganizationDetail {
   name: string;
   slug: string;
   plan: { name: string; label: string; features: string } | null;
+  subscriptionStatus: 'inactive' | 'active' | 'past_due';
+  subscriptionExpiresAt: string | null;
 }
 
 export interface LoginResponse {
