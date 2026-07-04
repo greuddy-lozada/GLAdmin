@@ -40,37 +40,48 @@ cp .env.example .env
 #   JWT_REFRESH_SECRET
 ```
 
-### 2.3 Base de datos con Docker
+### 2.3 Base de datos con Podman
 
 ```bash
 # Levantar solo PostgreSQL
-docker compose up -d postgres
+podman run -d --name cuadra-postgres \
+  -e POSTGRES_USER=cuadra \
+  -e POSTGRES_PASSWORD=cuadra_dev \
+  -e POSTGRES_DB=cuadra_dev \
+  -p 5432:5432 \
+  postgres:16-alpine
 
-# Ejecutar migraciones
-pnpm run db:migrate
+# Ejecutar schema (primer inicio)
+pnpm --filter backend exec prisma db push
 
 # Sembrar datos de prueba
-pnpm run db:seed
+pnpm --filter backend exec tsx prisma/seed.ts
 ```
 
 ### 2.4 Iniciar desarrollo
 
 ```bash
-# Inicia backend (puerto 3001) + frontend (puerto 3000) en paralelo
+# Inicia backend (puerto 4000) + frontend (puerto 3000) en paralelo
+# El frontend corre directamente (hot reload), no en Docker
+# PostgreSQL debe estar corriendo previamente (paso 2.3)
 pnpm run dev
 ```
 
 | Servicio | URL |
 |---|---|
 | Frontend | http://localhost:3000 |
-| Backend API | http://localhost:3001/api |
+| Backend API | http://localhost:4000/api |
 | Prisma Studio | `npx prisma studio` (http://localhost:5555) |
+
+> **Nota:** El frontend se sirve con `next dev` (Turbopack, hot reload) durante desarrollo. No se usa Docker para el frontend en ningún entorno — desarrollo usa `next dev`, producción usa `output: 'export'` + CDN.
 
 ---
 
-## 3. Docker Compose — Stack Completo
+## 3. Docker Compose — Backend + Base de Datos
 
-### `docker-compose.yml` (estructura esperada)
+> **El frontend se sirve como estático (ver §3.1).** Solo backend y PostgreSQL requieren contenedores.
+
+### `docker-compose.yml`
 
 ```yaml
 services:
@@ -84,35 +95,85 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "cuadra"]
+      interval: 10s
+      retries: 5
 
   backend:
     build:
       context: .
       dockerfile: backend/Dockerfile
     ports:
-      - "3001:3001"
+      - "4000:4000"
     environment:
       - DATABASE_URL=postgresql://cuadra:cuadra_dev@postgres:5432/cuadra_dev
       - JWT_SECRET=${JWT_SECRET}
       - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
     depends_on:
       postgres:
         condition: service_healthy
 
-  frontend:
-    build:
-      context: .
-      dockerfile: frontend/Dockerfile
-    ports:
-      - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:3001/api
-    depends_on:
-      - backend
-
 volumes:
   postgres_data:
 ```
+
+> **Nota:** El servicio `frontend` fue eliminado del compose. El frontend se sirve como archivos estáticos (ver §3.1).
+
+### 3.1 Frontend — Static Export
+
+Cuadra es arquitectónicamente una SPA: **0 API routes en Next.js**, **0 server-side data fetching**, **100% de las páginas son `'use client'`** o wrappers vacíos. El frontend se construye como estático con `output: 'export'` y se sirve desde cualquier CDN o hosting estático. El servidor Node.js del frontend **no es necesario**.
+
+#### Configuración
+
+**`next.config.mjs`:**
+```js
+const nextConfig = {
+  output: 'export',
+  trailingSlash: true,
+};
+```
+
+**`frontend/.env.production`:**
+```
+NEXT_PUBLIC_API_URL=https://api.cuadra.app/api
+```
+
+> El cliente llama directamente al backend via `NEXT_PUBLIC_API_URL`. El proxy `rewrites()` fue eliminado — era un atajo de desarrollo, no una necesidad arquitectónica.
+
+#### Build
+
+```bash
+pnpm --filter frontend build    # → frontend/out/ (~5MB, 36 páginas estáticas)
+```
+
+#### Deploy
+
+| Plataforma | Build command | Output dir |
+|---|---|---|
+| **Cloudflare Pages** | `pnpm --filter frontend build` | `frontend/out` |
+| **Netlify** | `pnpm --filter frontend build` | `frontend/out` |
+| **Vercel** | Override build: `pnpm --filter frontend build` | `frontend/out` |
+| **S3 + CloudFront** | Build en CI, upload `out/` al bucket | `frontend/out` |
+| **Nginx / Caddy** | Build en CI, copia `out/` al servidor | `frontend/out` |
+
+#### CORS — Backend
+
+El backend debe permitir CORS desde el dominio del frontend estático. Ya está configurado en `backend/src/main.ts`:
+
+```typescript
+app.enableCors({
+  origin: process.env.FRONTEND_URL ?? 'http://localhost:3000',
+  credentials: true,
+});
+```
+
+Para producción: `FRONTEND_URL=https://cuadra.app`.
+
+#### PWA / Service Worker
+
+Serwist genera el service worker durante el build estático. Configuración en `sw.ts`. El archivo `manifest.ts` requiere `export const dynamic = 'force-static'` para compatibilidad con `output: 'export'`. Build verificado: 66 precache entries, ~2MB.
 
 ---
 
@@ -136,7 +197,10 @@ PORT=3001
 API_PREFIX="/api"
 
 # ── Frontend ──
-NEXT_PUBLIC_API_URL="http://localhost:3001/api"
+# Desarrollo (.env.local):
+NEXT_PUBLIC_API_URL="http://localhost:4000/api"
+# Producción (.env.production):
+# NEXT_PUBLIC_API_URL="https://api.cuadra.app/api"
 NEXT_PUBLIC_APP_NAME="Cuadra"
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 
@@ -180,19 +244,17 @@ FF_TAX_REPORTS="false"            # Reportes fiscales venezolanos (en desarrollo
     "dev:backend": "pnpm --filter backend dev",
     "dev:frontend": "pnpm --filter frontend dev",
     "build": "pnpm run --parallel build",
+    "build:frontend": "pnpm --filter frontend build",
     "lint": "pnpm run --parallel lint",
     "typecheck": "pnpm run --parallel typecheck",
     "test": "pnpm run --parallel test",
-    "test:e2e": "pnpm --filter backend test:e2e",
-    "db:migrate": "pnpm --filter backend prisma:migrate",
-    "db:migrate:staging": "pnpm --filter backend prisma:migrate:deploy",
-    "db:seed": "pnpm --filter backend prisma:seed",
-    "db:reset": "pnpm --filter backend prisma:reset",
-    "db:studio": "pnpm --filter backend prisma:studio",
-    "docker:up": "docker compose up -d",
-    "docker:down": "docker compose down",
-    "docker:build": "docker compose build",
-    "clean": "pnpm -r exec rm -rf dist node_modules/.cache .next"
+    "test:e2e": "pnpm --filter e2e test",
+    "db:push": "pnpm --filter backend exec prisma db push",
+    "db:seed": "pnpm --filter backend exec tsx prisma/seed.ts",
+    "db:studio": "pnpm --filter backend exec prisma studio",
+    "podman:up": "podman run -d --name cuadra-postgres -e POSTGRES_USER=cuadra -e POSTGRES_PASSWORD=cuadra_dev -e POSTGRES_DB=cuadra_dev -p 5432:5432 postgres:16-alpine",
+    "podman:start": "podman start cuadra-postgres",
+    "clean": "pnpm -r exec rm -rf dist node_modules/.cache .next out"
   }
 }
 ```
