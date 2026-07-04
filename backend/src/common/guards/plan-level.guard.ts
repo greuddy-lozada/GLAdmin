@@ -26,7 +26,9 @@ export class PlanLevelGuard implements CanActivate {
     const required = PLAN_ORDER[requiredLevel];
     if (required === undefined) return true;
 
-    const request = context.switchToHttp().getRequest<{ user?: { role?: string } }>();
+    const request = context
+      .switchToHttp()
+      .getRequest<{ user?: { role?: string } }>();
     if (request.user?.role === 'master') return true;
 
     const ctx = this.context.getCurrent();
