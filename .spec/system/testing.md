@@ -56,18 +56,117 @@ frontend/src/features/{module}/
 
 ### E2E (Playwright)
 
+> **Ubicación:** `e2e/` (raíz del monorepo, package independiente).
+> **Codebase:** 55 archivos, ~1350 líneas. Arquitectura documentada abajo.
+
+#### Estructura
+
 ```
-frontend/e2e/
-├── auth/
-│   └── login.spec.ts
-├── products/
-│   └── crud-product.spec.ts
-├── invoices/
-│   └── invoice-lifecycle.spec.ts
-├── pos/
-│   └── pos-checkout.spec.ts
-└── fixtures/
-    └── test-data.ts
+e2e/
+├── playwright.config.ts          # Config: chromium, auth state, baseURL
+├── package.json                  # Scripts: test, test:ui, test:headed, test:debug
+├── tsconfig.json
+│
+├── shared/                       # Capa transversal reutilizable
+│   ├── fixtures/
+│   │   └── auth.fixture.ts       # Inyección + persistencia de sesión (storageState)
+│   │
+│   ├── builders/                 # Patrón Builder para datos de prueba
+│   │   ├── base.builder.ts       # abstract Builder<T>
+│   │   ├── product.builder.ts    # ProductBuilder con fluent API
+│   │   ├── customer.builder.ts
+│   │   └── sale.builder.ts
+│   │
+│   ├── tasks/                    # Workflows con lógica de negocio
+│   │   ├── base.task.ts          # abstract AbstractTask
+│   │   └── crud.task.ts          # abstract CrudTask<T> (Template Method)
+│   │
+│   ├── validators/               # Validaciones reutilizables (Composite)
+│   │   ├── base.validator.ts     # abstract AbstractValidator
+│   │   ├── toast.validator.ts    # Concrete: valida toasts Sileo
+│   │   ├── table.validator.ts    # Concrete: valida DataTable
+│   │   └── form.validator.ts     # Concrete: valida formularios
+│   │
+│   ├── components/               # Component Objects reutilizables
+│   │   ├── data-table.component.ts
+│   │   ├── slide-form.component.ts
+│   │   ├── confirm-dialog.component.ts
+│   │   ├── sidebar.component.ts
+│   │   └── toast.component.ts
+│   │
+│   ├── pages/                    # Page Objects compartidos
+│   │   ├── base.page.ts          # abstract BasePage
+│   │   ├── login.page.ts
+│   │   └── dashboard.page.ts
+│   │
+│   └── utils/
+│       ├── api-client.ts         # HTTP client para setup/teardown
+│       └── test-data.ts          # Credenciales de prueba
+│
+├── modules/                      # Screaming Architecture por módulo
+│   ├── auth/
+│   │   ├── auth.spec.ts          # Spec: orquestación de tests
+│   │   └── login.task.ts         # Task: workflow de login
+│   │
+│   ├── products/                 # Cada módulo contiene:
+│   │   ├── products.spec.ts      #   - Spec (orquestación)
+│   │   ├── products.page.ts      #   - Page Object
+│   │   ├── product-crud.task.ts  #   - Task (workflow + lógica)
+│   │   └── product.validator.ts  #   - Validator compuesto
+│   │
+│   ├── customers/                # customer-crud.task extiende CrudTask<T>
+│   ├── billing/                  # subscribe.task con flujo de suscripción
+│   ├── pos/                      # checkout.task con flujo de venta
+│   ├── inventory/                # stock-management.task
+│   └── admin/                    # payment-review.task
+```
+
+#### Patrones implementados
+
+| Patrón | Abstracción | Concretos |
+|---|---|---|
+| **Builder** | `Builder<T>` | `ProductBuilder`, `CustomerBuilder`, `SaleBuilder` |
+| **Template Method** | `AbstractTask.execute()` | `CrudTask<T>` → `ProductCrudTask`, `CustomerCrudTask` |
+| **Composite** | `AbstractValidator` | `ProductValidator` compone `ToastValidator` + `TableValidator` + `FormValidator` |
+| **Page Object** | `BasePage` | `ProductsPage`, `PosPage`, `BillingPage` |
+| **Component Object** | Classes standalone | `DataTable`, `SlideForm`, `ConfirmDialog`, `Sidebar` |
+| **Strategy** | `CrudTask<T>` | Cada módulo implementa create/read/update/delete con su propia lógica |
+
+#### Fixture de sesión
+
+El fixture `authenticatedPage` inyecta sesión via `LoginPage.login()` + `storageState`. La sesión se persiste en `e2e/.auth/user.json` y se reutiliza entre tests para evitar logins repetidos.
+
+```typescript
+// shared/fixtures/auth.fixture.ts
+export const test = base.extend<AuthFixtures>({
+  authenticatedPage: async ({ page }, use) => {
+    const loginPage = new LoginPage(page);
+    await loginPage.navigate();
+    await loginPage.login('glozada', '000000');
+    await loginPage.waitForDashboard();
+    await page.context().storageState({ path: 'e2e/.auth/user.json' });
+    await use(page);
+  },
+});
+```
+
+#### Flujos críticos cubiertos
+
+| # | Flujo (spec) | Spec file | Estado |
+|---|---|---|---|
+| 1 | Login → Dashboard → Logout | `modules/auth/auth.spec.ts` | Implementado |
+| 2 | CRUD Producto | `modules/products/products.spec.ts` | Implementado |
+| 3 | Factura completa | `modules/invoices/invoices.spec.ts` | Pendiente |
+| 4 | POS: buscar → agregar → cobrar | `modules/pos/pos.spec.ts` | Implementado |
+| 5 | Registro con roles | `modules/auth/registration.spec.ts` | Pendiente |
+
+#### Comandos
+
+```bash
+pnpm --filter e2e test              # Todos los tests
+pnpm --filter e2e test:ui           # Playwright UI mode
+pnpm --filter e2e test:headed       # Ver navegador
+pnpm --filter e2e test -- products  # Solo un módulo
 ```
 
 ---
