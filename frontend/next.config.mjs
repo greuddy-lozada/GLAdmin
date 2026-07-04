@@ -6,20 +6,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'export',
+  trailingSlash: true,
   turbopack: {
     root: path.resolve(__dirname, '..'),
-  },
-  async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: 'http://localhost:4000/api/:path*',
-      },
-      {
-        source: '/uploads/:path*',
-        destination: 'http://localhost:4000/uploads/:path*',
-      },
-    ];
   },
 };
 
