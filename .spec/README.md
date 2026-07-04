@@ -23,6 +23,13 @@
 | [system/testing.md](system/testing.md) | Cobertura, estructura de tests, factory functions, E2E. |
 | [system/performance.md](system/performance.md) | Bundle size, query limits, P95 latency, caching. |
 
+### 💼 Negocio — BMAD Method
+| Archivo | Propósito |
+|---|---|
+| [business/product-strategy.md](business/product-strategy.md) | Visión, ICP, propuesta de valor, competitive moat, roadmap. |
+| [business/customer-discovery.md](business/customer-discovery.md) | Hipótesis, guía de entrevista, learning cards, experimentos. |
+| [business/go-to-market.md](business/go-to-market.md) | Fases de lanzamiento, pricing, canales, métricas, riesgos. |
+
 ### 🎨 UI/UX
 | Archivo | Propósito |
 |---|---|
@@ -55,6 +62,7 @@
 
 ## Cómo usar este directorio
 
+0. **Antes de decidir qué construir**, consulta [business/product-strategy.md](business/product-strategy.md) (visión, roadmap) y valida con [business/customer-discovery.md](business/customer-discovery.md) (hipótesis, entrevistas).
 1. **Antes de implementar un feature nuevo**, lee [system/architecture.md](system/architecture.md) y [system/api-conventions.md](system/api-conventions.md).
 2. **Antes de tocar la base de datos**, consulta [system/database.md](system/database.md) y [system/security.md](system/security.md) (regla de inmutabilidad contable).
 3. **Antes de crear UI**, revisa [UI-UX/design-system.md](UI-UX/design-system.md) (incluye accesibilidad).
