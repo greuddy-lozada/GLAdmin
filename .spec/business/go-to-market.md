@@ -14,9 +14,9 @@
 | Usuarios | 3-5 empresas (amigos, familiares, contactos cercanos) |
 | Precio | Gratis a cambio de feedback activo |
 | Compromiso nuestro | Soporte directo por WhatsApp. Llamada semanal de feedback. |
-| Objetivo | Encontrar bugs críticos. Validar que los flujos core (facturar, cobrar, POS) funcionan en el mundo real. |
+| Objetivo | Encontrar bugs críticos. Validar que los flujos core (vender, cobrar, gestionar inventario desde el POS) funcionan en el mundo real. |
 | Duración | 4-8 semanas |
-| Criterio de salida | 0 bugs críticos abiertos. Flujo de facturación completo y probado por al menos 3 empresas distintas. Feedback cualitativo positivo ("lo usaría en mi negocio"). |
+| Criterio de salida | 0 bugs críticos abiertos. Flujo completo de venta (buscar producto → agregar → cobrar) probado por al menos 3 empresas distintas. Feedback cualitativo positivo ("lo usaría en mi negocio"). |
 
 ### Fase 1: Beta Abierta
 
@@ -35,7 +35,7 @@
 |---|---|
 | Usuarios | Sin límite |
 | Precio | Precio completo según plan elegido |
-| Adquisición | Contadores como canal. Google Ads (presupuesto bajo, alta segmentación). SEO. Referidos con incentivo. |
+| Adquisición | Dueños/gerentes directos. Google Ads (presupuesto bajo, alta segmentación). SEO. Referidos con incentivo. |
 | Objetivo | Crecimiento sostenible mes a mes. |
 | Duración | Continua |
 | Criterio de éxito | 50+ empresas con suscripción activa. MRR estable o creciente. Churn mensual < 5%. |
@@ -48,10 +48,10 @@
 
 | Plan | Precio (USD/mes) | Usuarios | Features clave |
 |---|---|---|---|
-| **Free** | $0 | 1 | POS básico, hasta 50 productos, facturación limitada |
-| **Pro** | Por definir | 5 | Catálogo ilimitado, facturación SENIAT completa, Pago Móvil |
-| **Business** | Por definir | 20 | + Contabilidad, reportes fiscales, retenciones IVA/ISLR |
-| **Enterprise** | Custom | Ilimitado | + API, multi-sucursal, nómina, soporte prioritario, SLAs |
+| **Free** | $0 | 1 | POS básico, hasta 50 productos, ventas ilimitadas |
+| **Pro** | Por definir | 5 | Catálogo ilimitado, Pago Móvil, multi-moneda, analytics básicos |
+| **Business** | Por definir | 20 | + Analytics avanzados, dashboard KPIs, multi-caja, exportación de datos |
+| **Enterprise** | Custom | Ilimitado | + API, multi-sucursal, soporte prioritario, SLAs |
 
 ---
 
@@ -60,11 +60,11 @@
 | Canal | Prioridad | Inversión | Notas |
 |---|---|---|---|
 | Referidos boca a boca | **Alta** | $0 | El más efectivo en PyMEs venezolanas. Incentivar con mes gratis por referido. |
-| Contadores como distribuidores | **Alta** | Comisión o fee fijo | El contador recomienda Cuadra. Si confía en los reportes, trae cartera de clientes. |
-| Grupos de WhatsApp/Telegram | **Media** | $0 | Comunidades activas de emprendedores venezolanos. Compartir valor, no spam. |
-| Instagram / TikTok | **Media** | Contenido orgánico | Tutoriales cortos: "cómo emitir una factura en 30 segundos", tips fiscales. |
-| Google Ads | **Baja** | Presupuesto controlado | Keywords: "sistema de facturación", "facturación SENIAT", "software administrativo Venezuela". |
-| SEO / Blog | **Baja** | Tiempo | Contenido evergreen sobre facturación fiscal venezolana. Atrae tráfico pasivo a largo plazo. |
+| Grupos de WhatsApp/Telegram | **Alta** | $0 | Comunidades activas de emprendedores venezolanos. Compartir valor, no spam. |
+| Instagram / TikTok | **Media** | Contenido orgánico | Tutoriales cortos: "cómo vender más rápido con Cuadra", tips de gestión de inventario. |
+| Contadores (canal secundario) | **Media** | Comisión o fee fijo | Si un contador recomienda Cuadra, gana comisión. No es el canal principal pero suma. |
+| Google Ads | **Baja** | Presupuesto controlado | Keywords: "punto de venta", "sistema POS Venezuela", "software de inventario". |
+| SEO / Blog | **Baja** | Tiempo | Contenido evergreen sobre gestión de PyMEs. Atrae tráfico pasivo a largo plazo. |
 
 ---
 
@@ -76,7 +76,7 @@
 | MRR | $0 | $X | $Y | $Z |
 | Churn mensual | N/A | < 15% | < 5% | < 5% |
 | NPS | N/A | > 30 | > 40 | > 40 |
-| Time-to-value (1ra factura emitida) | < 2 días | < 1 día | < 1 hora | < 30 min |
+| Time-to-value (1ra venta registrada) | < 2 días | < 1 día | < 1 hora | < 30 min |
 | Tickets de soporte por empresa/mes | Ilimitado | < 3 | < 1 | < 0.5 |
 | Tasa de conversión Free → Pro | N/A | N/A | > 5% | > 8% |
 
@@ -86,8 +86,8 @@
 
 | Riesgo | Probabilidad | Impacto | Mitigación |
 |---|---|---|---|
-| SENIAT cambia requerimientos de facturación | Media | Alto | Arquitectura de plantillas fiscales flexible. Monitoreo de gaceta oficial. |
-| Competidor local bien fondeado entra al mercado | Baja | Alto | Moat: datos fiscales históricos + offline POS. Switching cost alto una vez adoptado. |
+| Competidor local (Loyverse, Zulu, Alegra) captura el mercado | Media | Alto | Moat: offline POS + multi-moneda VES/USD + Pago Móvil integrado. Competidores cloud no funcionan sin internet. |
+| Competidor local bien fondeado entra al mercado | Baja | Alto | Moat: historial de ventas + offline POS. Switching cost alto una vez adoptado. |
 | Inestabilidad de internet en Venezuela | Muy alta | Medio | POS offline-first. PWA con service worker. Sync automático al reconectar. |
 | Usuarios no renuevan (cash culture, prefieren pago único) | Media | Alto | Período de gracia corto. Recordatorios automáticos. Descuento por pago anual. Suspensión de servicio (datos no se pierden). |
 | Tipo de cambio VES/USD volátil | Muy alta | Bajo | Precios fijados en USD. Pago Móvil calculado a tasa del día. |
