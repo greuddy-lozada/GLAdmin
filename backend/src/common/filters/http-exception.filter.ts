@@ -9,6 +9,12 @@ import {
 import { Response } from 'express';
 import { I18nService } from '../../shared/i18n/i18n.service';
 
+export interface ApiError {
+  code: string;
+  message: string;
+  details?: unknown;
+}
+
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(HttpExceptionFilter.name);
@@ -22,27 +28,38 @@ export class HttpExceptionFilter implements ExceptionFilter {
       ctx.getRequest();
     const lang = this.resolveLang(request);
 
-    let status = HttpStatus.INTERNAL_SERVER_ERROR;
-    let messageKey = 'COMMON.INTERNAL_ERROR';
-    let errors: unknown = null;
-
     if (exception instanceof HttpException) {
-      status = exception.getStatus();
+      const status = exception.getStatus();
       const exceptionResponse = exception.getResponse();
+
+      let code = `HTTP_${status}`;
+      let messageKey = 'COMMON.INTERNAL_ERROR';
+      let details: unknown = undefined;
 
       if (typeof exceptionResponse === 'string') {
         messageKey = exceptionResponse;
       } else if (typeof exceptionResponse === 'object') {
         const resp = exceptionResponse as Record<string, unknown>;
+        code = (resp.code as string) || code;
         messageKey = (resp.message as string) || exception.message;
-        errors = resp.errors || null;
 
         if (Array.isArray(resp.message)) {
-          errors = resp.message;
+          details = resp.message;
           messageKey = 'COMMON.VALIDATION_ERROR';
+        } else if (resp.details) {
+          details = resp.details;
         }
       }
-    } else if (exception instanceof Error) {
+
+      const message = this.i18n.translate(messageKey, lang);
+
+      response.status(status).json({
+        error: { code, message, ...(details !== undefined && { details }) },
+      });
+      return;
+    }
+
+    if (exception instanceof Error) {
       this.logger.error(
         `Unhandled error: ${exception.message}`,
         exception.stack,
@@ -51,14 +68,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
       this.logger.error('Unhandled non-Error exception', String(exception));
     }
 
-    const message = this.i18n.translate(messageKey, lang);
-    const statusCode = status;
+    const message = this.i18n.translate('COMMON.INTERNAL_ERROR', lang);
 
-    response.status(status).json({
-      data: null,
-      message,
-      errors,
-      statusCode,
+    response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+      error: { code: 'INTERNAL_ERROR', message },
     });
   }
 

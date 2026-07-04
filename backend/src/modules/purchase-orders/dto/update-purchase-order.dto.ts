@@ -1,6 +1,38 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreatePurchaseOrderDto } from './create-purchase-order.dto';
+import {
+  IsString,
+  IsOptional,
+  IsDateString,
+  IsInt,
+  IsBoolean,
+  IsIn,
+} from 'class-validator';
 
-export class UpdatePurchaseOrderDto extends PartialType(
-  CreatePurchaseOrderDto,
-) {}
+export class UpdatePurchaseOrderDto {
+  @IsOptional()
+  @IsInt()
+  idSupplier?: number;
+
+  @IsOptional()
+  @IsString()
+  code?: string;
+
+  @IsOptional()
+  @IsDateString()
+  date?: string;
+
+  @IsOptional()
+  @IsInt()
+  paymentMethod?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  applyWithholding?: boolean;
+
+  @IsOptional()
+  @IsIn([75, 100])
+  withholdingPercentage?: number;
+
+  @IsOptional()
+  @IsString()
+  withholdingProof?: string;
+}

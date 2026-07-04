@@ -1,9 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { ContextService } from '../tenant/context.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
 import { UpdateSaleDto } from './dto/update-sale.dto';
+import { AppException } from '../../common/errors';
 
 @Injectable()
 export class SalesService {
@@ -124,7 +126,7 @@ export class SalesService {
     });
 
     if (!sale) {
-      throw new NotFoundException('Sale not found');
+      throw new AppException('SALE_002', HttpStatus.NOT_FOUND);
     }
 
     return sale;
@@ -134,17 +136,23 @@ export class SalesService {
     const orgId = this.context.getCurrent()?.organizationId;
     if (!orgId) throw new Error('No organization context');
 
+    const existing = await this.prisma.sale.findFirst({
+      where: { id, organizationId: orgId },
+    });
+    if (!existing) throw new AppException('SALE_002', HttpStatus.NOT_FOUND);
+    if (existing.status !== 0) {
+      throw new AppException('SALE_001', HttpStatus.FORBIDDEN);
+    }
+
     const sale = await this.prisma.sale.update({
       where: { id, organizationId: orgId },
       data: {
-        code: dto.code,
-        date: dto.date ? new Date(dto.date) : undefined,
-        amount: dto.amount,
-        amountUsd: dto.amountUsd,
-        exchangeRate: dto.exchangeRate,
-        paymentMethod: dto.paymentMethod,
-        status: dto.status,
-        idCustomer: dto.idCustomer,
+        ...(dto.code !== undefined && { code: dto.code }),
+        ...(dto.date !== undefined && { date: new Date(dto.date) }),
+        ...(dto.paymentMethod !== undefined && {
+          paymentMethod: dto.paymentMethod,
+        }),
+        ...(dto.idCustomer !== undefined && { idCustomer: dto.idCustomer }),
       },
       include: {
         details: true,

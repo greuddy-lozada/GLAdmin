@@ -8,74 +8,78 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { I18nService } from '../../shared/i18n/i18n.service';
 
-export interface SuccessResponse<T> {
+export interface ApiResponse<T> {
   data: T;
-  message: string | null;
-  statusCode: number;
+  meta?: Record<string, unknown>;
 }
 
 @Injectable()
 export class TransformInterceptor<T> implements NestInterceptor<
   T,
-  SuccessResponse<T>
+  ApiResponse<T>
 > {
   constructor(private readonly i18n: I18nService) {}
 
   intercept(
     context: ExecutionContext,
     next: CallHandler,
-  ): Observable<SuccessResponse<T>> {
+  ): Observable<ApiResponse<T>> {
     const lang = this.resolveLang(context);
 
     return next.handle().pipe(
       map((body: unknown) => {
         const responseBody = body as Record<string, unknown> | null;
-        const statusCode = context.switchToHttp().getResponse().statusCode;
 
         if (responseBody === null || responseBody === undefined) {
-          return { data: null as T, message: null, statusCode };
+          return { data: null as T };
         }
 
         if (Array.isArray(responseBody)) {
-          return { data: responseBody as T, message: null, statusCode };
+          return { data: responseBody as T };
         }
 
-        if (
-          typeof responseBody === 'object' &&
-          'data' in responseBody &&
-          Array.isArray(responseBody.data) &&
-          'total' in responseBody &&
-          'page' in responseBody &&
-          'limit' in responseBody
-        ) {
-          return {
-            data: responseBody.data as T,
-            total: responseBody.total,
-            page: responseBody.page,
-            limit: responseBody.limit,
-            message: null,
-            statusCode,
-          };
+        if (typeof responseBody === 'object') {
+          const {
+            data: bodyData,
+            message: bodyMsg,
+            total,
+            page,
+            limit,
+            ...rest
+          } = responseBody;
+
+          if (bodyData !== undefined && total !== undefined) {
+            const totalPages = limit
+              ? Math.ceil((total as number) / (limit as number))
+              : 1;
+            return {
+              data: bodyData as T,
+              meta: { page, limit, total, totalPages },
+            };
+          }
+
+          if (bodyData !== undefined) {
+            const meta: Record<string, unknown> = {};
+            if (bodyMsg) {
+              meta.message = this.i18n.translate(bodyMsg as string, lang);
+            }
+            Object.assign(meta, rest);
+            return Object.keys(meta).length > 0
+              ? { data: bodyData as T, meta }
+              : { data: bodyData as T };
+          }
+
+          if (bodyMsg !== undefined) {
+            const meta = {
+              message: this.i18n.translate(bodyMsg as string, lang),
+            };
+            return { data: rest as T, meta };
+          }
+
+          return { data: responseBody as T };
         }
 
-        if (
-          typeof responseBody === 'object' &&
-          'data' in responseBody &&
-          'message' in responseBody
-        ) {
-          const msg = (responseBody.message as string)
-            ? this.i18n.translate(responseBody.message as string, lang)
-            : null;
-          return { data: responseBody.data as T, message: msg, statusCode };
-        }
-
-        if (typeof responseBody === 'object' && 'message' in responseBody) {
-          const msg = this.i18n.translate(responseBody.message as string, lang);
-          const { message: _, ...rest } = responseBody;
-          return { data: rest as T, message: msg, statusCode };
-        }
-
-        return { data: responseBody as T, message: null, statusCode };
+        return { data: responseBody as T };
       }),
     );
   }

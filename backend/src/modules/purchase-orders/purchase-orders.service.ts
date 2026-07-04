@@ -1,14 +1,12 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { ContextService } from '../../modules/tenant/context.service';
 import { CreatePurchaseOrderDto } from './dto/create-purchase-order.dto';
 import { UpdatePurchaseOrderDto } from './dto/update-purchase-order.dto';
 import { ReceivePurchaseOrderDto } from './dto/receive-purchase-order.dto';
+import { AppException } from '../../common/errors';
 
 @Injectable()
 export class PurchaseOrdersService {
@@ -62,19 +60,13 @@ export class PurchaseOrdersService {
         where: { organizationId: orgId },
       });
       if (!orgCompany?.isWithholdingAgent) {
-        throw new BadRequestException(
-          'La organización no es agente de retención',
-        );
+        throw new AppException('PO_004', HttpStatus.BAD_REQUEST);
       }
       if (!withholdingPercentage) {
-        throw new BadRequestException(
-          'Debe especificar un porcentaje de retención (75 o 100)',
-        );
+        throw new AppException('PO_005', HttpStatus.BAD_REQUEST);
       }
       if (!withholdingProof) {
-        throw new BadRequestException(
-          'Debe adjuntar el comprobante de retención',
-        );
+        throw new AppException('PO_006', HttpStatus.BAD_REQUEST);
       }
     }
 
@@ -122,14 +114,17 @@ export class PurchaseOrdersService {
   }
 
   async findAll(page = 1, limit = 20) {
+    const orgId = this.orgId;
     const skip = (page - 1) * limit;
+    const where = { organizationId: orgId };
     const [data, total] = await Promise.all([
       this.prisma.purchaseOrder.findMany({
+        where,
         skip,
         take: limit,
         include: this.include,
       }),
-      this.prisma.purchaseOrder.count(),
+      this.prisma.purchaseOrder.count({ where }),
     ]);
     return { data, total, page, limit };
   }
@@ -142,15 +137,17 @@ export class PurchaseOrdersService {
         accountsPayables: true,
       },
     });
-    if (!purchaseOrder) throw new NotFoundException('PURCHASE_ORDER.NOT_FOUND');
+    if (!purchaseOrder) throw new AppException('PO_002', HttpStatus.NOT_FOUND);
     return purchaseOrder;
   }
 
   async update(id: number, dto: UpdatePurchaseOrderDto) {
     const existing = await this.findOne(id);
+    if (existing.status === 4) {
+      throw new AppException('PO_001', HttpStatus.FORBIDDEN);
+    }
     const orgId = this.orgId;
     const {
-      details: dtoDetails,
       applyWithholding,
       withholdingPercentage,
       withholdingProof,
@@ -162,52 +159,25 @@ export class PurchaseOrdersService {
         where: { organizationId: orgId },
       });
       if (!orgCompany?.isWithholdingAgent) {
-        throw new BadRequestException(
-          'La organización no es agente de retención',
-        );
+        throw new AppException('PO_004', HttpStatus.BAD_REQUEST);
       }
       if (!withholdingPercentage && !existing.withholdingRecords?.length) {
-        throw new BadRequestException(
-          'Debe especificar un porcentaje de retención (75 o 100)',
-        );
+        throw new AppException('PO_005', HttpStatus.BAD_REQUEST);
       }
       if (!withholdingProof && !existing.withholdingRecords?.length) {
-        throw new BadRequestException(
-          'Debe adjuntar el comprobante de retención',
-        );
+        throw new AppException('PO_006', HttpStatus.BAD_REQUEST);
       }
     }
 
     const purchaseOrder = await this.prisma.$transaction(async (tx) => {
-      if (dtoDetails) {
-        await tx.purchaseOrderDet.deleteMany({
-          where: { idPurchaseOrder: id },
-        });
-        if (dtoDetails.length > 0) {
-          await tx.purchaseOrderDet.createMany({
-            data: dtoDetails.map((d) => ({
-              idPurchaseOrder: id,
-              idProduct: d.idProduct,
-              quantity: d.quantity,
-              unitPrice: d.unitPrice,
-              unitPriceUsd: d.unitPriceUsd,
-              subtotal: d.subtotal,
-              subtotalUsd: d.subtotalUsd,
-              observation: d.observation,
-              organizationId: orgId,
-            })),
-          });
-        }
-      }
-
       if (applyWithholding !== undefined) {
         const existingRecord = existing.withholdingRecords?.[0];
         if (applyWithholding) {
           const pct = withholdingPercentage ?? existingRecord?.percentage ?? 75;
           const proof =
             withholdingProof ?? existingRecord?.withholdingProof ?? '';
-          const baseAmt = dto.ivaAmount ?? existing.ivaAmount ?? 0;
-          const baseAmtUsd = dto.ivaAmountUsd ?? existing.ivaAmountUsd ?? 0;
+          const baseAmt = existing.ivaAmount ?? 0;
+          const baseAmtUsd = existing.ivaAmountUsd ?? 0;
           const data = {
             idSupplier: dto.idSupplier ?? existing.idSupplier,
             idPurchaseOrder: id,
@@ -251,23 +221,18 @@ export class PurchaseOrdersService {
   async receive(id: number, dto: ReceivePurchaseOrderDto) {
     const existing = await this.findOne(id);
     if (existing.status === 4) {
-      throw new BadRequestException('PURCHASE_ORDER.ALREADY_RECEIVED');
+      throw new AppException('PO_003', HttpStatus.BAD_REQUEST);
     }
     const orgId = this.orgId;
 
     await this.prisma.$transaction(async (tx) => {
       for (const item of dto.details) {
         const line = existing.details.find((d) => d.id === item.id);
-        if (!line)
-          throw new BadRequestException(
-            `Detail id ${item.id} not found in PO ${id}`,
-          );
+        if (!line) throw new AppException('PO_007', HttpStatus.BAD_REQUEST);
 
         const newReceived = line.receivedQuantity + item.quantity;
         if (newReceived > (line.quantity ?? 0)) {
-          throw new BadRequestException(
-            `Cannot receive ${item.quantity} more for detail ${item.id}: ordered ${line.quantity}, already received ${line.receivedQuantity}`,
-          );
+          throw new AppException('PO_008', HttpStatus.BAD_REQUEST);
         }
 
         await tx.purchaseOrderDet.update({

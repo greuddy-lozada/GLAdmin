@@ -67,7 +67,7 @@ if (!jwtSecret) {
     JwtModule.register({
       global: true,
       secret: jwtSecret,
-      signOptions: { expiresIn: '7d' },
+      signOptions: { expiresIn: '15m' },
     }),
     PrismaModule,
     I18nModule,
