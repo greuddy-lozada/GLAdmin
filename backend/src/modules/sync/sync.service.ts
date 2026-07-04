@@ -207,12 +207,49 @@ export class SyncService {
   async push(mutations: PushMutationDto[]) {
     const orgId = this.context.getCurrent()?.organizationId;
     if (!orgId) throw new Error('No organization context');
+
+    // Pre-load all relevant stocks in one query (ponytail: avoid N+1)
+    const relevantProductIds = [
+      ...new Set(
+        mutations
+          .filter((m) => m.table === 'sales' && m.operation === 'create')
+          .flatMap(
+            (m) =>
+              (m.data as { items?: Array<{ productId: number }> })?.items?.map(
+                (i) => i.productId,
+              ) ?? [],
+          ),
+      ),
+    ];
+    const stockMap = new Map(
+      relevantProductIds.length > 0
+        ? (
+            await this.prisma.stock.findMany({
+              where: {
+                idProduct: { in: relevantProductIds },
+                organizationId: orgId,
+              },
+            })
+          ).map((s) => [s.idProduct, s])
+        : [],
+    );
+
     const accepted: number[] = [];
     const conflicts: Array<{
       localTimestamp: string;
       recordId?: number;
       issue: string;
       description: string;
+    }> = [];
+    const syncConflictsToCreate: Array<{
+      organizationId: number;
+      table: string;
+      recordId?: number;
+      localData: string;
+      serverData: string;
+      localTimestamp: Date;
+      description: string;
+      status: string;
     }> = [];
     const errors: Array<{ localTimestamp: string; error: string }> = [];
 
@@ -226,9 +263,7 @@ export class SyncService {
           let hasConflict = false;
 
           for (const item of mutationItems.items) {
-            const currentStock = await this.prisma.stock.findFirst({
-              where: { idProduct: item.productId, organizationId: orgId },
-            });
+            const currentStock = stockMap.get(item.productId);
 
             if (!currentStock || currentStock.existence < item.quantity) {
               const salesSince: SaleWithDetails[] =
@@ -265,20 +300,18 @@ export class SyncService {
                   description: `Product ${item.productId}: requested ${item.quantity}, available ${available}`,
                 });
 
-                await this.prisma.syncConflict.create({
-                  data: {
-                    organizationId: orgId,
-                    table: 'sales',
-                    recordId: mutation.recordId,
-                    localData: JSON.stringify(mutation.data),
-                    serverData: JSON.stringify({
-                      currentStock: currentStock?.existence || 0,
-                      consumedSince,
-                    }),
-                    localTimestamp: new Date(mutation.localTimestamp),
-                    description: `Oversold product ${item.productId}: requested ${item.quantity}, available ${available}`,
-                    status: 'pending',
-                  },
+                syncConflictsToCreate.push({
+                  organizationId: orgId,
+                  table: 'sales',
+                  recordId: mutation.recordId,
+                  localData: JSON.stringify(mutation.data),
+                  serverData: JSON.stringify({
+                    currentStock: currentStock?.existence || 0,
+                    consumedSince,
+                  }),
+                  localTimestamp: new Date(mutation.localTimestamp),
+                  description: `Oversold product ${item.productId}: requested ${item.quantity}, available ${available}`,
+                  status: 'pending',
                 });
 
                 break;
@@ -330,15 +363,20 @@ export class SyncService {
     }
 
     const lastPushAt = new Date();
-    await this.prisma.syncCursor.upsert({
-      where: { organizationId: orgId },
-      update: { lastPushAt },
-      create: {
-        organizationId: orgId,
-        lastPullAt: new Date(0),
-        lastPushAt,
-      },
-    });
+    await Promise.all([
+      this.prisma.syncCursor.upsert({
+        where: { organizationId: orgId },
+        update: { lastPushAt },
+        create: {
+          organizationId: orgId,
+          lastPullAt: new Date(0),
+          lastPushAt,
+        },
+      }),
+      syncConflictsToCreate.length > 0
+        ? this.prisma.syncConflict.createMany({ data: syncConflictsToCreate })
+        : Promise.resolve(),
+    ]);
 
     return { accepted, conflicts, errors };
   }

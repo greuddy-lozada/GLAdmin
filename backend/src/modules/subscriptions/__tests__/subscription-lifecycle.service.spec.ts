@@ -1,9 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { SubscriptionLifecycleService } from '../subscription-lifecycle.service';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
-import {
-  SUBSCRIPTION_STATUS,
-} from '../constants';
+import { SUBSCRIPTION_STATUS } from '../constants';
 
 describe('SubscriptionLifecycleService', () => {
   let service: SubscriptionLifecycleService;

@@ -83,19 +83,22 @@ export class SalesService {
         },
       });
 
-      const seen = new Set<number>();
+      const byProduct = new Map<number, number>();
       for (const item of dto.items) {
+        const current = byProduct.get(item.productId) || 0;
+        byProduct.set(item.productId, current + item.quantity);
+      }
+      for (const [productId, totalQty] of byProduct) {
         await tx.stock.updateMany({
-          where: { idProduct: item.productId, organizationId: orgId },
-          data: { existence: { decrement: item.quantity } },
+          where: { idProduct: productId, organizationId: orgId },
+          data: { existence: { decrement: totalQty } },
         });
-        if (!seen.has(item.productId)) {
-          seen.add(item.productId);
-        }
       }
-      for (const productId of seen) {
-        await this.recalcTotalExistence(productId, tx);
-      }
+      await Promise.all(
+        Array.from(byProduct.keys()).map((productId) =>
+          this.recalcTotalExistence(productId, tx),
+        ),
+      );
 
       return created;
     });
@@ -191,19 +194,22 @@ export class SalesService {
     const sale = await this.findOne(id);
 
     await this.prisma.$transaction(async (tx) => {
-      const seen = new Set<number>();
+      const byProduct = new Map<number, number>();
       for (const item of sale.details) {
+        const current = byProduct.get(item.idProduct) || 0;
+        byProduct.set(item.idProduct, current + (item.quantity || 0));
+      }
+      for (const [productId, totalQty] of byProduct) {
         await tx.stock.updateMany({
-          where: { idProduct: item.idProduct, organizationId: orgId },
-          data: { existence: { increment: item.quantity || 0 } },
+          where: { idProduct: productId, organizationId: orgId },
+          data: { existence: { increment: totalQty } },
         });
-        if (!seen.has(item.idProduct)) {
-          seen.add(item.idProduct);
-        }
       }
-      for (const productId of seen) {
-        await this.recalcTotalExistence(productId, tx);
-      }
+      await Promise.all(
+        Array.from(byProduct.keys()).map((productId) =>
+          this.recalcTotalExistence(productId, tx),
+        ),
+      );
 
       await tx.sale.delete({
         where: { id, organizationId: orgId },

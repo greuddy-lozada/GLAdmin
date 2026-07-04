@@ -121,12 +121,17 @@ export class SubscriptionLifecycleService {
       select: { id: true },
     });
 
-    for (const org of orgs) {
-      try {
-        await this.evaluateSubscription(org.id);
-      } catch (error) {
-        this.logger.error(`Failed to evaluate org ${org.id}`, error);
-      }
+    // ponytail: parallelize with concurrency cap to avoid overwhelming DB
+    const CONCURRENCY = 10;
+    for (let i = 0; i < orgs.length; i += CONCURRENCY) {
+      const chunk = orgs.slice(i, i + CONCURRENCY);
+      await Promise.allSettled(
+        chunk.map((org) =>
+          this.evaluateSubscription(org.id).catch((error) => {
+            this.logger.error(`Failed to evaluate org ${org.id}`, error);
+          }),
+        ),
+      );
     }
   }
 }

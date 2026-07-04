@@ -278,19 +278,28 @@ export class PurchaseOrdersService {
         observation: string;
       }[] = [];
 
+      // Validate all details before any writes
       for (const item of dto.details) {
         const line = existing.details.find((d) => d.id === item.id);
         if (!line) throw new AppException('PO_007', HttpStatus.BAD_REQUEST);
-
         const newReceived = line.receivedQuantity + item.quantity;
         if (newReceived > (line.quantity ?? 0)) {
           throw new AppException('PO_008', HttpStatus.BAD_REQUEST);
         }
+      }
 
-        await tx.purchaseOrderDet.update({
+      // Batch detail updates in parallel
+      const detailUpdates = dto.details.map((item) => {
+        const line = existing.details.find((d) => d.id === item.id)!;
+        return tx.purchaseOrderDet.update({
           where: { id: item.id },
-          data: { receivedQuantity: newReceived },
+          data: { receivedQuantity: line.receivedQuantity + item.quantity },
         });
+      });
+      await Promise.all(detailUpdates);
+
+      for (const item of dto.details) {
+        const line = existing.details.find((d) => d.id === item.id)!;
 
         let stock = stockByProduct.get(line.idProduct);
 
