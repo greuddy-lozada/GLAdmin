@@ -4,6 +4,7 @@ import {
   SUBSCRIPTION_STATUS,
   GRACE_PERIOD_DAYS,
   SUBSCRIPTION_DURATION_DAYS,
+  DAY_MS,
 } from './constants';
 
 @Injectable()
@@ -57,7 +58,7 @@ export class SubscriptionLifecycleService {
         data: {
           subscriptionStatus: SUBSCRIPTION_STATUS.ACTIVE,
           subscriptionExpiresAt: new Date(
-            Date.now() + SUBSCRIPTION_DURATION_DAYS * 86400000,
+            Date.now() + SUBSCRIPTION_DURATION_DAYS * DAY_MS,
           ),
         },
       });
@@ -77,7 +78,7 @@ export class SubscriptionLifecycleService {
     }
 
     const daysSinceExpiry = Math.floor(
-      (now.getTime() - org.subscriptionExpiresAt.getTime()) / 86400000,
+      (now.getTime() - org.subscriptionExpiresAt.getTime()) / DAY_MS,
     );
 
     if (daysSinceExpiry <= GRACE_PERIOD_DAYS) {

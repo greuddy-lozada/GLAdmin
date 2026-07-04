@@ -7,6 +7,7 @@ import { useAuth } from '@/providers/auth-provider';
 import { useUiStore } from '@/stores/ui-store';
 import { navigationGroups, navigationConfig } from '@/config/navigation.config';
 import { hasMinLevel } from '@/lib/auth/roles';
+import { parsePlanFeatures } from '@/lib/parse-features';
 
 import { useI18n } from '@/i18n';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
@@ -85,9 +86,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   if (!isAuthenticated) return null;
 
   const userRole = user?.role?.slug || 'employee';
-  const userFeatures = currentOrg?.plan?.features
-    ? (() => { try { return JSON.parse(currentOrg.plan.features); } catch { return []; } })()
-    : [];
+  const userFeatures = parsePlanFeatures(currentOrg?.plan?.features);
 
   const visibleGroups = navigationGroups
     .map((group) => ({

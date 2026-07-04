@@ -10,7 +10,11 @@ import {
   CreateSubscriptionPaymentDto,
   ReviewSubscriptionPaymentDto,
 } from './subscription-payment.dto';
-import { SUBSCRIPTION_STATUS, SUBSCRIPTION_DURATION_DAYS } from './constants';
+import {
+  SUBSCRIPTION_STATUS,
+  SUBSCRIPTION_DURATION_DAYS,
+  DAY_MS,
+} from './constants';
 
 @Injectable()
 export class SubscriptionPaymentService {
@@ -136,11 +140,11 @@ export class SubscriptionPaymentService {
         ) {
           newExpiresAt = new Date(
             org.subscriptionExpiresAt.getTime() +
-              SUBSCRIPTION_DURATION_DAYS * 86400000,
+              SUBSCRIPTION_DURATION_DAYS * DAY_MS,
           );
         } else {
           newExpiresAt = new Date(
-            now.getTime() + SUBSCRIPTION_DURATION_DAYS * 86400000,
+            now.getTime() + SUBSCRIPTION_DURATION_DAYS * DAY_MS,
           );
         }
 

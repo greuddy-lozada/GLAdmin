@@ -5,6 +5,7 @@ import { motion } from 'motion/react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useI18n } from '@/i18n';
 
 interface SlideFormProps {
   open: boolean;
@@ -17,6 +18,7 @@ interface SlideFormProps {
 }
 
 export function SlideForm({ open, title, onClose, children, panel, panelWidth = 420, loading }: SlideFormProps) {
+  const { t } = useI18n();
   useEffect(() => {
     document.documentElement.style.setProperty('--panel-offset', open ? `${panelWidth}px` : '0px');
     return () => document.documentElement.style.setProperty('--panel-offset', '0px');
@@ -45,7 +47,7 @@ export function SlideForm({ open, title, onClose, children, panel, panelWidth = 
         <div style={{ width: panelWidth }} className="h-full bg-card text-foreground shadow-xl">
           <div className="flex items-center justify-between px-6 py-5 border-b border-border">
             <h2 className="text-lg font-semibold">{title}</h2>
-            <Button variant="ghost" size="icon" onClick={onClose} aria-label="Cerrar">
+            <Button variant="ghost" size="icon" onClick={onClose} aria-label={t('common.close')}>
               <X className="h-4 w-4" />
             </Button>
           </div>

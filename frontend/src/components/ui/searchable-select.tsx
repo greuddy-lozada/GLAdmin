@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback, type KeyboardEvent } from 'react';
 import { ChevronDown, X, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n';
 
 interface SearchableSelectProps<T> {
   value: number | undefined;
@@ -36,6 +37,7 @@ export function SearchableSelect<T>({
   const rootRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const { t } = useI18n();
 
   useEffect(() => {
     if (!value) {
@@ -165,17 +167,17 @@ export function SearchableSelect<T>({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Buscar..."
+              placeholder={t('common.searchPlaceholder')}
               className="h-9 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             />
           </div>
           <div className="max-h-[240px] overflow-y-auto p-1">
             {loading && (
-              <div className="px-2 py-4 text-center text-sm text-muted-foreground">Buscando...</div>
+              <div className="px-2 py-4 text-center text-sm text-muted-foreground">{t('common.searching')}</div>
             )}
             {!loading && !search.trim() && (
               <div className="px-2 py-4 text-center text-sm text-muted-foreground">
-                Escribe para buscar
+                {t('common.typeToSearch')}
               </div>
             )}
             {!loading && search.trim() && results.length === 0 && (

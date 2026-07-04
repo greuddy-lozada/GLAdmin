@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useI18n } from '@/i18n';
+import { parsePlanFeatures } from '@/lib/parse-features';
 import { useBilling } from '../hooks/use-billing';
 import { BillingPagoMovil } from './billing-pago-movil';
 import { BillingCash } from './billing-cash';
@@ -52,15 +53,6 @@ export default function BillingPage() {
   const handleCash = (plan: Plan) => {
     setSelectedPlan(plan);
     setCashOpen(true);
-  };
-
-  const parseFeatures = (features: string): string[] => {
-    try {
-      const parsed = JSON.parse(features);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return features ? features.split(',').map((f) => f.trim()).filter(Boolean) : [];
-    }
   };
 
   if (loading) {
@@ -130,9 +122,9 @@ export default function BillingPage() {
               .filter((p) => p.isActive)
               .map((plan) => {
                 const isCurrent = currentPlanName === plan.name;
-                const features = parseFeatures(plan.features)
-                  .filter((f) => !BASE_FEATURES.has(f) && FEATURE_TO_KEY[f])
-                  .map((f) => t(FEATURE_TO_KEY[f]));
+    const features = parsePlanFeatures(plan.features)
+                    .filter((f) => !BASE_FEATURES.has(f) && FEATURE_TO_KEY[f])
+                    .map((f) => t(FEATURE_TO_KEY[f]));
                 const price = plan.amount / 100;
 
                 return (

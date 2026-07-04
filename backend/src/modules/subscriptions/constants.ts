@@ -6,3 +6,4 @@ export const SUBSCRIPTION_STATUS = {
 
 export const GRACE_PERIOD_DAYS = 7;
 export const SUBSCRIPTION_DURATION_DAYS = 30;
+export const DAY_MS = 86_400_000;
