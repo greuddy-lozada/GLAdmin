@@ -10,12 +10,6 @@ export interface Plan {
   isActive: boolean;
 }
 
-export interface OrganizationPlan {
-  id: number;
-  name: string;
-  label?: string;
-}
-
 export interface CreateCheckoutSessionResponse {
   url: string;
   sessionId: string;

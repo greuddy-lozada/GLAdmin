@@ -15,7 +15,3 @@ export type FeatureFlag =
   | 'multiple_orgs'
   | 'white_label'
   | 'priority_support';
-
-export function hasFeature(features: string[], feature: FeatureFlag): boolean {
-  return features.includes(feature);
-}

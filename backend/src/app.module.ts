@@ -12,7 +12,6 @@ import { TenantMiddleware } from './modules/tenant/tenant.middleware';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { AuthGuard } from './common/guards/auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
-import { FeatureGuard } from './common/guards/feature.guard';
 import { PlanLevelGuard } from './common/guards/plan-level.guard';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
@@ -111,10 +110,6 @@ if (!jwtSecret) {
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: FeatureGuard,
     },
     {
       provide: APP_GUARD,

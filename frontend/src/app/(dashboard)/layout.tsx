@@ -7,7 +7,7 @@ import { useAuth } from '@/providers/auth-provider';
 import { useUiStore } from '@/stores/ui-store';
 import { navigationGroups, navigationConfig } from '@/config/navigation.config';
 import { hasMinLevel } from '@/lib/auth/roles';
-import { hasFeature } from '@/lib/feature-flags';
+
 import { useI18n } from '@/i18n';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { UserNav } from '@/components/ui/user-nav';
@@ -97,7 +97,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         : group.items.filter(
             (item) =>
               hasMinLevel(userRole, item.minLevel) &&
-              (!item.requiredFeature || hasFeature(userFeatures, item.requiredFeature)),
+              (!item.requiredFeature || userFeatures.includes(item.requiredFeature)),
           ),
     }))
     .filter((group) => group.items.length > 0);
