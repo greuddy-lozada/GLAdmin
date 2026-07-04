@@ -661,6 +661,7 @@ model Stock {
   @@index([organizationId])
   @@index([organizationId, available])
   @@index([idProduct])
+  @@index([idProduct, organizationId])
   @@index([idSupplier])
   @@index([idBatch])
   @@index([idPurchaseOrder])
@@ -727,6 +728,7 @@ model PurchaseOrder {
 
   @@map("purchase_orders")
   @@index([organizationId])
+  @@index([organizationId, date])
   @@index([idSupplier])
   @@index([exchangeRateId])
   @@index([exchangeRateDayId])
@@ -868,6 +870,8 @@ model Sale {
 
   @@map("sales")
   @@index([organizationId])
+  @@index([organizationId, createdAt])
+  @@index([organizationId, date])
   @@index([idCustomer])
   @@index([exchangeRateId])
   @@index([officialExchangeRateId])
@@ -1015,6 +1019,7 @@ model SyncConflict {
 
   @@map("sync_conflicts")
   @@index([organizationId])
+  @@index([organizationId, status])
   @@index([resolvedBy])
 }
 

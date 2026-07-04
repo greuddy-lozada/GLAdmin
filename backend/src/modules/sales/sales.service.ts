@@ -88,12 +88,16 @@ export class SalesService {
         const current = byProduct.get(item.productId) || 0;
         byProduct.set(item.productId, current + item.quantity);
       }
+      const stockUpdates: Promise<unknown>[] = [];
       for (const [productId, totalQty] of byProduct) {
-        await tx.stock.updateMany({
-          where: { idProduct: productId, organizationId: orgId },
-          data: { existence: { decrement: totalQty } },
-        });
+        stockUpdates.push(
+          tx.stock.updateMany({
+            where: { idProduct: productId, organizationId: orgId },
+            data: { existence: { decrement: totalQty } },
+          }),
+        );
       }
+      await Promise.all(stockUpdates);
       await Promise.all(
         Array.from(byProduct.keys()).map((productId) =>
           this.recalcTotalExistence(productId, tx),
@@ -199,12 +203,16 @@ export class SalesService {
         const current = byProduct.get(item.idProduct) || 0;
         byProduct.set(item.idProduct, current + (item.quantity || 0));
       }
+      const stockUpdates: Promise<unknown>[] = [];
       for (const [productId, totalQty] of byProduct) {
-        await tx.stock.updateMany({
-          where: { idProduct: productId, organizationId: orgId },
-          data: { existence: { increment: totalQty } },
-        });
+        stockUpdates.push(
+          tx.stock.updateMany({
+            where: { idProduct: productId, organizationId: orgId },
+            data: { existence: { increment: totalQty } },
+          }),
+        );
       }
+      await Promise.all(stockUpdates);
       await Promise.all(
         Array.from(byProduct.keys()).map((productId) =>
           this.recalcTotalExistence(productId, tx),
