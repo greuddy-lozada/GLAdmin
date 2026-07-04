@@ -46,7 +46,6 @@ export default function CustomersPage() {
   const [deleteTarget, setDeleteTarget] = useState<Customer | null>(null);
 
   const columns: Column<Customer>[] = [
-    { field: 'id', headerName: t('customers.field.id') },
     { field: 'idCardNumber', headerName: t('customers.field.idCardNumber') },
     { field: 'firstName', headerName: t('customers.field.firstName') },
     { field: 'lastName', headerName: t('customers.field.lastName') },

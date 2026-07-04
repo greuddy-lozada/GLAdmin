@@ -68,8 +68,6 @@ export default function ProductsPage() {
   const displayPvpVes = computePvpVes(displayPvpUsd, bcvRate);
 
   const columns: Column<Product>[] = [
-    { field: 'id', headerName: t('products.field.id') },
-    { field: 'code', headerName: t('products.field.code') },
     { field: 'name', headerName: t('products.field.name') },
     {
       field: 'dollarPrice',

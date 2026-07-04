@@ -44,7 +44,6 @@ export default function SuppliersPage() {
   const [deleteTarget, setDeleteTarget] = useState<Supplier | null>(null);
 
   const columns: Column<Supplier>[] = [
-    { field: 'id', headerName: t('suppliers.field.id') },
     { field: 'companyName', headerName: t('suppliers.field.companyName') },
     { field: 'businessName', headerName: t('suppliers.field.businessName'), render: (row) => row.businessName ?? '—' },
     { field: 'phoneNumber', headerName: t('suppliers.field.phoneNumber') },

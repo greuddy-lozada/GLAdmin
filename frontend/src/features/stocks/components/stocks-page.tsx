@@ -38,7 +38,6 @@ export default function StocksPage() {
   const [deleteTarget, setDeleteTarget] = useState<Stock | null>(null);
 
   const columns: Column<Stock>[] = [
-    { field: 'id', headerName: t('stocks.field.id') },
     {
       field: 'idProduct',
       headerName: t('stocks.field.product'),

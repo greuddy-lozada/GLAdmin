@@ -10,7 +10,6 @@ export default function RolesPage() {
   const { t } = useI18n();
 
   const columns: Column<Role>[] = [
-    { field: 'id', headerName: t('roles.field.id') },
     { field: 'name', headerName: t('roles.field.name') },
     { field: 'slug', headerName: t('roles.field.slug') },
     { field: 'description', headerName: t('roles.field.description') },

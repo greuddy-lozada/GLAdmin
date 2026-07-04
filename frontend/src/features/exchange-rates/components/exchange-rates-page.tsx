@@ -41,7 +41,6 @@ export default function ExchangeRatesPage() {
   }, []);
 
   const columns: Column<ExchangeRateDay>[] = [
-    { field: 'id', headerName: t('exchangeRates.field.id') },
     {
       field: 'date',
       headerName: t('exchangeRates.field.date'),

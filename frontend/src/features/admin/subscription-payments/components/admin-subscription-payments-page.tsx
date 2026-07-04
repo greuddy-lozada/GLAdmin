@@ -47,7 +47,6 @@ export default function AdminSubscriptionPaymentsPage() {
   });
 
   const columns: Column<SubscriptionPayment>[] = [
-    { field: 'id', headerName: 'ID' },
     {
       field: 'organizationId',
       headerName: t('subscription.admin.field.organization'),

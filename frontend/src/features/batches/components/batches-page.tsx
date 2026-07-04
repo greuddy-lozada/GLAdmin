@@ -34,7 +34,6 @@ export default function BatchesPage() {
   const [deleteTarget, setDeleteTarget] = useState<Batch | null>(null);
 
   const columns: Column<Batch>[] = [
-    { field: 'id', headerName: t('batches.field.id') },
     { field: 'code', headerName: t('batches.field.code') },
     { field: 'description', headerName: t('batches.field.description') },
   ];

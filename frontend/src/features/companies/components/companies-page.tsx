@@ -42,8 +42,6 @@ export default function CompaniesPage() {
   const [deleteTarget, setDeleteTarget] = useState<Company | null>(null);
 
   const columns: Column<Company>[] = [
-    { field: 'id', headerName: t('companies.field.id') },
-    { field: 'taxId', headerName: t('companies.field.taxId') },
     { field: 'name', headerName: t('companies.field.name') },
     { field: 'phoneNumber', headerName: t('companies.field.phoneNumber') },
     { field: 'email', headerName: t('companies.field.email') },

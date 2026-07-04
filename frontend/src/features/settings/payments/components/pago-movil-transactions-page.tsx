@@ -55,7 +55,6 @@ export default function PagoMovilTransactionsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const columns: Column<PagoMovilTransaction>[] = [
-    { field: 'id', headerName: t('common.field.id') },
     { field: 'amountVes', headerName: t('pagoMovil.transactions.field.amountVes') },
     { field: 'amountUsd', headerName: t('pagoMovil.transactions.field.amountUsd') },
     {

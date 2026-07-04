@@ -49,7 +49,6 @@ export default function UsersPage() {
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
 
   const columns: Column<User>[] = [
-    { field: 'id', headerName: t('users.field.id') },
     { field: 'firstName', headerName: t('users.field.firstName') },
     { field: 'lastName', headerName: t('users.field.lastName') },
     { field: 'userName', headerName: t('users.field.userName') },

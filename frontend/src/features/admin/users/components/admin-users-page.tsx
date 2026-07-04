@@ -38,7 +38,6 @@ export default function AdminUsersPage() {
   }, []);
 
   const columns: Column<AdminUser>[] = [
-    { field: 'id', headerName: t('admin.users.field.id') },
     { field: 'name', render: (row) => `${row.firstName} ${row.lastName}`.trim(), headerName: t('admin.users.field.name') },
     { field: 'email', headerName: t('admin.users.field.email') },
     { field: 'role', render: (row) => row.role?.slug ?? '—', headerName: t('admin.users.field.role') },

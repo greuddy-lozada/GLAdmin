@@ -47,7 +47,6 @@ export default function AdminOrgsPage() {
     text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim();
 
   const columns: Column<AdminOrg>[] = [
-    { field: 'id', headerName: t('admin.organizations.field.id') },
     { field: 'name', headerName: t('admin.organizations.field.name') },
     { field: 'slug', headerName: t('admin.organizations.field.slug') },
     { field: 'plan', render: (row) => row.plan?.name ?? '—', headerName: t('admin.organizations.field.plan') },

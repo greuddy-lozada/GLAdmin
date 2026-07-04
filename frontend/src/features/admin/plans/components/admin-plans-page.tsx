@@ -43,7 +43,6 @@ export default function AdminPlansPage() {
   const [error, setError] = useState('');
 
   const columns: Column<AdminPlan>[] = [
-    { field: 'id', headerName: t('admin.plans.field.id') },
     { field: 'name', headerName: t('admin.plans.field.name') },
     { field: 'label', headerName: t('admin.plans.field.label') },
     { field: 'amount', headerName: t('admin.plans.field.amount') },

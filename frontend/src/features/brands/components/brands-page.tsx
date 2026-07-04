@@ -32,7 +32,6 @@ export default function BrandsPage() {
   const [deleteTarget, setDeleteTarget] = useState<Brand | null>(null);
 
   const columns: Column<Brand>[] = [
-    { field: 'id', headerName: t('brands.field.id') },
     { field: 'name', headerName: t('brands.field.name') },
     { field: 'description', headerName: t('brands.field.description') },
   ];

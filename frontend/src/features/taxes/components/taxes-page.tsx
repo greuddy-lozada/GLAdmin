@@ -32,7 +32,6 @@ export default function TaxesPage() {
   const [deleteTarget, setDeleteTarget] = useState<Tax | null>(null);
 
   const columns: Column<Tax>[] = [
-    { field: 'id', headerName: t('taxes.field.id') },
     { field: 'name', headerName: t('taxes.field.name') },
     {
       field: 'percentage',

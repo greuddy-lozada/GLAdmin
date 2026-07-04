@@ -41,7 +41,6 @@ export default function CategoriesPage() {
   const [allCategories, setAllCategories] = useState<{ id: number; name: string }[]>([]);
 
   const columns: Column<Category>[] = [
-    { field: 'id', headerName: t('categories.field.id') },
     { field: 'name', headerName: t('categories.field.name') },
     { field: 'description', headerName: t('categories.field.description') },
     {
