@@ -1,72 +1,35 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useOptimisticCrud } from '@/hooks/use-optimistic-crud';
 import { Supplier, CreateSupplierRequest, UpdateSupplierRequest } from '../models/supplier.model';
 import { supplierService } from '../services/supplier.service';
 
+function buildOptimistic(data: CreateSupplierRequest, tempId: number): Supplier {
+  return {
+    id: tempId,
+    companyName: data.companyName,
+    businessName: data.businessName ?? null,
+    fiscalAddress: data.fiscalAddress ?? null,
+    taxId: data.taxId ?? null,
+    taxWithholdingAgent: data.taxWithholdingAgent ?? false,
+    firstName: data.firstName ?? null,
+    lastName: data.lastName ?? null,
+    address: data.address ?? null,
+    phoneNumber: data.phoneNumber ?? null,
+    email: data.email ?? null,
+    available: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+}
+
 export function useSuppliers() {
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadSuppliers = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await supplierService.getAll();
-      setSuppliers(data);
-    } catch {
-      setError('Error al cargar proveedores');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadSuppliers();
-  }, [loadSuppliers]);
-
-  const createSupplier = useCallback(async (data: CreateSupplierRequest) => {
-    setLoading(true);
-    try {
-      await supplierService.create(data);
-      await loadSuppliers();
-      return true;
-    } catch {
-      setError('Error al crear proveedor');
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, [loadSuppliers]);
-
-  const updateSupplier = useCallback(async (id: number, data: UpdateSupplierRequest) => {
-    setLoading(true);
-    try {
-      await supplierService.update(id, data);
-      await loadSuppliers();
-      return true;
-    } catch {
-      setError('Error al actualizar proveedor');
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, [loadSuppliers]);
-
-  const deleteSupplier = useCallback(async (id: number) => {
-    setLoading(true);
-    try {
-      await supplierService.delete(id);
-      await loadSuppliers();
-      return true;
-    } catch {
-      setError('Error al eliminar proveedor');
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, [loadSuppliers]);
-
-  return { suppliers, loading, error, loadSuppliers, createSupplier, updateSupplier, deleteSupplier };
+  return useOptimisticCrud<Supplier, CreateSupplierRequest, UpdateSupplierRequest>({
+    queryKey: ['suppliers'],
+    queryFn: () => supplierService.getAll(),
+    createFn: (data) => supplierService.create(data),
+    updateFn: (id, data) => supplierService.update(id, data),
+    deleteFn: (id) => supplierService.delete(id),
+    buildOptimistic,
+  });
 }

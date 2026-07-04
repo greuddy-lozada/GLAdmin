@@ -19,7 +19,6 @@ import { SlideForm } from '@/components/ui/slide-form';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useProducts } from '@/features/products/hooks/use-products';
 import { Product, CreateProductRequest, UpdateProductRequest } from '@/features/products/models/product.model';
-import { productService } from '@/features/products/services/product.service';
 import { useI18n } from '@/i18n';
 import { RoleGuard } from '@/components/ui/role-guard';
 import { useAuth } from '@/providers/auth-provider';
@@ -37,7 +36,7 @@ function computePvpVes(pvpUsd: number, bcvRate: number): number {
 }
 
 export default function ProductsPage() {
-  const { products, loading, loadProducts } = useProducts();
+  const { items: productsData, isLoading: loading, create, update, remove } = useProducts();
   const { t, tp } = useI18n();
   const { user } = useAuth();
   const role = user?.role?.slug ?? 'employee';
@@ -59,7 +58,6 @@ export default function ProductsPage() {
   const [brands, setBrands] = useState<{ id: number; name: string }[]>([]);
   const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
   const [bcvRate, setBcvRate] = useState(0);
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [newBrandName, setNewBrandName] = useState('');
@@ -195,57 +193,52 @@ export default function ProductsPage() {
     setPvpOverride(!pvpOverride);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     setError('');
-    setSubmitting(true);
-    try {
-      const payload = {
-        ...formData,
-        dollarPrice: displayPvpUsd,
-        price: displayPvpVes,
-      };
-      if (selectedProduct) {
-        const data: UpdateProductRequest = {
-          code: payload.code,
-          name: payload.name,
-          price: payload.price,
-          dollarPrice: payload.dollarPrice,
-          baseCost: payload.baseCost,
-          margin: payload.margin,
-          idTax: payload.idTax,
-          observation: payload.observation,
-          image: payload.image,
-          available: payload.available,
-        };
-        await productService.update(selectedProduct.id, data);
-        sileo.success({ description: t('products.updated') });
-      } else {
-        await productService.create(payload);
-        sileo.success({ description: t('products.created') });
-      }
-      await loadProducts();
-      setFormOpen(false);
-    } catch {
-      setError(t('products.error.save'));
-    } finally {
-      setSubmitting(false);
+    setFormOpen(false);
+    const isEdit = !!selectedProduct;
+    if (isEdit) {
+      update.mutate(
+        {
+          id: selectedProduct!.id,
+          data: {
+            code: formData.code,
+            name: formData.name,
+            price: displayPvpVes,
+            dollarPrice: displayPvpUsd,
+            baseCost: formData.baseCost,
+            margin: formData.margin,
+            idTax: formData.idTax,
+            observation: formData.observation,
+            image: formData.image,
+            available: formData.available,
+          } as UpdateProductRequest,
+        },
+        {
+          onSuccess: () => sileo.success({ description: t('products.updated') }),
+          onError: () => { setError(t('products.error.save')); setFormOpen(true); },
+        },
+      );
+    } else {
+      create.mutate(
+        { ...formData, dollarPrice: displayPvpUsd, price: displayPvpVes } as CreateProductRequest,
+        {
+          onSuccess: () => sileo.success({ description: t('products.created') }),
+          onError: () => { setError(t('products.error.save')); setFormOpen(true); },
+        },
+      );
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!deleteTarget) return;
-    setSubmitting(true);
-    try {
-      await productService.delete(deleteTarget.id);
-      sileo.success({ description: t('products.deleted') });
-      await loadProducts();
-      setDeleteOpen(false);
-      setDeleteTarget(null);
-    } catch {
-      setError(t('products.error.delete'));
-    } finally {
-      setSubmitting(false);
-    }
+    const targetId = deleteTarget.id;
+    setDeleteOpen(false);
+    setDeleteTarget(null);
+    remove.mutate(targetId, {
+      onSuccess: () => sileo.success({ description: t('products.deleted') }),
+      onError: () => { setError(t('products.error.delete')); setDeleteOpen(true); },
+    });
   };
 
   return (
@@ -324,10 +317,9 @@ export default function ProductsPage() {
                   onChange={(e) => setNewBrandName(e.target.value)}
                   placeholder={t('products.brandPlaceholder')}
                   autoFocus />
-                <Button size="sm" disabled={!newBrandName.trim() || submitting}
+                <Button size="sm" disabled={!newBrandName.trim() || create.isPending || update.isPending}
                   onClick={async () => {
                     if (!newBrandName.trim()) return;
-                    setSubmitting(true);
                     try {
                       const created = await apiClient.post('/brands', { name: newBrandName.trim() });
                       const brand = created.data.data;
@@ -337,8 +329,6 @@ export default function ProductsPage() {
                       setShowNewBrandInput(false);
                     } catch {
                       setError(t('products.error.save'));
-                    } finally {
-                      setSubmitting(false);
                     }
                   }}>
                   {t('common.save')}
@@ -394,8 +384,8 @@ export default function ProductsPage() {
               <Label>{t('products.field.available')}</Label>
             </div>
           )}
-          <Button onClick={handleSave} disabled={submitting} className="w-full">
-            {submitting ? t('common.saving') : t('common.save')}
+          <Button onClick={handleSave} disabled={create.isPending || update.isPending} className="w-full">
+            {create.isPending || update.isPending ? t('common.saving') : t('common.save')}
           </Button>
         </div>
       }
@@ -414,7 +404,7 @@ export default function ProductsPage() {
 
       <DataTable
         columns={columns}
-        rows={products}
+        rows={productsData}
         loading={loading}
         onEdit={canEdit ? openEdit : undefined}
         onDelete={canDelete ? (product) => {
@@ -431,7 +421,7 @@ export default function ProductsPage() {
         confirmLabel={t('common.delete')}
         onConfirm={handleDelete}
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
-        loading={submitting}
+        loading={remove.isPending}
       />
       </div>
     </SlideForm>

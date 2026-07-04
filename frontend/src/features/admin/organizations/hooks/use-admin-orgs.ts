@@ -1,30 +1,27 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
-import { AdminOrg } from '../models/admin-org.model';
+import { useOptimisticCrud } from '@/hooks/use-optimistic-crud';
+import { AdminOrg, CreateAdminOrgRequest, UpdateAdminOrgRequest } from '../models/admin-org.model';
 import { adminOrgsService } from '../services/admin-orgs.service';
 
+function buildOptimistic(data: CreateAdminOrgRequest, tempId: number): AdminOrg {
+  return {
+    id: tempId,
+    name: data.name,
+    slug: data.slug ?? '',
+    isActive: data.isActive ?? true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+}
+
 export function useAdminOrgs() {
-  const [orgs, setOrgs] = useState<AdminOrg[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadOrgs = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await adminOrgsService.getAll();
-      setOrgs(data);
-    } catch {
-      setError('Error al cargar organizaciones');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadOrgs();
-  }, [loadOrgs]);
-
-  return { orgs, loading, error, loadOrgs };
+  return useOptimisticCrud<AdminOrg, CreateAdminOrgRequest, UpdateAdminOrgRequest>({
+    queryKey: ['adminOrgs'],
+    queryFn: () => adminOrgsService.getAll(),
+    createFn: (data) => adminOrgsService.create(data),
+    updateFn: (id, data) => adminOrgsService.update(id, data),
+    deleteFn: (id) => adminOrgsService.delete(id),
+    buildOptimistic,
+  });
 }

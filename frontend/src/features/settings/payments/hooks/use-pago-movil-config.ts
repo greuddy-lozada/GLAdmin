@@ -1,72 +1,38 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
-import { PagoMovilConfig, CreatePagoMovilConfigRequest, UpdatePagoMovilConfigRequest } from '../models/pago-movil-config.model';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { CreatePagoMovilConfigRequest, UpdatePagoMovilConfigRequest } from '../models/pago-movil-config.model';
 import { pagoMovilConfigService } from '../services/pago-movil-config.service';
 
 export function usePagoMovilConfig() {
-  const [config, setConfig] = useState<PagoMovilConfig | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const loadConfig = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await pagoMovilConfigService.get();
-      setConfig(data);
-    } catch {
-      setError('Error al cargar configuración');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const { data: config = null, isLoading: loading, error } = useQuery({
+    queryKey: ['pagoMovilConfig'],
+    queryFn: () => pagoMovilConfigService.get(),
+  });
 
-  useEffect(() => {
-    loadConfig();
-  }, [loadConfig]);
+  const createMutation = useMutation({
+    mutationFn: (data: CreatePagoMovilConfigRequest) => pagoMovilConfigService.create(data),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['pagoMovilConfig'] }),
+  });
 
-  const createConfig = useCallback(async (data: CreatePagoMovilConfigRequest) => {
-    setLoading(true);
-    try {
-      const result = await pagoMovilConfigService.create(data);
-      setConfig(result);
-      return true;
-    } catch {
-      setError('Error al guardar configuración');
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const updateMutation = useMutation({
+    mutationFn: (data: UpdatePagoMovilConfigRequest) => pagoMovilConfigService.update(data),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['pagoMovilConfig'] }),
+  });
 
-  const updateConfig = useCallback(async (data: UpdatePagoMovilConfigRequest) => {
-    setLoading(true);
-    try {
-      const result = await pagoMovilConfigService.update(data);
-      setConfig(result);
-      return true;
-    } catch {
-      setError('Error al actualizar configuración');
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const deactivateMutation = useMutation({
+    mutationFn: () => pagoMovilConfigService.deactivate(),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['pagoMovilConfig'] }),
+  });
 
-  const deactivateConfig = useCallback(async () => {
-    setLoading(true);
-    try {
-      await pagoMovilConfigService.deactivate();
-      setConfig(null);
-      return true;
-    } catch {
-      setError('Error al desactivar configuración');
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  return { config, loading, error, loadConfig, createConfig, updateConfig, deactivateConfig };
+  return {
+    config,
+    loading,
+    error: error ? 'Error al cargar configuración' : null,
+    create: { mutate: createMutation.mutate, isPending: createMutation.isPending },
+    update: { mutate: updateMutation.mutate, isPending: updateMutation.isPending },
+    deactivate: { mutate: deactivateMutation.mutate, isPending: deactivateMutation.isPending },
+  };
 }

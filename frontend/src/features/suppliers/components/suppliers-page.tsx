@@ -11,8 +11,7 @@ import { DataTable, Column } from '@/components/ui/data-table';
 import { SlideForm } from '@/components/ui/slide-form';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useSuppliers } from '@/features/suppliers/hooks/use-suppliers';
-import { Supplier, CreateSupplierRequest, UpdateSupplierRequest } from '@/features/suppliers/models/supplier.model';
-import { supplierService } from '@/features/suppliers/services/supplier.service';
+import { Supplier, CreateSupplierRequest } from '@/features/suppliers/models/supplier.model';
 import { useI18n } from '@/i18n';
 import { sileo } from 'sileo';
 import { RoleGuard } from '@/components/ui/role-guard';
@@ -20,7 +19,7 @@ import { useAuth } from '@/providers/auth-provider';
 import { hasMinLevel } from '@/lib/auth/roles';
 
 export default function SuppliersPage() {
-  const { suppliers, loading, loadSuppliers } = useSuppliers();
+  const { items: suppliersData, isLoading: loading, create, update, remove } = useSuppliers();
   const { t, tp } = useI18n();
   const { user } = useAuth();
   const role = user?.role?.slug ?? 'employee';
@@ -41,7 +40,6 @@ export default function SuppliersPage() {
     phoneNumber: '',
     email: '',
   });
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<Supplier | null>(null);
 
@@ -84,58 +82,58 @@ export default function SuppliersPage() {
     setFormOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     setError('');
-    setSubmitting(true);
-    try {
-      if (selectedSupplier) {
-        const data: UpdateSupplierRequest = {
-          companyName: formData.companyName,
-          businessName: formData.businessName || undefined,
-          fiscalAddress: formData.fiscalAddress || undefined,
-          taxId: formData.taxId || undefined,
-          taxWithholdingAgent: formData.taxWithholdingAgent,
-          firstName: formData.firstName || undefined,
-          lastName: formData.lastName || undefined,
-          address: formData.address || undefined,
-          phoneNumber: formData.phoneNumber || undefined,
-          email: formData.email || undefined,
-          available: formData.available,
-        };
-        await supplierService.update(selectedSupplier.id, data);
-        sileo.success({ description: t('suppliers.updated') });
-      } else {
-        await supplierService.create({
+    setFormOpen(false);
+    const isEdit = !!selectedSupplier;
+    if (isEdit) {
+      update.mutate(
+        {
+          id: selectedSupplier!.id,
+          data: {
+            companyName: formData.companyName,
+            businessName: formData.businessName || undefined,
+            fiscalAddress: formData.fiscalAddress || undefined,
+            taxId: formData.taxId || undefined,
+            taxWithholdingAgent: formData.taxWithholdingAgent,
+            firstName: formData.firstName || undefined,
+            lastName: formData.lastName || undefined,
+            address: formData.address || undefined,
+            phoneNumber: formData.phoneNumber || undefined,
+            email: formData.email || undefined,
+            available: formData.available,
+          },
+        },
+        {
+          onSuccess: () => sileo.success({ description: t('suppliers.updated') }),
+          onError: () => { setError(t('suppliers.error.save')); setFormOpen(true); },
+        },
+      );
+    } else {
+      create.mutate(
+        {
           ...formData,
           businessName: formData.businessName || undefined,
           fiscalAddress: formData.fiscalAddress || undefined,
           taxId: formData.taxId || undefined,
-        });
-        sileo.success({ description: t('suppliers.created') });
-      }
-      await loadSuppliers();
-      setFormOpen(false);
-    } catch {
-      setError(t('suppliers.error.save'));
-    } finally {
-      setSubmitting(false);
+        },
+        {
+          onSuccess: () => sileo.success({ description: t('suppliers.created') }),
+          onError: () => { setError(t('suppliers.error.save')); setFormOpen(true); },
+        },
+      );
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!deleteTarget) return;
-    setSubmitting(true);
-    try {
-      await supplierService.delete(deleteTarget.id);
-      sileo.success({ description: t('suppliers.deleted') });
-      await loadSuppliers();
-      setDeleteOpen(false);
-      setDeleteTarget(null);
-    } catch {
-      setError(t('suppliers.error.delete'));
-    } finally {
-      setSubmitting(false);
-    }
+    const targetId = deleteTarget.id;
+    setDeleteOpen(false);
+    setDeleteTarget(null);
+    remove.mutate(targetId, {
+      onSuccess: () => sileo.success({ description: t('suppliers.deleted') }),
+      onError: () => { setError(t('suppliers.error.delete')); setDeleteOpen(true); },
+    });
   };
 
   return (
@@ -191,8 +189,8 @@ export default function SuppliersPage() {
               <Label>{t('suppliers.field.available')}</Label>
             </div>
           )}
-          <Button onClick={handleSave} disabled={submitting} className="w-full">
-            {submitting ? t('common.saving') : t('common.save')}
+          <Button onClick={handleSave} disabled={create.isPending || update.isPending} className="w-full">
+            {create.isPending || update.isPending ? t('common.saving') : t('common.save')}
           </Button>
         </div>
       }
@@ -210,7 +208,7 @@ export default function SuppliersPage() {
 
       <DataTable
         columns={columns}
-        rows={suppliers}
+        rows={suppliersData}
         loading={loading}
         onEdit={canEdit ? openEdit : undefined}
         onDelete={canDelete ? (supplier) => {
@@ -227,7 +225,7 @@ export default function SuppliersPage() {
         confirmLabel={t('common.delete')}
         onConfirm={handleDelete}
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
-        loading={submitting}
+        loading={remove.isPending}
       />
     </SlideForm>
   );

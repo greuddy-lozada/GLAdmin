@@ -18,8 +18,7 @@ import { DataTable, Column } from '@/components/ui/data-table';
 import { SlideForm } from '@/components/ui/slide-form';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useUsers } from '@/features/users/hooks/use-users';
-import { User, CreateUserRequest, UpdateUserRequest } from '@/features/users/models/user.model';
-import { userService } from '@/features/users/services/user.service';
+import { User, CreateUserRequest } from '@/features/users/models/user.model';
 import { useI18n } from '@/i18n';
 import { RoleGuard } from '@/components/ui/role-guard';
 import { useAuth } from '@/providers/auth-provider';
@@ -28,7 +27,7 @@ import { sileo } from 'sileo';
 import apiClient from '@/lib/api/api-client';
 
 export default function UsersPage() {
-  const { users, loading, loadUsers } = useUsers();
+  const { items: usersData, isLoading: loading, create, update, remove } = useUsers();
   const { t, tp } = useI18n();
   const { user: currentUser } = useAuth();
   const role = currentUser?.role?.slug ?? 'employee';
@@ -46,7 +45,6 @@ export default function UsersPage() {
     idRole: 4,
   });
   const [roles, setRoles] = useState<{ id: number; name: string }[]>([]);
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
 
@@ -94,48 +92,45 @@ export default function UsersPage() {
     setFormOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     setError('');
-    setSubmitting(true);
-    try {
-      if (selectedUser) {
-        const data: UpdateUserRequest = {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email || undefined,
-          idRole: formData.idRole,
-          isActive: formData.isActive,
-        };
-        if (formData.password) data.password = formData.password;
-        await userService.update(selectedUser.id, data);
-        sileo.success({ description: t('users.updated') });
-      } else {
-        await userService.create(formData);
-        sileo.success({ description: t('users.created') });
-      }
-      await loadUsers();
-      setFormOpen(false);
-    } catch {
-      setError(t('users.error.save'));
-    } finally {
-      setSubmitting(false);
+    setFormOpen(false);
+    const isEdit = !!selectedUser;
+    if (isEdit) {
+      update.mutate(
+        {
+          id: selectedUser!.id,
+          data: {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email || undefined,
+            idRole: formData.idRole,
+            isActive: formData.isActive,
+            ...(formData.password ? { password: formData.password } : {}),
+          },
+        },
+        {
+          onSuccess: () => sileo.success({ description: t('users.updated') }),
+          onError: () => { setError(t('users.error.save')); setFormOpen(true); },
+        },
+      );
+    } else {
+      create.mutate(formData, {
+        onSuccess: () => sileo.success({ description: t('users.created') }),
+        onError: () => { setError(t('users.error.save')); setFormOpen(true); },
+      });
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!deleteTarget) return;
-    setSubmitting(true);
-    try {
-      await userService.delete(deleteTarget.id);
-      await loadUsers();
-      sileo.success({ description: t('users.deleted') });
-      setDeleteOpen(false);
-      setDeleteTarget(null);
-    } catch {
-      setError(t('users.error.delete'));
-    } finally {
-      setSubmitting(false);
-    }
+    const targetId = deleteTarget.id;
+    setDeleteOpen(false);
+    setDeleteTarget(null);
+    remove.mutate(targetId, {
+      onSuccess: () => sileo.success({ description: t('users.deleted') }),
+      onError: () => { setError(t('users.error.delete')); setDeleteOpen(true); },
+    });
   };
 
   return (
@@ -185,8 +180,8 @@ export default function UsersPage() {
               <Label>{t('users.field.isActive')}</Label>
             </div>
           )}
-          <Button onClick={handleSave} disabled={submitting} className="w-full">
-            {submitting ? t('common.saving') : t('common.save')}
+          <Button onClick={handleSave} disabled={create.isPending || update.isPending} className="w-full">
+            {create.isPending || update.isPending ? t('common.saving') : t('common.save')}
           </Button>
         </div>
       }
@@ -204,7 +199,7 @@ export default function UsersPage() {
 
       <DataTable
         columns={columns}
-        rows={users}
+        rows={usersData}
         loading={loading}
         onEdit={canEdit ? openEdit : undefined}
         onDelete={canDelete ? (user) => {
@@ -221,7 +216,7 @@ export default function UsersPage() {
         confirmLabel={t('common.delete')}
         onConfirm={handleDelete}
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
-        loading={submitting}
+        loading={remove.isPending}
       />
     </SlideForm>
   );

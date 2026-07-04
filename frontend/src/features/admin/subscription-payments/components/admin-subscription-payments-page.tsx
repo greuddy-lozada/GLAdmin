@@ -1,13 +1,15 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DataTable, Column } from '@/components/ui/data-table';
 import { useI18n } from '@/i18n';
-import { useAdminSubscriptionPayments } from '@/features/billing/hooks/use-subscription-payment';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { subscriptionPaymentService } from '@/features/billing/services/subscription-payment.service';
 import type { SubscriptionPayment } from '@/features/billing/models/subscription-payment.model';
+import { sileo } from 'sileo';
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString();
@@ -24,11 +26,25 @@ function StatusBadge({ status }: { status: string }) {
 
 export default function AdminSubscriptionPaymentsPage() {
   const { t } = useI18n();
-  const { payments, loading, error, load, review } = useAdminSubscriptionPayments();
+  const queryClient = useQueryClient();
+  const [filter, setFilter] = useState<string | undefined>(undefined);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  const { data: payments = [], isLoading: loading, error } = useQuery({
+    queryKey: ['adminSubscriptionPayments', filter],
+    queryFn: () => subscriptionPaymentService.findAllAdmin(filter),
+  });
+
+  const reviewMutation = useMutation({
+    mutationFn: ({ id, status }: { id: number; status: 'approved' | 'rejected' }) =>
+      subscriptionPaymentService.review(id, { status }),
+    onSuccess: (_data, variables) => {
+      const key = variables.status === 'approved' ? 'subscription.admin.approved' : 'subscription.admin.rejected';
+      sileo.success({ description: t(key) });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminSubscriptionPayments'] });
+    },
+  });
 
   const columns: Column<SubscriptionPayment>[] = [
     { field: 'id', headerName: 'ID' },
@@ -64,10 +80,10 @@ export default function AdminSubscriptionPaymentsPage() {
       render: (row) =>
         row.status === 'pending' ? (
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" className="text-green-600 h-7 text-xs" onClick={() => review(row.id, 'approved')}>
+            <Button size="sm" variant="outline" className="text-green-600 h-7 text-xs" onClick={() => reviewMutation.mutate({ id: row.id, status: 'approved' })}>
               {t('subscription.admin.approve')}
             </Button>
-            <Button size="sm" variant="outline" className="text-red-600 h-7 text-xs" onClick={() => review(row.id, 'rejected')}>
+            <Button size="sm" variant="outline" className="text-red-600 h-7 text-xs" onClick={() => reviewMutation.mutate({ id: row.id, status: 'rejected' })}>
               {t('subscription.admin.reject')}
             </Button>
           </div>
@@ -77,13 +93,13 @@ export default function AdminSubscriptionPaymentsPage() {
 
   return (
     <div className="space-y-4">
-      {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
+      {error && <Alert variant="destructive"><AlertDescription>{String(error)}</AlertDescription></Alert>}
 
       <div className="flex items-center justify-between">
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={() => load()}>{t('common.refresh')}</Button>
-          <Button size="sm" variant="outline" onClick={() => load('pending')}>{t('subscription.admin.filterPending')}</Button>
-          <Button size="sm" variant="outline" onClick={() => load()}>{t('subscription.admin.filterAll')}</Button>
+          <Button size="sm" variant="outline" onClick={() => setFilter(undefined)}>{t('common.refresh')}</Button>
+          <Button size="sm" variant="outline" onClick={() => setFilter('pending')}>{t('subscription.admin.filterPending')}</Button>
+          <Button size="sm" variant="outline" onClick={() => setFilter(undefined)}>{t('subscription.admin.filterAll')}</Button>
         </div>
       </div>
 

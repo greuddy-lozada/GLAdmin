@@ -1,72 +1,36 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useOptimisticCrud } from '@/hooks/use-optimistic-crud';
 import { Product, CreateProductRequest, UpdateProductRequest } from '../models/product.model';
 import { productService } from '../services/product.service';
 
+function buildOptimistic(data: CreateProductRequest, tempId: number): Product {
+  return {
+    id: tempId,
+    code: data.code,
+    name: data.name,
+    price: data.price ?? 0,
+    dollarPrice: data.dollarPrice,
+    baseCost: data.baseCost,
+    margin: data.margin ?? 20,
+    idTax: data.idTax,
+    idBrand: data.idBrand,
+    idCategory: data.idCategory,
+    observation: data.observation,
+    image: data.image,
+    available: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+}
+
 export function useProducts() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadProducts = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await productService.getAll();
-      setProducts(data);
-    } catch {
-      setError('Error al cargar productos');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadProducts();
-  }, [loadProducts]);
-
-  const createProduct = useCallback(async (data: CreateProductRequest) => {
-    setLoading(true);
-    try {
-      await productService.create(data);
-      await loadProducts();
-      return true;
-    } catch {
-      setError('Error al crear producto');
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, [loadProducts]);
-
-  const updateProduct = useCallback(async (id: number, data: UpdateProductRequest) => {
-    setLoading(true);
-    try {
-      await productService.update(id, data);
-      await loadProducts();
-      return true;
-    } catch {
-      setError('Error al actualizar producto');
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, [loadProducts]);
-
-  const deleteProduct = useCallback(async (id: number) => {
-    setLoading(true);
-    try {
-      await productService.delete(id);
-      await loadProducts();
-      return true;
-    } catch {
-      setError('Error al eliminar producto');
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, [loadProducts]);
-
-  return { products, loading, error, loadProducts, createProduct, updateProduct, deleteProduct };
+  return useOptimisticCrud<Product, CreateProductRequest, UpdateProductRequest>({
+    queryKey: ['products'],
+    queryFn: () => productService.getAll(),
+    createFn: (data) => productService.create(data),
+    updateFn: (id, data) => productService.update(id, data),
+    deleteFn: (id) => productService.delete(id),
+    buildOptimistic,
+  });
 }

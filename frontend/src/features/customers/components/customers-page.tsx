@@ -12,8 +12,7 @@ import { DataTable, Column } from '@/components/ui/data-table';
 import { SlideForm } from '@/components/ui/slide-form';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useCustomers } from '@/features/customers/hooks/use-customers';
-import { Customer, CreateCustomerRequest, UpdateCustomerRequest } from '@/features/customers/models/customer.model';
-import { customerService } from '@/features/customers/services/customer.service';
+import { Customer, CreateCustomerRequest } from '@/features/customers/models/customer.model';
 import { useI18n } from '@/i18n';
 import { sileo } from 'sileo';
 import { RoleGuard } from '@/components/ui/role-guard';
@@ -22,7 +21,7 @@ import { hasMinLevel } from '@/lib/auth/roles';
 import apiClient from '@/lib/api/api-client';
 
 export default function CustomersPage() {
-  const { customers, loading, loadCustomers } = useCustomers();
+  const { items: customersData, isLoading: loading, create, update, remove } = useCustomers();
   const { t, tp } = useI18n();
   const { user } = useAuth();
   const role = user?.role?.slug ?? 'employee';
@@ -42,7 +41,6 @@ export default function CustomersPage() {
     withholdingPercentage: 75,
     withholdingProof: '',
   });
-  const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<Customer | null>(null);
@@ -93,55 +91,55 @@ export default function CustomersPage() {
     setFormOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     setError('');
-    setSubmitting(true);
-    try {
-      if (selectedCustomer) {
-        const data: UpdateCustomerRequest = {
-          idCardNumber: formData.idCardNumber,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          address: formData.address || undefined,
-          phoneNumber: formData.phoneNumber || undefined,
-          email: formData.email || undefined,
-          available: formData.available,
-          isWithholdingAgent: formData.isWithholdingAgent,
-          withholdingPercentage: formData.isWithholdingAgent ? formData.withholdingPercentage : undefined,
-          withholdingProof: formData.withholdingProof || undefined,
-        };
-        await customerService.update(selectedCustomer.id, data);
-        sileo.success({ description: t('customers.updated') });
-      } else {
-        await customerService.create({
+    setFormOpen(false);
+    const isEdit = !!selectedCustomer;
+    if (isEdit) {
+      update.mutate(
+        {
+          id: selectedCustomer!.id,
+          data: {
+            idCardNumber: formData.idCardNumber,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            address: formData.address || undefined,
+            phoneNumber: formData.phoneNumber || undefined,
+            email: formData.email || undefined,
+            available: formData.available,
+            isWithholdingAgent: formData.isWithholdingAgent,
+            withholdingPercentage: formData.isWithholdingAgent ? formData.withholdingPercentage : undefined,
+            withholdingProof: formData.withholdingProof || undefined,
+          },
+        },
+        {
+          onSuccess: () => sileo.success({ description: t('customers.updated') }),
+          onError: () => { setError(t('customers.error.save')); setFormOpen(true); },
+        },
+      );
+    } else {
+      create.mutate(
+        {
           ...formData,
           withholdingProof: formData.withholdingProof || undefined,
-        });
-        sileo.success({ description: t('customers.created') });
-      }
-      await loadCustomers();
-      setFormOpen(false);
-    } catch {
-      setError(t('customers.error.save'));
-    } finally {
-      setSubmitting(false);
+        },
+        {
+          onSuccess: () => sileo.success({ description: t('customers.created') }),
+          onError: () => { setError(t('customers.error.save')); setFormOpen(true); },
+        },
+      );
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!deleteTarget) return;
-    setSubmitting(true);
-    try {
-      await customerService.delete(deleteTarget.id);
-      sileo.success({ description: t('customers.deleted') });
-      await loadCustomers();
-      setDeleteOpen(false);
-      setDeleteTarget(null);
-    } catch {
-      setError(t('customers.error.delete'));
-    } finally {
-      setSubmitting(false);
-    }
+    const targetId = deleteTarget.id;
+    setDeleteOpen(false);
+    setDeleteTarget(null);
+    remove.mutate(targetId, {
+      onSuccess: () => sileo.success({ description: t('customers.deleted') }),
+      onError: () => { setError(t('customers.error.delete')); setDeleteOpen(true); },
+    });
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -238,8 +236,8 @@ export default function CustomersPage() {
               </div>
             </div>
           )}
-          <Button onClick={handleSave} disabled={submitting} className="w-full">
-            {submitting ? t('common.saving') : t('common.save')}
+          <Button onClick={handleSave} disabled={create.isPending || update.isPending} className="w-full">
+            {create.isPending || update.isPending ? t('common.saving') : t('common.save')}
           </Button>
         </div>
       }
@@ -257,7 +255,7 @@ export default function CustomersPage() {
 
       <DataTable
         columns={columns}
-        rows={customers}
+        rows={customersData}
         loading={loading}
         onEdit={canEdit ? openEdit : undefined}
         onDelete={canDelete ? (customer) => {
@@ -274,7 +272,7 @@ export default function CustomersPage() {
         confirmLabel={t('common.delete')}
         onConfirm={handleDelete}
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
-        loading={submitting}
+        loading={remove.isPending}
       />
     </SlideForm>
   );

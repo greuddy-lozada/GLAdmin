@@ -39,7 +39,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default function PagoMovilTransactionsPage() {
-  const { items, loading, error, createItem, reviewItem } = usePagoMovilTransactions();
+  const { items, isLoading: loading, create, review } = usePagoMovilTransactions();
   const { t, tp } = useI18n();
   const [formOpen, setFormOpen] = useState(false);
   const [reviewDialog, setReviewDialog] = useState<{ open: boolean; id: number; action: 'approved' | 'rejected' }>({ open: false, id: 0, action: 'approved' });
@@ -50,7 +50,6 @@ export default function PagoMovilTransactionsPage() {
     phoneNumber: '',
     reference: '',
   });
-  const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
   const [uploadingProof, setUploadingProof] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -121,38 +120,27 @@ export default function PagoMovilTransactionsPage() {
     });
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     setFormError('');
-    setSubmitting(true);
-    try {
-      const ok = await createItem(formData);
-      if (ok) {
-        sileo.success({ description: t('pagoMovil.transactions.submitted') });
-        setFormOpen(false);
-      } else {
-        setFormError(t('pagoMovil.transactions.error.save'));
-      }
-    } catch {
-      setFormError(t('pagoMovil.transactions.error.save'));
-    } finally {
-      setSubmitting(false);
-    }
+    setFormOpen(false);
+    create.mutate(formData, {
+      onSuccess: () => sileo.success({ description: t('pagoMovil.transactions.submitted') }),
+      onError: () => { setFormError(t('pagoMovil.transactions.error.save')); setFormOpen(true); },
+    });
   };
 
-  const handleReview = async () => {
-    setSubmitting(true);
-    try {
-      const ok = await reviewItem(reviewDialog.id, { status: reviewDialog.action });
-      if (ok) {
-        const key = reviewDialog.action === 'approved' ? 'pagoMovil.review.approved' : 'pagoMovil.review.rejected';
-        sileo.success({ description: t(key) });
-      }
-    } catch {
-      setFormError(t('pagoMovil.review.error'));
-    } finally {
-      setSubmitting(false);
-      setReviewDialog({ ...reviewDialog, open: false });
-    }
+  const handleReview = () => {
+    setReviewDialog((prev) => ({ ...prev, open: false }));
+    review.mutate(
+      { id: reviewDialog.id, data: { status: reviewDialog.action } },
+      {
+        onSuccess: () => {
+          const key = reviewDialog.action === 'approved' ? 'pagoMovil.review.approved' : 'pagoMovil.review.rejected';
+          sileo.success({ description: t(key) });
+        },
+        onError: () => { setFormError(t('pagoMovil.review.error')); },
+      },
+    );
   };
 
   return (
@@ -216,8 +204,8 @@ export default function PagoMovilTransactionsPage() {
               )}
             </div>
             {formError && <Alert variant="destructive"><AlertDescription>{formError}</AlertDescription></Alert>}
-            <Button onClick={handleSave} disabled={submitting} className="w-full">
-              {submitting ? t('common.saving') : t('common.save')}
+            <Button onClick={handleSave} disabled={create.isPending} className="w-full">
+              {create.isPending ? t('common.saving') : t('common.save')}
             </Button>
           </div>
         }
@@ -231,8 +219,6 @@ export default function PagoMovilTransactionsPage() {
             </Button>
           </RoleGuard>
         </div>
-
-        {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
 
         <DataTable
           columns={columns}
@@ -274,7 +260,7 @@ export default function PagoMovilTransactionsPage() {
         confirmLabel={t(`pagoMovil.transactions.status.${reviewDialog.action}`)}
         onConfirm={handleReview}
         onCancel={() => setReviewDialog({ ...reviewDialog, open: false })}
-        loading={submitting}
+        loading={review.isPending}
       />
     </>
   );

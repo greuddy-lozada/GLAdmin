@@ -18,14 +18,13 @@ import { DataTable, Column } from '@/components/ui/data-table';
 import { SlideForm } from '@/components/ui/slide-form';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useAdminOrgs } from '@/features/admin/organizations/hooks/use-admin-orgs';
-import { AdminOrg, CreateAdminOrgRequest, UpdateAdminOrgRequest } from '@/features/admin/organizations/models/admin-org.model';
-import { adminOrgsService } from '@/features/admin/organizations/services/admin-orgs.service';
+import { AdminOrg, CreateAdminOrgRequest } from '@/features/admin/organizations/models/admin-org.model';
 import { useI18n } from '@/i18n';
 import { sileo } from 'sileo';
 import apiClient from '@/lib/api/api-client';
 
 export default function AdminOrgsPage() {
-  const { orgs, loading, loadOrgs } = useAdminOrgs();
+  const { items: orgsData, isLoading: loading, create, update, remove } = useAdminOrgs();
   const { t, tp } = useI18n();
   const [formOpen, setFormOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -38,7 +37,6 @@ export default function AdminOrgsPage() {
     planId: undefined,
     isActive: true,
   });
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -80,45 +78,40 @@ export default function AdminOrgsPage() {
     setFormOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     setError('');
-    setSubmitting(true);
-    try {
-      const data = {
-        ...formData,
-        slug: formData.slug || slugify(formData.name),
-        planId: formData.planId || undefined,
-      };
-      if (selectedOrg) {
-        await adminOrgsService.update(selectedOrg.id, data as UpdateAdminOrgRequest);
-        sileo.success({ description: t('admin.organizations.updated') });
-      } else {
-        await adminOrgsService.create(data as CreateAdminOrgRequest);
-        sileo.success({ description: t('admin.organizations.created') });
-      }
-      await loadOrgs();
-      setFormOpen(false);
-    } catch {
-      setError(t('admin.organizations.error.save'));
-    } finally {
-      setSubmitting(false);
+    setFormOpen(false);
+    const data: CreateAdminOrgRequest = {
+      name: formData.name,
+      slug: formData.slug || slugify(formData.name),
+      planId: formData.planId || undefined,
+      isActive: formData.isActive,
+    };
+    if (selectedOrg) {
+      update.mutate(
+        { id: selectedOrg.id, data },
+        {
+          onSuccess: () => sileo.success({ description: t('admin.organizations.updated') }),
+          onError: () => { setError(t('admin.organizations.error.save')); setFormOpen(true); },
+        },
+      );
+    } else {
+      create.mutate(data, {
+        onSuccess: () => sileo.success({ description: t('admin.organizations.created') }),
+        onError: () => { setError(t('admin.organizations.error.save')); setFormOpen(true); },
+      });
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!deleteTarget) return;
-    setSubmitting(true);
-    try {
-      await adminOrgsService.delete(deleteTarget.id);
-      sileo.success({ description: t('admin.organizations.deleted') });
-      await loadOrgs();
-      setDeleteOpen(false);
-      setDeleteTarget(null);
-    } catch {
-      setError(t('admin.organizations.error.delete'));
-    } finally {
-      setSubmitting(false);
-    }
+    const targetId = deleteTarget.id;
+    setDeleteOpen(false);
+    setDeleteTarget(null);
+    remove.mutate(targetId, {
+      onSuccess: () => sileo.success({ description: t('admin.organizations.deleted') }),
+      onError: () => { setError(t('admin.organizations.error.delete')); setDeleteOpen(true); },
+    });
   };
 
   return (
@@ -154,8 +147,8 @@ export default function AdminOrgsPage() {
             <Switch checked={formData.isActive ?? true} onCheckedChange={(c) => setFormData({ ...formData, isActive: c })} />
             <Label>{t('admin.organizations.field.isActive')}</Label>
           </div>
-          <Button onClick={handleSave} disabled={submitting} className="w-full">
-            {submitting ? t('common.saving') : t('common.save')}
+          <Button onClick={handleSave} disabled={create.isPending || update.isPending} className="w-full">
+            {create.isPending || update.isPending ? t('common.saving') : t('common.save')}
           </Button>
         </div>
       }
@@ -171,7 +164,7 @@ export default function AdminOrgsPage() {
 
       <DataTable
         columns={columns}
-        rows={orgs}
+        rows={orgsData}
         loading={loading}
         onEdit={openEdit}
         onDelete={(org) => {
@@ -188,7 +181,7 @@ export default function AdminOrgsPage() {
         confirmLabel={t('common.delete')}
         onConfirm={handleDelete}
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
-        loading={submitting}
+        loading={remove.isPending}
       />
     </SlideForm>
   );

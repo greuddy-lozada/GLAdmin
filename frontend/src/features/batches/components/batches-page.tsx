@@ -10,8 +10,7 @@ import { DataTable, Column } from '@/components/ui/data-table';
 import { SlideForm } from '@/components/ui/slide-form';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useBatches } from '@/features/batches/hooks/use-batches';
-import { Batch, CreateBatchRequest, UpdateBatchRequest } from '@/features/batches/models/batch.model';
-import { batchService } from '@/features/batches/services/batch.service';
+import { Batch, CreateBatchRequest } from '@/features/batches/models/batch.model';
 import { useI18n } from '@/i18n';
 import { sileo } from 'sileo';
 import { RoleGuard } from '@/components/ui/role-guard';
@@ -19,7 +18,7 @@ import { useAuth } from '@/providers/auth-provider';
 import { hasMinLevel } from '@/lib/auth/roles';
 
 export default function BatchesPage() {
-  const { batches, loading, loadBatches } = useBatches();
+  const { items: batchesData, isLoading: loading, create, update, remove } = useBatches();
   const { t, tp } = useI18n();
   const { user } = useAuth();
   const role = user?.role?.slug ?? 'employee';
@@ -31,7 +30,6 @@ export default function BatchesPage() {
   const [formData, setFormData] = useState<CreateBatchRequest>({
     code: '',
   });
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<Batch | null>(null);
 
@@ -58,44 +56,35 @@ export default function BatchesPage() {
     setFormOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     setError('');
-    setSubmitting(true);
-    try {
-      if (selectedBatch) {
-        const data: UpdateBatchRequest = {
-          code: formData.code,
-          description: formData.description || null,
-        };
-        await batchService.update(selectedBatch.id, data);
-        sileo.success({ description: t('batches.updated') });
-      } else {
-        await batchService.create(formData);
-        sileo.success({ description: t('batches.created') });
-      }
-      await loadBatches();
-      setFormOpen(false);
-    } catch {
-      setError(t('batches.error.save'));
-    } finally {
-      setSubmitting(false);
+    setFormOpen(false);
+    const isEdit = !!selectedBatch;
+    if (isEdit) {
+      update.mutate(
+        { id: selectedBatch!.id, data: { code: formData.code, description: formData.description || null } },
+        {
+          onSuccess: () => sileo.success({ description: t('batches.updated') }),
+          onError: () => { setError(t('batches.error.save')); setFormOpen(true); },
+        },
+      );
+    } else {
+      create.mutate(formData, {
+        onSuccess: () => sileo.success({ description: t('batches.created') }),
+        onError: () => { setError(t('batches.error.save')); setFormOpen(true); },
+      });
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!deleteTarget) return;
-    setSubmitting(true);
-    try {
-      await batchService.delete(deleteTarget.id);
-      sileo.success({ description: t('batches.deleted') });
-      await loadBatches();
-      setDeleteOpen(false);
-      setDeleteTarget(null);
-    } catch {
-      setError(t('batches.error.delete'));
-    } finally {
-      setSubmitting(false);
-    }
+    const targetId = deleteTarget.id;
+    setDeleteOpen(false);
+    setDeleteTarget(null);
+    remove.mutate(targetId, {
+      onSuccess: () => sileo.success({ description: t('batches.deleted') }),
+      onError: () => { setError(t('batches.error.delete')); setDeleteOpen(true); },
+    });
   };
 
   return (
@@ -113,8 +102,8 @@ export default function BatchesPage() {
             <Label>{t('batches.field.description')}</Label>
             <Input value={formData.description ?? ''} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
           </div>
-          <Button onClick={handleSave} disabled={submitting} className="w-full">
-            {submitting ? t('common.saving') : t('common.save')}
+          <Button onClick={handleSave} disabled={create.isPending || update.isPending} className="w-full">
+            {create.isPending || update.isPending ? t('common.saving') : t('common.save')}
           </Button>
         </div>
       }
@@ -132,7 +121,7 @@ export default function BatchesPage() {
 
       <DataTable
         columns={columns}
-        rows={batches}
+        rows={batchesData}
         loading={loading}
         onEdit={canEdit ? openEdit : undefined}
         onDelete={canDelete ? (batch) => {
@@ -149,7 +138,7 @@ export default function BatchesPage() {
         confirmLabel={t('common.delete')}
         onConfirm={handleDelete}
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
-        loading={submitting}
+        loading={remove.isPending}
       />
     </SlideForm>
   );

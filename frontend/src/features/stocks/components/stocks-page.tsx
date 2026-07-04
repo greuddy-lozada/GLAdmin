@@ -12,8 +12,7 @@ import { DataTable, Column } from '@/components/ui/data-table';
 import { SlideForm } from '@/components/ui/slide-form';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useStocks } from '@/features/stocks/hooks/use-stocks';
-import { Stock, CreateStockRequest, UpdateStockRequest } from '@/features/stocks/models/stock.model';
-import { stockService } from '@/features/stocks/services/stock.service';
+import { Stock, CreateStockRequest } from '@/features/stocks/models/stock.model';
 import { useI18n } from '@/i18n';
 import { sileo } from 'sileo';
 import { RoleGuard } from '@/components/ui/role-guard';
@@ -22,7 +21,7 @@ import { hasMinLevel } from '@/lib/auth/roles';
 import apiClient from '@/lib/api/api-client';
 
 export default function StocksPage() {
-  const { stocks, loading, loadStocks } = useStocks();
+  const { items: stocksData, isLoading: loading, create, update, remove } = useStocks();
   const { t } = useI18n();
   const { user } = useAuth();
   const role = user?.role?.slug ?? 'employee';
@@ -35,7 +34,6 @@ export default function StocksPage() {
     idProduct: 0,
     existence: 1,
   });
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<Stock | null>(null);
 
@@ -84,47 +82,44 @@ export default function StocksPage() {
     setFormOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     setError('');
-    setSubmitting(true);
-    try {
-      if (selectedStock) {
-        const data: UpdateStockRequest = {
-          idProduct: formData.idProduct,
-          idSupplier: formData.idSupplier,
-          idBatch: formData.idBatch,
-          existence: formData.existence,
-          available: formData.available,
-        };
-        await stockService.update(selectedStock.id, data);
-        sileo.success({ description: t('stocks.updated') });
-      } else {
-        await stockService.create(formData);
-        sileo.success({ description: t('stocks.created') });
-      }
-      await loadStocks();
-      setFormOpen(false);
-    } catch {
-      setError(t('stocks.error.save'));
-    } finally {
-      setSubmitting(false);
+    setFormOpen(false);
+    const isEdit = !!selectedStock;
+    if (isEdit) {
+      update.mutate(
+        {
+          id: selectedStock!.id,
+          data: {
+            idProduct: formData.idProduct,
+            idSupplier: formData.idSupplier,
+            idBatch: formData.idBatch,
+            existence: formData.existence,
+            available: formData.available,
+          },
+        },
+        {
+          onSuccess: () => sileo.success({ description: t('stocks.updated') }),
+          onError: () => { setError(t('stocks.error.save')); setFormOpen(true); },
+        },
+      );
+    } else {
+      create.mutate(formData, {
+        onSuccess: () => sileo.success({ description: t('stocks.created') }),
+        onError: () => { setError(t('stocks.error.save')); setFormOpen(true); },
+      });
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!deleteTarget) return;
-    setSubmitting(true);
-    try {
-      await stockService.delete(deleteTarget.id);
-      sileo.success({ description: t('stocks.deleted') });
-      await loadStocks();
-      setDeleteOpen(false);
-      setDeleteTarget(null);
-    } catch {
-      setError(t('stocks.error.delete'));
-    } finally {
-      setSubmitting(false);
-    }
+    const targetId = deleteTarget.id;
+    setDeleteOpen(false);
+    setDeleteTarget(null);
+    remove.mutate(targetId, {
+      onSuccess: () => sileo.success({ description: t('stocks.deleted') }),
+      onError: () => { setError(t('stocks.error.delete')); setDeleteOpen(true); },
+    });
   };
 
   return (
@@ -187,8 +182,8 @@ export default function StocksPage() {
               <Label>{t('stocks.field.available')}</Label>
             </div>
           )}
-          <Button onClick={handleSave} disabled={submitting} className="w-full">
-            {submitting ? t('common.saving') : t('common.save')}
+          <Button onClick={handleSave} disabled={create.isPending || update.isPending} className="w-full">
+            {create.isPending || update.isPending ? t('common.saving') : t('common.save')}
           </Button>
         </div>
       }
@@ -206,7 +201,7 @@ export default function StocksPage() {
 
       <DataTable
         columns={columns}
-        rows={stocks}
+        rows={stocksData}
         loading={loading}
         onEdit={canEdit ? openEdit : undefined}
         onDelete={canDelete ? (stock) => {
@@ -223,7 +218,7 @@ export default function StocksPage() {
         confirmLabel={t('common.delete')}
         onConfirm={handleDelete}
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
-        loading={submitting}
+        loading={remove.isPending}
       />
     </SlideForm>
   );

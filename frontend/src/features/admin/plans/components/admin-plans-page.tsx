@@ -19,13 +19,12 @@ import { DataTable, Column } from '@/components/ui/data-table';
 import { SlideForm } from '@/components/ui/slide-form';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useAdminPlans } from '@/features/admin/plans/hooks/use-admin-plans';
-import { AdminPlan, CreateAdminPlanRequest, UpdateAdminPlanRequest } from '@/features/admin/plans/models/admin-plan.model';
-import { adminPlansService } from '@/features/admin/plans/services/admin-plans.service';
+import { AdminPlan, CreateAdminPlanRequest } from '@/features/admin/plans/models/admin-plan.model';
 import { useI18n } from '@/i18n';
 import { sileo } from 'sileo';
 
 export default function AdminPlansPage() {
-  const { plans, loading, loadPlans } = useAdminPlans();
+  const { items: plansData, isLoading: loading, create, update, remove } = useAdminPlans();
   const { t, tp } = useI18n();
   const [formOpen, setFormOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -41,7 +40,6 @@ export default function AdminPlansPage() {
     maxUsers: 5,
     isActive: true,
   });
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   const columns: Column<AdminPlan>[] = [
@@ -82,40 +80,34 @@ export default function AdminPlansPage() {
     setFormOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     setError('');
-    setSubmitting(true);
-    try {
-      if (selectedPlan) {
-        await adminPlansService.update(selectedPlan.id, formData as UpdateAdminPlanRequest);
-        sileo.success({ description: t('admin.plans.updated') });
-      } else {
-        await adminPlansService.create(formData as CreateAdminPlanRequest);
-        sileo.success({ description: t('admin.plans.created') });
-      }
-      await loadPlans();
-      setFormOpen(false);
-    } catch {
-      setError(t('admin.plans.error.save'));
-    } finally {
-      setSubmitting(false);
+    setFormOpen(false);
+    if (selectedPlan) {
+      update.mutate(
+        { id: selectedPlan.id, data: formData },
+        {
+          onSuccess: () => sileo.success({ description: t('admin.plans.updated') }),
+          onError: () => { setError(t('admin.plans.error.save')); setFormOpen(true); },
+        },
+      );
+    } else {
+      create.mutate(formData as CreateAdminPlanRequest, {
+        onSuccess: () => sileo.success({ description: t('admin.plans.created') }),
+        onError: () => { setError(t('admin.plans.error.save')); setFormOpen(true); },
+      });
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!deleteTarget) return;
-    setSubmitting(true);
-    try {
-      await adminPlansService.delete(deleteTarget.id);
-      sileo.success({ description: t('admin.plans.deleted') });
-      await loadPlans();
-      setDeleteOpen(false);
-      setDeleteTarget(null);
-    } catch {
-      setError(t('admin.plans.error.delete'));
-    } finally {
-      setSubmitting(false);
-    }
+    const targetId = deleteTarget.id;
+    setDeleteOpen(false);
+    setDeleteTarget(null);
+    remove.mutate(targetId, {
+      onSuccess: () => sileo.success({ description: t('admin.plans.deleted') }),
+      onError: () => { setError(t('admin.plans.error.delete')); setDeleteOpen(true); },
+    });
   };
 
   return (
@@ -170,8 +162,8 @@ export default function AdminPlansPage() {
             <Switch checked={formData.isActive ?? true} onCheckedChange={(c) => setFormData({ ...formData, isActive: c })} />
             <Label>{t('admin.plans.field.isActive')}</Label>
           </div>
-          <Button onClick={handleSave} disabled={submitting} className="w-full">
-            {submitting ? t('common.saving') : t('common.save')}
+          <Button onClick={handleSave} disabled={create.isPending || update.isPending} className="w-full">
+            {create.isPending || update.isPending ? t('common.saving') : t('common.save')}
           </Button>
         </div>
       }
@@ -187,7 +179,7 @@ export default function AdminPlansPage() {
 
       <DataTable
         columns={columns}
-        rows={plans}
+        rows={plansData}
         loading={loading}
         onEdit={openEdit}
         onDelete={(plan) => {
@@ -204,7 +196,7 @@ export default function AdminPlansPage() {
         confirmLabel={t('common.delete')}
         onConfirm={handleDelete}
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
-        loading={submitting}
+        loading={remove.isPending}
       />
     </SlideForm>
   );

@@ -23,13 +23,12 @@ function formatDate(dateStr: string) {
 }
 
 export default function ExchangeRatesPage() {
-  const { items, loading, loadItems } = useExchangeRates();
+  const { items: exchangeRatesData, isLoading: loading, create, update } = useExchangeRates();
   const { t } = useI18n();
   const [formOpen, setFormOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ExchangeRateDay | null>(null);
   const [latestDay, setLatestDay] = useState<ExchangeRateDay | null>(null);
   const [formData, setFormData] = useState<CreateExchangeRateRequest>({});
-  const [submitting, setSubmitting] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState('');
 
@@ -89,7 +88,6 @@ export default function ExchangeRatesPage() {
     try {
       await apiClient.post('/exchange-rates/sync');
       sileo.success({ description: t('exchangeRates.synced') });
-      await loadItems();
       refreshLatest();
     } catch {
       sileo.error({ description: t('exchangeRates.error.sync') });
@@ -98,26 +96,30 @@ export default function ExchangeRatesPage() {
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     setError('');
-    setSubmitting(true);
-    try {
-      if (selectedItem) {
-        await exchangeRateService.update(selectedItem.id, formData);
-        sileo.success({ description: t('exchangeRates.updated') });
-      } else {
-        await exchangeRateService.create(formData);
-        sileo.success({ description: t('exchangeRates.created') });
-      }
-      await loadItems();
-      refreshLatest();
-      setFormOpen(false);
-      setSelectedItem(null);
-    } catch {
-      setError(t('exchangeRates.error.save'));
-    } finally {
-      setSubmitting(false);
+    setFormOpen(false);
+    if (selectedItem) {
+      update.mutate(
+        { id: selectedItem.id, data: formData },
+        {
+          onSuccess: () => {
+            sileo.success({ description: t('exchangeRates.updated') });
+            refreshLatest();
+          },
+          onError: () => { setError(t('exchangeRates.error.save')); setFormOpen(true); },
+        },
+      );
+    } else {
+      create.mutate(formData, {
+        onSuccess: () => {
+          sileo.success({ description: t('exchangeRates.created') });
+          refreshLatest();
+        },
+        onError: () => { setError(t('exchangeRates.error.save')); setFormOpen(true); },
+      });
     }
+    setSelectedItem(null);
   };
 
   return (
@@ -142,8 +144,8 @@ export default function ExchangeRatesPage() {
             <Input type="number" step="0.01" value={formData.rateParalelo ?? ''}
               onChange={(e) => setFormData({ ...formData, rateParalelo: e.target.value === '' ? undefined : Number(e.target.value) })} />
           </div>
-          <Button onClick={handleSave} disabled={submitting} className="w-full">
-            {submitting ? t('common.saving') : t('common.save')}
+          <Button onClick={handleSave} disabled={create.isPending || update.isPending} className="w-full">
+            {create.isPending || update.isPending ? t('common.saving') : t('common.save')}
           </Button>
         </div>
       }
@@ -174,7 +176,7 @@ export default function ExchangeRatesPage() {
 
       <DataTable
         columns={columns}
-        rows={items}
+        rows={exchangeRatesData}
         loading={loading}
         onEdit={(item) => openEdit(item)}
         emptyMessage={t('exchangeRates.empty')}

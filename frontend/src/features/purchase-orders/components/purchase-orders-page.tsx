@@ -69,7 +69,7 @@ interface PurchaseOrderFormData {
 }
 
 export default function PurchaseOrdersPage() {
-  const { items, loading, loadItems } = usePurchaseOrders();
+  const { items: purchaseOrdersData, isLoading: loading, create, update, remove } = usePurchaseOrders();
   const { t, tp } = useI18n();
   const { user } = useAuth();
   const role = user?.role?.slug ?? 'employee';
@@ -103,7 +103,6 @@ export default function PurchaseOrdersPage() {
   const [companies, setCompanies] = useState<{ id: number; name: string; isWithholdingAgent?: boolean; withholdingPercentage?: number }[]>([]);
   const [products, setProducts] = useState<{ id: number; code: string; name: string; price: number; priceUsd: number; taxPercentage?: number }[]>([]);
   const [exchangeRateDays, setExchangeRateDays] = useState<{ id: number; date: string; rateBcvUsd: number | null; rateParalelo: number | null }[]>([]);
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<PurchaseOrder | null>(null);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
@@ -111,6 +110,7 @@ export default function PurchaseOrdersPage() {
   const [receiveOpen, setReceiveOpen] = useState(false);
   const [receiveTarget, setReceiveTarget] = useState<PurchaseOrder | null>(null);
   const [receiveQuantities, setReceiveQuantities] = useState<Record<number, number>>({});
+  const [receiveSubmitting, setReceiveSubmitting] = useState(false);
 
   const orgCompany = companies[0];
   const isWithholdingAgent = orgCompany?.isWithholdingAgent ?? false;
@@ -352,24 +352,21 @@ export default function PurchaseOrdersPage() {
     setFormData({ ...formData, details: updated, ...totals });
   };
 
-  const handleStatusChange = async (newStatus: PurchaseOrderStatus) => {
+  const handleStatusChange = (newStatus: PurchaseOrderStatus) => {
     if (!selectedItem) return;
-    setSubmitting(true);
     setError('');
-    try {
-      await purchaseOrderService.update(selectedItem.id, { status: newStatus });
-      await loadItems();
-      sileo.success({ description: t('purchaseOrders.updated') });
-      setFormOpen(false);
-      setSelectedItem(null);
-    } catch {
-      setError(t('purchaseOrders.error.save'));
-    } finally {
-      setSubmitting(false);
-    }
+    setFormOpen(false);
+    setSelectedItem(null);
+    update.mutate(
+      { id: selectedItem.id, data: { status: newStatus } },
+      {
+        onSuccess: () => sileo.success({ description: t('purchaseOrders.updated') }),
+        onError: () => { setError(t('purchaseOrders.error.save')); setFormOpen(true); },
+      },
+    );
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     setError('');
     if (!formData.idSupplier) {
       setError(t('purchaseOrders.error.save'));
@@ -379,70 +376,72 @@ export default function PurchaseOrdersPage() {
       setError(t('purchaseOrders.withholdingRequired'));
       return;
     }
-    setSubmitting(true);
-    try {
-      const data: CreatePurchaseOrderRequest = {
-        idSupplier: Number(formData.idSupplier),
-        code: formData.code || undefined,
-        date: formData.date || undefined,
-        amount: formData.amount,
-        amountUsd: formData.amountUsd,
-        baseAmount: formData.baseAmount,
-        baseAmountUsd: formData.baseAmountUsd,
-        ivaAmount: formData.ivaAmount,
-        ivaAmountUsd: formData.ivaAmountUsd,
-        exchangeRate: formData.exchangeRate || undefined,
-        exchangeRateDayId: formData.exchangeRateDayId ? Number(formData.exchangeRateDayId) : undefined,
-        paymentMethod: formData.paymentMethod,
-        status: formData.status,
-        applyWithholding: formData.applyWithholding || undefined,
-        withholdingPercentage: formData.applyWithholding ? formData.withholdingPercentage : undefined,
-        withholdingProof: formData.applyWithholding ? formData.withholdingProof : undefined,
-        details: formData.details.map((d) => ({
-          idProduct: d.idProduct,
-          quantity: d.quantity,
-          unitPrice: d.unitPrice,
-          unitPriceUsd: d.unitPriceUsd,
-          subtotal: d.subtotal,
-          subtotalUsd: d.subtotalUsd,
-          observation: d.observation || undefined,
-        })),
-      };
-      if (selectedItem) {
-        await purchaseOrderService.update(selectedItem.id, {
-          ...data,
-          idSupplier: undefined,
-          details: data.details && data.details.length > 0 ? data.details : undefined,
-        });
-      } else {
-        await purchaseOrderService.create(data);
-      }
-      await loadItems();
-      sileo.success({ description: selectedItem ? t('purchaseOrders.updated') : t('purchaseOrders.created') });
-      setFormOpen(false);
-      setSelectedItem(null);
-    } catch {
-      setError(t('purchaseOrders.error.save'));
-    } finally {
-      setSubmitting(false);
+    setFormOpen(false);
+    const data: CreatePurchaseOrderRequest = {
+      idSupplier: Number(formData.idSupplier),
+      code: formData.code || undefined,
+      date: formData.date || undefined,
+      amount: formData.amount,
+      amountUsd: formData.amountUsd,
+      baseAmount: formData.baseAmount,
+      baseAmountUsd: formData.baseAmountUsd,
+      ivaAmount: formData.ivaAmount,
+      ivaAmountUsd: formData.ivaAmountUsd,
+      exchangeRate: formData.exchangeRate || undefined,
+      exchangeRateDayId: formData.exchangeRateDayId ? Number(formData.exchangeRateDayId) : undefined,
+      paymentMethod: formData.paymentMethod,
+      status: formData.status,
+      applyWithholding: formData.applyWithholding || undefined,
+      withholdingPercentage: formData.applyWithholding ? formData.withholdingPercentage : undefined,
+      withholdingProof: formData.applyWithholding ? formData.withholdingProof : undefined,
+      details: formData.details.map((d) => ({
+        idProduct: d.idProduct,
+        quantity: d.quantity,
+        unitPrice: d.unitPrice,
+        unitPriceUsd: d.unitPriceUsd,
+        subtotal: d.subtotal,
+        subtotalUsd: d.subtotalUsd,
+        observation: d.observation || undefined,
+      })),
+    };
+    if (selectedItem) {
+      update.mutate(
+        {
+          id: selectedItem.id,
+          data: {
+            ...data,
+            idSupplier: undefined,
+            details: data.details && data.details.length > 0 ? data.details : [],
+          },
+        },
+        {
+          onSuccess: () => {
+            sileo.success({ description: t('purchaseOrders.updated') });
+            setSelectedItem(null);
+          },
+          onError: () => { setError(t('purchaseOrders.error.save')); setFormOpen(true); },
+        },
+      );
+    } else {
+      create.mutate(data, {
+        onSuccess: () => {
+          sileo.success({ description: t('purchaseOrders.created') });
+          setSelectedItem(null);
+        },
+        onError: () => { setError(t('purchaseOrders.error.save')); setFormOpen(true); },
+      });
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!deleteTarget) return;
-    setSubmitting(true);
-    try {
-      await purchaseOrderService.delete(deleteTarget.id);
-      await loadItems();
-      sileo.success({ description: t('purchaseOrders.deleted') });
-      setDeleteOpen(false);
-      setDeleteTarget(null);
-    } catch (error) {
-      console.error(error);
-      setError(t('purchaseOrders.error.delete'));
-    } finally {
-      setSubmitting(false);
-    }
+    const targetId = deleteTarget.id;
+    setDeleteOpen(false);
+    setDeleteTarget(null);
+    remove.mutate(targetId, {
+      onSuccess: () => sileo.success({ description: t('purchaseOrders.deleted') }),
+      onError: () => { setError(t('purchaseOrders.error.delete')); setDeleteOpen(true); },
+    });
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -476,7 +475,7 @@ export default function PurchaseOrdersPage() {
 
   const handleReceive = async () => {
     if (!receiveTarget) return;
-    setSubmitting(true);
+    setReceiveSubmitting(true);
     setError('');
     try {
       const details = Object.entries(receiveQuantities)
@@ -484,13 +483,12 @@ export default function PurchaseOrdersPage() {
         .map(([id, quantity]) => ({ id: Number(id), quantity }));
       await purchaseOrderService.receive(receiveTarget.id, details);
       sileo.success({ description: t('purchaseOrders.receiveSuccess') });
-      await loadItems();
       setReceiveOpen(false);
       setReceiveTarget(null);
     } catch {
       setError(t('purchaseOrders.error.save'));
     } finally {
-      setSubmitting(false);
+      setReceiveSubmitting(false);
     }
   };
 
@@ -508,7 +506,7 @@ export default function PurchaseOrdersPage() {
                 {currentTransitions.map((st) => {
                   const key = STATUS_LABEL_KEY[st];
                   return (
-                    <Button key={st} size="sm" variant="outline" onClick={() => handleStatusChange(st)} disabled={submitting}>
+                    <Button key={st} size="sm" variant="outline" onClick={() => handleStatusChange(st)} disabled={update.isPending}>
                       {key ? t(key) : st}
                     </Button>
                   );
@@ -720,8 +718,8 @@ export default function PurchaseOrdersPage() {
             )}
           </div>
 
-          <Button onClick={handleSave} disabled={submitting} className="w-full">
-            {submitting ? t('common.saving') : t('common.save')}
+          <Button onClick={handleSave} disabled={create.isPending || update.isPending} className="w-full">
+            {create.isPending || update.isPending ? t('common.saving') : t('common.save')}
           </Button>
         </div>
       }
@@ -740,7 +738,7 @@ export default function PurchaseOrdersPage() {
 
       <DataTable
         columns={columns}
-        rows={items}
+        rows={purchaseOrdersData}
         loading={loading}
         onEdit={canEdit ? (item) => openEdit(item) : undefined}
         onDelete={canDelete ? (item) => { setDeleteTarget(item); setDeleteOpen(true); } : undefined}
@@ -748,7 +746,7 @@ export default function PurchaseOrdersPage() {
       />
 
       {expandedRow && (() => {
-        const row = items.find((i) => i.id === expandedRow);
+        const row = purchaseOrdersData.find((i) => i.id === expandedRow);
         if (!row) return null;
         return (
           <div className="border rounded-lg p-4 mt-2 bg-muted/30">
@@ -813,8 +811,8 @@ export default function PurchaseOrdersPage() {
             <Button variant="outline" onClick={() => { setReceiveOpen(false); setReceiveTarget(null); }}>
               {t('common.cancel')}
             </Button>
-            <Button onClick={handleReceive} disabled={submitting}>
-              {submitting ? t('common.saving') : t('purchaseOrders.receiveConfirm')}
+            <Button onClick={handleReceive} disabled={receiveSubmitting}>
+              {receiveSubmitting ? t('common.saving') : t('purchaseOrders.receiveConfirm')}
             </Button>
           </div>
         </DialogContent>
@@ -827,7 +825,7 @@ export default function PurchaseOrdersPage() {
         confirmLabel={t('common.delete')}
         onConfirm={handleDelete}
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
-        loading={submitting}
+        loading={remove.isPending}
       />
       </div>
     </SlideForm>

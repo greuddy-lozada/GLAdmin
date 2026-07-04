@@ -18,7 +18,6 @@ import { SlideForm } from '@/components/ui/slide-form';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useAdminInvites } from '@/features/admin/invites/hooks/use-admin-invites';
 import { AdminInvite, CreateAdminInviteRequest } from '@/features/admin/invites/models/admin-invite.model';
-import { adminInvitesService } from '@/features/admin/invites/services/admin-invites.service';
 import { useI18n } from '@/i18n';
 import { sileo } from 'sileo';
 import apiClient from '@/lib/api/api-client';
@@ -29,7 +28,7 @@ function formatDate(dateStr: string) {
 }
 
 export default function AdminInvitesPage() {
-  const { invites, loading, loadInvites } = useAdminInvites();
+  const { items: invitesData, isLoading: loading, create, remove } = useAdminInvites();
   const { t, tp } = useI18n();
   const [formOpen, setFormOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -41,7 +40,6 @@ export default function AdminInvitesPage() {
     organizationId: 0,
     roleId: 0,
   });
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -71,35 +69,24 @@ export default function AdminInvitesPage() {
     setFormOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     setError('');
-    setSubmitting(true);
-    try {
-      await adminInvitesService.create(formData);
-      sileo.success({ description: t('admin.invites.created') });
-      await loadInvites();
-      setFormOpen(false);
-    } catch {
-      setError(t('admin.invites.error.save'));
-    } finally {
-      setSubmitting(false);
-    }
+    setFormOpen(false);
+    create.mutate(formData, {
+      onSuccess: () => sileo.success({ description: t('admin.invites.created') }),
+      onError: () => { setError(t('admin.invites.error.save')); setFormOpen(true); },
+    });
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!deleteTarget) return;
-    setSubmitting(true);
-    try {
-      await adminInvitesService.delete(deleteTarget.id);
-      sileo.success({ description: t('admin.invites.deleted') });
-      await loadInvites();
-      setDeleteOpen(false);
-      setDeleteTarget(null);
-    } catch {
-      setError(t('admin.invites.error.delete'));
-    } finally {
-      setSubmitting(false);
-    }
+    const targetId = deleteTarget.id;
+    setDeleteOpen(false);
+    setDeleteTarget(null);
+    remove.mutate(targetId, {
+      onSuccess: () => sileo.success({ description: t('admin.invites.deleted') }),
+      onError: () => { setError(t('admin.invites.error.delete')); setDeleteOpen(true); },
+    });
   };
 
   return (
@@ -141,8 +128,8 @@ export default function AdminInvitesPage() {
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={handleSave} disabled={submitting} className="w-full">
-            {submitting ? t('common.saving') : t('common.save')}
+          <Button onClick={handleSave} disabled={create.isPending} className="w-full">
+            {create.isPending ? t('common.saving') : t('common.save')}
           </Button>
         </div>
       }
@@ -158,7 +145,7 @@ export default function AdminInvitesPage() {
 
       <DataTable
         columns={columns}
-        rows={invites}
+        rows={invitesData}
         loading={loading}
         onDelete={(invite) => {
           setDeleteTarget(invite);
@@ -174,7 +161,7 @@ export default function AdminInvitesPage() {
         confirmLabel={t('common.delete')}
         onConfirm={handleDelete}
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
-        loading={submitting}
+        loading={remove.isPending}
       />
     </SlideForm>
   );

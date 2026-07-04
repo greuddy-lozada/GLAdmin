@@ -1,30 +1,32 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
-import { AdminPlan } from '../models/admin-plan.model';
+import { useOptimisticCrud } from '@/hooks/use-optimistic-crud';
+import { AdminPlan, CreateAdminPlanRequest, UpdateAdminPlanRequest } from '../models/admin-plan.model';
 import { adminPlansService } from '../services/admin-plans.service';
 
+function buildOptimistic(data: CreateAdminPlanRequest, tempId: number): AdminPlan {
+  return {
+    id: tempId,
+    name: data.name,
+    label: data.label,
+    amount: data.amount,
+    currency: data.currency ?? 'usd',
+    interval: data.interval,
+    features: data.features ?? '',
+    maxUsers: data.maxUsers ?? 5,
+    isActive: data.isActive ?? true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+}
+
 export function useAdminPlans() {
-  const [plans, setPlans] = useState<AdminPlan[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadPlans = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await adminPlansService.getAll();
-      setPlans(data);
-    } catch {
-      setError('Error al cargar planes');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadPlans();
-  }, [loadPlans]);
-
-  return { plans, loading, error, loadPlans };
+  return useOptimisticCrud<AdminPlan, CreateAdminPlanRequest, UpdateAdminPlanRequest>({
+    queryKey: ['adminPlans'],
+    queryFn: () => adminPlansService.getAll(),
+    createFn: (data) => adminPlansService.create(data),
+    updateFn: (id, data) => adminPlansService.update(id, data),
+    deleteFn: (id) => adminPlansService.delete(id),
+    buildOptimistic,
+  });
 }

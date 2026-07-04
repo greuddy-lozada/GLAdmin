@@ -12,8 +12,7 @@ import { DataTable, Column } from '@/components/ui/data-table';
 import { SlideForm } from '@/components/ui/slide-form';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useCompanies } from '@/features/companies/hooks/use-companies';
-import { Company, CreateCompanyRequest, UpdateCompanyRequest } from '@/features/companies/models/company.model';
-import { companyService } from '@/features/companies/services/company.service';
+import { Company, CreateCompanyRequest } from '@/features/companies/models/company.model';
 import { useI18n } from '@/i18n';
 import { sileo } from 'sileo';
 import { RoleGuard } from '@/components/ui/role-guard';
@@ -21,7 +20,7 @@ import { useAuth } from '@/providers/auth-provider';
 import { hasMinLevel } from '@/lib/auth/roles';
 
 export default function CompaniesPage() {
-  const { companies, loading, loadCompanies } = useCompanies();
+  const { items: companiesData, isLoading: loading, create, update, remove } = useCompanies();
   const { t, tp } = useI18n();
   const { user } = useAuth();
   const role = user?.role?.slug ?? 'employee';
@@ -39,7 +38,6 @@ export default function CompaniesPage() {
     isWithholdingAgent: false,
     withholdingPercentage: 75,
   });
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<Company | null>(null);
 
@@ -74,50 +72,47 @@ export default function CompaniesPage() {
     setFormOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     setError('');
-    setSubmitting(true);
-    try {
-      if (selectedCompany) {
-        const data: UpdateCompanyRequest = {
-          taxId: formData.taxId,
-          name: formData.name,
-          address: formData.address,
-          phoneNumber: formData.phoneNumber,
-          email: formData.email,
-          website: formData.website || null,
-          isWithholdingAgent: formData.isWithholdingAgent,
-          withholdingPercentage: formData.isWithholdingAgent ? formData.withholdingPercentage : undefined,
-        };
-        await companyService.update(selectedCompany.id, data);
-        sileo.success({ description: t('companies.updated') });
-      } else {
-        await companyService.create(formData);
-        sileo.success({ description: t('companies.created') });
-      }
-      await loadCompanies();
-      setFormOpen(false);
-    } catch {
-      setError(t('companies.error.save'));
-    } finally {
-      setSubmitting(false);
+    setFormOpen(false);
+    const isEdit = !!selectedCompany;
+    if (isEdit) {
+      update.mutate(
+        {
+          id: selectedCompany!.id,
+          data: {
+            taxId: formData.taxId,
+            name: formData.name,
+            address: formData.address,
+            phoneNumber: formData.phoneNumber,
+            email: formData.email,
+            website: formData.website || null,
+            isWithholdingAgent: formData.isWithholdingAgent,
+            withholdingPercentage: formData.isWithholdingAgent ? formData.withholdingPercentage : undefined,
+          },
+        },
+        {
+          onSuccess: () => sileo.success({ description: t('companies.updated') }),
+          onError: () => { setError(t('companies.error.save')); setFormOpen(true); },
+        },
+      );
+    } else {
+      create.mutate(formData, {
+        onSuccess: () => sileo.success({ description: t('companies.created') }),
+        onError: () => { setError(t('companies.error.save')); setFormOpen(true); },
+      });
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!deleteTarget) return;
-    setSubmitting(true);
-    try {
-      await companyService.delete(deleteTarget.id);
-      sileo.success({ description: t('companies.deleted') });
-      await loadCompanies();
-      setDeleteOpen(false);
-      setDeleteTarget(null);
-    } catch {
-      setError(t('companies.error.delete'));
-    } finally {
-      setSubmitting(false);
-    }
+    const targetId = deleteTarget.id;
+    setDeleteOpen(false);
+    setDeleteTarget(null);
+    remove.mutate(targetId, {
+      onSuccess: () => sileo.success({ description: t('companies.deleted') }),
+      onError: () => { setError(t('companies.error.delete')); setDeleteOpen(true); },
+    });
   };
 
   return (
@@ -167,8 +162,8 @@ export default function CompaniesPage() {
               </Select>
             </div>
           )}
-          <Button onClick={handleSave} disabled={submitting} className="w-full">
-            {submitting ? t('common.saving') : t('common.save')}
+          <Button onClick={handleSave} disabled={create.isPending || update.isPending} className="w-full">
+            {create.isPending || update.isPending ? t('common.saving') : t('common.save')}
           </Button>
         </div>
       }
@@ -186,7 +181,7 @@ export default function CompaniesPage() {
 
       <DataTable
         columns={columns}
-        rows={companies}
+        rows={companiesData}
         loading={loading}
         onEdit={canEdit ? openEdit : undefined}
         onDelete={canDelete ? (company) => {
@@ -203,7 +198,7 @@ export default function CompaniesPage() {
         confirmLabel={t('common.delete')}
         onConfirm={handleDelete}
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
-        loading={submitting}
+        loading={remove.isPending}
       />
     </SlideForm>
   );

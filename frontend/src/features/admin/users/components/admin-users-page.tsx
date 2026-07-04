@@ -16,14 +16,13 @@ import { DataTable, Column } from '@/components/ui/data-table';
 import { SlideForm } from '@/components/ui/slide-form';
 import { useAdminUsers } from '@/features/admin/users/hooks/use-admin-users';
 import { AdminUser, UpdateAdminUserRequest } from '@/features/admin/users/models/admin-user.model';
-import { adminUsersService } from '@/features/admin/users/services/admin-users.service';
 import { useI18n } from '@/i18n';
 import { sileo } from 'sileo';
 import { Role } from '@/features/roles/models/role.model';
 import apiClient from '@/lib/api/api-client';
 
 export default function AdminUsersPage() {
-  const { users, loading, loadUsers } = useAdminUsers();
+  const { items: usersData, isLoading: loading, update } = useAdminUsers();
   const { t } = useI18n();
   const [formOpen, setFormOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
@@ -32,7 +31,6 @@ export default function AdminUsersPage() {
     isActive: true,
     roleId: undefined,
   });
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -62,20 +60,17 @@ export default function AdminUsersPage() {
     setFormOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     setError('');
-    setSubmitting(true);
-    try {
-      if (selectedUser) {
-        await adminUsersService.update(selectedUser.id, formData);
-        sileo.success({ description: t('admin.users.updated') });
-      }
-      await loadUsers();
-      setFormOpen(false);
-    } catch {
-      setError(t('admin.users.error.save'));
-    } finally {
-      setSubmitting(false);
+    setFormOpen(false);
+    if (selectedUser) {
+      update.mutate(
+        { id: selectedUser.id, data: formData },
+        {
+          onSuccess: () => sileo.success({ description: t('admin.users.updated') }),
+          onError: () => { setError(t('admin.users.error.save')); setFormOpen(true); },
+        },
+      );
     }
   };
 
@@ -104,8 +99,8 @@ export default function AdminUsersPage() {
             <Switch checked={formData.isActive ?? true} onCheckedChange={(c) => setFormData({ ...formData, isActive: c })} />
             <Label>{t('admin.users.field.isActive')}</Label>
           </div>
-          <Button onClick={handleSave} disabled={submitting} className="w-full">
-            {submitting ? t('common.saving') : t('common.save')}
+          <Button onClick={handleSave} disabled={update.isPending} className="w-full">
+            {update.isPending ? t('common.saving') : t('common.save')}
           </Button>
         </div>
       }
@@ -114,7 +109,7 @@ export default function AdminUsersPage() {
 
       <DataTable
         columns={columns}
-        rows={users}
+        rows={usersData}
         loading={loading}
         onEdit={openEdit}
         emptyMessage={t('admin.users.empty')}

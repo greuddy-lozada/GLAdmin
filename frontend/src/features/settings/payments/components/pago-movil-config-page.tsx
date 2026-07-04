@@ -16,13 +16,12 @@ import { VENEZUELA_BANKS } from '@/lib/venezuela-banks';
 
 export default function PagoMovilConfigPage() {
   const { t } = useI18n();
-  const { config, loading, error, createConfig, updateConfig, loadConfig } = usePagoMovilConfig();
+  const { config, loading, error, create, update } = usePagoMovilConfig();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [bankId, setBankId] = useState('');
   const [idNumber, setIdNumber] = useState('');
   const [exchangeRate, setExchangeRate] = useState(0);
   const [isActive, setIsActive] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
 
   useEffect(() => {
@@ -35,33 +34,28 @@ export default function PagoMovilConfigPage() {
     }
   }, [config]);
 
-  const handleSave = async () => {
+  const handleSave = () => {
     setFormError('');
-    setSubmitting(true);
-    try {
-      if (config) {
-        const ok = await updateConfig({ phoneNumber, bankId, idNumber, exchangeRate, isActive });
-        if (ok) {
-          sileo.success({ description: t('pagoMovil.config.updated') });
-          await loadConfig();
-        } else {
-          setFormError(t('pagoMovil.config.error.save'));
-        }
-      } else {
-        const ok = await createConfig({ phoneNumber, bankId, idNumber, exchangeRate });
-        if (ok) {
-          sileo.success({ description: t('pagoMovil.config.created') });
-          await loadConfig();
-        } else {
-          setFormError(t('pagoMovil.config.error.save'));
-        }
-      }
-    } catch {
-      setFormError(t('pagoMovil.config.error.save'));
-    } finally {
-      setSubmitting(false);
+    if (config) {
+      update.mutate(
+        { phoneNumber, bankId, idNumber, exchangeRate, isActive },
+        {
+          onSuccess: () => sileo.success({ description: t('pagoMovil.config.updated') }),
+          onError: () => setFormError(t('pagoMovil.config.error.save')),
+        },
+      );
+    } else {
+      create.mutate(
+        { phoneNumber, bankId, idNumber, exchangeRate },
+        {
+          onSuccess: () => sileo.success({ description: t('pagoMovil.config.created') }),
+          onError: () => setFormError(t('pagoMovil.config.error.save')),
+        },
+      );
     }
   };
+
+  const configError = typeof error === 'string' ? error : null;
 
   return (
     <div className="space-y-6">
@@ -71,7 +65,7 @@ export default function PagoMovilConfigPage() {
         </Alert>
       )}
 
-      {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
+      {configError && <Alert variant="destructive"><AlertDescription>{configError}</AlertDescription></Alert>}
       {formError && <Alert variant="destructive"><AlertDescription>{formError}</AlertDescription></Alert>}
 
       <Card>
@@ -114,8 +108,8 @@ export default function PagoMovilConfigPage() {
               </div>
             )}
 
-            <Button onClick={handleSave} disabled={submitting || loading}>
-              {submitting ? t('common.saving') : t('common.save')}
+            <Button onClick={handleSave} disabled={create.isPending || update.isPending || loading}>
+              {create.isPending || update.isPending ? t('common.saving') : t('common.save')}
             </Button>
           </div>
         </CardContent>

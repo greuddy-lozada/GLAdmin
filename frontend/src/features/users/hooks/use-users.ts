@@ -1,72 +1,30 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useOptimisticCrud } from '@/hooks/use-optimistic-crud';
 import { User, CreateUserRequest, UpdateUserRequest } from '../models/user.model';
 import { userService } from '../services/user.service';
 
+function buildOptimistic(data: CreateUserRequest, tempId: number): User {
+  return {
+    id: tempId,
+    firstName: data.firstName,
+    lastName: data.lastName,
+    userName: data.userName,
+    email: data.email,
+    idRole: data.idRole,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+}
+
 export function useUsers() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadUsers = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await userService.getAll();
-      setUsers(data);
-    } catch {
-      setError('Error al cargar usuarios');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadUsers();
-  }, [loadUsers]);
-
-  const createUser = useCallback(async (data: CreateUserRequest) => {
-    setLoading(true);
-    try {
-      await userService.create(data);
-      await loadUsers();
-      return true;
-    } catch {
-      setError('Error al crear usuario');
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, [loadUsers]);
-
-  const updateUser = useCallback(async (id: number, data: UpdateUserRequest) => {
-    setLoading(true);
-    try {
-      await userService.update(id, data);
-      await loadUsers();
-      return true;
-    } catch {
-      setError('Error al actualizar usuario');
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, [loadUsers]);
-
-  const deleteUser = useCallback(async (id: number) => {
-    setLoading(true);
-    try {
-      await userService.delete(id);
-      await loadUsers();
-      return true;
-    } catch {
-      setError('Error al eliminar usuario');
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, [loadUsers]);
-
-  return { users, loading, error, loadUsers, createUser, updateUser, deleteUser };
+  return useOptimisticCrud<User, CreateUserRequest, UpdateUserRequest>({
+    queryKey: ['users'],
+    queryFn: () => userService.getAll(),
+    createFn: (data) => userService.create(data),
+    updateFn: (id, data) => userService.update(id, data),
+    deleteFn: (id) => userService.delete(id),
+    buildOptimistic,
+  });
 }
