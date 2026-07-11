@@ -292,7 +292,8 @@
       "save": "Error al guardar producto",
       "load": "Error al cargar productos",
       "delete": "Error al eliminar producto"
-    }
+    },
+    "uncategorized": "Sin categoría"
   },
   "brands": {
     "title": "Marcas",
@@ -539,14 +540,20 @@
       "method": "Método",
       "amountVes": "Monto Bs.",
       "amountUsd": "Monto USD",
-      "confirm": "Confirmar pago"
+      "confirm": "Confirmar pago",
+      "paid": "Pagado",
+      "remaining": "Faltante",
+      "complete": "Completo",
+      "excess": "Excedente"
     },
     "receipt": {
       "title": "Venta completada",
       "description": "Detalle del comprobante de venta",
       "items": "{{count}} artículos",
       "close": "Cerrar",
-      "autoClose": "Esta ventana se cerrará automáticamente"
+      "autoClose": "Esta ventana se cerrará automáticamente",
+      "print": "Imprimir",
+      "thanks": "¡Gracias por su compra!"
     },
     "stock": {
       "outOfStock": "Sin stock",
@@ -555,7 +562,15 @@
     },
     "sales": {
       "title": "Últimas ventas",
-      "empty": "Sin ventas"
+      "empty": "Sin ventas",
+      "detail": "Ver detalle",
+      "search": "Buscar por código o cliente...",
+      "fromDate": "Desde",
+      "toDate": "Hasta",
+      "loadMore": "Cargar más",
+      "error": {
+        "load": "Error al cargar venta"
+      }
     },
     "toolbar": {
       "undo": "Deshacer"
@@ -852,6 +867,8 @@
     "pos": {
       "searchProduct": "Buscar producto",
       "searchCustomer": "Buscar cliente",
+      "clearCustomer": "Quitar cliente",
+      "clearCart": "Limpiar carrito",
       "parkOrder": "Poner en espera",
       "payment": "Cobrar",
       "undo": "Deshacer",

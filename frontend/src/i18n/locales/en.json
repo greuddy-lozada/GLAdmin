@@ -292,7 +292,8 @@
       "save": "Error saving product",
       "load": "Error loading products",
       "delete": "Error deleting product"
-    }
+    },
+    "uncategorized": "Uncategorized"
   },
   "brands": {
     "title": "Brands",
@@ -539,14 +540,20 @@
       "method": "Method",
       "amountVes": "Amount Bs.",
       "amountUsd": "Amount USD",
-      "confirm": "Confirm payment"
+      "confirm": "Confirm payment",
+      "paid": "Paid",
+      "remaining": "Remaining",
+      "complete": "Complete",
+      "excess": "Excess"
     },
     "receipt": {
       "title": "Sale completed",
       "description": "Sales receipt details",
       "items": "{{count}} items",
       "close": "Close",
-      "autoClose": "This window will close automatically"
+      "autoClose": "This window will close automatically",
+      "print": "Print",
+      "thanks": "Thank you for your purchase!"
     },
     "stock": {
       "outOfStock": "Out of stock",
@@ -555,7 +562,15 @@
     },
     "sales": {
       "title": "Recent sales",
-      "empty": "No sales"
+      "empty": "No sales",
+      "detail": "View details",
+      "search": "Search by code or customer...",
+      "fromDate": "From",
+      "toDate": "To",
+      "loadMore": "Load more",
+      "error": {
+        "load": "Error loading sale"
+      }
     },
     "toolbar": {
       "undo": "Undo"
@@ -852,6 +867,8 @@
     "pos": {
       "searchProduct": "Search product",
       "searchCustomer": "Search customer",
+      "clearCustomer": "Clear customer",
+      "clearCart": "Clear cart",
       "parkOrder": "Park order",
       "payment": "Checkout",
       "undo": "Undo",

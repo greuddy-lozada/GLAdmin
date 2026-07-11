@@ -210,3 +210,22 @@ a {
     transition-duration: 0.01ms !important;
   }
 }
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #pos-receipt, #pos-receipt * {
+    visibility: visible;
+  }
+  #pos-receipt {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 1rem;
+  }
+  .receipt-no-print {
+    display: none !important;
+  }
+}

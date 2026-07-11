@@ -1,26 +1,38 @@
 'use client';
 
-import { useEffect, useState, Suspense, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { sileo } from 'sileo';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useI18n } from '@/i18n';
 import { useHotkey } from '@/hooks/use-hotkey';
 import { usePosStore } from '@/stores/pos-store';
 import { usePos } from './hooks/use-pos';
 import { useOfflineSale } from './hooks/use-offline-sale';
-import { CustomerSearch } from './components/customer-search';
-import { QuickAddCustomer } from './components/quick-add-customer';
-import { DetailTable } from './components/detail-table';
-import { SaleSummary } from './components/sale-summary';
 import { PosToolbar } from './components/pos-toolbar';
+import { CustomerBar } from './components/customer-bar';
+import { QuickAddCustomer } from './components/quick-add-customer';
+import { ProductGrid, type ProductGridHandle } from './components/product-grid';
+import { CartPanel } from './components/cart-panel';
 import { ParkedOrders } from './components/parked-orders';
 import { PaymentModal } from './components/payment-modal';
 import { ReceiptDialog } from './components/receipt-dialog';
 import { SaleHistory } from './components/sale-history';
+import { SaleDetailModal } from './components/sale-detail-modal';
 import { PaymentMethod, type SalePayment } from './models/pos.model';
-import type { ParkedOrder } from '@/lib/sync/db';
+import type { CartItem } from './models/pos.model';
+import type { ParkedOrder, LocalSale } from '@/lib/sync/db';
 import { localDb } from '@/lib/sync/db';
+
+interface ReceiptData {
+  open: boolean;
+  code: string;
+  items: CartItem[];
+  total: number;
+  totalUsd: number;
+  customerName?: string;
+  customerTaxId?: string;
+  payments: SalePayment[];
+  exchangeRate: number;
+}
 
 export default function PosPage() {
   const { t } = useI18n();
@@ -35,24 +47,27 @@ export default function PosPage() {
 
   const customerId = usePosStore(s => s.customerId);
   const customerName = usePosStore(s => s.customerName);
+  const customerTaxId = usePosStore(s => s.customerTaxId);
   const exchangeRate = usePosStore(s => s.exchangeRate);
   const setCustomer = usePosStore(s => s.setCustomer);
   const clearCustomer = usePosStore(s => s.clearCustomer);
   const setExchangeRate = usePosStore(s => s.setExchangeRate);
 
   const { createSale } = useOfflineSale();
-  const [receipt, setReceipt] = useState<{ open: boolean; code: string; itemCount: number; total: number; totalUsd: number }>({ open: false, code: '', itemCount: 0, total: 0, totalUsd: 0 });
+  const [receipt, setReceipt] = useState<ReceiptData>({ open: false, code: '', items: [], total: 0, totalUsd: 0, payments: [], exchangeRate: 0 });
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [quickAddKey, setQuickAddKey] = useState(0);
+  const [gridRefresh, setGridRefresh] = useState(0);
+  const [detailSale, setDetailSale] = useState<LocalSale | null>(null);
+
+  const productGridRef = useRef<ProductGridHandle>(null);
+  const customerSearchRef = useRef<HTMLInputElement>(null);
 
   const openQuickAdd = () => {
     setQuickAddKey(k => k + 1);
     setQuickAddOpen(true);
   };
-
-  const productSearchRef = useRef<HTMLInputElement>(null);
-  const customerSearchRef = useRef<HTMLInputElement>(null);
 
   const barcodeBuffer = useRef('');
   const barcodeTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -75,13 +90,21 @@ export default function PosPage() {
     }
   };
 
+  const handleClearCart = () => {
+    if (cart.length > 0) clearCart();
+  };
+
   const handleCloseModal = () => {
     setReceipt(prev => ({ ...prev, open: false }));
     setPaymentOpen(false);
+    setQuickAddOpen(false);
   };
 
-  useHotkey('pos.searchProduct', () => productSearchRef.current?.focus());
+  useHotkey('pos.searchProduct', () => productGridRef.current?.focusSearch());
   useHotkey('pos.searchCustomer', () => customerSearchRef.current?.focus());
+  useHotkey('pos.clearCustomer', () => clearCustomer());
+  useHotkey('pos.clearCart', handleClearCart);
+  useHotkey('pos.refreshProducts', () => setGridRefresh(n => n + 1));
   useHotkey('pos.parkOrder', handlePark);
   useHotkey('pos.payment', () => setPaymentOpen(true));
   useHotkey('pos.undo', undoLastItem);
@@ -89,10 +112,9 @@ export default function PosPage() {
   useHotkey('pos.quickAddCustomer', openQuickAdd);
 
   const handlePayment = async (payments: SalePayment[]) => {
-    const saleCode = `SALE-${Date.now()}`;
     const primaryMethod = payments.length === 1 ? payments[0].method : PaymentMethod.Mixed;
-    await createSale(cart, total, totalUsd, exchangeRate, primaryMethod, customerId, withholdingPercentage, withholdingAmount, withholdingAmountUsd, payments);
-    setReceipt({ open: true, code: saleCode, itemCount: cart.length, total, totalUsd });
+    const saleCode = await createSale(cart, total, totalUsd, exchangeRate, primaryMethod, customerId, withholdingPercentage, withholdingAmount, withholdingAmountUsd, payments);
+    setReceipt({ open: true, code: saleCode, items: [...cart], total, totalUsd, customerName, customerTaxId, payments, exchangeRate });
     clearCart();
     clearCustomer();
     setPaymentOpen(false);
@@ -102,7 +124,7 @@ export default function PosPage() {
     resumeCart(order);
   };
 
-  const handleQuickAddCustomer = (customer: { id: number; name: string; taxId: string; isWithholdingAgent: boolean; withholdingPercentage?: number | null; withholdingProof?: string }) => {
+  const handleQuickAddCustomer = (customer: { id: number; name: string; taxId: string; isWithholdingAgent: boolean; withholdingPercentage?: number | null }) => {
     setCustomer(customer.id, customer.name, customer.taxId, customer.isWithholdingAgent ? customer.withholdingPercentage ?? null : null);
   };
 
@@ -125,36 +147,81 @@ export default function PosPage() {
   }, [addToCart]);
 
   return (
-    <div className="container mx-auto p-6 max-w-3xl">
-      <Suspense fallback={<div className="space-y-4 p-6"><Skeleton className="h-10 w-full" /><Skeleton className="h-12 w-full" /><Skeleton className="h-64 w-full" /></div>}>
-        <PosToolbar exchangeRate={exchangeRate} onPark={handlePark} onUndo={undoLastItem} canUndo={canUndo} hasItems={cart.length > 0} />
+    <>
+      <div className="flex flex-col h-[calc(100vh-8rem)] pb-6">
+      <PosToolbar exchangeRate={exchangeRate} onPark={handlePark} onUndo={undoLastItem} canUndo={canUndo} hasItems={cart.length > 0} />
 
-        <div className="flex items-center gap-2 mb-4">
-          <CustomerSearch
-            ref={customerSearchRef}
-            value={customerId}
-            onChange={(id, name, taxId, withholdingPct) => setCustomer(id, name, taxId, withholdingPct)}
+      <CustomerBar
+        ref={customerSearchRef}
+        customerId={customerId}
+        customerName={customerName}
+        customerTaxId={customerTaxId}
+        withholdingPercentage={withholdingPercentage}
+        onSelectCustomer={(id, name, taxId, withholding) => setCustomer(id, name, taxId, withholding)}
+        onClearCustomer={clearCustomer}
+        onQuickAdd={openQuickAdd}
+      />
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4 flex-1 min-h-0">
+        <div className="lg:col-span-2 h-full min-h-0 flex flex-col">
+          <div className="flex-1 overflow-y-auto pr-1 min-h-0">
+            <ProductGrid ref={productGridRef} onAddToCart={addToCart} refreshTrigger={gridRefresh} />
+          </div>
+          <div className="mt-3 space-y-2 flex-shrink-0">
+            <ParkedOrders currentCartCount={cart.length} onResume={handleResume} refreshTrigger={parkRefresh} />
+            <SaleHistory onSelectSale={setDetailSale} />
+          </div>
+        </div>
+
+        <div className="lg:col-span-1 h-full min-h-0">
+          <CartPanel
+            items={cart}
+            onUpdateQuantity={updateQuantity}
+            onRemove={removeFromCart}
+            total={total}
+            totalUsd={totalUsd}
+            totalTax={totalTax}
+            totalTaxUsd={totalTaxUsd}
+            exchangeRate={exchangeRate}
+            withholdingPercentage={withholdingPercentage}
+            withholdingAmount={withholdingAmount}
+            netToCollect={netToCollect}
+            onCheckout={() => setPaymentOpen(true)}
           />
-          <QuickAddCustomer key={quickAddKey} open={quickAddOpen} onOpenChange={setQuickAddOpen} onCreated={handleQuickAddCustomer} />
         </div>
-
-        <DetailTable ref={productSearchRef} items={cart} onAddToCart={addToCart} onUpdateQuantity={updateQuantity} onRemove={removeFromCart} />
-
-        <SaleSummary total={total} totalUsd={totalUsd} totalTax={totalTax} totalTaxUsd={totalTaxUsd} exchangeRate={exchangeRate} withholdingPercentage={withholdingPercentage} withholdingAmount={withholdingAmount} withholdingAmountUsd={withholdingAmountUsd} netToCollect={netToCollect} netToCollectUsd={netToCollectUsd} />
-
-        <div className="mt-4">
-          <Button className="w-full" size="lg" onClick={() => setPaymentOpen(true)} disabled={cart.length === 0}>
-            {t('pos.payment.checkout')}
-          </Button>
-        </div>
-
-        <ParkedOrders currentCartCount={cart.length} onResume={handleResume} refreshTrigger={parkRefresh} />
-
-        <SaleHistory />
-      </Suspense>
-
-      <PaymentModal open={paymentOpen} onOpenChange={setPaymentOpen} total={total} totalUsd={totalUsd} totalTax={totalTax} totalTaxUsd={totalTaxUsd} exchangeRate={exchangeRate} withholdingAmount={withholdingAmount} withholdingAmountUsd={withholdingAmountUsd} netToCollect={netToCollect} netToCollectUsd={netToCollectUsd} onPayment={handlePayment} />
-      <ReceiptDialog open={receipt.open} onClose={() => setReceipt(prev => ({ ...prev, open: false }))} saleCode={receipt.code} itemCount={receipt.itemCount} total={receipt.total} totalUsd={receipt.totalUsd} />
     </div>
+
+      <PaymentModal
+        open={paymentOpen}
+        onOpenChange={setPaymentOpen}
+        total={total}
+        totalUsd={totalUsd}
+        totalTax={totalTax}
+        totalTaxUsd={totalTaxUsd}
+        exchangeRate={exchangeRate}
+        withholdingAmount={withholdingAmount}
+        withholdingAmountUsd={withholdingAmountUsd}
+        netToCollect={netToCollect}
+        netToCollectUsd={netToCollectUsd}
+        onPayment={handlePayment}
+      />
+
+      <ReceiptDialog
+        open={receipt.open}
+        onClose={() => setReceipt(prev => ({ ...prev, open: false }))}
+        code={receipt.code}
+        items={receipt.items}
+        total={receipt.total}
+        totalUsd={receipt.totalUsd}
+        customerName={receipt.customerName}
+        customerTaxId={receipt.customerTaxId}
+        payments={receipt.payments}
+        exchangeRate={receipt.exchangeRate}
+      />
+    </div>
+
+    <QuickAddCustomer key={quickAddKey} open={quickAddOpen} onOpenChange={setQuickAddOpen} onCreated={handleQuickAddCustomer} />
+    <SaleDetailModal sale={detailSale} open={detailSale !== null} onOpenChange={(o) => !o && setDetailSale(null)} />
+    </>
   );
 }

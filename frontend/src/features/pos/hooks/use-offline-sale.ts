@@ -4,6 +4,13 @@ import type { CartItem } from '../models/pos.model';
 import { PaymentMethod, type CreateSaleRequest, type SalePayment } from '../models/pos.model';
 
 export function useOfflineSale() {
+  const getNextCode = async (): Promise<string> => {
+    const meta = await localDb.syncMetadata.get('saleCounter');
+    const next = (meta ? parseInt(meta.value, 10) : 0) + 1;
+    await localDb.syncMetadata.put({ key: 'saleCounter', value: String(next) });
+    return String(next).padStart(5, '0');
+  };
+
   const createSale = async (
     cart: CartItem[],
     total: number,
@@ -16,8 +23,9 @@ export function useOfflineSale() {
     withholdingAmountUsd?: number,
     payments?: SalePayment[],
   ) => {
+    const code = await getNextCode();
     const saleData: CreateSaleRequest = {
-      code: `SALE-${Date.now()}`,
+      code,
       date: new Date().toISOString(),
       amount: total,
       amountUsd: totalUsd,
@@ -76,6 +84,8 @@ export function useOfflineSale() {
         });
       }
     }
+
+    return code;
   };
 
   return { createSale };

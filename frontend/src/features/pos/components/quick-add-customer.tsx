@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Upload, X } from 'lucide-react';
+import { Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -111,12 +111,11 @@ export function QuickAddCustomer({ onCreated, open: externalOpen, onOpenChange }
   };
 
   return (
-    <>
-      <SlideForm
-        open={open}
-        title={t('pos.customer.quickAddTitle')}
-        onClose={() => setOpen(false)}
-        panel={<div className="space-y-4">
+    <SlideForm
+      open={open}
+      title={t('pos.customer.quickAddTitle')}
+      onClose={() => setOpen(false)}
+      panel={<div className="space-y-4">
             <div className="space-y-2"><Label>{t('pos.customer.field.firstName')}</Label><Input autoFocus value={firstName} onChange={(e) => setFirstName(e.target.value)} required /></div>
             <div className="space-y-2"><Label>{t('pos.customer.field.lastName')}</Label><Input value={lastName} onChange={(e) => setLastName(e.target.value)} required /></div>
             <div className="space-y-2"><Label>{t('pos.customer.field.taxId')}</Label><Input value={taxId} onChange={(e) => setTaxId(e.target.value)} required /></div>
@@ -167,11 +166,8 @@ export function QuickAddCustomer({ onCreated, open: externalOpen, onOpenChange }
               {saving ? t('common.saving') : t('common.save')}
             </Button>
           </div>}
-      >
-        <Button size="sm" variant="ghost" onClick={() => { reset(); setOpen(true); }}>
-          <Plus className="h-4 w-4" /> {t('pos.customer.quickAdd')}
-        </Button>
-      </SlideForm>
-    </>
+    >
+      {null}
+    </SlideForm>
   );
 }

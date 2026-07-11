@@ -42,6 +42,12 @@
 | [DevOps/release-policy.md](DevOps/release-policy.md) | Criterios de producción, smoke tests, rollback. |
 | [DevOps/git-hygiene.md](DevOps/git-hygiene.md) | Ramas, conventional commits, PRs, git hooks. |
 
+### 📋 Planes de Implementación
+| Archivo | Propósito |
+|---|---|
+| [plans/database-migration-plan.md](plans/database-migration-plan.md) | Migración UUIDs + PostgreSQL (plan original, ejecutado parcialmente). |
+| [plans/implementation-priorities.md](plans/implementation-priorities.md) | Plan de prioridades prácticas: Decimal(18,4), soft delete, tests. |
+
 ---
 
 ## Stack Tecnológico (Resumen)

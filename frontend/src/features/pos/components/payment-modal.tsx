@@ -59,6 +59,11 @@ export function PaymentModal({ open, onOpenChange, total, totalUsd, totalTax, to
 
   const vesNum = parseFloat(vesAmount) || 0;
   const usdNum = parseFloat(usdAmount) || 0;
+  const paidVes = vesNum + usdNum * exchangeRate;
+  const remaining = collectTotal - paidVes;
+  const isExact = Math.abs(remaining) < 0.01;
+  const isOver = remaining < 0;
+  const remainingUsd = exchangeRate > 0 ? Math.abs(remaining) / exchangeRate : 0;
 
   const handleConfirm = () => {
     const paidVes = vesNum + usdNum * exchangeRate;
@@ -139,8 +144,27 @@ export function PaymentModal({ open, onOpenChange, total, totalUsd, totalTax, to
             </div>
           </div>
 
-          <div className="text-xs text-muted-foreground">
-            Total: Bs. {vesNum.toFixed(2)} + USD ${usdNum.toFixed(2)} × {exchangeRate.toFixed(2)} = Bs. {(vesNum + usdNum * exchangeRate).toFixed(2)}
+          <div className={`border rounded-lg p-3 space-y-1.5 ${isExact ? 'bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800' : isOver ? 'bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800' : paidVes > 0 ? 'bg-yellow-50 border-yellow-200 dark:bg-yellow-950/20 dark:border-yellow-800' : 'bg-muted/30'}`}>
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>{t('pos.payment.paid')}</span>
+              <span className="tabular-nums">Bs. {paidVes.toFixed(2)}</span>
+            </div>
+            <div className={`flex justify-between text-sm font-semibold ${isExact ? 'text-green-600 dark:text-green-400' : isOver ? 'text-destructive' : 'text-yellow-600 dark:text-yellow-400'}`}>
+              <span>
+                {isExact ? t('pos.payment.complete') : isOver ? t('pos.payment.excess') : t('pos.payment.remaining')}
+              </span>
+              <span className="tabular-nums">
+                {isExact ? '\u2713' : `Bs. ${Math.abs(remaining).toFixed(2)}`}
+                {!isExact && exchangeRate > 0 && (
+                  <span className="text-xs ml-1 font-normal">($ {remainingUsd.toFixed(2)} USD)</span>
+                )}
+              </span>
+            </div>
+            {!isExact && (
+              <div className="text-[10px] text-muted-foreground text-right">
+                Total a cobrar: Bs. {collectTotal.toFixed(2)}
+              </div>
+            )}
           </div>
 
           {error && <p className="text-sm text-destructive">{error}</p>}
