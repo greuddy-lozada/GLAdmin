@@ -166,6 +166,7 @@ export default function CompaniesPage() {
         </div>
       }
     >
+      <div className="max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <RoleGuard minLevel={80}>
           <Button onClick={openCreate}>
@@ -198,6 +199,7 @@ export default function CompaniesPage() {
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
         loading={remove.isPending}
       />
+      </div>
     </SlideForm>
   );
 }

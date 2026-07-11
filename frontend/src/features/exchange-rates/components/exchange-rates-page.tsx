@@ -149,6 +149,7 @@ export default function ExchangeRatesPage() {
         </div>
       }
     >
+      <div className="max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           {latestDay && (
@@ -180,6 +181,7 @@ export default function ExchangeRatesPage() {
         onEdit={(item) => openEdit(item)}
         emptyMessage={t('exchangeRates.empty')}
       />
+      </div>
     </SlideForm>
   );
 }

@@ -152,6 +152,7 @@ export default function AdminOrgsPage() {
         </div>
       }
     >
+      <div className="max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <Button onClick={openCreate}>
           <Plus className="mr-2 h-4 w-4" />
@@ -182,6 +183,7 @@ export default function AdminOrgsPage() {
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
         loading={remove.isPending}
       />
+      </div>
     </SlideForm>
   );
 }

@@ -16,7 +16,7 @@ export default function RolesPage() {
   ];
 
   return (
-    <div>
+    <div className="max-w-6xl mx-auto">
       <DataTable
         columns={columns}
         rows={roles}

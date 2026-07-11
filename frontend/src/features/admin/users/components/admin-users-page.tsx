@@ -104,6 +104,7 @@ export default function AdminUsersPage() {
         </div>
       }
     >
+      <div className="max-w-6xl mx-auto">
       {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
 
       <DataTable
@@ -113,6 +114,7 @@ export default function AdminUsersPage() {
         onEdit={openEdit}
         emptyMessage={t('admin.users.empty')}
       />
+      </div>
     </SlideForm>
   );
 }

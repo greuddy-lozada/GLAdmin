@@ -187,6 +187,7 @@ export default function StocksPage() {
         </div>
       }
     >
+      <div className="max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <RoleGuard minLevel={60}>
           <Button onClick={openCreate}>
@@ -219,6 +220,7 @@ export default function StocksPage() {
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
         loading={remove.isPending}
       />
+      </div>
     </SlideForm>
   );
 }

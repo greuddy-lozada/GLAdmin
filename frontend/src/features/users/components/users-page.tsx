@@ -185,6 +185,7 @@ export default function UsersPage() {
         </div>
       }
     >
+      <div className="max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <RoleGuard minLevel={80}>
           <Button onClick={openCreate}>
@@ -217,6 +218,7 @@ export default function UsersPage() {
         onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
         loading={remove.isPending}
       />
+      </div>
     </SlideForm>
   );
 }
