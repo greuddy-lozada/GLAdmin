@@ -23,7 +23,8 @@ function getStripeInstance() {
 
 @Injectable()
 export class PaymentsService {
-  private readonly processedEvents = new Set<string>();
+  // ponytail: Stripe not in use yet — comment out unbounded Set to prevent RAM leak
+  // private readonly processedEvents = new Set<string>();
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -73,10 +74,9 @@ export class PaymentsService {
   }
 
   async handleWebhook(event: StripeWebhookEvent) {
-    if (this.processedEvents.has(event.id)) {
-      return;
-    }
-    this.processedEvents.add(event.id);
+    // ponytail: Stripe not in use — dedup disabled to avoid unbounded Set growth
+    // if (this.processedEvents.has(event.id)) { return; }
+    // this.processedEvents.add(event.id);
 
     if (event.type === 'checkout.session.completed') {
       const object = event.data.object as {

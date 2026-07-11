@@ -34,8 +34,14 @@ export class SyncController {
   }
 
   @Get('conflicts')
-  async getConflicts() {
-    return this.syncService.getConflicts();
+  async getConflicts(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.syncService.getConflicts(
+      page ? parseInt(page, 10) : 1,
+      limit ? parseInt(limit, 10) : 50,
+    );
   }
 
   @Patch('conflicts/:id/resolve')

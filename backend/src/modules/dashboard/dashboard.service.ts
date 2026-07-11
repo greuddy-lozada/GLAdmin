@@ -91,6 +91,7 @@ export class DashboardService {
             price: true,
             stocks: { select: { existence: true } },
           },
+          take: 200,
         }),
         this.prisma.supplier.findMany({
           where: { available: true, organizationId: orgId },
@@ -106,7 +107,7 @@ export class DashboardService {
           where: { date: { not: null }, organizationId: orgId },
           select: { date: true },
           orderBy: { date: 'desc' },
-          take: 500,
+          take: 100,
         }),
       ]);
 
@@ -186,7 +187,7 @@ export class DashboardService {
         where: { organizationId: orgId, date: { not: null } },
         select: { date: true, amount: true },
         orderBy: { date: 'desc' },
-        take: 500,
+        take: 100,
       }),
     ]);
 

@@ -57,7 +57,7 @@ export default function BillingPage() {
 
   if (loading) {
     return (
-      <div className="h-full flex flex-col gap-4">
+      <div className="h-full flex flex-col gap-6">
         <div className="flex-1 overflow-y-auto">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((i) => (
@@ -82,12 +82,12 @@ export default function BillingPage() {
   }
 
   return (
-    <div className="h-full flex flex-col gap-4">
+    <div className="h-full flex flex-col gap-6">
       {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
 
       {currentOrg && currentOrg.subscriptionStatus !== 'inactive' && (
         <Alert>
-          <AlertDescription>
+          <AlertDescription className="leading-relaxed max-w-prose">
             {currentOrg.subscriptionStatus === 'active' && currentOrg.subscriptionExpiresAt
               ? tp('subscription.status.active', {
                   plan: currentOrg.plan?.label ?? '',
@@ -103,7 +103,7 @@ export default function BillingPage() {
       )}
       {currentOrg && currentOrg.subscriptionStatus === 'inactive' && (
         <Alert>
-          <AlertDescription>
+          <AlertDescription className="leading-relaxed max-w-prose">
             {t('subscription.status.inactive')}
           </AlertDescription>
         </Alert>

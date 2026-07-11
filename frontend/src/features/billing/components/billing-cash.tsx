@@ -43,7 +43,7 @@ export function BillingCash({ plan, open, onOpenChange }: BillingCashProps) {
             <p className="text-3xl font-bold">${amountUsd.toFixed(2)}</p>
           </div>
           <div className="bg-muted rounded-lg p-3 text-sm space-y-2">
-            <p>{t('subscription.payment.cashInstructions')}</p>
+            <p className="leading-relaxed">{t('subscription.payment.cashInstructions')}</p>
           </div>
           {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
           <Button onClick={handleSubmit} disabled={submitting} className="w-full" size="lg">

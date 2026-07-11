@@ -19,7 +19,7 @@ export function PosToolbar({ exchangeRate, onPark, onUndo, canUndo, hasItems }: 
   const { displayKeys: undoKeys } = useHotkey('pos.undo', () => {}, { enabled: false });
 
   return (
-    <div className="flex items-center justify-between mb-4">
+    <div className="flex items-center justify-between mb-6">
       <div className="flex gap-2">
         <Button variant="outline" size="sm" onClick={onPark} disabled={!hasItems} title={`${t('pos.park.button')} (${parkKeys})`}>
           <Pause className="mr-2 h-4 w-4" />

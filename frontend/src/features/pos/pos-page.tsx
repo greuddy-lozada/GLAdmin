@@ -25,8 +25,7 @@ import { localDb } from '@/lib/sync/db';
 export default function PosPage() {
   const { t } = useI18n();
   const {
-    cart, products, loadProducts,
-    addToCart, removeFromCart, updateQuantity, clearCart,
+    cart, addToCart, removeFromCart, updateQuantity, clearCart,
     total, totalUsd, totalTax, totalTaxUsd,
     withholdingPercentage, withholdingAmount, withholdingAmountUsd,
     netToCollect, netToCollectUsd,
@@ -59,13 +58,12 @@ export default function PosPage() {
   const barcodeTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
-    loadProducts();
     localDb.exchangeRateDays.orderBy('updatedAt').last().then((day) => {
       if (day) setExchangeRate(day.rateBcvUsd ?? day.rateParalelo ?? 0);
     }).catch(() => {
       localDb.exchangeRates.orderBy('updatedAt').last().then((rate) => { if (rate) setExchangeRate(rate.rate); }).catch(console.warn);
     });
-  }, [loadProducts, setExchangeRate]);
+  }, [setExchangeRate]);
 
   const handlePark = async () => {
     const result = await parkCart(customerId, customerName);
@@ -87,7 +85,6 @@ export default function PosPage() {
   useHotkey('pos.parkOrder', handlePark);
   useHotkey('pos.payment', () => setPaymentOpen(true));
   useHotkey('pos.undo', undoLastItem);
-  useHotkey('pos.refreshProducts', loadProducts);
   useHotkey('pos.closeModal', handleCloseModal);
   useHotkey('pos.quickAddCustomer', openQuickAdd);
 
@@ -117,13 +114,15 @@ export default function PosPage() {
         barcodeTimer.current = setTimeout(() => { barcodeBuffer.current = ''; }, 200);
       }
       if (e.key === 'Enter' && barcodeBuffer.current.length >= 3) {
-        const product = products.find(p => p.code === barcodeBuffer.current);
-        if (product) { addToCart(product); barcodeBuffer.current = ''; e.preventDefault(); }
+        const code = barcodeBuffer.current;
+        localDb.products.filter(p => p.code === code).first().then(product => {
+          if (product) { addToCart(product); barcodeBuffer.current = ''; e.preventDefault(); }
+        });
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [products, addToCart]);
+  }, [addToCart]);
 
   return (
     <div className="container mx-auto p-6 max-w-3xl">

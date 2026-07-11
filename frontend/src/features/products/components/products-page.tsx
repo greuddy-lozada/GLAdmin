@@ -248,7 +248,7 @@ export default function ProductsPage() {
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>{t('products.field.code')}</Label>
-            <Input value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} required />
+            <Input className="font-mono" value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} required />
           </div>
           <div className="space-y-2">
             <Label>{t('products.field.name')}</Label>

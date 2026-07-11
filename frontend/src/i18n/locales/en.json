@@ -525,6 +525,7 @@
     },
     "payment": {
       "title": "Select payment method",
+      "description": "Enter amounts and select payment method",
       "checkout": "Checkout",
       "cash": "Cash",
       "pagoMovil": "Pago Móvil",
@@ -542,6 +543,7 @@
     },
     "receipt": {
       "title": "Sale completed",
+      "description": "Sales receipt details",
       "items": "{{count}} items",
       "close": "Close",
       "autoClose": "This window will close automatically"

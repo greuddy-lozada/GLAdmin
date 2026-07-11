@@ -17,7 +17,7 @@ interface PosState {
 
   addToCart: (product: LocalProduct, taxes: TaxMap) => void;
   removeFromCart: (productId: number) => void;
-  updateQuantity: (productId: number, quantity: number, products: LocalProduct[]) => void;
+  updateQuantity: (productId: number, quantity: number, productStock?: number) => void;
   clearCart: () => void;
   undoLastItem: () => void;
   setCart: (items: CartItem[]) => void;
@@ -96,15 +96,14 @@ export const usePosStore = create<PosState>()(
         set(state => ({ cart: state.cart.filter(item => item.productId !== productId) }));
       },
 
-      updateQuantity: (productId, quantity, products) => {
+      updateQuantity: (productId, quantity, productStock) => {
         if (quantity <= 0) {
           get().removeFromCart(productId);
           return;
         }
 
-        const product = products.find(p => p.id === productId);
-        if (quantity > (product?.stock ?? 0)) {
-          sileo.error({ description: `Stock insuficiente para ${product?.name}` });
+        if (productStock != null && quantity > productStock) {
+          sileo.error({ description: `Stock insuficiente` });
           return;
         }
 

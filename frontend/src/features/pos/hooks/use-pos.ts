@@ -9,12 +9,11 @@ export function usePos() {
 
   const addToCartAction = usePosStore(s => s.addToCart);
   const removeFromCart = usePosStore(s => s.removeFromCart);
-  const updateQuantityAction = usePosStore(s => s.updateQuantity);
+  const storeUpdateQuantity = usePosStore(s => s.updateQuantity);
   const clearCart = usePosStore(s => s.clearCart);
   const undoLastItem = usePosStore(s => s.undoLastItem);
   const setCart = usePosStore(s => s.setCart);
 
-  const [products, setProducts] = useState<LocalProduct[]>([]);
   const [taxes, setTaxes] = useState<TaxMap>({});
   const [parkRefresh, setParkRefresh] = useState(0);
 
@@ -26,18 +25,14 @@ export function usePos() {
     }).catch(console.warn);
   }, []);
 
-  const loadProducts = useCallback(async () => {
-    const allProducts = await localDb.products.toArray();
-    setProducts(allProducts);
-  }, []);
-
   const addToCart = useCallback((product: LocalProduct) => {
     addToCartAction(product, taxes);
   }, [addToCartAction, taxes]);
 
-  const updateQuantity = useCallback((productId: number, quantity: number) => {
-    updateQuantityAction(productId, quantity, products);
-  }, [updateQuantityAction, products]);
+  const updateQuantity = useCallback(async (productId: number, quantity: number) => {
+    const product = await localDb.products.get(productId);
+    storeUpdateQuantity(productId, quantity, product?.stock);
+  }, [storeUpdateQuantity]);
 
   const total = useMemo(() => cart.reduce((sum, item) => sum + item.subtotal, 0), [cart]);
   const totalUsd = useMemo(() => cart.reduce((sum, item) => sum + item.subtotalUsd, 0), [cart]);
@@ -116,8 +111,6 @@ export function usePos() {
 
   return {
     cart,
-    products,
-    loadProducts,
     addToCart,
     removeFromCart,
     updateQuantity,

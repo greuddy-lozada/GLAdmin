@@ -525,6 +525,7 @@
     },
     "payment": {
       "title": "Seleccionar método de pago",
+      "description": "Ingresa los montos y selecciona el método de pago",
       "checkout": "Cobrar",
       "cash": "Efectivo",
       "pagoMovil": "Pago Móvil",
@@ -542,6 +543,7 @@
     },
     "receipt": {
       "title": "Venta completada",
+      "description": "Detalle del comprobante de venta",
       "items": "{{count}} artículos",
       "close": "Cerrar",
       "autoClose": "Esta ventana se cerrará automáticamente"

@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { CheckCircle2 } from 'lucide-react';
 import { useI18n } from '@/i18n';
 
@@ -31,9 +31,10 @@ export function ReceiptDialog({ open, onClose, saleCode, itemCount, total, total
           <div className="flex flex-col items-center gap-2">
             <CheckCircle2 className="h-12 w-12 text-green-500" />
             <DialogTitle>{t('pos.receipt.title')}</DialogTitle>
+            <DialogDescription>{t('pos.receipt.description')}</DialogDescription>
           </div>
         </DialogHeader>
-        <div className="text-center space-y-2">
+        <div className="space-y-2">
           <p className="text-sm text-muted-foreground font-mono">{saleCode}</p>
           <p>{tp('pos.receipt.items', { count: String(itemCount) })}</p>
           <div className="text-lg font-bold tabular-nums text-primary">${total.toFixed(2)} VES</div>

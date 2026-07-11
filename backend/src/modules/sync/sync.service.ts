@@ -34,12 +34,16 @@ export class SyncService {
     private readonly salesService: SalesService,
   ) {}
 
+  private static readonly SYNC_BATCH_SIZE = 500;
+
   async pull(since?: string) {
     const orgId = this.context.getCurrent()?.organizationId;
     if (!orgId) throw new Error('No organization context');
     const sinceDate = since ? new Date(since) : new Date(0);
 
-    // ponytail: parallelize 9 independent entity pulls → 5x latency improvement
+    const orderBy = { updatedAt: 'asc' as const };
+    const take = SyncService.SYNC_BATCH_SIZE;
+
     const [
       products,
       customers,
@@ -67,6 +71,8 @@ export class SyncService {
           updatedAt: true,
           stocks: { select: { existence: true } },
         },
+        orderBy,
+        take,
       }),
       this.prisma.customer.findMany({
         where: { organizationId: orgId, updatedAt: { gt: sinceDate } },
@@ -81,10 +87,14 @@ export class SyncService {
           withholdingProof: true,
           updatedAt: true,
         },
+        orderBy,
+        take,
       }),
       this.prisma.exchangeRate.findMany({
         where: { organizationId: orgId, updatedAt: { gt: sinceDate } },
         select: { id: true, rate: true, updatedAt: true },
+        orderBy,
+        take,
       }),
       this.prisma.exchangeRateDay.findMany({
         where: { organizationId: orgId, updatedAt: { gt: sinceDate } },
@@ -95,10 +105,14 @@ export class SyncService {
           rateParalelo: true,
           updatedAt: true,
         },
+        orderBy,
+        take,
       }),
       this.prisma.supplier.findMany({
         where: { organizationId: orgId, updatedAt: { gt: sinceDate } },
         select: { id: true, companyName: true, updatedAt: true },
+        orderBy,
+        take,
       }),
       this.prisma.company.findMany({
         where: { organizationId: orgId, updatedAt: { gt: sinceDate } },
@@ -109,14 +123,20 @@ export class SyncService {
           withholdingPercentage: true,
           updatedAt: true,
         },
+        orderBy,
+        take,
       }),
       this.prisma.tax.findMany({
         where: { organizationId: orgId, updatedAt: { gt: sinceDate } },
         select: { id: true, name: true, percentage: true, updatedAt: true },
+        orderBy,
+        take,
       }),
       this.prisma.brand.findMany({
         where: { organizationId: orgId, updatedAt: { gt: sinceDate } },
         select: { id: true, name: true, description: true, updatedAt: true },
+        orderBy,
+        take,
       }),
       this.prisma.category.findMany({
         where: { organizationId: orgId, updatedAt: { gt: sinceDate } },
@@ -127,20 +147,36 @@ export class SyncService {
           idParent: true,
           updatedAt: true,
         },
+        orderBy,
+        take,
       }),
     ]);
 
+    const hasMore =
+      products.length >= take ||
+      customers.length >= take ||
+      exchangeRates.length >= take ||
+      exchangeRateDays.length >= take ||
+      suppliers.length >= take ||
+      companies.length >= take ||
+      taxes.length >= take ||
+      brands.length >= take ||
+      categories.length >= take;
+
     const lastPullAt = new Date();
 
-    await this.prisma.syncCursor.upsert({
-      where: { organizationId: orgId },
-      update: { lastPullAt },
-      create: {
-        organizationId: orgId,
-        lastPullAt,
-        lastPushAt: new Date(0),
-      },
-    });
+    // Only advance cursor when all data fits in one batch
+    if (!hasMore) {
+      await this.prisma.syncCursor.upsert({
+        where: { organizationId: orgId },
+        update: { lastPullAt },
+        create: {
+          organizationId: orgId,
+          lastPullAt,
+          lastPushAt: new Date(0),
+        },
+      });
+    }
 
     const productsWithStock: SyncProductWithStock[] = products.map((p) => ({
       id: p.id,
@@ -170,7 +206,8 @@ export class SyncService {
       taxes,
       brands,
       categories,
-      cursor: { lastPullAt: lastPullAt.toISOString() },
+      hasMore,
+      cursor: { lastPullAt: (hasMore ? sinceDate : lastPullAt).toISOString() },
     };
   }
 
@@ -246,6 +283,7 @@ export class SyncService {
                     },
                   },
                   include: { details: true },
+                  take: 1000,
                 });
 
               const consumedSince = salesSince.reduce(
@@ -351,12 +389,14 @@ export class SyncService {
     return { accepted, conflicts, errors };
   }
 
-  async getConflicts() {
+  async getConflicts(page = 1, limit = 50) {
     const orgId = this.context.getCurrent()?.organizationId;
     if (!orgId) throw new Error('No organization context');
     return this.prisma.syncConflict.findMany({
       where: { organizationId: orgId, status: 'pending' },
       orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
     });
   }
 

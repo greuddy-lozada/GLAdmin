@@ -81,7 +81,7 @@ export function BillingPagoMovil({ plan, open, onOpenChange }: BillingPagoMovilP
       onClose={() => onOpenChange(false)}
       panel={<div className="space-y-4">
           {config?.pagoMovil.phoneNumber && (
-            <div className="bg-muted rounded-lg p-3 space-y-1 text-sm">
+            <div className="bg-muted rounded-lg p-3 space-y-1 text-sm leading-relaxed">
               <p className="font-medium">{t('subscription.payment.depositTo')}</p>
               <p><span className="text-muted-foreground">{t('subscription.payment.bank')}:</span> {config.pagoMovil.bankId ? `${getBankName(config.pagoMovil.bankId)} (${config.pagoMovil.bankId})` : t('common.none')}</p>
               <p><span className="text-muted-foreground">{t('subscription.payment.phone')}:</span> {config.pagoMovil.phoneNumber}</p>

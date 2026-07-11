@@ -39,7 +39,7 @@ export function RecentOrdersPanel({ orders }: Props) {
           {orders.map((order) => (
             <tr key={order.id} className="border-b border-border/50 last:border-0">
               <td className="py-2.5 pr-4">{order.id}</td>
-              <td className="py-2.5 pr-4">{order.code ?? '—'}</td>
+              <td className="py-2.5 pr-4 font-mono">{order.code ?? '—'}</td>
               <td className="py-2.5 pr-4">{order.supplierName}</td>
               <td className="py-2.5 pr-4 text-right font-medium">{formatAmount(order.amount)}</td>
               <td className="py-2.5 text-right text-muted-foreground">{formatDate(order.date)}</td>

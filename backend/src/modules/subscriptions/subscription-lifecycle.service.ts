@@ -113,25 +113,35 @@ export class SubscriptionLifecycleService {
   }
 
   async evaluateAllActive(): Promise<void> {
-    const orgs = await this.prisma.organization.findMany({
-      where: {
-        planId: { not: null },
-        deletedAt: null,
-      },
-      select: { id: true },
-    });
-
-    // ponytail: parallelize with concurrency cap to avoid overwhelming DB
+    const BATCH_SIZE = 100;
     const CONCURRENCY = 10;
-    for (let i = 0; i < orgs.length; i += CONCURRENCY) {
-      const chunk = orgs.slice(i, i + CONCURRENCY);
-      await Promise.allSettled(
-        chunk.map((org) =>
-          this.evaluateSubscription(org.id).catch((error) => {
-            this.logger.error(`Failed to evaluate org ${org.id}`, error);
-          }),
-        ),
-      );
-    }
+    let cursor: number | undefined;
+
+    do {
+      const orgs = await this.prisma.organization.findMany({
+        where: {
+          planId: { not: null },
+          deletedAt: null,
+          ...(cursor ? { id: { gt: cursor } } : {}),
+        },
+        select: { id: true },
+        orderBy: { id: 'asc' },
+        take: BATCH_SIZE,
+      });
+
+      for (let i = 0; i < orgs.length; i += CONCURRENCY) {
+        const chunk = orgs.slice(i, i + CONCURRENCY);
+        await Promise.allSettled(
+          chunk.map((org) =>
+            this.evaluateSubscription(org.id).catch((error) => {
+              this.logger.error(`Failed to evaluate org ${org.id}`, error);
+            }),
+          ),
+        );
+      }
+
+      cursor =
+        orgs.length === BATCH_SIZE ? orgs[orgs.length - 1].id : undefined;
+    } while (cursor);
   }
 }

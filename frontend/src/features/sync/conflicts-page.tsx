@@ -30,7 +30,7 @@ export default function ConflictsPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6 space-y-4">
+      <div className="max-w-6xl mx-auto p-6 space-y-4">
         {Array.from({ length: 3 }).map((_, i) => (
           <Skeleton key={i} className="h-24 w-full" />
         ))}
@@ -39,7 +39,7 @@ export default function ConflictsPage() {
   }
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="max-w-6xl mx-auto p-6">
       <Suspense fallback={<div className="flex items-center justify-center h-64"><p className="text-muted-foreground">{t('common.loading')}</p></div>}>
       {conflicts.length === 0 ? (
         <p className="text-muted-foreground">{t('sync.noConflicts')}</p>

@@ -25,7 +25,7 @@ export function SubscriptionBanner() {
   return (
     <Alert>
       <AlertTriangle className="h-4 w-4" />
-      <AlertDescription>
+      <AlertDescription className="leading-relaxed max-w-prose">
         {tp('subscription.banner.pastDue', {
           date: expiresAt.toLocaleDateString('es-VE'),
           graceEnd: graceEnd.toLocaleDateString('es-VE'),

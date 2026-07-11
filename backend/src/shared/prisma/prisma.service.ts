@@ -8,7 +8,16 @@ export class PrismaService
   implements OnModuleInit, OnModuleDestroy
 {
   constructor(private readonly contextService?: ContextService) {
-    super();
+    const dbUrl = process.env.DATABASE_URL ?? '';
+    const connectionLimit = process.env.DATABASE_CONNECTION_LIMIT || '5';
+    const sep = dbUrl.includes('?') ? '&' : '?';
+    super({
+      datasources: {
+        db: {
+          url: `${dbUrl}${sep}connection_limit=${connectionLimit}`,
+        },
+      },
+    });
   }
 
   async onModuleInit() {

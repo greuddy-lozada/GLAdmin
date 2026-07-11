@@ -131,7 +131,7 @@ export default function PurchaseOrdersPage() {
       headerName: t('purchaseOrders.field.supplier'),
       render: (row) => row.supplier?.companyName ?? '-',
     },
-    { field: 'code', headerName: t('purchaseOrders.field.code') },
+    { field: 'code', headerName: t('purchaseOrders.field.code'), render: (row) => <span className="font-mono">{row.code}</span> },
     {
       field: 'amount',
       headerName: t('purchaseOrders.field.amount'),
@@ -531,7 +531,7 @@ export default function PurchaseOrdersPage() {
           </div>
           <div className="space-y-2">
             <Label>{t('purchaseOrders.field.code')}</Label>
-            <Input value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} required />
+            <Input className="font-mono" value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} required />
           </div>
           <div className="space-y-2">
             <Label>{t('purchaseOrders.field.date')}</Label>
@@ -700,7 +700,7 @@ export default function PurchaseOrdersPage() {
               <span>{t('purchaseOrders.ivaAmount')}</span>
               <span className="tabular-nums">Bs. {formData.ivaAmount.toFixed(2)} / USD {formData.ivaAmountUsd.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between font-semibold">
+            <div className="flex justify-between font-bold">
               <span>{t('purchaseOrders.field.amount')}</span>
               <span className="tabular-nums">Bs. {formData.amount.toFixed(2)} / USD {formData.amountUsd.toFixed(2)}</span>
             </div>

@@ -40,11 +40,9 @@ export const CustomerSearch = forwardRef<HTMLInputElement, CustomerSearchProps>(
       setLoading(true);
       debounce.current = setTimeout(() => {
         localDb.customers
-          .filter(c =>
-            c.firstName.toLowerCase().startsWith(q.toLowerCase()) ||
-            c.lastName.toLowerCase().startsWith(q.toLowerCase()) ||
-            (c.taxId?.includes(q) ?? false)
-          )
+          .where('firstName').startsWithIgnoreCase(q)
+          .or('lastName').startsWithIgnoreCase(q)
+          .or('taxId').startsWith(q)
           .limit(8)
           .toArray()
           .then(r => { setResults(r); setOpen(true); })

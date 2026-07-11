@@ -27,6 +27,7 @@ export class SyncEngine {
   private broadcastChannel?: BroadcastChannel;
   private isLeader = false;
   private electionTimer?: ReturnType<typeof setTimeout>;
+  private cleanupTimer?: ReturnType<typeof setInterval>;
   private tabId = 0;
 
   get lastSyncAt() {
@@ -67,7 +68,7 @@ export class SyncEngine {
         params: since ? { since } : undefined,
       });
 
-      const { products, customers, exchangeRates, exchangeRateDays, suppliers, companies, taxes, brands, categories, cursor } = response.data.data;
+      const { products, customers, exchangeRates, exchangeRateDays, suppliers, companies, taxes, brands, categories, hasMore, cursor } = response.data.data;
 
       for (const product of products) {
         await localDb.products.put({
@@ -178,6 +179,14 @@ export class SyncEngine {
 
       this._lastSyncAt = cursor.lastPullAt;
       this.retryCount = 0;
+
+      // Immediately pull next chunk if data was truncated
+      if (hasMore) {
+        this.pullInFlight = false;
+        this.pull();
+        return;
+      }
+
       this.emit('sync-complete');
     } catch (error) {
       this.retryCount++;
@@ -328,6 +337,9 @@ export class SyncEngine {
       });
 
       this.pull();
+
+      // Periodic cleanup of old IndexedDB data (every 24h)
+      this.cleanupTimer = setInterval(() => this.cleanupLocalDb(), 24 * 60 * 60 * 1000);
     }, ELECTION_TIMEOUT_MS);
 
     window.addEventListener('beforeunload', (event) => {
@@ -336,6 +348,17 @@ export class SyncEngine {
         event.returnValue = 'You have pending changes that have not been synced. Are you sure you want to leave?';
       }
     });
+  }
+
+  private async cleanupLocalDb(): Promise<void> {
+    const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    try {
+      await localDb.sales.filter(s => s.createdAt < cutoff).delete();
+      await localDb.parkedOrders.filter(o => o.createdAt < cutoff).delete();
+      await localDb.syncQueue.where('status').equals('failed').delete();
+    } catch {
+      // Best-effort cleanup, ignore errors
+    }
   }
 
   private generateTabId(): number {
@@ -363,6 +386,10 @@ export class SyncEngine {
     if (this.broadcastChannel) {
       this.broadcastChannel.close();
       this.broadcastChannel = undefined;
+    }
+    if (this.cleanupTimer) {
+      clearInterval(this.cleanupTimer);
+      this.cleanupTimer = undefined;
     }
     this.isLeader = false;
   }

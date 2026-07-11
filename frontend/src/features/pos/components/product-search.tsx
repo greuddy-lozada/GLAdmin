@@ -49,7 +49,8 @@ export const ProductSearch = forwardRef<HTMLInputElement, ProductSearchProps>(
       setLoading(true);
       debounce.current = setTimeout(() => {
         localDb.products
-          .filter(p => p.name.toLowerCase().startsWith(q.toLowerCase()) || (p.code?.includes(q) ?? false))
+          .where('name').startsWithIgnoreCase(q)
+          .or('code').startsWith(q)
           .limit(10)
           .toArray()
           .then(r => { setResults(r); setOpen(true); })

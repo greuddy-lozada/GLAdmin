@@ -14,6 +14,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -82,9 +83,10 @@ export function PaymentModal({ open, onOpenChange, total, totalUsd, totalTax, to
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t('pos.payment.title')}</DialogTitle>
+          <DialogDescription>{t('pos.payment.description')}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="text-center">
+          <div>
             <div className="text-2xl font-bold tabular-nums text-primary">${collectTotal.toFixed(2)} VES</div>
             <div className="text-lg text-muted-foreground tabular-nums">${collectTotalUsd.toFixed(2)} USD</div>
             <div className="text-xs text-muted-foreground">Tasa: Bs. {exchangeRate.toFixed(2)} / USD</div>

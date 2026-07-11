@@ -249,3 +249,21 @@ localDb.version(7).stores({
   parkedOrders: '++id, createdAt',
   shortcutBindings: '++id, shortcutId',
 });
+
+localDb.version(8).stores({
+  products: 'id, updatedAt, organizationId, name, code',
+  customers: 'id, updatedAt, organizationId, firstName, lastName, taxId',
+  syncQueue: '++id, status, localTimestamp',
+  stockCache: 'productId',
+  sales: '++id, syncedAt',
+  syncMetadata: 'key',
+  suppliers: 'id, updatedAt, organizationId',
+  companies: 'id, updatedAt, organizationId',
+  taxes: 'id, updatedAt, organizationId',
+  brands: 'id, updatedAt, organizationId',
+  categories: 'id, updatedAt, organizationId',
+  exchangeRates: 'id, updatedAt',
+  exchangeRateDays: 'id, updatedAt',
+  parkedOrders: '++id, createdAt',
+  shortcutBindings: '++id, shortcutId',
+});

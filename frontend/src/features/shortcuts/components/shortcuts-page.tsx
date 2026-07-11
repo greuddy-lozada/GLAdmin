@@ -126,7 +126,7 @@ export default function ShortcutsPage() {
         <CardContent className="space-y-6">
           {grouped.map(group => (
             <div key={group.scope}>
-              <h3 className="text-sm font-medium text-muted-foreground mb-2 uppercase tracking-wide">
+              <h3 className="text-sm font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
                 {t(`shortcuts.scope.${group.scope}`)}
               </h3>
               <div className="divide-y">
