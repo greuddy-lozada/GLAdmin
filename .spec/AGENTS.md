@@ -1,8 +1,18 @@
 # AGENTS.md — Instrucciones para Agentes de IA
 
 > **Este archivo define el comportamiento esperado de cualquier agente de IA (OpenCode, Codex, Copilot, etc.) que trabaje en Cuadra.**  
-> Para las reglas de arquitectura, consulta [system/architecture.md](system/architecture.md).  
-> Para las reglas de seguridad, consulta [system/security.md](system/security.md).
+> Para las reglas de arquitectura, consulta [.spec/system/architecture.md](.spec/system/architecture.md).  
+> Para las reglas de seguridad, consulta [.spec/system/security.md](.spec/system/security.md).
+
+---
+
+## Project Rules (`.spec/`)
+
+El directorio `.spec/` es la fuente de verdad del proyecto. Contiene especificaciones de sistema, negocio, UI/UX y DevOps.
+
+**Cuando el usuario diga "lee las reglas del proyecto" / "read the project rules", lee TODOS los archivos bajo `.spec/` recursivamente al inicio de la sesión (excluyendo `.spec/audit/`).**
+
+Mapa completo de documentos en [.spec/README.md](.spec/README.md).
 
 ---
 
@@ -226,4 +236,4 @@ const columns: Column<Entity>[] = [
 
 ---
 
-*Referencia cruzada: [architecture.md](system/architecture.md) | [security.md](system/security.md) | [database.md](system/database.md)*
+*Referencia cruzada: [architecture.md](.spec/system/architecture.md) | [security.md](.spec/system/security.md) | [database.md](.spec/system/database.md)*
