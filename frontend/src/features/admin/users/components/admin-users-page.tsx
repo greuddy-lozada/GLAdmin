@@ -84,7 +84,7 @@ export default function AdminUsersPage() {
             <Label>{t('admin.users.field.role')}</Label>
             <Select
               value={String(formData.roleId ?? '')}
-              onValueChange={(v) => setFormData({ ...formData, roleId: v ? Number(v) : undefined })}
+              onValueChange={(v) => setFormData({ ...formData, roleId: v || undefined })}
             >
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>

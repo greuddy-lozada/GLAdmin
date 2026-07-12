@@ -52,44 +52,41 @@ export class TenantMiddleware implements NestMiddleware {
     });
   }
 
-  private extractTokenPayload(req: Request): { sub?: number; orgId?: number } {
+  private extractTokenPayload(req: Request): { sub?: string; orgId?: string } {
     const authHeader = req.headers['authorization'];
     if (!authHeader || typeof authHeader !== 'string') return {};
     const [type, token] = authHeader.split(' ');
     if (type !== 'Bearer' || !token) return {};
     try {
-      return this.jwtService.verify(token) as { sub?: number; orgId?: number };
+      return this.jwtService.verify(token) as { sub?: string; orgId?: string };
     } catch {
       return {};
     }
   }
 
-  private async resolveOrgId(req: Request): Promise<number | undefined> {
+  private async resolveOrgId(req: Request): Promise<string | undefined> {
     const tokenPayload = this.extractTokenPayload(req);
     const userId = tokenPayload.sub;
 
     const header = req.headers['x-organization-id'];
     if (header && userId) {
-      const requestedOrgId = parseInt(header as string, 10);
-      if (!isNaN(requestedOrgId)) {
-        const membership = await this.prisma.userOrganization.findUnique({
-          where: {
-            userId_organizationId: {
-              userId,
-              organizationId: requestedOrgId,
-            },
+      const requestedOrgId = header as string;
+      const membership = await this.prisma.userOrganization.findUnique({
+        where: {
+          userId_organizationId: {
+            userId,
+            organizationId: requestedOrgId,
           },
-        });
-        if (membership) return requestedOrgId;
-      }
+        },
+      });
+      if (membership) return requestedOrgId;
     }
 
     if (tokenPayload.orgId) return tokenPayload.orgId;
 
     const cookie = req.cookies?.['organization_id'];
     if (cookie) {
-      const cookieOrgId = parseInt(String(cookie), 10);
-      if (!isNaN(cookieOrgId)) return cookieOrgId;
+      return String(cookie);
     }
 
     return undefined;

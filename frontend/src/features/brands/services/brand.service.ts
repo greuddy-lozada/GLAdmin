@@ -7,7 +7,7 @@ export const brandService = {
     return response.data.data;
   },
 
-  async getById(id: number): Promise<Brand> {
+  async getById(id: string): Promise<Brand> {
     const response = await apiClient.get(`/brands/${id}`);
     return response.data.data;
   },
@@ -17,12 +17,12 @@ export const brandService = {
     return response.data.data;
   },
 
-  async update(id: number, data: Partial<CreateBrandRequest>): Promise<Brand> {
+  async update(id: string, data: Partial<CreateBrandRequest>): Promise<Brand> {
     const response = await apiClient.patch(`/brands/${id}`, data);
     return response.data.data;
   },
 
-  async delete(id: number): Promise<void> {
+  async delete(id: string): Promise<void> {
     await apiClient.delete(`/brands/${id}`);
   },
 };

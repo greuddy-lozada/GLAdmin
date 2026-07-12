@@ -38,7 +38,7 @@ export default function CategoriesPage() {
   const [formData, setFormData] = useState<CreateCategoryRequest>({ name: '', description: '' });
   const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
-  const [allCategories, setAllCategories] = useState<{ id: number; name: string }[]>([]);
+  const [allCategories, setAllCategories] = useState<{ id: string; name: string }[]>([]);
 
   const columns: Column<Category>[] = [
     { field: 'name', headerName: t('categories.field.name') },
@@ -54,7 +54,7 @@ export default function CategoriesPage() {
     setSelectedCategory(null);
     setError('');
     setFormData({ name: '', description: '' });
-    apiClient.get('/categories').then((r: { data: { data: { id: number; name: string }[] } }) => setAllCategories(r.data.data || [])).catch(() => {});
+    apiClient.get('/categories').then((r: { data: { data: { id: string; name: string }[] } }) => setAllCategories(r.data.data || [])).catch(() => {});
     setFormOpen(true);
   };
 
@@ -62,7 +62,7 @@ export default function CategoriesPage() {
     setSelectedCategory(category);
     setError('');
     setFormData({ name: category.name, description: category.description ?? '', idParent: category.idParent });
-    apiClient.get('/categories').then((r: { data: { data: { id: number; name: string }[] } }) => setAllCategories(r.data.data || [])).catch(() => {});
+    apiClient.get('/categories').then((r: { data: { data: { id: string; name: string }[] } }) => setAllCategories(r.data.data || [])).catch(() => {});
     setFormOpen(true);
   };
 
@@ -114,8 +114,8 @@ export default function CategoriesPage() {
           </div>
           <div className="space-y-2">
             <Label>{t('categories.field.parent')}</Label>
-            <Select value={formData.idParent ? String(formData.idParent) : ''}
-              onValueChange={(v) => setFormData({ ...formData, idParent: v ? Number(v) : undefined })}>
+            <Select value={formData.idParent ?? ''}
+              onValueChange={(v) => setFormData({ ...formData, idParent: v || undefined })}>
               <SelectTrigger><SelectValue placeholder={t('common.none')} /></SelectTrigger>
               <SelectContent>
                 {allCategories.filter((c) => c.id !== selectedCategory?.id).map((cat) => (

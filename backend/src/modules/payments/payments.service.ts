@@ -28,7 +28,7 @@ export class PaymentsService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async createCheckoutSession(planId: number, organizationId: number) {
+  async createCheckoutSession(planId: string, organizationId: string) {
     const plan = await this.prisma.plan.findUnique({ where: { id: planId } });
     if (!plan) throw new NotFoundException('Plan not found');
     if (!plan.isActive) throw new BadRequestException('Plan is not active');
@@ -51,7 +51,7 @@ export class PaymentsService {
             price_data: {
               currency: plan.currency,
               product_data: { name: plan.label },
-              unit_amount: plan.amount * 100,
+              unit_amount: Number(plan.amount) * 100,
               recurring: { interval: plan.interval as 'month' | 'year' },
             },
             quantity: 1,
@@ -82,8 +82,8 @@ export class PaymentsService {
       const object = event.data.object as {
         metadata?: { organizationId?: string; planId?: string };
       };
-      const organizationId = Number(object.metadata?.organizationId);
-      const planId = Number(object.metadata?.planId);
+      const organizationId = object.metadata?.organizationId;
+      const planId = object.metadata?.planId;
 
       if (!organizationId || !planId) return;
 

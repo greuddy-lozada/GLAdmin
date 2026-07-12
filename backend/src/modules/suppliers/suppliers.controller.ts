@@ -7,7 +7,7 @@ import {
   Param,
   Delete,
   Query,
-  ParseIntPipe,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { SuppliersService } from './suppliers.service';
 import { CreateSupplierDto } from './dto/create-supplier.dto';
@@ -39,14 +39,14 @@ export class SuppliersController {
 
   @Get(':id')
   @Roles('master', 'admin', 'employee')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.suppliersService.findOne(id);
   }
 
   @Patch(':id')
   @Roles('master', 'admin', 'employee')
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateSupplierDto,
   ) {
     return this.suppliersService.update(id, dto);
@@ -54,7 +54,7 @@ export class SuppliersController {
 
   @Delete(':id')
   @Roles('master', 'admin')
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.suppliersService.remove(id);
   }
 }

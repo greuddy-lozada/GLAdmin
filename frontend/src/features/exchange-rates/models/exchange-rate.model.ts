@@ -1,5 +1,5 @@
 export interface ExchangeRateDay {
-  id: number;
+  id: string;
   date: string;
   rateBcvUsd: number | null;
   rateParalelo: number | null;

@@ -11,7 +11,7 @@ export class StocksService {
     private readonly contextService: ContextService,
   ) {}
 
-  private async recalcTotalExistence(productId: number) {
+  private async recalcTotalExistence(productId: string) {
     const result = await this.prisma.stock.aggregate({
       where: { idProduct: productId },
       _sum: { existence: true },
@@ -73,7 +73,7 @@ export class StocksService {
     return { data, total, page, limit };
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const stock = await this.prisma.stock.findUnique({
       where: { id },
       include: { product: true, supplier: true, batch: true, stockDets: true },
@@ -82,7 +82,7 @@ export class StocksService {
     return stock;
   }
 
-  async update(id: number, dto: UpdateStockDto) {
+  async update(id: string, dto: UpdateStockDto) {
     const before = await this.findOne(id);
     const stock = await this.prisma.stock.update({
       where: { id },
@@ -95,7 +95,7 @@ export class StocksService {
     return { data: stock, message: 'STOCK.UPDATED' };
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const stock = await this.findOne(id);
     await this.prisma.stock.update({
       where: { id },

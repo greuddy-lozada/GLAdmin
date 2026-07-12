@@ -1,21 +1,21 @@
 export interface Stock {
-  id: number;
-  idProduct: number;
-  idSupplier?: number;
-  idBatch?: number;
+  id: string;
+  idProduct: string;
+  idSupplier?: string;
+  idBatch?: string;
   existence: number;
   available: boolean;
   product?: {
-    id: number;
+    id: string;
     code: string;
     name: string;
   };
   supplier?: {
-    id: number;
+    id: string;
     companyName: string;
   };
   batch?: {
-    id: number;
+    id: string;
     code: string;
   };
   createdAt: string;
@@ -23,23 +23,23 @@ export interface Stock {
 }
 
 export interface CreateStockRequest {
-  idProduct: number;
-  idSupplier?: number;
-  idBatch?: number;
+  idProduct: string;
+  idSupplier?: string;
+  idBatch?: string;
   existence: number;
 }
 
 export interface StockAlert {
-  id: number;
+  id: string;
   name: string;
   price: number;
   totalExistence: number;
 }
 
 export interface UpdateStockRequest {
-  idProduct?: number;
-  idSupplier?: number;
-  idBatch?: number;
+  idProduct?: string;
+  idSupplier?: string;
+  idBatch?: string;
   existence?: number;
   available?: boolean;
 }

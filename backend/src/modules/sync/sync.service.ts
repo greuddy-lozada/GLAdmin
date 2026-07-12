@@ -7,23 +7,23 @@ import { ResolveConflictDto } from './dto/resolve-conflict.dto';
 import { CreateSaleDto } from '../sales/dto/create-sale.dto';
 
 export interface SyncProductWithStock {
-  id: number;
+  id: string;
   name: string;
   code: string;
   price: number;
   dollarPrice: number | null;
   baseCost: number | null;
   margin: number;
-  idTax: number | null;
-  idBrand: number | null;
-  idCategory: number | null;
+  idTax: string | null;
+  idBrand: string | null;
+  idCategory: string | null;
   updatedAt: Date;
   stock: number;
 }
 
 interface SaleWithDetails {
-  id: number;
-  details: { idProduct: number; quantity: number | null }[];
+  id: string;
+  details: { idProduct: string; quantity: number | null }[];
 }
 
 @Injectable()
@@ -182,9 +182,9 @@ export class SyncService {
       id: p.id,
       name: p.name,
       code: p.code,
-      price: p.price,
-      dollarPrice: p.dollarPrice,
-      baseCost: p.baseCost,
+      price: Number(p.price),
+      dollarPrice: p.dollarPrice != null ? Number(p.dollarPrice) : null,
+      baseCost: p.baseCost != null ? Number(p.baseCost) : null,
       margin: p.margin,
       idTax: p.idTax,
       idBrand: p.idBrand,
@@ -222,7 +222,7 @@ export class SyncService {
           .filter((m) => m.table === 'sales' && m.operation === 'create')
           .flatMap(
             (m) =>
-              (m.data as { items?: Array<{ productId: number }> })?.items?.map(
+              (m.data as { items?: Array<{ productId: string }> })?.items?.map(
                 (i) => i.productId,
               ) ?? [],
           ),
@@ -241,17 +241,17 @@ export class SyncService {
         : [],
     );
 
-    const accepted: number[] = [];
+    const accepted: string[] = [];
     const conflicts: Array<{
       localTimestamp: string;
-      recordId?: number;
+      recordId?: string;
       issue: string;
       description: string;
     }> = [];
     const syncConflictsToCreate: Array<{
-      organizationId: number;
+      organizationId: string;
       table: string;
-      recordId?: number;
+      recordId?: string;
       localData: string;
       serverData: string;
       localTimestamp: Date;
@@ -264,7 +264,7 @@ export class SyncService {
       try {
         if (mutation.table === 'sales' && mutation.operation === 'create') {
           const mutationItems = mutation.data as {
-            items: Array<{ productId: number; quantity: number }>;
+            items: Array<{ productId: string; quantity: number }>;
           };
 
           let hasConflict = false;
@@ -289,7 +289,7 @@ export class SyncService {
               const consumedSince = salesSince.reduce(
                 (sum: number, sale: SaleWithDetails) => {
                   const detail = sale.details.find(
-                    (d: { idProduct: number; quantity: number }) =>
+                    (d: { idProduct: string; quantity: number }) =>
                       d.idProduct === item.productId,
                   );
                   return sum + (detail?.quantity || 0);
@@ -337,10 +337,10 @@ export class SyncService {
             exchangeRate: mutation.data.exchangeRate as number,
             paymentMethod: mutation.data.paymentMethod as number,
             status: mutation.data.status as number,
-            idCustomer: mutation.data.idCustomer as number,
+            idCustomer: mutation.data.idCustomer as string,
             items: (
               mutation.data.items as Array<{
-                productId: number;
+                productId: string;
                 quantity: number;
                 unitPrice: number;
                 unitPriceUsd: number;
@@ -360,7 +360,7 @@ export class SyncService {
           const sale = await this.salesService.create(createSaleDto);
           accepted.push(sale.id);
         } else {
-          accepted.push(0);
+          accepted.push('');
         }
       } catch (error) {
         errors.push({
@@ -400,7 +400,7 @@ export class SyncService {
     });
   }
 
-  async resolveConflict(id: number, dto: ResolveConflictDto) {
+  async resolveConflict(id: string, dto: ResolveConflictDto) {
     const orgId = this.context.getCurrent()?.organizationId;
     if (!orgId) throw new Error('No organization context');
 

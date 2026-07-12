@@ -4,7 +4,7 @@ import { useOptimisticCrud } from '@/hooks/use-optimistic-crud';
 import { PurchaseOrder, CreatePurchaseOrderRequest, UpdatePurchaseOrderRequest } from '../models/purchase-order.model';
 import { purchaseOrderService } from '../services/purchase-order.service';
 
-function buildOptimistic(data: CreatePurchaseOrderRequest, tempId: number): PurchaseOrder {
+function buildOptimistic(data: CreatePurchaseOrderRequest, tempId: string): PurchaseOrder {
   return {
     id: tempId,
     idSupplier: data.idSupplier,

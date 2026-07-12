@@ -6,11 +6,11 @@ export class AuditLogService {
   constructor(private readonly prisma: PrismaService) {}
 
   async log(params: {
-    organizationId: number;
-    userId?: number | null;
+    organizationId: string;
+    userId?: string | null;
     action: string;
     entity: string;
-    entityId?: number | null;
+    entityId?: string | null;
     metadata?: Record<string, unknown> | null;
     ipAddress?: string | null;
   }) {

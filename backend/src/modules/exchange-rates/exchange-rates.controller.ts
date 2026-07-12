@@ -6,7 +6,7 @@ import {
   Patch,
   Param,
   Delete,
-  ParseIntPipe,
+  ParseUUIDPipe,
   Query,
 } from '@nestjs/common';
 import { ExchangeRatesService } from './exchange-rates.service';
@@ -47,14 +47,14 @@ export class ExchangeRatesController {
 
   @Get(':id')
   @Roles('master', 'executive', 'employee')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.exchangeRatesService.findOne(id);
   }
 
   @Patch(':id')
   @Roles('master', 'executive')
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateExchangeRateDto,
   ) {
     return this.exchangeRatesService.update(id, dto);
@@ -62,7 +62,7 @@ export class ExchangeRatesController {
 
   @Delete(':id')
   @Roles('master', 'executive')
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.exchangeRatesService.remove(id);
   }
 }

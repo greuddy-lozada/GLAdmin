@@ -4,7 +4,7 @@ import { useOptimisticCrud } from '@/hooks/use-optimistic-crud';
 import { Tax, CreateTaxRequest, UpdateTaxRequest } from '../models/tax.model';
 import { taxService } from '../services/tax.service';
 
-function buildOptimistic(data: CreateTaxRequest, tempId: number): Tax {
+function buildOptimistic(data: CreateTaxRequest, tempId: string): Tax {
   return {
     id: tempId,
     name: data.name,

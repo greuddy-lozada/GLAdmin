@@ -10,9 +10,9 @@ const MAX_BACKOFF = 30000;
 const LEADER_HEARTBEAT_MS = 15_000;
 const ELECTION_TIMEOUT_MS = 2000;
 
-function getStoredOrgId(): number {
+function getStoredOrgId(): string {
   const raw = localStorage.getItem(ORG_STORAGE_KEY);
-  return raw ? parseInt(raw, 10) : 1;
+  return raw || '';
 }
 
 export class SyncEngine {

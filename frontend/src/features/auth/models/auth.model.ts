@@ -1,14 +1,14 @@
 export interface User {
-  id: number;
+  id: string;
   firstName: string;
   lastName: string;
   userName: string;
   email: string;
-  idRole: number;
+  idRole: string;
   isActive: boolean;
   mustChangePassword: boolean;
   role?: {
-    id: number;
+    id: string;
     name: string;
     slug: string;
   };
@@ -22,7 +22,7 @@ export interface LoginRequest {
 }
 
 export interface OrganizationInfo {
-  id: number;
+  id: string;
   name: string;
   slug: string;
   plan: { name: string; label: string } | null;
@@ -30,7 +30,7 @@ export interface OrganizationInfo {
 }
 
 export interface OrganizationDetail {
-  id: number;
+  id: string;
   name: string;
   slug: string;
   plan: { name: string; label: string; features: string } | null;

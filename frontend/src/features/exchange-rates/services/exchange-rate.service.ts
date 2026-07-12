@@ -17,12 +17,12 @@ export const exchangeRateService = {
     return response.data.data;
   },
 
-  async update(id: number, data: UpdateExchangeRateRequest): Promise<ExchangeRateDay> {
+  async update(id: string, data: UpdateExchangeRateRequest): Promise<ExchangeRateDay> {
     const response = await apiClient.patch(`/exchange-rates/${id}`, data);
     return response.data.data;
   },
 
-  async delete(id: number): Promise<void> {
+  async delete(id: string): Promise<void> {
     await apiClient.delete(`/exchange-rates/${id}`);
   },
 };

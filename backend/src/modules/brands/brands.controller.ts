@@ -7,7 +7,7 @@ import {
   Param,
   Delete,
   Query,
-  ParseIntPipe,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { BrandsService } from './brands.service';
 import { CreateBrandDto } from './dto/create-brand.dto';
@@ -35,19 +35,19 @@ export class BrandsController {
 
   @Get(':id')
   @Roles('master', 'admin', 'employee')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.brandsService.findOne(id);
   }
 
   @Patch(':id')
   @Roles('master', 'admin')
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateBrandDto) {
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateBrandDto) {
     return this.brandsService.update(id, dto);
   }
 
   @Delete(':id')
   @Roles('master')
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.brandsService.remove(id);
   }
 }

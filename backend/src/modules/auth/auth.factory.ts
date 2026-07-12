@@ -20,7 +20,7 @@ export class AuthFactory {
 
   createOrgAccessToken(
     user: UserEntity,
-    orgId: number,
+    orgId: string,
     orgRole: string,
   ): string {
     const payload = {
@@ -58,12 +58,12 @@ export class AuthFactory {
     refreshToken: string,
   ): {
     user: {
-      id: number;
+      id: string;
       firstName: string;
       lastName: string;
       userName: string;
       email: string;
-      role: { id: number; name: string; slug: string } | undefined;
+      role: { id: string; name: string; slug: string } | undefined;
       isActive: boolean;
       mustChangePassword: boolean;
     };

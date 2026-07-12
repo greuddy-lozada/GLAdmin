@@ -23,7 +23,7 @@ export default function ConflictsPage() {
     loadConflicts();
   }, []);
 
-  const handleResolve = async (id: number, status: 'resolved_server' | 'resolved_local') => {
+  const handleResolve = async (id: string, status: 'resolved_server' | 'resolved_local') => {
     await conflictResolver.resolveConflict(id, status);
     await loadConflicts();
   };

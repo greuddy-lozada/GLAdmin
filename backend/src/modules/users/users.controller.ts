@@ -6,7 +6,7 @@ import {
   Delete,
   Body,
   Param,
-  ParseIntPipe,
+  ParseUUIDPipe,
   Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
@@ -33,14 +33,14 @@ export class UsersController {
 
   @Get(':id')
   @Roles('master', 'admin')
-  async findById(@Param('id', ParseIntPipe) id: number) {
+  async findById(@Param('id', ParseUUIDPipe) id: string) {
     return this.usersService.findById(id);
   }
 
   @Patch(':id')
   @Roles('master', 'admin')
   async update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateUserDto,
   ) {
     return this.usersService.update(id, dto);
@@ -48,7 +48,7 @@ export class UsersController {
 
   @Delete(':id')
   @Roles('master')
-  async delete(@Param('id', ParseIntPipe) id: number) {
+  async delete(@Param('id', ParseUUIDPipe) id: string) {
     return this.usersService.delete(id);
   }
 }

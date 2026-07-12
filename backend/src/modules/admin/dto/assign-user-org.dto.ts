@@ -1,9 +1,9 @@
-import { IsInt } from 'class-validator';
+import { IsUUID } from 'class-validator';
 
 export class AssignUserOrgDto {
-  @IsInt()
-  userId: number;
+  @IsUUID()
+  userId: string;
 
-  @IsInt()
-  roleId: number;
+  @IsUUID()
+  roleId: string;
 }

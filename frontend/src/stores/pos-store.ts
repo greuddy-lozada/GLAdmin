@@ -1,29 +1,34 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { sileo } from 'sileo';
-import type { CartItem } from '@/features/pos/models/pos.model';
+import type { CartItem, PaymentLine } from '@/features/pos/models/pos.model';
 import type { LocalProduct } from '@/lib/sync/db';
 
-export type TaxMap = Record<number, { name: string; percentage: number }>;
+export type TaxMap = Record<string, { name: string; percentage: number }>;
 
 interface PosState {
   cart: CartItem[];
-  customerId?: number;
+  customerId?: string;
   customerName?: string;
   customerTaxId?: string;
   withholdingPercentage: number | null;
-  lastAddedProductId: number | null;
+  lastAddedProductId: string | null;
   exchangeRate: number;
+  paymentLines: PaymentLine[];
 
   addToCart: (product: LocalProduct, taxes: TaxMap) => void;
-  removeFromCart: (productId: number) => void;
-  updateQuantity: (productId: number, quantity: number, productStock?: number) => void;
+  removeFromCart: (productId: string) => void;
+  updateQuantity: (productId: string, quantity: number, productStock?: number) => void;
   clearCart: () => void;
   undoLastItem: () => void;
   setCart: (items: CartItem[]) => void;
-  setCustomer: (id?: number, name?: string, taxId?: string, withholdingPercentage?: number | null) => void;
+  setCustomer: (id?: string, name?: string, taxId?: string, withholdingPercentage?: number | null) => void;
   clearCustomer: () => void;
   setExchangeRate: (rate: number) => void;
+  addPaymentLine: (line: PaymentLine) => void;
+  removePaymentLine: (index: number) => void;
+  clearPaymentLines: () => void;
+  setPaymentLines: (lines: PaymentLine[]) => void;
 }
 
 export const usePosStore = create<PosState>()(
@@ -36,6 +41,7 @@ export const usePosStore = create<PosState>()(
       withholdingPercentage: null,
       lastAddedProductId: null,
       exchangeRate: 0,
+      paymentLines: [],
 
       addToCart: (product, taxes) => {
         const { cart, exchangeRate } = get();
@@ -68,6 +74,7 @@ export const usePosStore = create<PosState>()(
                 : item
             ),
             lastAddedProductId: product.id,
+            paymentLines: [],
           });
         } else {
           set({
@@ -88,12 +95,13 @@ export const usePosStore = create<PosState>()(
               },
             ],
             lastAddedProductId: product.id,
+            paymentLines: [],
           });
         }
       },
 
       removeFromCart: (productId) => {
-        set(state => ({ cart: state.cart.filter(item => item.productId !== productId) }));
+        set(state => ({ cart: state.cart.filter(item => item.productId !== productId), paymentLines: [] }));
       },
 
       updateQuantity: (productId, quantity, productStock) => {
@@ -120,10 +128,11 @@ export const usePosStore = create<PosState>()(
                 }
               : item
           ),
+          paymentLines: [],
         }));
       },
 
-      clearCart: () => set({ cart: [], lastAddedProductId: null }),
+      clearCart: () => set({ cart: [], lastAddedProductId: null, paymentLines: [] }),
 
       undoLastItem: () => {
         const { lastAddedProductId, cart } = get();
@@ -148,16 +157,18 @@ export const usePosStore = create<PosState>()(
                 : i
             ),
             lastAddedProductId: null,
+            paymentLines: [],
           });
         } else {
           set({
             cart: cart.filter(i => i.productId !== lastAddedProductId),
             lastAddedProductId: null,
+            paymentLines: [],
           });
         }
       },
 
-      setCart: (items) => set({ cart: items }),
+      setCart: (items) => set({ cart: items, paymentLines: [] }),
 
       setCustomer: (id, name, taxId, withholdingPct) => set({
         customerId: id,
@@ -174,6 +185,12 @@ export const usePosStore = create<PosState>()(
       }),
 
       setExchangeRate: (rate) => set({ exchangeRate: rate }),
+
+      addPaymentLine: (line) => set((s) => ({ paymentLines: [...s.paymentLines, line] })),
+      removePaymentLine: (index) =>
+        set((s) => ({ paymentLines: s.paymentLines.filter((_, i) => i !== index) })),
+      clearPaymentLines: () => set({ paymentLines: [] }),
+      setPaymentLines: (lines) => set({ paymentLines: lines }),
     }),
     {
       name: 'pos-storage',
@@ -185,6 +202,7 @@ export const usePosStore = create<PosState>()(
         withholdingPercentage: state.withholdingPercentage,
         lastAddedProductId: state.lastAddedProductId,
         exchangeRate: state.exchangeRate,
+        paymentLines: state.paymentLines,
       }),
     },
   ),

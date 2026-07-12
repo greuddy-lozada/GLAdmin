@@ -4,14 +4,14 @@ import { useOptimisticCrud } from '@/hooks/use-optimistic-crud';
 import { AdminUser, UpdateAdminUserRequest } from '../models/admin-user.model';
 import { adminUsersService } from '../services/admin-users.service';
 
-function buildOptimistic(data: UpdateAdminUserRequest, tempId: number): AdminUser {
+function buildOptimistic(data: UpdateAdminUserRequest, tempId: string): AdminUser {
   return {
     id: tempId,
     firstName: '',
     lastName: '',
     userName: '',
     email: '',
-    idRole: data.roleId ?? 0,
+    idRole: data.roleId ?? '',
     isActive: data.isActive ?? true,
     mustChangePassword: false,
   };

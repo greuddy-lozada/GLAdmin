@@ -6,13 +6,13 @@ import { cn } from '@/lib/utils';
 import { useI18n } from '@/i18n';
 
 interface SearchableSelectProps<T> {
-  value: number | undefined;
-  onChange: (value: number | undefined) => void;
+  value: string | undefined;
+  onChange: (value: string | undefined) => void;
   placeholder: string;
   emptyText: string;
   searchFn: (term: string) => Promise<T[]>;
   renderItem: (item: T) => string;
-  getKey: (item: T) => number;
+  getKey: (item: T) => string;
   allowClear?: boolean;
   selectedLabel?: string;
 }

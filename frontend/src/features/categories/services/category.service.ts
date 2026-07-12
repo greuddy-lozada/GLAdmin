@@ -7,7 +7,7 @@ export const categoryService = {
     return response.data.data;
   },
 
-  async getById(id: number): Promise<Category> {
+  async getById(id: string): Promise<Category> {
     const response = await apiClient.get(`/categories/${id}`);
     return response.data.data;
   },
@@ -17,12 +17,12 @@ export const categoryService = {
     return response.data.data;
   },
 
-  async update(id: number, data: Partial<CreateCategoryRequest>): Promise<Category> {
+  async update(id: string, data: Partial<CreateCategoryRequest>): Promise<Category> {
     const response = await apiClient.patch(`/categories/${id}`, data);
     return response.data.data;
   },
 
-  async delete(id: number): Promise<void> {
+  async delete(id: string): Promise<void> {
     await apiClient.delete(`/categories/${id}`);
   },
 };

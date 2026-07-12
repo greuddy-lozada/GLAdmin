@@ -7,7 +7,7 @@ import {
   Param,
   Delete,
   Query,
-  ParseIntPipe,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
@@ -35,14 +35,14 @@ export class CustomersController {
 
   @Get(':id')
   @Roles('master', 'admin', 'employee')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.customersService.findOne(id);
   }
 
   @Patch(':id')
   @Roles('master', 'admin', 'employee')
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateCustomerDto,
   ) {
     return this.customersService.update(id, dto);
@@ -50,7 +50,7 @@ export class CustomersController {
 
   @Delete(':id')
   @Roles('master', 'admin')
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.customersService.remove(id);
   }
 }

@@ -16,7 +16,7 @@ import { sileo } from 'sileo';
 import apiClient from '@/lib/api/api-client';
 
 interface QuickAddCustomerProps {
-  onCreated: (customer: { id: number; name: string; taxId: string; isWithholdingAgent: boolean; withholdingPercentage?: number | null; withholdingProof?: string }) => void;
+  onCreated: (customer: { id: string; name: string; taxId: string; isWithholdingAgent: boolean; withholdingPercentage?: number | null; withholdingProof?: string }) => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
@@ -73,10 +73,10 @@ export function QuickAddCustomer({ onCreated, open: externalOpen, onOpenChange }
     setError('');
     setSaving(true);
     try {
-      const id = Date.now();
+      const id = String(Date.now());
       await localDb.customers.put({
         id,
-        organizationId: 1,
+        organizationId: '1',
         firstName, lastName, taxId, phone: phone || undefined,
         isWithholdingAgent,
         withholdingPercentage: isWithholdingAgent ? withholdingPercentage : undefined,

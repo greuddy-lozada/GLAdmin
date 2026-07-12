@@ -15,15 +15,15 @@ import { AuditLogService } from '../audit-log/audit-log.service';
 import { SubscriptionLifecycleService } from '../subscriptions/subscription-lifecycle.service';
 
 interface UserOrganizationWithRelations {
-  userId: number;
-  organizationId: number;
-  roleId: number;
+  userId: string;
+  organizationId: string;
+  roleId: string;
   organization: {
-    id: number;
+    id: string;
     name: string;
     slug: string;
     plan: {
-      id: number;
+      id: string;
       name: string;
       label: string;
       features: string;
@@ -32,7 +32,7 @@ interface UserOrganizationWithRelations {
     subscriptionExpiresAt: Date | null;
   };
   role: {
-    id: number;
+    id: string;
     name: string;
     slug: string;
     createdAt: Date;
@@ -60,7 +60,7 @@ export class AuthService {
     if (!isPasswordValid) {
       await this.auditLog
         .log({
-          organizationId: 0,
+          organizationId: '',
           userId: user.id,
           action: 'LOGIN_FAILED',
           entity: 'User',
@@ -74,7 +74,7 @@ export class AuthService {
     if (!user.isActive) {
       await this.auditLog
         .log({
-          organizationId: 0,
+          organizationId: '',
           userId: user.id,
           action: 'LOGIN_FAILED',
           entity: 'User',
@@ -106,7 +106,7 @@ export class AuthService {
 
     this.auditLog
       .log({
-        organizationId: organizations[0]?.id ?? 0,
+        organizationId: organizations[0]?.id ?? '',
         userId: user.id,
         action: 'LOGIN_SUCCESS',
         entity: 'User',
@@ -164,7 +164,7 @@ export class AuthService {
     };
   }
 
-  async selectOrg(userId: number, organizationId: number) {
+  async selectOrg(userId: string, organizationId: string) {
     const membership = await this.prisma.userOrganization.findUnique({
       where: {
         userId_organizationId: { userId, organizationId },
@@ -304,7 +304,7 @@ export class AuthService {
     };
   }
 
-  async me(userId: number) {
+  async me(userId: string) {
     const user = await this.userRepository.findById(userId);
     if (!user) {
       throw new NotFoundException('AUTH.USER_NOT_FOUND');
@@ -318,12 +318,12 @@ export class AuthService {
     return { data: userWithoutPassword, message: 'AUTH.USER_FOUND' };
   }
 
-  async logout(userId: number) {
+  async logout(userId: string) {
     await this.prisma.refreshToken.deleteMany({ where: { userId } });
     return { data: null, message: 'AUTH.LOGOUT_SUCCESS' };
   }
 
-  async changePassword(userId: number, dto: ChangePasswordDto) {
+  async changePassword(userId: string, dto: ChangePasswordDto) {
     const user = await this.userRepository.findById(userId);
     if (!user) {
       throw new NotFoundException('AUTH.USER_NOT_FOUND');
@@ -350,7 +350,7 @@ export class AuthService {
     return { data: null, message: 'AUTH.PASSWORD_CHANGED' };
   }
 
-  private async getUserOrgs(userId: number) {
+  private async getUserOrgs(userId: string) {
     const userOrgs: UserOrganizationWithRelations[] =
       await this.prisma.userOrganization.findMany({
         where: { userId },

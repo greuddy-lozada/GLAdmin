@@ -124,7 +124,7 @@ export default function PosPage() {
     resumeCart(order);
   };
 
-  const handleQuickAddCustomer = (customer: { id: number; name: string; taxId: string; isWithholdingAgent: boolean; withholdingPercentage?: number | null }) => {
+  const handleQuickAddCustomer = (customer: { id: string; name: string; taxId: string; isWithholdingAgent: boolean; withholdingPercentage?: number | null }) => {
     setCustomer(customer.id, customer.name, customer.taxId, customer.isWithholdingAgent ? customer.withholdingPercentage ?? null : null);
   };
 

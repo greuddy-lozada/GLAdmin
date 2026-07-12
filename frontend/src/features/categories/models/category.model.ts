@@ -1,10 +1,10 @@
 export interface Category {
-  id: number;
+  id: string;
   name: string;
   description?: string;
-  idParent?: number;
-  parent?: { id: number; name: string };
-  children?: { id: number; name: string }[];
+  idParent?: string;
+  parent?: { id: string; name: string };
+  children?: { id: string; name: string }[];
   available: boolean;
   createdAt: string;
   updatedAt: string;
@@ -13,5 +13,5 @@ export interface Category {
 export interface CreateCategoryRequest {
   name: string;
   description?: string;
-  idParent?: number;
+  idParent?: string;
 }

@@ -1,5 +1,5 @@
 export interface AdminPlan {
-  id: number;
+  id: string;
   name: string;
   label: string;
   amount: number;

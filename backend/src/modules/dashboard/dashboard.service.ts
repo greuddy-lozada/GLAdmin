@@ -3,30 +3,14 @@ import { PrismaService } from '../../shared/prisma/prisma.service';
 import { ContextService } from '../tenant/context.service';
 
 export interface ProductWithExistence {
-  id: number;
+  id: string;
   name: string;
   price: number;
   existence: number;
 }
 
-interface RecentOrder {
-  id: number;
-  code: string;
-  date: Date;
-  amount: number;
-  supplier: { companyName: string };
-}
-
-interface SaleWithCustomer {
-  id: number;
-  code: string;
-  date: Date;
-  amount: number;
-  customer: { firstName: string; lastName: string } | null;
-}
-
 interface TopSupplier {
-  id: number;
+  id: string;
   companyName: string;
   _count: { purchaseOrders: number };
 }
@@ -38,7 +22,7 @@ export class DashboardService {
     private readonly contextService: ContextService,
   ) {}
 
-  private getOrgId(): number {
+  private getOrgId(): string {
     const ctx = this.contextService?.getCurrent();
     const orgId = ctx?.organizationId;
     if (!orgId) throw new Error('No organization context');
@@ -111,24 +95,17 @@ export class DashboardService {
         }),
       ]);
 
-    interface ProductWithStock {
-      id: number;
-      name: string;
-      price: number;
-      stocks: { existence: number }[];
-    }
-
-    const productsWithExistence: ProductWithExistence[] = (
-      allProducts as ProductWithStock[]
-    ).map((p) => ({
-      id: p.id,
-      name: p.name,
-      price: p.price,
-      existence: p.stocks.reduce(
-        (sum: number, s: { existence: number }) => sum + s.existence,
-        0,
-      ),
-    }));
+    const productsWithExistence: ProductWithExistence[] = allProducts.map(
+      (p) => ({
+        id: p.id,
+        name: p.name,
+        price: Number(p.price),
+        existence: p.stocks.reduce(
+          (sum: number, s: { existence: number }) => sum + s.existence,
+          0,
+        ),
+      }),
+    );
 
     productsWithExistence.sort((a, b) => b.existence - a.existence);
     const top5Products = productsWithExistence.slice(0, 5);
@@ -148,11 +125,11 @@ export class DashboardService {
 
     return {
       data: {
-        recentOrders: recentOrders.map((o: RecentOrder) => ({
+        recentOrders: recentOrders.map((o) => ({
           id: o.id,
           code: o.code,
           date: o.date?.toISOString() ?? null,
-          amount: o.amount,
+          amount: Number(o.amount ?? 0),
           supplierName: o.supplier.companyName,
         })),
         topProducts: top5Products,
@@ -205,15 +182,18 @@ export class DashboardService {
       .reverse();
 
     const totalSales = allSales.length;
-    const totalRevenue = allSales.reduce((sum, s) => sum + (s.amount ?? 0), 0);
+    const totalRevenue = allSales.reduce(
+      (sum, s) => sum + Number(s.amount ?? 0),
+      0,
+    );
 
     return {
       data: {
-        recentSales: recentSales.map((s: SaleWithCustomer) => ({
+        recentSales: recentSales.map((s) => ({
           id: s.id,
           code: s.code,
           date: s.date?.toISOString() ?? null,
-          amount: s.amount,
+          amount: Number(s.amount ?? 0),
           customerName: s.customer
             ? `${s.customer.firstName} ${s.customer.lastName}`
             : '—',

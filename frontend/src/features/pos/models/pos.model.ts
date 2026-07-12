@@ -7,7 +7,7 @@ export enum PaymentMethod {
 }
 
 export interface CartItem {
-  productId: number;
+  productId: string;
   name: string;
   quantity: number;
   unitPrice: number;
@@ -21,7 +21,7 @@ export interface CartItem {
 }
 
 export interface SaleItem {
-  productId: number;
+  productId: string;
   quantity: number;
   unitPrice: number;
   unitPriceUsd: number;
@@ -39,6 +39,8 @@ export interface SalePayment {
   currency: 'VES' | 'USD';
 }
 
+export type PaymentLine = SalePayment;
+
 export interface CreateSaleRequest {
   code: string;
   date: string;
@@ -47,7 +49,7 @@ export interface CreateSaleRequest {
   exchangeRate: number;
   paymentMethod: PaymentMethod;
   status: number;
-  idCustomer?: number;
+  idCustomer?: string;
   customerName?: string;
   items: SaleItem[];
   totalTax?: number;
@@ -62,7 +64,7 @@ export interface ParkedOrder {
   id?: number;
   label: string;
   cartItems: CartItem[];
-  customerId?: number;
+  customerId?: string;
   customerName?: string;
   total: number;
   totalUsd: number;

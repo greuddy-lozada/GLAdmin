@@ -60,7 +60,7 @@ export function useAdminSubscriptionPayments() {
     }
   }, [t]);
 
-  const review = useCallback(async (id: number, status: 'approved' | 'rejected') => {
+  const review = useCallback(async (id: string, status: 'approved' | 'rejected') => {
     try {
       await subscriptionPaymentService.review(id, { status });
       const key = status === 'approved' ? 'subscription.admin.approved' : 'subscription.admin.rejected';

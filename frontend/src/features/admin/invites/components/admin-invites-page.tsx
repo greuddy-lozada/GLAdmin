@@ -33,12 +33,12 @@ export default function AdminInvitesPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<AdminInvite | null>(null);
-  const [organizations, setOrganizations] = useState<{ id: number; name: string }[]>([]);
-  const [roles, setRoles] = useState<{ id: number; name: string }[]>([]);
+  const [organizations, setOrganizations] = useState<{ id: string; name: string }[]>([]);
+  const [roles, setRoles] = useState<{ id: string; name: string }[]>([]);
   const [formData, setFormData] = useState<CreateAdminInviteRequest>({
     email: '',
-    organizationId: 0,
-    roleId: 0,
+    organizationId: '',
+    roleId: '',
   });
   const [error, setError] = useState('');
 
@@ -65,7 +65,7 @@ export default function AdminInvitesPage() {
 
   const openCreate = () => {
     setError('');
-    setFormData({ email: '', organizationId: 0, roleId: 0 });
+    setFormData({ email: '', organizationId: '', roleId: '' });
     setFormOpen(true);
   };
 
@@ -103,8 +103,8 @@ export default function AdminInvitesPage() {
           <div className="space-y-2">
             <Label>{t('admin.invites.field.organization')}</Label>
             <Select
-              value={String(formData.organizationId || '')}
-              onValueChange={(v) => setFormData({ ...formData, organizationId: Number(v) })}
+              value={formData.organizationId}
+              onValueChange={(v) => setFormData({ ...formData, organizationId: v })}
             >
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -117,8 +117,8 @@ export default function AdminInvitesPage() {
           <div className="space-y-2">
             <Label>{t('admin.invites.field.role')}</Label>
             <Select
-              value={String(formData.roleId || '')}
-              onValueChange={(v) => setFormData({ ...formData, roleId: Number(v) })}
+              value={formData.roleId}
+              onValueChange={(v) => setFormData({ ...formData, roleId: v })}
             >
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>

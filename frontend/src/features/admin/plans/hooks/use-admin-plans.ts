@@ -4,7 +4,7 @@ import { useOptimisticCrud } from '@/hooks/use-optimistic-crud';
 import { AdminPlan, CreateAdminPlanRequest, UpdateAdminPlanRequest } from '../models/admin-plan.model';
 import { adminPlansService } from '../services/admin-plans.service';
 
-function buildOptimistic(data: CreateAdminPlanRequest, tempId: number): AdminPlan {
+function buildOptimistic(data: CreateAdminPlanRequest, tempId: string): AdminPlan {
   return {
     id: tempId,
     name: data.name,

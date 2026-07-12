@@ -6,8 +6,12 @@ import { SUBSCRIPTION_STATUS } from '../constants';
 describe('SubscriptionLifecycleService', () => {
   let service: SubscriptionLifecycleService;
 
-  const freePlan = { id: 1, name: 'free' };
-  const paidPlan = { id: 2, name: 'starter' };
+  const orgId = '00000000-0000-0000-0000-000000000001';
+  const freePlanId = '11111111-1111-1111-1111-111111111111';
+  const paidPlanId = '22222222-2222-2222-2222-222222222222';
+
+  const freePlan = { id: freePlanId, name: 'free' };
+  const paidPlan = { id: paidPlanId, name: 'starter' };
 
   const mockPrisma = {
     organization: {
@@ -36,8 +40,8 @@ describe('SubscriptionLifecycleService', () => {
 
   function createMockOrg(overrides: Record<string, unknown> = {}) {
     return {
-      id: 1,
-      planId: 2,
+      id: orgId,
+      planId: paidPlanId,
       plan: paidPlan,
       subscriptionStatus: SUBSCRIPTION_STATUS.ACTIVE,
       subscriptionExpiresAt: new Date(Date.now() + 30 * 86400000),
@@ -51,11 +55,11 @@ describe('SubscriptionLifecycleService', () => {
         createMockOrg({ planId: null, plan: null }),
       );
 
-      await service.evaluateSubscription(1);
+      await service.evaluateSubscription(orgId);
 
       expect(mockPrisma.organization.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: 1 },
+          where: { id: orgId },
           data: {
             subscriptionStatus: SUBSCRIPTION_STATUS.INACTIVE,
             subscriptionExpiresAt: null,
@@ -67,13 +71,13 @@ describe('SubscriptionLifecycleService', () => {
     test('org con plan Free → debe mantener inactive', async () => {
       mockPrisma.organization.findUnique.mockResolvedValue(
         createMockOrg({
-          planId: 1,
+          planId: freePlanId,
           plan: freePlan,
           subscriptionStatus: SUBSCRIPTION_STATUS.ACTIVE,
         }),
       );
 
-      await service.evaluateSubscription(1);
+      await service.evaluateSubscription(orgId);
 
       expect(mockPrisma.organization.update).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -88,7 +92,7 @@ describe('SubscriptionLifecycleService', () => {
     test('org con plan pago activo → no debe cambiar nada', async () => {
       mockPrisma.organization.findUnique.mockResolvedValue(createMockOrg());
 
-      await service.evaluateSubscription(1);
+      await service.evaluateSubscription(orgId);
 
       expect(mockPrisma.organization.update).not.toHaveBeenCalled();
     });
@@ -98,7 +102,7 @@ describe('SubscriptionLifecycleService', () => {
         createMockOrg({ subscriptionExpiresAt: null }),
       );
 
-      await service.evaluateSubscription(1);
+      await service.evaluateSubscription(orgId);
 
       expect(mockPrisma.organization.update).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -116,7 +120,7 @@ describe('SubscriptionLifecycleService', () => {
         createMockOrg({ subscriptionExpiresAt: expired3DaysAgo }),
       );
 
-      await service.evaluateSubscription(1);
+      await service.evaluateSubscription(orgId);
 
       expect(mockPrisma.organization.update).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -132,7 +136,7 @@ describe('SubscriptionLifecycleService', () => {
       );
       mockPrisma.plan.findUnique.mockResolvedValue(freePlan);
 
-      await service.evaluateSubscription(1);
+      await service.evaluateSubscription(orgId);
 
       expect(mockPrisma.organization.update).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -148,7 +152,9 @@ describe('SubscriptionLifecycleService', () => {
     test('org no encontrada → no debe hacer nada', async () => {
       mockPrisma.organization.findUnique.mockResolvedValue(null);
 
-      await service.evaluateSubscription(999);
+      await service.evaluateSubscription(
+        '00000000-0000-0000-0000-000000000999',
+      );
 
       expect(mockPrisma.organization.update).not.toHaveBeenCalled();
     });
@@ -157,8 +163,8 @@ describe('SubscriptionLifecycleService', () => {
   describe('evaluateAllActive()', () => {
     test('debe evaluar todas las orgs con plan asignado', async () => {
       mockPrisma.organization.findMany.mockResolvedValue([
-        { id: 1 },
-        { id: 2 },
+        { id: orgId },
+        { id: '00000000-0000-0000-0000-000000000002' },
       ]);
       mockPrisma.organization.findUnique.mockResolvedValue(createMockOrg());
 
@@ -169,8 +175,8 @@ describe('SubscriptionLifecycleService', () => {
 
     test('debe continuar si una org falla', async () => {
       mockPrisma.organization.findMany.mockResolvedValue([
-        { id: 1 },
-        { id: 2 },
+        { id: orgId },
+        { id: '00000000-0000-0000-0000-000000000002' },
       ]);
       mockPrisma.organization.findUnique
         .mockResolvedValueOnce(createMockOrg())

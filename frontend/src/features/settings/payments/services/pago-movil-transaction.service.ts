@@ -13,12 +13,12 @@ export const pagoMovilTransactionService = {
     return response.data.data;
   },
 
-  async get(id: number): Promise<PagoMovilTransaction> {
+  async get(id: string): Promise<PagoMovilTransaction> {
     const response = await apiClient.get(`/pago-movil/transactions/${id}`);
     return response.data.data;
   },
 
-  async review(id: number, data: ReviewPagoMovilTransactionRequest): Promise<PagoMovilTransaction> {
+  async review(id: string, data: ReviewPagoMovilTransactionRequest): Promise<PagoMovilTransaction> {
     const response = await apiClient.patch(`/pago-movil/transactions/${id}/review`, data);
     return response.data.data;
   },

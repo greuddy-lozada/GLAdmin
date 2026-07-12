@@ -4,9 +4,9 @@ export interface ProductData {
   name: string;
   price: number;
   cost?: number;
-  categoryId?: number;
-  brandId?: number;
-  taxId?: number;
+  categoryId?: string;
+  brandId?: string;
+  taxId?: string;
 }
 
 export class ProductBuilder extends Builder<ProductData> {
@@ -27,17 +27,17 @@ export class ProductBuilder extends Builder<ProductData> {
     return this;
   }
 
-  withCategory(id: number): this {
+  withCategory(id: string): this {
     this.data.categoryId = id;
     return this;
   }
 
-  withBrand(id: number): this {
+  withBrand(id: string): this {
     this.data.brandId = id;
     return this;
   }
 
-  withTax(id: number): this {
+  withTax(id: string): this {
     this.data.taxId = id;
     return this;
   }

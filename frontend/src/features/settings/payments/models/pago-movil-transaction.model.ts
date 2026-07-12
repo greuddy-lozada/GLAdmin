@@ -1,7 +1,7 @@
 export interface PagoMovilTransaction {
-  id: number;
-  organizationId: number;
-  userId: number;
+  id: string;
+  organizationId: string;
+  userId: string;
   amountVes: number;
   amountUsd: number;
   bankId: string;
@@ -9,11 +9,11 @@ export interface PagoMovilTransaction {
   reference: string;
   proofImage?: string | null;
   status: 'pending' | 'approved' | 'rejected';
-  reviewedBy?: number | null;
+  reviewedBy?: string | null;
   reviewedAt?: string | null;
   createdAt: string;
   updatedAt: string;
-  user?: { id: number; firstName: string; lastName: string };
+  user?: { id: string; firstName: string; lastName: string };
 }
 
 export interface CreatePagoMovilTransactionRequest {

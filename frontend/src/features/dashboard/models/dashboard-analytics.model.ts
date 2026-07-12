@@ -1,5 +1,5 @@
 export interface RecentOrder {
-  id: number;
+  id: string;
   code: string | null;
   date: string | null;
   amount: number | null;
@@ -7,7 +7,7 @@ export interface RecentOrder {
 }
 
 export interface RecentSale {
-  id: number;
+  id: string;
   code: string | null;
   date: string | null;
   amount: number | null;

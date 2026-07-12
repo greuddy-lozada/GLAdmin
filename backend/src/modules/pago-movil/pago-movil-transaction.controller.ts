@@ -5,7 +5,7 @@ import {
   Patch,
   Param,
   Body,
-  ParseIntPipe,
+  ParseUUIDPipe,
   Query,
 } from '@nestjs/common';
 import { PagoMovilService } from './pago-movil.service';
@@ -35,23 +35,23 @@ export class PagoMovilTransactionController {
   @MinLevel(ROLE_LEVEL.employee)
   create(
     @Body() dto: CreatePagoMovilTransactionDto,
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
   ) {
     return this.pagoMovilService.createTransaction(dto, userId);
   }
 
   @Get(':id')
   @MinLevel(ROLE_LEVEL.employee)
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.pagoMovilService.getTransaction(id);
   }
 
   @Patch(':id/review')
   @MinLevel(ROLE_LEVEL.manager)
   review(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: ReviewPagoMovilTransactionDto,
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
   ) {
     return this.pagoMovilService.reviewTransaction(id, dto, userId);
   }

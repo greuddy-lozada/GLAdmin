@@ -1,5 +1,5 @@
 export interface Tax {
-  id: number;
+  id: string;
   name: string;
   percentage: number;
   formula?: string | null;

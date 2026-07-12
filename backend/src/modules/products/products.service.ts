@@ -6,28 +6,16 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { Prisma } from '@prisma/client';
 
 export interface ProductWithStock {
-  id: number;
+  id: string;
   name: string;
   price: number;
   available: boolean;
-  organizationId: number;
-  tax?: { id: number; name: string | null; percentage: number } | null;
-  brand?: { id: number; name: string } | null;
-  category?: { id: number; name: string } | null;
+  organizationId: string;
+  tax?: { id: string; name: string | null; percentage: number } | null;
+  brand?: { id: string; name: string } | null;
+  category?: { id: string; name: string } | null;
   stocks: { existence: number }[];
   stock: number;
-}
-
-interface ProductWithStocks {
-  id: number;
-  name: string;
-  price: number;
-  available: boolean;
-  organizationId: number;
-  tax?: { id: number; name: string | null; percentage: number } | null;
-  brand?: { id: number; name: string } | null;
-  category?: { id: number; name: string } | null;
-  stocks: { existence: number }[];
 }
 
 @Injectable()
@@ -112,7 +100,7 @@ export class ProductsService {
     return { data, total, page, limit };
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const product = await this.prisma.product.findUnique({
       where: { id },
       include: { tax: true, brand: true, category: true },
@@ -121,7 +109,7 @@ export class ProductsService {
     return product;
   }
 
-  async update(id: number, dto: UpdateProductDto) {
+  async update(id: string, dto: UpdateProductDto) {
     await this.findOne(id);
     await this.enrichWithPvp(dto);
     const product = await this.prisma.product.update({
@@ -132,7 +120,7 @@ export class ProductsService {
     return { data: product, message: 'PRODUCT.UPDATED' };
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const product = await this.findOne(id);
     await this.prisma.product.update({
       where: { id },
@@ -161,8 +149,16 @@ export class ProductsService {
       this.prisma.product.count({ where }),
     ]);
 
-    const data = products.map((product: ProductWithStocks) => ({
-      ...product,
+    const data = products.map((product) => ({
+      id: product.id,
+      name: product.name,
+      price: Number(product.price),
+      available: product.available,
+      organizationId: product.organizationId,
+      tax: product.tax,
+      brand: product.brand,
+      category: product.category,
+      stocks: product.stocks,
       stock: product.stocks.reduce(
         (sum: number, s: { existence: number }) => sum + s.existence,
         0,

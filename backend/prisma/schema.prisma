@@ -15,7 +15,7 @@ datasource db {
 // ROLE
 // ────────────────────────────────────────────
 model Role {
-  id        Int      @id @default(autoincrement()) @map("id")
+  id        String   @id @default(uuid()) @db.Uuid @map("id")
   name      String   @map("name")
   slug      String   @unique @map("slug")
   createdAt DateTime @default(now()) @map("created_at")
@@ -32,13 +32,13 @@ model Role {
 // USER
 // ────────────────────────────────────────────
 model User {
-  id                 Int       @id @default(autoincrement()) @map("id")
+  id                 String    @id @default(uuid()) @db.Uuid @map("id")
   email              String    @unique @map("email")
   userName           String    @unique @map("user_name")
   password           String    @map("password")
   firstName          String    @map("first_name")
   lastName           String    @map("last_name")
-  idRole             Int       @map("id_role")
+  idRole             String    @db.Uuid @map("id_role")
   mustChangePassword Boolean   @default(false) @map("must_change_password")
   lastLogin          DateTime? @map("last_login")
   isActive           Boolean   @default(true) @map("is_active")
@@ -47,7 +47,7 @@ model User {
   updatedAt          DateTime  @updatedAt @map("updated_at")
   deletedAt          DateTime? @map("deleted_at")
 
-  currentOrganizationId  Int? @map("current_organization_id")
+  currentOrganizationId  String? @db.Uuid @map("current_organization_id")
 
   role                   Role                      @relation(fields: [idRole], references: [id])
   refreshTokens          RefreshToken[]
@@ -67,10 +67,10 @@ model User {
 // REFRESH TOKEN
 // ────────────────────────────────────────────
 model RefreshToken {
-  id         Int      @id @default(autoincrement()) @map("id")
+  id         String   @id @default(uuid()) @db.Uuid @map("id")
   tokenId    String   @unique @map("token_id")
   tokenHash  String   @map("token_hash")
-  userId     Int      @map("user_id")
+  userId     String   @db.Uuid @map("user_id")
   deviceInfo String?  @map("device_info")
   expiresAt  DateTime @map("expires_at")
   createdAt  DateTime @default(now()) @map("created_at")
@@ -86,7 +86,7 @@ model RefreshToken {
 // PERMISSION
 // ────────────────────────────────────────────
 model Permission {
-  id        Int      @id @default(autoincrement()) @map("id")
+  id        String      @id @default(uuid()) @db.Uuid @map("id")
   name      String?  @map("name")
   slug      String?  @map("slug")
   createdAt DateTime @default(now()) @map("created_at")
@@ -99,13 +99,13 @@ model Permission {
 // ORGANIZATION (Multi-tenant core)
 // ────────────────────────────────────────────
 model Organization {
-  id        Int       @id @default(autoincrement()) @map("id")
+  id        String       @id @default(uuid()) @db.Uuid @map("id")
   name      String    @map("name")
   slug      String    @unique @map("slug")
   version   Int       @default(0) @map("version")
   isActive  Boolean   @default(true) @map("is_active")
   settings  String?   @map("settings")
-  planId                Int?       @map("plan_id")
+  planId                String? @db.Uuid @map("plan_id")
   subscriptionStatus    String     @default("inactive") @map("subscription_status")
   subscriptionExpiresAt DateTime?  @map("subscription_expires_at")
   createdAt DateTime  @default(now()) @map("created_at")
@@ -151,19 +151,19 @@ model Organization {
 // PLAN
 // ────────────────────────────────────────────
 model Plan {
-  id        Int      @id @default(autoincrement()) @map("id")
+  id        String      @id @default(uuid()) @db.Uuid @map("id")
   name      String   @unique @map("name")
   label     String   @map("label")
-  amount    Int      @map("amount")
+  amount    Decimal  @db.Decimal(18,4) @map("amount")
   currency  String   @default("usd") @map("currency")
   interval  String   @map("interval")
   features  String   @map("features")
   maxUsers  Int      @default(5) @map("max_users")
-  version   Int      @default(0) @map("version")
-  isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  deletedAt DateTime? @map("deleted_at")
+  version        Int       @default(0) @map("version")
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at")
 
   organizations        Organization[]
   subscriptionPayments SubscriptionPayment[]
@@ -176,11 +176,11 @@ model Plan {
 // SUBSCRIPTION PAYMENT
 // ────────────────────────────────────────────
 model SubscriptionPayment {
-  id                Int       @id @default(autoincrement()) @map("id")
-  organizationId    Int       @map("organization_id")
-  planId            Int       @map("plan_id")
+  id                String       @id @default(uuid()) @db.Uuid @map("id")
+  organizationId    String @db.Uuid @map("organization_id")
+  planId            String @db.Uuid @map("plan_id")
   method            String    @map("method")
-  amountUsd         Float     @map("amount_usd")
+  amountUsd         Decimal   @db.Decimal(18,4) @map("amount_usd")
   status            String    @default("pending") @map("status")
 
   bankId            String?   @map("bank_id")
@@ -188,7 +188,7 @@ model SubscriptionPayment {
   reference         String?   @map("reference")
   proofImage        String?   @map("proof_image")
 
-  reviewedBy        Int?      @map("reviewed_by")
+  reviewedBy        String?  @db.Uuid @map("reviewed_by")
   reviewedAt        DateTime? @map("reviewed_at")
   notes             String?   @map("notes")
   createdAt         DateTime  @default(now()) @map("created_at")
@@ -211,9 +211,9 @@ model SubscriptionPayment {
 // USER ORGANIZATION (M:N pivot)
 // ────────────────────────────────────────────
 model UserOrganization {
-  userId         Int @map("user_id")
-  organizationId Int @map("organization_id")
-  roleId         Int @map("role_id")
+  userId         String @db.Uuid @map("user_id")
+  organizationId String @db.Uuid @map("organization_id")
+  roleId         String @db.Uuid @map("role_id")
 
   user         User         @relation(fields: [userId], references: [id])
   organization Organization @relation(fields: [organizationId], references: [id])
@@ -229,12 +229,12 @@ model UserOrganization {
 // INVITE
 // ────────────────────────────────────────────
 model Invite {
-  id             Int      @id @default(autoincrement()) @map("id")
+  id             String      @id @default(uuid()) @db.Uuid @map("id")
   code           String   @unique @map("code")
   email          String   @map("email")
-  organizationId Int      @map("organization_id")
-  roleId         Int      @map("role_id")
-  invitedById    Int      @map("invited_by_id")
+  organizationId String @db.Uuid @map("organization_id")
+  roleId         String @db.Uuid @map("role_id")
+  invitedById    String @db.Uuid @map("invited_by_id")
   expiresAt      DateTime @map("expires_at")
   version        Int      @default(0) @map("version")
   used           Boolean  @default(false) @map("used")
@@ -256,8 +256,8 @@ model Invite {
 // PAGO MOVIL CONFIG
 // ────────────────────────────────────────────
 model PagoMovilConfig {
-  id             Int      @id @default(autoincrement()) @map("id")
-  organizationId Int      @unique @map("organization_id")
+  id             String      @id @default(uuid()) @db.Uuid @map("id")
+  organizationId String @db.Uuid @unique @map("organization_id")
   phoneNumber    String   @map("phone_number")
   bankId         String   @map("bank_id")
   idNumber       String   @map("id_number")
@@ -266,48 +266,51 @@ model PagoMovilConfig {
   isActive       Boolean  @default(true) @map("is_active")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at")
 
   organization    Organization @relation(fields: [organizationId], references: [id])
 
   @@map("pago_movil_configs")
   @@index([organizationId])
+  @@index([deletedAt])
 }
 
 // ────────────────────────────────────────────
 // PAGO MOVIL TRANSACTION
 // ────────────────────────────────────────────
 model PagoMovilTransaction {
-  id             Int       @id @default(autoincrement()) @map("id")
-  organizationId Int       @map("organization_id")
-  userId         Int       @map("user_id")
-  amountVes      Float     @map("amount_ves")
-  amountUsd      Float     @map("amount_usd")
+  id             String       @id @default(uuid()) @db.Uuid @map("id")
+  organizationId String @db.Uuid @map("organization_id")
+  userId         String @db.Uuid @map("user_id")
+  amountVes      Decimal   @db.Decimal(18,4) @map("amount_ves")
+  amountUsd      Decimal   @db.Decimal(18,4) @map("amount_usd")
   bankId         String    @map("bank_id")
   phoneNumber    String    @map("phone_number")
   reference      String    @map("reference")
   proofImage     String?   @map("proof_image")
   version        Int       @default(0) @map("version")
   status         String    @default("pending") @map("status")
-  reviewedBy     Int?      @map("reviewed_by")
+  reviewedBy     String?   @db.Uuid @map("reviewed_by")
   reviewedAt     DateTime? @map("reviewed_at")
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at")
 
   organization Organization @relation(fields: [organizationId], references: [id])
   user         User         @relation(fields: [userId], references: [id])
 
   @@map("pago_movil_transactions")
-  @@index([organizationId])
   @@index([userId])
   @@index([reviewedBy])
   @@index([status])
+  @@index([deletedAt])
 }
 
 // ────────────────────────────────────────────
 // CUSTOMER
 // ────────────────────────────────────────────
 model Customer {
-  id                   Int       @id @default(autoincrement()) @map("id")
+  id                   String       @id @default(uuid()) @db.Uuid @map("id")
   idCardNumber         String    @map("id_card_number")
   firstName            String    @map("first_name")
   lastName             String    @map("last_name")
@@ -322,7 +325,7 @@ model Customer {
   createdAt            DateTime  @default(now()) @map("created_at")
   updatedAt            DateTime  @updatedAt @map("updated_at")
   deletedAt            DateTime? @map("deleted_at")
-  organizationId       Int       @map("organization_id")
+  organizationId       String @db.Uuid @map("organization_id")
 
   organization Organization @relation(fields: [organizationId], references: [id])
   sales        Sale[]
@@ -338,7 +341,7 @@ model Customer {
 // SUPPLIER
 // ────────────────────────────────────────────
 model Supplier {
-  id                 Int       @id @default(autoincrement()) @map("id")
+  id                 String       @id @default(uuid()) @db.Uuid @map("id")
   companyName        String    @map("company_name")
   businessName       String?   @map("business_name")
   fiscalAddress      String?   @map("fiscal_address")
@@ -354,7 +357,7 @@ model Supplier {
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
   deletedAt          DateTime? @map("deleted_at")
-  organizationId     Int       @map("organization_id")
+  organizationId     String @db.Uuid @map("organization_id")
 
   organization      Organization          @relation(fields: [organizationId], references: [id])
   stocks            Stock[]
@@ -372,7 +375,7 @@ model Supplier {
 // COMPANY
 // ────────────────────────────────────────────
 model Company {
-  id                    Int       @id @default(autoincrement()) @map("id")
+  id                    String       @id @default(uuid()) @db.Uuid @map("id")
   taxId                 String    @default("") @map("tax_id")
   name                  String    @map("name")
   address               String    @map("address")
@@ -385,7 +388,7 @@ model Company {
   createdAt             DateTime  @default(now()) @map("created_at")
   updatedAt             DateTime  @updatedAt @map("updated_at")
   deletedAt             DateTime? @map("deleted_at")
-  organizationId        Int       @map("organization_id")
+  organizationId        String @db.Uuid @map("organization_id")
 
   organization Organization @relation(fields: [organizationId], references: [id])
   licenses     License[]
@@ -400,9 +403,9 @@ model Company {
 // LICENSE
 // ────────────────────────────────────────────
 model License {
-  id         Int       @id @default(autoincrement()) @map("id")
+  id         String       @id @default(uuid()) @db.Uuid @map("id")
   code       String?   @map("code")
-  idCompany  Int       @map("id_company")
+  idCompany  String @db.Uuid @map("id_company")
   version    Int       @default(0) @map("version")
   available  Boolean?  @map("available")
   expiryDate DateTime? @map("expiry_date")
@@ -419,7 +422,7 @@ model License {
 // CURRENCY
 // ────────────────────────────────────────────
 model Currency {
-  id        Int      @id @default(autoincrement()) @map("id")
+  id        String      @id @default(uuid()) @db.Uuid @map("id")
   code      String?  @map("code")
   name      String?  @map("name")
   symbol    String?  @map("symbol")
@@ -435,15 +438,15 @@ model Currency {
 // EXCHANGE RATE
 // ────────────────────────────────────────────
 model ExchangeRate {
-  id             Int      @id @default(autoincrement()) @map("id")
+  id             String      @id @default(uuid()) @db.Uuid @map("id")
   rate           Float    @map("rate")
-  currencyId     Int?     @map("currency_id")
+  currencyId     String? @db.Uuid @map("currency_id")
   type           String   @default("official") @map("type")
   date           DateTime @map("date")
   source         String?  @map("source")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
-  organizationId Int      @map("organization_id")
+  organizationId String @db.Uuid @map("organization_id")
 
   organization          Organization             @relation(fields: [organizationId], references: [id])
   currency              Currency?                @relation(fields: [currencyId], references: [id])
@@ -464,12 +467,12 @@ model ExchangeRate {
 // EXCHANGE RATE DAY
 // ────────────────────────────────────────────
 model ExchangeRateDay {
-  id              Int      @id @default(autoincrement()) @map("id")
+  id              String      @id @default(uuid()) @db.Uuid @map("id")
   date            DateTime @map("date")
   rateBcvUsd      Float?   @map("rate_bcv_usd")
   rateParalelo    Float?   @map("rate_paralelo")
   source          String?  @default("dolarapi") @map("source")
-  organizationId  Int      @map("organization_id")
+  organizationId  String @db.Uuid @map("organization_id")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
@@ -485,7 +488,7 @@ model ExchangeRateDay {
 // MODULE
 // ────────────────────────────────────────────
 model Module {
-  id        Int      @id @default(autoincrement()) @map("id")
+  id        String      @id @default(uuid()) @db.Uuid @map("id")
   name      String?  @map("name")
   available Boolean? @map("available")
   createdAt DateTime @default(now()) @map("created_at")
@@ -498,7 +501,7 @@ model Module {
 // TAX
 // ────────────────────────────────────────────
 model Tax {
-  id             Int       @id @default(autoincrement()) @map("id")
+  id             String       @id @default(uuid()) @db.Uuid @map("id")
   name           String?   @map("name")
   percentage     Int       @map("percentage")
   formula        String?   @map("formula")
@@ -506,7 +509,7 @@ model Tax {
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
   deletedAt      DateTime? @map("deleted_at")
-  organizationId Int       @map("organization_id")
+  organizationId String @db.Uuid @map("organization_id")
 
   organization Organization @relation(fields: [organizationId], references: [id])
   products     Product[]
@@ -521,7 +524,7 @@ model Tax {
 // BRAND
 // ────────────────────────────────────────────
 model Brand {
-  id             Int       @id @default(autoincrement()) @map("id")
+  id             String       @id @default(uuid()) @db.Uuid @map("id")
   name           String    @map("name")
   description    String?   @map("description")
   version        Int       @default(0) @map("version")
@@ -529,7 +532,7 @@ model Brand {
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
   deletedAt      DateTime? @map("deleted_at")
-  organizationId Int       @map("organization_id")
+  organizationId String @db.Uuid @map("organization_id")
 
   organization Organization @relation(fields: [organizationId], references: [id])
   products     Product[]
@@ -544,10 +547,10 @@ model Brand {
 // CATEGORY
 // ────────────────────────────────────────────
 model Category {
-  id             Int        @id @default(autoincrement()) @map("id")
+  id             String        @id @default(uuid()) @db.Uuid @map("id")
   name           String     @map("name")
   description    String?    @map("description")
-  idParent       Int?       @map("id_parent")
+  idParent       String? @db.Uuid @map("id_parent")
   parent         Category?  @relation("CategoryHierarchy", fields: [idParent], references: [id])
   children       Category[] @relation("CategoryHierarchy")
   version        Int        @default(0) @map("version")
@@ -555,12 +558,13 @@ model Category {
   createdAt      DateTime   @default(now()) @map("created_at")
   updatedAt      DateTime   @updatedAt @map("updated_at")
   deletedAt      DateTime?  @map("deleted_at")
-  organizationId Int        @map("organization_id")
+  organizationId String @db.Uuid @map("organization_id")
 
   organization Organization @relation(fields: [organizationId], references: [id])
   products     Product[]
 
   @@map("categories")
+  @@unique([name, organizationId])
   @@index([organizationId])
   @@index([organizationId, available])
   @@index([idParent])
@@ -571,17 +575,17 @@ model Category {
 // PRODUCT
 // ────────────────────────────────────────────
 model Product {
-  id              Int          @id @default(autoincrement()) @map("id")
+  id              String          @id @default(uuid()) @db.Uuid @map("id")
   code            String       @map("code")
   name            String       @map("name")
-  price           Float        @map("price")
-  dollarPrice     Float?       @map("dollar_price")
-  baseCost        Float?       @map("base_cost")
+  price           Decimal      @db.Decimal(18,4) @map("price")
+  dollarPrice     Decimal?     @db.Decimal(18,4) @map("dollar_price")
+  baseCost        Decimal?     @db.Decimal(18,4) @map("base_cost")
   margin          Float        @default(20) @map("margin")
   totalExistence  Int          @default(0) @map("total_existence")
-  idTax           Int?         @map("id_tax")
-  idBrand         Int?         @map("id_brand")
-  idCategory      Int?         @map("id_category")
+  idTax           String? @db.Uuid @map("id_tax")
+  idBrand         String? @db.Uuid @map("id_brand")
+  idCategory      String? @db.Uuid @map("id_category")
   observation     String?      @map("observation")
   version         Int          @default(0) @map("version")
   available       Boolean      @default(true) @map("available")
@@ -589,7 +593,7 @@ model Product {
   createdAt       DateTime     @default(now()) @map("created_at")
   updatedAt       DateTime     @updatedAt @map("updated_at")
   deletedAt       DateTime?    @map("deleted_at")
-  organizationId  Int          @map("organization_id")
+  organizationId  String @db.Uuid @map("organization_id")
 
   organization             Organization               @relation(fields: [organizationId], references: [id])
   tax                      Tax?                       @relation(fields: [idTax], references: [id])
@@ -615,14 +619,14 @@ model Product {
 // BATCH
 // ────────────────────────────────────────────
 model Batch {
-  id             Int       @id @default(autoincrement()) @map("id")
+  id             String       @id @default(uuid()) @db.Uuid @map("id")
   code           String    @map("code")
   description    String?   @map("description")
   version        Int       @default(0) @map("version")
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
   deletedAt      DateTime? @map("deleted_at")
-  organizationId Int       @map("organization_id")
+  organizationId String @db.Uuid @map("organization_id")
 
   organization Organization @relation(fields: [organizationId], references: [id])
   stocks       Stock[]
@@ -637,18 +641,18 @@ model Batch {
 // STOCK
 // ────────────────────────────────────────────
 model Stock {
-  id              Int       @id @default(autoincrement()) @map("id")
-  idProduct       Int       @map("id_product")
-  idSupplier      Int?      @map("id_supplier")
-  idBatch         Int?      @map("id_batch")
-  idPurchaseOrder Int?      @map("id_purchase_order")
+  id              String       @id @default(uuid()) @db.Uuid @map("id")
+  idProduct       String @db.Uuid @map("id_product")
+  idSupplier      String? @db.Uuid @map("id_supplier")
+  idBatch         String? @db.Uuid @map("id_batch")
+  idPurchaseOrder String? @db.Uuid @map("id_purchase_order")
   existence       Int       @map("existence")
   version         Int       @default(0) @map("version")
   available       Boolean   @default(true) @map("available")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
   deletedAt       DateTime? @map("deleted_at")
-  organizationId  Int       @map("organization_id")
+  organizationId  String @db.Uuid @map("organization_id")
 
   organization  Organization  @relation(fields: [organizationId], references: [id])
   product       Product       @relation(fields: [idProduct], references: [id])
@@ -672,8 +676,8 @@ model Stock {
 // STOCK DETAIL
 // ────────────────────────────────────────────
 model StockDet {
-  id          Int       @id @default(autoincrement()) @map("id")
-  idStock     Int       @map("id_stock")
+  id          String       @id @default(uuid()) @db.Uuid @map("id")
+  idStock     String @db.Uuid @map("id_stock")
   type        Int       @map("type")
   quantity    Int       @map("quantity")
   expiryDate  DateTime? @map("expiry_date")
@@ -691,21 +695,21 @@ model StockDet {
 // PURCHASE ORDER
 // ────────────────────────────────────────────
 model PurchaseOrder {
-  id                     Int                  @id @default(autoincrement()) @map("id")
-  idSupplier             Int                  @map("id_supplier")
+  id                     String                  @id @default(uuid()) @db.Uuid @map("id")
+  idSupplier             String @db.Uuid @map("id_supplier")
   code                   String?              @map("code")
   date                   DateTime?            @map("date")
-  amount                 Float?               @map("amount")
-  amountUsd              Float?               @map("amount_usd")
-  baseAmount             Float?               @map("base_amount")
-  baseAmountUsd          Float?               @map("base_amount_usd")
-  ivaAmount              Float?               @map("iva_amount")
-  ivaAmountUsd           Float?               @map("iva_amount_usd")
+  amount                 Decimal?             @db.Decimal(18,4) @map("amount")
+  amountUsd              Decimal?             @db.Decimal(18,4) @map("amount_usd")
+  baseAmount             Decimal?             @db.Decimal(18,4) @map("base_amount")
+  baseAmountUsd          Decimal?             @db.Decimal(18,4) @map("base_amount_usd")
+  ivaAmount              Decimal?             @db.Decimal(18,4) @map("iva_amount")
+  ivaAmountUsd           Decimal?             @db.Decimal(18,4) @map("iva_amount_usd")
   exchangeRate           Float?               @map("exchange_rate")
-  exchangeRateId         Int?                 @map("exchange_rate_id")
-  exchangeRateDayId      Int?                 @map("exchange_rate_day_id")
+  exchangeRateId         String? @db.Uuid @map("exchange_rate_id")
+  exchangeRateDayId      String? @db.Uuid @map("exchange_rate_day_id")
   officialExchangeRate   Float?               @map("official_exchange_rate")
-  officialExchangeRateId Int?                 @map("official_exchange_rate_id")
+  officialExchangeRateId String? @db.Uuid @map("official_exchange_rate_id")
   paymentMethod          Int?                 @map("payment_method")
   status                 String?              @default("DRAFT")
   version                Int                  @default(0) @map("version")
@@ -714,7 +718,7 @@ model PurchaseOrder {
   deletedAt              DateTime?            @map("deleted_at")
   annulledAt             DateTime?            @map("annulled_at")
   annulmentReason        String?              @map("annulment_reason")
-  organizationId         Int                  @map("organization_id")
+  organizationId         String @db.Uuid @map("organization_id")
 
   organization               Organization           @relation(fields: [organizationId], references: [id])
   supplier                   Supplier               @relation(fields: [idSupplier], references: [id])
@@ -743,20 +747,20 @@ model PurchaseOrder {
 // PURCHASE ORDER DETAIL
 // ────────────────────────────────────────────
 model PurchaseOrderDet {
-  id               Int      @id @default(autoincrement()) @map("id")
-  idPurchaseOrder  Int      @map("id_purchase_order")
-  idProduct        Int      @map("id_product")
+  id               String      @id @default(uuid()) @db.Uuid @map("id")
+  idPurchaseOrder  String @db.Uuid @map("id_purchase_order")
+  idProduct        String @db.Uuid @map("id_product")
   quantity         Int?     @map("quantity")
   receivedQuantity Int      @default(0) @map("received_quantity")
-  unitPrice        Float?   @map("unit_price")
-  unitPriceUsd     Float?   @map("unit_price_usd")
-  subtotal         Float?   @map("subtotal")
-  subtotalUsd      Float?   @map("subtotal_usd")
+  unitPrice        Decimal?  @db.Decimal(18,4) @map("unit_price")
+  unitPriceUsd     Decimal?  @db.Decimal(18,4) @map("unit_price_usd")
+  subtotal         Decimal?  @db.Decimal(18,4) @map("subtotal")
+  subtotalUsd      Decimal?  @db.Decimal(18,4) @map("subtotal_usd")
   observation      String?  @map("observation")
   version          Int      @default(0) @map("version")
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
-  organizationId   Int      @map("organization_id")
+  organizationId   String @db.Uuid @map("organization_id")
 
   organization    Organization  @relation(fields: [organizationId], references: [id])
   purchaseOrder   PurchaseOrder @relation(fields: [idPurchaseOrder], references: [id])
@@ -772,20 +776,20 @@ model PurchaseOrderDet {
 // ACCOUNTS PAYABLE (CXP)
 // ────────────────────────────────────────────
 model AccountsPayable {
-  id              Int       @id @default(autoincrement()) @map("id")
-  idPurchaseOrder Int       @map("id_purchase_order")
+  id              String       @id @default(uuid()) @db.Uuid @map("id")
+  idPurchaseOrder String @db.Uuid @map("id_purchase_order")
   dueDate         DateTime? @map("due_date")
   issueDate       DateTime? @map("issue_date")
-  amount          Float?    @map("amount")
-  amountUsd       Float?    @map("amount_usd")
+  amount          Decimal?  @db.Decimal(18,4) @map("amount")
+  amountUsd       Decimal?  @db.Decimal(18,4) @map("amount_usd")
   exchangeRate    Float?    @map("exchange_rate")
-  credit          Float?    @map("credit")
+  credit          Decimal?  @db.Decimal(18,4) @map("credit")
   status          Int?      @map("status")
   version         Int       @default(0) @map("version")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
   deletedAt       DateTime? @map("deleted_at")
-  organizationId  Int       @map("organization_id")
+  organizationId  String @db.Uuid @map("organization_id")
 
   organization    Organization  @relation(fields: [organizationId], references: [id])
   purchaseOrder   PurchaseOrder @relation(fields: [idPurchaseOrder], references: [id])
@@ -801,15 +805,15 @@ model AccountsPayable {
 // TAX WITHHOLDING RECORD
 // ────────────────────────────────────────────
 model WithholdingRecord {
-  id                Int       @id @default(autoincrement()) @map("id")
-  idSupplier        Int       @map("id_supplier")
-  idPurchaseOrder   Int?      @map("id_purchase_order")
+  id                String       @id @default(uuid()) @db.Uuid @map("id")
+  idSupplier        String @db.Uuid @map("id_supplier")
+  idPurchaseOrder   String? @db.Uuid @map("id_purchase_order")
   type              String    @map("type")
   percentage        Float     @map("percentage")
-  baseAmount        Float     @map("base_amount")
-  baseAmountUsd     Float?    @map("base_amount_usd")
-  withheldAmount    Float     @map("withheld_amount")
-  withheldAmountUsd Float?    @map("withheld_amount_usd")
+  baseAmount        Decimal   @db.Decimal(18,4) @map("base_amount")
+  baseAmountUsd     Decimal?  @db.Decimal(18,4) @map("base_amount_usd")
+  withheldAmount    Decimal   @db.Decimal(18,4) @map("withheld_amount")
+  withheldAmountUsd Decimal?  @db.Decimal(18,4) @map("withheld_amount_usd")
   exchangeRate      Float?    @map("exchange_rate")
   documentNumber    String?   @map("document_number")
   period            String?   @map("period")
@@ -818,7 +822,7 @@ model WithholdingRecord {
   createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt         DateTime  @updatedAt @map("updated_at")
   deletedAt         DateTime? @map("deleted_at")
-  organizationId    Int       @map("organization_id")
+  organizationId    String @db.Uuid @map("organization_id")
 
   organization   Organization    @relation(fields: [organizationId], references: [id])
   supplier       Supplier        @relation(fields: [idSupplier], references: [id])
@@ -835,21 +839,21 @@ model WithholdingRecord {
 // SALE
 // ────────────────────────────────────────────
 model Sale {
-  id                     Int        @id @default(autoincrement()) @map("id")
-  idCustomer             Int?       @map("id_customer")
+  id                     String        @id @default(uuid()) @db.Uuid @map("id")
+  idCustomer             String? @db.Uuid @map("id_customer")
   code                   String?    @map("code")
   date                   DateTime?  @map("date")
-  amount                 Float?     @map("amount")
-  amountUsd              Float?     @map("amount_usd")
+  amount                 Decimal?   @db.Decimal(18,4) @map("amount")
+  amountUsd              Decimal?   @db.Decimal(18,4) @map("amount_usd")
   exchangeRate           Float?     @map("exchange_rate")
-  exchangeRateId         Int?       @map("exchange_rate_id")
+  exchangeRateId         String? @db.Uuid @map("exchange_rate_id")
   officialExchangeRate   Float?     @map("official_exchange_rate")
-  officialExchangeRateId Int?       @map("official_exchange_rate_id")
-  totalTax               Float?     @map("total_tax")
-  totalTaxUsd            Float?     @map("total_tax_usd")
+  officialExchangeRateId String? @db.Uuid @map("official_exchange_rate_id")
+  totalTax               Decimal?   @db.Decimal(18,4) @map("total_tax")
+  totalTaxUsd            Decimal?   @db.Decimal(18,4) @map("total_tax_usd")
   withholdingPercentage  Float?     @map("withholding_percentage")
-  withholdingAmount      Float?     @map("withholding_amount")
-  withholdingAmountUsd   Float?     @map("withholding_amount_usd")
+  withholdingAmount      Decimal?   @db.Decimal(18,4) @map("withholding_amount")
+  withholdingAmountUsd   Decimal?   @db.Decimal(18,4) @map("withholding_amount_usd")
   paymentMethod          Int?       @map("payment_method")
   status                 String?   @default("DRAFT")
   version                Int        @default(0) @map("version")
@@ -858,7 +862,7 @@ model Sale {
   deletedAt              DateTime?  @map("deleted_at")
   annulledAt             DateTime?  @map("annulled_at")
   annulmentReason        String?    @map("annulment_reason")
-  organizationId         Int        @map("organization_id")
+  organizationId         String @db.Uuid @map("organization_id")
 
   organization               Organization        @relation(fields: [organizationId], references: [id])
   customer                   Customer?           @relation(fields: [idCustomer], references: [id])
@@ -885,23 +889,23 @@ model Sale {
 // SALE DETAIL
 // ────────────────────────────────────────────
 model SalesDet {
-  id             Int      @id @default(autoincrement()) @map("id")
-  idSale         Int      @map("id_sale")
-  idProduct      Int      @map("id_product")
+  id             String      @id @default(uuid()) @db.Uuid @map("id")
+  idSale         String @db.Uuid @map("id_sale")
+  idProduct      String @db.Uuid @map("id_product")
   quantity       Int?     @map("quantity")
-  unitPrice      Float?   @map("unit_price")
-  unitPriceUsd   Float?   @map("unit_price_usd")
-  subtotal       Float?   @map("subtotal")
-  subtotalUsd    Float?   @map("subtotal_usd")
-  taxName        String?  @map("tax_name")
-  taxPercentage  Float?   @map("tax_percentage")
-  taxAmount      Float?   @map("tax_amount")
-  taxAmountUsd   Float?   @map("tax_amount_usd")
+  unitPrice      Decimal?   @db.Decimal(18,4) @map("unit_price")
+  unitPriceUsd   Decimal?   @db.Decimal(18,4) @map("unit_price_usd")
+  subtotal       Decimal?   @db.Decimal(18,4) @map("subtotal")
+  subtotalUsd    Decimal?   @db.Decimal(18,4) @map("subtotal_usd")
+  taxName        String?    @map("tax_name")
+  taxPercentage  Float?     @map("tax_percentage")
+  taxAmount      Decimal?   @db.Decimal(18,4) @map("tax_amount")
+  taxAmountUsd   Decimal?   @db.Decimal(18,4) @map("tax_amount_usd")
   observation    String?  @map("observation")
   version        Int      @default(0) @map("version")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
-  organizationId Int      @map("organization_id")
+  organizationId String @db.Uuid @map("organization_id")
 
   organization Organization @relation(fields: [organizationId], references: [id])
   sale         Sale         @relation(fields: [idSale], references: [id])
@@ -917,13 +921,13 @@ model SalesDet {
 // SALE PAYMENT
 // ────────────────────────────────────────────
 model SalePayment {
-  id             Int      @id @default(autoincrement()) @map("id")
-  saleId         Int      @map("sale_id")
+  id             String      @id @default(uuid()) @db.Uuid @map("id")
+  saleId         String @db.Uuid @map("sale_id")
   method         Int      @map("method")
-  amount         Float    @map("amount")
+  amount         Decimal   @db.Decimal(18,4) @map("amount")
   currency       String   @map("currency")
   createdAt      DateTime @default(now()) @map("created_at")
-  organizationId Int      @map("organization_id")
+  organizationId String @db.Uuid @map("organization_id")
 
   sale         Sale         @relation(fields: [saleId], references: [id])
   organization Organization @relation(fields: [organizationId], references: [id])
@@ -937,20 +941,20 @@ model SalePayment {
 // ACCOUNTS RECEIVABLE
 // ────────────────────────────────────────────
 model AccountsReceivable {
-  id             Int       @id @default(autoincrement()) @map("id")
-  idSale         Int?      @map("id_sale")
+  id             String       @id @default(uuid()) @db.Uuid @map("id")
+  idSale         String? @db.Uuid @map("id_sale")
   dueDate        DateTime? @map("due_date")
   issueDate      DateTime? @map("issue_date")
-  amount         Float?    @map("amount")
-  amountUsd      Float?    @map("amount_usd")
+  amount         Decimal?  @db.Decimal(18,4) @map("amount")
+  amountUsd      Decimal?  @db.Decimal(18,4) @map("amount_usd")
   exchangeRate   Float?    @map("exchange_rate")
-  credit         Float?    @map("credit")
+  credit         Decimal?  @db.Decimal(18,4) @map("credit")
   status         Int?      @map("status")
   version        Int       @default(0) @map("version")
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
   deletedAt      DateTime? @map("deleted_at")
-  organizationId Int       @map("organization_id")
+  organizationId String @db.Uuid @map("organization_id")
 
   organization Organization @relation(fields: [organizationId], references: [id])
   sale         Sale?        @relation(fields: [idSale], references: [id])
@@ -966,9 +970,9 @@ model AccountsReceivable {
 // PRODUCT EXCHANGE RATE LINKS
 // ────────────────────────────────────────────
 model ProductsExchangeRates {
-  id             Int      @id @default(autoincrement()) @map("id")
-  idProduct      Int      @map("id_product")
-  idExchangeRate Int      @map("id_exchange_rate")
+  id             String      @id @default(uuid()) @db.Uuid @map("id")
+  idProduct      String @db.Uuid @map("id_product")
+  idExchangeRate String @db.Uuid @map("id_exchange_rate")
   value          Float?   @map("value")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
@@ -985,8 +989,8 @@ model ProductsExchangeRates {
 // SYNC CURSOR
 // ────────────────────────────────────────────
 model SyncCursor {
-  id              Int      @id @default(autoincrement()) @map("id")
-  organizationId  Int      @unique @map("organization_id")
+  id              String      @id @default(uuid()) @db.Uuid @map("id")
+  organizationId  String @db.Uuid @unique @map("organization_id")
   lastPullAt      DateTime @map("last_pull_at")
   lastPushAt      DateTime @map("last_push_at")
   createdAt       DateTime @default(now()) @map("created_at")
@@ -1001,16 +1005,16 @@ model SyncCursor {
 // SYNC CONFLICT
 // ────────────────────────────────────────────
 model SyncConflict {
-  id              Int       @id @default(autoincrement()) @map("id")
-  organizationId  Int       @map("organization_id")
+  id              String       @id @default(uuid()) @db.Uuid @map("id")
+  organizationId  String @db.Uuid @map("organization_id")
   table           String    @map("table")
-  recordId        Int?      @map("record_id")
+  recordId        String? @db.Uuid @map("record_id")
   localData       String    @map("local_data")
   serverData      String    @map("server_data")
   localTimestamp  DateTime  @map("local_timestamp")
   description     String    @map("description")
   status          String    @default("pending") @map("status")
-  resolvedBy      Int?      @map("resolved_by")
+  resolvedBy      String?  @db.Uuid @map("resolved_by")
   resolvedAt      DateTime? @map("resolved_at")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
@@ -1027,12 +1031,12 @@ model SyncConflict {
 // AUDIT LOG
 // ────────────────────────────────────────────
 model AuditLog {
-  id              Int      @id @default(autoincrement()) @map("id")
-  organizationId  Int      @map("organization_id")
-  userId          Int?     @map("user_id")
+  id              String      @id @default(uuid()) @db.Uuid @map("id")
+  organizationId  String @db.Uuid @map("organization_id")
+  userId          String? @db.Uuid @map("user_id")
   action          String   @map("action")
   entity          String   @map("entity")
-  entityId        Int?     @map("entity_id")
+  entityId        String? @db.Uuid @map("entity_id")
   metadata        String?  @map("metadata")
   ipAddress       String?  @map("ip_address")
   createdAt       DateTime @default(now()) @map("created_at")

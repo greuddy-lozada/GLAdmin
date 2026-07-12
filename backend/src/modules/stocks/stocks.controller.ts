@@ -7,7 +7,7 @@ import {
   Param,
   Delete,
   Query,
-  ParseIntPipe,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { StocksService } from './stocks.service';
 import { CreateStockDto } from './dto/create-stock.dto';
@@ -41,19 +41,19 @@ export class StocksController {
 
   @Get(':id')
   @Roles('master', 'admin', 'employee')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.stocksService.findOne(id);
   }
 
   @Patch(':id')
   @Roles('master', 'admin')
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateStockDto) {
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateStockDto) {
     return this.stocksService.update(id, dto);
   }
 
   @Delete(':id')
   @Roles('master')
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.stocksService.remove(id);
   }
 }

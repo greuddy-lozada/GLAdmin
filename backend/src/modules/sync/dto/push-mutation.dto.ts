@@ -1,7 +1,7 @@
 import {
   IsString,
   IsOptional,
-  IsInt,
+  IsUUID,
   IsIn,
   IsObject,
   IsDateString,
@@ -17,8 +17,8 @@ export class PushMutationDto {
   table: string;
 
   @IsOptional()
-  @IsInt()
-  recordId?: number;
+  @IsUUID()
+  recordId?: string;
 
   @IsObject()
   data: Record<string, unknown>;

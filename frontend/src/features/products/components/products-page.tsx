@@ -54,9 +54,9 @@ export default function ProductsPage() {
     margin: 20,
   });
   const [pvpOverride, setPvpOverride] = useState(false);
-  const [taxes, setTaxes] = useState<{ id: number; name: string; percentage: number }[]>([]);
-  const [brands, setBrands] = useState<{ id: number; name: string }[]>([]);
-  const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
+  const [taxes, setTaxes] = useState<{ id: string; name: string; percentage: number }[]>([]);
+  const [brands, setBrands] = useState<{ id: string; name: string }[]>([]);
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [bcvRate, setBcvRate] = useState(0);
   const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
@@ -114,9 +114,9 @@ export default function ProductsPage() {
   ];
 
   useEffect(() => {
-    apiClient.get('/taxes').then((r: { data: { data: { id: number; name: string; percentage: number }[] } }) => setTaxes(r.data.data || [])).catch(() => console.warn('Failed to load taxes'));
-    apiClient.get('/brands').then((r: { data: { data: { id: number; name: string }[] } }) => setBrands(r.data.data || [])).catch(() => console.warn('Failed to load brands'));
-    apiClient.get('/categories').then((r: { data: { data: { id: number; name: string }[] } }) => setCategories(r.data.data || [])).catch(() => console.warn('Failed to load categories'));
+    apiClient.get('/taxes').then((r: { data: { data: { id: string; name: string; percentage: number }[] } }) => setTaxes(r.data.data || [])).catch(() => console.warn('Failed to load taxes'));
+    apiClient.get('/brands').then((r: { data: { data: { id: string; name: string }[] } }) => setBrands(r.data.data || [])).catch(() => console.warn('Failed to load brands'));
+    apiClient.get('/categories').then((r: { data: { data: { id: string; name: string }[] } }) => setCategories(r.data.data || [])).catch(() => console.warn('Failed to load categories'));
     exchangeRateService.getLatest().then((day) => { if (day?.rateBcvUsd) setBcvRate(day.rateBcvUsd); }).catch(() => console.warn('Failed to load BCV rate'));
   }, []);
 
@@ -297,8 +297,8 @@ export default function ProductsPage() {
           </div>
           <div className="space-y-2">
             <Label>{t('products.field.tax')}</Label>
-            <Select value={formData.idTax ? String(formData.idTax) : ''}
-              onValueChange={(v) => setFormData({ ...formData, idTax: v ? Number(v) : undefined })}>
+            <Select value={formData.idTax ?? ''}
+              onValueChange={(v) => setFormData({ ...formData, idTax: v || undefined })}>
               <SelectTrigger><SelectValue placeholder={t('common.none')} /></SelectTrigger>
               <SelectContent>
                 {taxes.map((tax) => (
@@ -336,10 +336,10 @@ export default function ProductsPage() {
                 </Button>
               </div>
             ) : (
-              <Select value={formData.idBrand ? String(formData.idBrand) : ''}
+              <Select value={formData.idBrand ?? ''}
                 onValueChange={(v) => {
                   if (v === '__new__') { setShowNewBrandInput(true); return; }
-                  setFormData({ ...formData, idBrand: v ? Number(v) : undefined });
+                  setFormData({ ...formData, idBrand: v || undefined });
                 }}>
                 <SelectTrigger><SelectValue placeholder={t('common.none')} /></SelectTrigger>
                 <SelectContent>
@@ -355,8 +355,8 @@ export default function ProductsPage() {
           </div>
           <div className="space-y-2">
             <Label>{t('products.field.category')}</Label>
-            <Select value={formData.idCategory ? String(formData.idCategory) : ''}
-              onValueChange={(v) => setFormData({ ...formData, idCategory: v ? Number(v) : undefined })}>
+            <Select value={formData.idCategory ?? ''}
+              onValueChange={(v) => setFormData({ ...formData, idCategory: v || undefined })}>
               <SelectTrigger><SelectValue placeholder={t('common.none')} /></SelectTrigger>
               <SelectContent>
                 {categories.map((cat) => (

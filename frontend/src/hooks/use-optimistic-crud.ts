@@ -4,24 +4,24 @@ interface OptimisticCrudOptions<T, CreateDTO, UpdateDTO> {
   queryKey: string[];
   queryFn: () => Promise<T[]>;
   createFn: (data: CreateDTO) => Promise<T>;
-  updateFn: (id: number, data: UpdateDTO) => Promise<T>;
-  deleteFn: (id: number) => Promise<void>;
-  getTempId?: () => number;
-  buildOptimistic?: (data: CreateDTO, tempId: number) => T;
+  updateFn: (id: string, data: UpdateDTO) => Promise<T>;
+  deleteFn: (id: string) => Promise<void>;
+  getTempId?: () => string;
+  buildOptimistic?: (data: CreateDTO, tempId: string) => T;
   mergeOptimistic?: (items: T[], updated: T) => T[];
 }
 
-const defaultGetTempId = () => -Date.now();
+const defaultGetTempId = () => 'temp-' + crypto.randomUUID();
 
-function defaultBuildOptimistic<CreateDTO>(data: CreateDTO, tempId: number) {
+function defaultBuildOptimistic<CreateDTO>(data: CreateDTO, tempId: string) {
   return { id: tempId, ...data } as unknown as never;
 }
 
-function defaultMerge<T extends { id: number }>(items: T[], updated: T): T[] {
+function defaultMerge<T extends { id: string }>(items: T[], updated: T): T[] {
   return items.map((item) => (item.id === updated.id ? updated : item));
 }
 
-export function useOptimisticCrud<T extends { id: number }, CreateDTO = Partial<T>, UpdateDTO = Partial<T>>(
+export function useOptimisticCrud<T extends { id: string }, CreateDTO = Partial<T>, UpdateDTO = Partial<T>>(
   options: OptimisticCrudOptions<T, CreateDTO, UpdateDTO>,
 ) {
   const queryClient = useQueryClient();
@@ -55,7 +55,7 @@ export function useOptimisticCrud<T extends { id: number }, CreateDTO = Partial<
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: UpdateDTO }) => options.updateFn(id, data),
+    mutationFn: ({ id, data }: { id: string; data: UpdateDTO }) => options.updateFn(id, data),
     onMutate: async ({ id, data }) => {
       await queryClient.cancelQueries({ queryKey: options.queryKey });
       const previous = queryClient.getQueryData<T[]>(options.queryKey);
@@ -77,7 +77,7 @@ export function useOptimisticCrud<T extends { id: number }, CreateDTO = Partial<
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => options.deleteFn(id),
+    mutationFn: (id: string) => options.deleteFn(id),
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: options.queryKey });
       const previous = queryClient.getQueryData<T[]>(options.queryKey);

@@ -87,6 +87,60 @@ export class PrismaService
               };
             }
 
+            const softDeleteModels = [
+              'Organization',
+              'User',
+              'Plan',
+              'Customer',
+              'Supplier',
+              'Company',
+              'Brand',
+              'Category',
+              'Product',
+              'Tax',
+              'Batch',
+              'Stock',
+              'PurchaseOrder',
+              'WithholdingRecord',
+              'Sale',
+              'SubscriptionPayment',
+              'AccountsPayable',
+              'AccountsReceivable',
+              'PagoMovilConfig',
+              'PagoMovilTransaction',
+            ];
+            const readOps = ['findUnique', 'findFirst', 'findMany', 'count'];
+            if (
+              readOps.includes(operation) &&
+              softDeleteModels.includes(model)
+            ) {
+              const whereObj = args.where as Record<string, unknown>;
+              if (!('deletedAt' in (whereObj ?? {}))) {
+                args.where = { ...whereObj, deletedAt: null };
+              }
+            }
+
+            // Soft delete: redirect delete/deleteMany → update/updateMany with deletedAt
+            if (softDeleteModels.includes(model)) {
+              const delegateName =
+                model.charAt(0).toLowerCase() + model.slice(1);
+              const rawDelegate = (this as Record<string, unknown>)[
+                delegateName
+              ] as Record<string, (...a: unknown[]) => unknown>;
+              if (operation === 'delete') {
+                return rawDelegate.update({
+                  where: args.where,
+                  data: { deletedAt: new Date() },
+                });
+              }
+              if (operation === 'deleteMany') {
+                return rawDelegate.updateMany({
+                  where: args.where,
+                  data: { deletedAt: new Date() },
+                });
+              }
+            }
+
             // Auto-increment version on update for optimistic locking
             const versionedModels = [
               'Supplier',

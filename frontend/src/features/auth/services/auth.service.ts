@@ -21,7 +21,7 @@ export const authService = {
     await apiClient.post('/auth/logout');
   },
 
-  async selectOrg(organizationId: number): Promise<SelectOrgResponse> {
+  async selectOrg(organizationId: string): Promise<SelectOrgResponse> {
     const response = await apiClient.post('/auth/select-org', { organizationId });
     return response.data.data;
   },

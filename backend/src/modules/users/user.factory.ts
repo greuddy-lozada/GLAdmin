@@ -8,7 +8,7 @@ export interface CreateUserData {
   userName: string;
   password: string;
   email: string;
-  idRole: number;
+  idRole: string;
   isActive: boolean;
 }
 

@@ -6,7 +6,7 @@ import {
   Delete,
   Param,
   Body,
-  ParseIntPipe,
+  ParseUUIDPipe,
   Query,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
@@ -31,7 +31,7 @@ export class AdminOrgsController {
 
   @Get(':id')
   @MinLevel(ROLE_LEVEL.master)
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.adminService.findOneOrg(id);
   }
 
@@ -43,20 +43,20 @@ export class AdminOrgsController {
 
   @Patch(':id')
   @MinLevel(ROLE_LEVEL.master)
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateOrgDto) {
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateOrgDto) {
     return this.adminService.updateOrg(id, dto);
   }
 
   @Delete(':id')
   @MinLevel(ROLE_LEVEL.master)
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.adminService.removeOrg(id);
   }
 
   @Post(':id/assign-user')
   @MinLevel(ROLE_LEVEL.master)
   assignUser(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: AssignUserOrgDto,
   ) {
     return this.adminService.assignUserToOrg(id, dto);
@@ -65,8 +65,8 @@ export class AdminOrgsController {
   @Post(':id/remove-user/:userId')
   @MinLevel(ROLE_LEVEL.master)
   removeUser(
-    @Param('id', ParseIntPipe) id: number,
-    @Param('userId', ParseIntPipe) userId: number,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('userId', ParseUUIDPipe) userId: string,
   ) {
     return this.adminService.removeUserFromOrg(id, userId);
   }
@@ -74,9 +74,9 @@ export class AdminOrgsController {
   @Patch(':id/change-role/:userId')
   @MinLevel(ROLE_LEVEL.master)
   changeRole(
-    @Param('id', ParseIntPipe) id: number,
-    @Param('userId', ParseIntPipe) userId: number,
-    @Body('roleId', ParseIntPipe) roleId: number,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @Body('roleId') roleId: string,
   ) {
     return this.adminService.changeUserRole(id, userId, roleId);
   }

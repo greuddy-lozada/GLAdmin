@@ -7,7 +7,7 @@ import {
   Param,
   Delete,
   Query,
-  ParseIntPipe,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { BatchesService } from './batches.service';
 import { CreateBatchDto } from './dto/create-batch.dto';
@@ -39,19 +39,19 @@ export class BatchesController {
 
   @Get(':id')
   @Roles('master', 'admin', 'employee')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.batchesService.findOne(id);
   }
 
   @Patch(':id')
   @Roles('master', 'admin')
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateBatchDto) {
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateBatchDto) {
     return this.batchesService.update(id, dto);
   }
 
   @Delete(':id')
   @Roles('master')
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.batchesService.remove(id);
   }
 }

@@ -1,5 +1,6 @@
 # Cuadra
 
+Control total. Cero estrés. Todo Cuadra.
 Sistema de Gestión Administrativa — Administrative Management System.
 
 ## Architecture

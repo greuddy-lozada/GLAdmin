@@ -45,7 +45,8 @@
 ### 📋 Planes de Implementación
 | Archivo | Propósito |
 |---|---|
-| [plans/database-migration-plan.md](plans/database-migration-plan.md) | Migración UUIDs + PostgreSQL (plan original, ejecutado parcialmente). |
+| [plans/database-migration-plan.md](plans/database-migration-plan.md) | Migración UUIDs + PostgreSQL (plan original, obsoleto → ver uuid-migration-plan.md). |
+| [plans/uuid-migration-plan.md](plans/uuid-migration-plan.md) | Migración UUIDs — plan detallado 11 fases: schema, backend, frontend, Dexie, sync, E2E. |
 | [plans/implementation-priorities.md](plans/implementation-priorities.md) | Plan de prioridades prácticas: Decimal(18,4), soft delete, tests. |
 
 ---

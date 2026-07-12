@@ -7,7 +7,7 @@ export const customerService = {
     return response.data.data;
   },
 
-  async getById(id: number): Promise<Customer> {
+  async getById(id: string): Promise<Customer> {
     const response = await apiClient.get(`/customers/${id}`);
     return response.data.data;
   },
@@ -17,12 +17,12 @@ export const customerService = {
     return response.data.data;
   },
 
-  async update(id: number, data: UpdateCustomerRequest): Promise<Customer> {
+  async update(id: string, data: UpdateCustomerRequest): Promise<Customer> {
     const response = await apiClient.patch(`/customers/${id}`, data);
     return response.data.data;
   },
 
-  async delete(id: number): Promise<void> {
+  async delete(id: string): Promise<void> {
     await apiClient.delete(`/customers/${id}`);
   },
 };

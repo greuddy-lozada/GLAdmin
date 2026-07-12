@@ -16,42 +16,42 @@ import { UpdatePlanDto } from './dto/update-plan.dto';
 import { CreateInviteDto } from './dto/create-invite.dto';
 
 export interface UserWithRelations {
-  id: number;
+  id: string;
   email: string;
   userName: string;
   password: string;
   firstName: string;
   lastName: string;
-  idRole: number;
+  idRole: string;
   mustChangePassword: boolean;
   lastLogin: Date | null;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
-  currentOrganizationId: number | null;
+  currentOrganizationId: string | null;
   role: {
-    id: number;
+    id: string;
     name: string;
     slug: string;
     createdAt: Date;
     updatedAt: Date;
   };
   organizations: {
-    userId: number;
-    organizationId: number;
-    roleId: number;
+    userId: string;
+    organizationId: string;
+    roleId: string;
     organization: {
-      id: number;
+      id: string;
       name: string;
       slug: string;
       isActive: boolean;
       settings: string | null;
-      planId: number | null;
+      planId: string | null;
       createdAt: Date;
       updatedAt: Date;
     };
     role: {
-      id: number;
+      id: string;
       name: string;
       slug: string;
       createdAt: Date;
@@ -99,7 +99,7 @@ export class AdminService {
     return { data, total, page, limit };
   }
 
-  async findOneOrg(id: number) {
+  async findOneOrg(id: string) {
     const org = await this.prisma.organization.findUnique({
       where: { id },
       include: {
@@ -133,7 +133,7 @@ export class AdminService {
     return { data: org, message: 'ADMIN.ORG_CREATED' };
   }
 
-  async updateOrg(id: number, dto: UpdateOrgDto) {
+  async updateOrg(id: string, dto: UpdateOrgDto) {
     await this.findOneOrg(id);
 
     const data: Record<string, unknown> = {};
@@ -163,7 +163,7 @@ export class AdminService {
     return { data: org, message: 'ADMIN.ORG_UPDATED' };
   }
 
-  async removeOrg(id: number) {
+  async removeOrg(id: string) {
     const org = await this.findOneOrg(id);
     await this.prisma.organization.update({
       where: { id },
@@ -172,7 +172,7 @@ export class AdminService {
     return { data: org, message: 'ADMIN.ORG_DELETED' };
   }
 
-  async assignUserToOrg(orgId: number, dto: AssignUserOrgDto) {
+  async assignUserToOrg(orgId: string, dto: AssignUserOrgDto) {
     const org = await this.prisma.organization.findUnique({
       where: { id: orgId },
     });
@@ -206,7 +206,7 @@ export class AdminService {
     return { data: membership, message: 'ADMIN.USER_ASSIGNED' };
   }
 
-  async removeUserFromOrg(orgId: number, userId: number) {
+  async removeUserFromOrg(orgId: string, userId: string) {
     const membership = await this.prisma.userOrganization.findUnique({
       where: { userId_organizationId: { userId, organizationId: orgId } },
     });
@@ -218,7 +218,7 @@ export class AdminService {
     return { data: null, message: 'ADMIN.USER_REMOVED' };
   }
 
-  async changeUserRole(orgId: number, userId: number, roleId: number) {
+  async changeUserRole(orgId: string, userId: string, roleId: string) {
     const membership = await this.prisma.userOrganization.findUnique({
       where: { userId_organizationId: { userId, organizationId: orgId } },
     });
@@ -262,7 +262,7 @@ export class AdminService {
     };
   }
 
-  async findOneUser(id: number) {
+  async findOneUser(id: string) {
     const user = await this.prisma.user.findUnique({
       where: { id },
       include: {
@@ -276,7 +276,7 @@ export class AdminService {
     return stripPassword(user);
   }
 
-  async updateUser(id: number, dto: UpdateUserDto) {
+  async updateUser(id: string, dto: UpdateUserDto) {
     await this.findOneUser(id);
 
     const data: Record<string, unknown> = {};
@@ -296,7 +296,7 @@ export class AdminService {
     return { data: stripPassword(user), message: 'ADMIN.USER_UPDATED' };
   }
 
-  async deactivateUser(id: number) {
+  async deactivateUser(id: string) {
     const user = await this.findOneUser(id);
     await this.prisma.user.update({
       where: { id },
@@ -316,7 +316,7 @@ export class AdminService {
     return { data, total, page, limit };
   }
 
-  async findOnePlan(id: number) {
+  async findOnePlan(id: string) {
     const plan = await this.prisma.plan.findUnique({ where: { id } });
     if (!plan) throw new NotFoundException('ADMIN.PLAN_NOT_FOUND');
     return plan;
@@ -338,7 +338,7 @@ export class AdminService {
     return { data: plan, message: 'ADMIN.PLAN_CREATED' };
   }
 
-  async updatePlan(id: number, dto: UpdatePlanDto) {
+  async updatePlan(id: string, dto: UpdatePlanDto) {
     await this.findOnePlan(id);
 
     const data: Record<string, unknown> = {};
@@ -358,7 +358,7 @@ export class AdminService {
     return { data: plan, message: 'ADMIN.PLAN_UPDATED' };
   }
 
-  async removePlan(id: number) {
+  async removePlan(id: string) {
     const plan = await this.findOnePlan(id);
     await this.prisma.plan.update({
       where: { id },
@@ -369,7 +369,7 @@ export class AdminService {
 
   // ─── Max Users ───────────────────────────────
 
-  private async checkMaxUsers(organizationId: number) {
+  private async checkMaxUsers(organizationId: string) {
     const org = await this.prisma.organization.findUnique({
       where: { id: organizationId },
       include: { plan: true },
@@ -404,7 +404,7 @@ export class AdminService {
     return { data, total, page, limit };
   }
 
-  async createInvite(dto: CreateInviteDto, invitedById: number) {
+  async createInvite(dto: CreateInviteDto, invitedById: string) {
     await this.checkMaxUsers(dto.organizationId);
 
     const code = crypto.randomUUID();
@@ -424,7 +424,7 @@ export class AdminService {
     return { data: invite, message: 'ADMIN.INVITE_CREATED' };
   }
 
-  async removeInvite(id: number) {
+  async removeInvite(id: string) {
     const invite = await this.prisma.invite.findUnique({ where: { id } });
     if (!invite) throw new NotFoundException('ADMIN.INVITE_NOT_FOUND');
 

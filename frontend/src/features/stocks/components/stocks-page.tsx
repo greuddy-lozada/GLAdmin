@@ -31,7 +31,7 @@ export default function StocksPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selectedStock, setSelectedStock] = useState<Stock | null>(null);
   const [formData, setFormData] = useState<CreateStockRequest & { available?: boolean }>({
-    idProduct: 0,
+    idProduct: '',
     existence: 1,
   });
   const [error, setError] = useState('');
@@ -64,7 +64,7 @@ export default function StocksPage() {
   const openCreate = () => {
     setSelectedStock(null);
     setError('');
-    setFormData({ idProduct: 0, existence: 1 });
+    setFormData({ idProduct: '', existence: 1 });
     setFormOpen(true);
   };
 
@@ -132,13 +132,13 @@ export default function StocksPage() {
             <Label>{t('stocks.field.product')}</Label>
             <SearchableSelect
               value={formData.idProduct || undefined}
-              onChange={(v) => setFormData({ ...formData, idProduct: v ?? 0 })}
+              onChange={(v) => setFormData({ ...formData, idProduct: v ?? '' })}
               placeholder={t('common.selectProduct')}
               emptyText="Sin resultados"
               selectedLabel={selectedStock?.product ? `${selectedStock.product.code} - ${selectedStock.product.name}` : undefined}
               searchFn={(term) => apiClient.get('/products', { params: { search: term, limit: 10 } }).then(r => r.data.data)}
-              renderItem={(p: { id: number; code: string; name: string }) => `${p.code} - ${p.name}`}
-              getKey={(p: { id: number }) => p.id}
+              renderItem={(p: { id: string; code: string; name: string }) => `${p.code} - ${p.name}`}
+              getKey={(p: { id: string }) => p.id}
             />
           </div>
           <div className="space-y-2">
@@ -151,8 +151,8 @@ export default function StocksPage() {
               allowClear
               selectedLabel={selectedStock?.supplier?.companyName}
               searchFn={(term) => apiClient.get('/suppliers', { params: { search: term, limit: 10 } }).then(r => r.data.data)}
-              renderItem={(s: { id: number; companyName: string }) => s.companyName}
-              getKey={(s: { id: number }) => s.id}
+              renderItem={(s: { id: string; companyName: string }) => s.companyName}
+              getKey={(s: { id: string }) => s.id}
             />
           </div>
           <div className="space-y-2">
@@ -165,8 +165,8 @@ export default function StocksPage() {
               allowClear
               selectedLabel={selectedStock?.batch?.code}
               searchFn={(term) => apiClient.get('/batches', { params: { search: term, limit: 10 } }).then(r => r.data.data)}
-              renderItem={(b: { id: number; code: string }) => b.code}
-              getKey={(b: { id: number }) => b.id}
+              renderItem={(b: { id: string; code: string }) => b.code}
+              getKey={(b: { id: string }) => b.id}
             />
           </div>
           <div className="space-y-2">

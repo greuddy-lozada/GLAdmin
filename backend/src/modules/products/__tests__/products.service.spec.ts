@@ -10,7 +10,7 @@ import {
 describe('ProductsService', () => {
   let service: ProductsService;
 
-  const mockOrgId = 1;
+  const mockOrgId = 'ffffffff-ffff-ffff-ffff-ffffffffffff';
   const mockContext = { getCurrent: () => ({ organizationId: mockOrgId }) };
 
   const mockPrisma = {
@@ -95,7 +95,7 @@ describe('ProductsService', () => {
       const entity = createTestProductEntity({ name: 'Found Product' });
       mockPrisma.product.findUnique.mockResolvedValue(entity);
 
-      const result = await service.findOne(1);
+      const result = await service.findOne(entity.id);
 
       expect(result.name).toBe('Found Product');
     });
@@ -103,7 +103,9 @@ describe('ProductsService', () => {
     test('debe lanzar error si no existe el producto', async () => {
       mockPrisma.product.findUnique.mockResolvedValue(null);
 
-      await expect(service.findOne(999)).rejects.toThrow();
+      await expect(
+        service.findOne('00000000-0000-0000-0000-000000000999'),
+      ).rejects.toThrow();
     });
   });
 
@@ -117,11 +119,14 @@ describe('ProductsService', () => {
         price: 200,
       });
 
-      const result = await service.update(1, { name: 'New Name', price: 200 });
+      const result = await service.update(existing.id, {
+        name: 'New Name',
+        price: 200,
+      });
 
       expect(mockPrisma.product.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: 1 },
+          where: { id: existing.id },
           data: expect.objectContaining({ name: 'New Name', price: 200 }),
         }),
       );
@@ -138,11 +143,11 @@ describe('ProductsService', () => {
         available: false,
       });
 
-      const result = await service.remove(1);
+      const result = await service.remove(entity.id);
 
       expect(mockPrisma.product.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: 1 },
+          where: { id: entity.id },
           data: expect.objectContaining({ available: false }),
         }),
       );

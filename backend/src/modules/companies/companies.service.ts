@@ -33,13 +33,13 @@ export class CompaniesService {
     return { data, total, page, limit };
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const company = await this.prisma.company.findUnique({ where: { id } });
     if (!company) throw new NotFoundException('COMPANY.NOT_FOUND');
     return company;
   }
 
-  async update(id: number, dto: UpdateCompanyDto) {
+  async update(id: string, dto: UpdateCompanyDto) {
     await this.findOne(id);
     const company = await this.prisma.company.update({
       where: { id },
@@ -48,7 +48,7 @@ export class CompaniesService {
     return { data: company, message: 'COMPANY.UPDATED' };
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const company = await this.findOne(id);
     await this.prisma.company.delete({ where: { id } });
     return { data: company, message: 'COMPANY.DELETED' };

@@ -1,12 +1,12 @@
 export class LoginResponseDto {
   user: {
-    id: number;
+    id: string;
     firstName: string;
     lastName: string;
     userName: string;
     email: string;
     role?: {
-      id: number;
+      id: string;
       name: string;
       slug: string;
     };

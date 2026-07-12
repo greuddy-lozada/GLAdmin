@@ -34,19 +34,19 @@ export class TaxesService {
     return { data, total, page, limit };
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const tax = await this.prisma.tax.findUnique({ where: { id } });
     if (!tax) throw new NotFoundException('TAX.NOT_FOUND');
     return tax;
   }
 
-  async update(id: number, dto: UpdateTaxDto) {
+  async update(id: string, dto: UpdateTaxDto) {
     await this.findOne(id);
     const tax = await this.prisma.tax.update({ where: { id }, data: dto });
     return { data: tax, message: 'TAX.UPDATED' };
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const tax = await this.findOne(id);
     await this.prisma.tax.delete({ where: { id } });
     return { data: tax, message: 'TAX.DELETED' };

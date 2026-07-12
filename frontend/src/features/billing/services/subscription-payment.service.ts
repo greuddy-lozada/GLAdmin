@@ -29,7 +29,7 @@ export const subscriptionPaymentService = {
     return res.data.data;
   },
 
-  async review(id: number, dto: ReviewSubscriptionPaymentRequest): Promise<SubscriptionPayment> {
+  async review(id: string, dto: ReviewSubscriptionPaymentRequest): Promise<SubscriptionPayment> {
     const res = await apiClient.patch(`/subscription-payments/${id}/review`, dto);
     return res.data.data;
   },

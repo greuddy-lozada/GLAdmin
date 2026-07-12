@@ -14,7 +14,7 @@ export class UserRepository implements IUserRepository {
     });
   }
 
-  async findById(id: number): Promise<UserEntity | null> {
+  async findById(id: string): Promise<UserEntity | null> {
     const user = await this.prisma.user.findUnique({
       where: { id },
       include: { role: true },
@@ -46,7 +46,7 @@ export class UserRepository implements IUserRepository {
     return user;
   }
 
-  async update(id: number, data: Partial<UserEntity>): Promise<UserEntity> {
+  async update(id: string, data: Partial<UserEntity>): Promise<UserEntity> {
     const user = await this.prisma.user.update({
       where: { id },
       data: {
@@ -61,7 +61,7 @@ export class UserRepository implements IUserRepository {
     return user;
   }
 
-  async delete(id: number): Promise<UserEntity> {
+  async delete(id: string): Promise<UserEntity> {
     const user = await this.prisma.user.delete({
       where: { id },
     });
@@ -80,7 +80,7 @@ export class UserRepository implements IUserRepository {
     return this.findOne({ email });
   }
 
-  async findByRole(roleId: number): Promise<UserEntity[]> {
+  async findByRole(roleId: string): Promise<UserEntity[]> {
     return this.findAll({ idRole: roleId });
   }
 

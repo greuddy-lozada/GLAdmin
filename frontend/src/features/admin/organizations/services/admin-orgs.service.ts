@@ -7,7 +7,7 @@ export const adminOrgsService = {
     return response.data.data;
   },
 
-  async getById(id: number): Promise<AdminOrg> {
+  async getById(id: string): Promise<AdminOrg> {
     const response = await apiClient.get(`/admin/orgs/${id}`);
     return response.data.data;
   },
@@ -17,12 +17,12 @@ export const adminOrgsService = {
     return response.data.data;
   },
 
-  async update(id: number, data: UpdateAdminOrgRequest): Promise<AdminOrg> {
+  async update(id: string, data: UpdateAdminOrgRequest): Promise<AdminOrg> {
     const response = await apiClient.patch(`/admin/orgs/${id}`, data);
     return response.data.data;
   },
 
-  async delete(id: number): Promise<void> {
+  async delete(id: string): Promise<void> {
     await apiClient.delete(`/admin/orgs/${id}`);
   },
 };

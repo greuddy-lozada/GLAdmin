@@ -4,7 +4,7 @@ import { useOptimisticCrud } from '@/hooks/use-optimistic-crud';
 import { Batch, CreateBatchRequest, UpdateBatchRequest } from '../models/batch.model';
 import { batchService } from '../services/batch.service';
 
-function buildOptimistic(data: CreateBatchRequest, tempId: number): Batch {
+function buildOptimistic(data: CreateBatchRequest, tempId: string): Batch {
   return {
     id: tempId,
     code: data.code,

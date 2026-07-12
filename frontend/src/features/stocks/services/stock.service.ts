@@ -12,7 +12,7 @@ export const stockService = {
     return response.data.data;
   },
 
-  async getById(id: number): Promise<Stock> {
+  async getById(id: string): Promise<Stock> {
     const response = await apiClient.get(`/stocks/${id}`);
     return response.data.data;
   },
@@ -22,12 +22,12 @@ export const stockService = {
     return response.data.data;
   },
 
-  async update(id: number, data: UpdateStockRequest): Promise<Stock> {
+  async update(id: string, data: UpdateStockRequest): Promise<Stock> {
     const response = await apiClient.patch(`/stocks/${id}`, data);
     return response.data.data;
   },
 
-  async delete(id: number): Promise<void> {
+  async delete(id: string): Promise<void> {
     await apiClient.delete(`/stocks/${id}`);
   },
 };

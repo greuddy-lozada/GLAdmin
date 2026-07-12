@@ -18,7 +18,7 @@ export class SalesService {
   ) {}
 
   private async recalcTotalExistence(
-    productId: number,
+    productId: string,
     tx?: Prisma.TransactionClient,
   ) {
     const db = tx || this.prisma;
@@ -83,7 +83,7 @@ export class SalesService {
         },
       });
 
-      const byProduct = new Map<number, number>();
+      const byProduct = new Map<string, number>();
       for (const item of dto.items) {
         const current = byProduct.get(item.productId) || 0;
         byProduct.set(item.productId, current + item.quantity);
@@ -134,7 +134,7 @@ export class SalesService {
     return { data, total, page, limit };
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const orgId = this.context.getCurrent()?.organizationId;
     if (!orgId) throw new Error('No organization context');
     const sale = await this.prisma.sale.findFirst({
@@ -152,7 +152,7 @@ export class SalesService {
     return sale;
   }
 
-  async update(id: number, dto: UpdateSaleDto) {
+  async update(id: string, dto: UpdateSaleDto) {
     const orgId = this.context.getCurrent()?.organizationId;
     if (!orgId) throw new Error('No organization context');
 
@@ -192,13 +192,13 @@ export class SalesService {
     return sale;
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const orgId = this.context.getCurrent()?.organizationId;
     if (!orgId) throw new Error('No organization context');
     const sale = await this.findOne(id);
 
     await this.prisma.$transaction(async (tx) => {
-      const byProduct = new Map<number, number>();
+      const byProduct = new Map<string, number>();
       for (const item of sale.details) {
         const current = byProduct.get(item.idProduct) || 0;
         byProduct.set(item.idProduct, current + (item.quantity || 0));

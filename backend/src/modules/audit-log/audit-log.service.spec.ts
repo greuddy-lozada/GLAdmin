@@ -14,7 +14,9 @@ describe('AuditLogService', () => {
           provide: PrismaService,
           useValue: {
             auditLog: {
-              create: jest.fn().mockResolvedValue({ id: 1 }),
+              create: jest.fn().mockResolvedValue({
+                id: '00000000-0000-0000-0000-000000000001',
+              }),
             },
           },
         },
@@ -27,21 +29,21 @@ describe('AuditLogService', () => {
 
   it('should log an audit entry', async () => {
     await service.log({
-      organizationId: 1,
-      userId: 1,
+      organizationId: 'ffffffff-ffff-ffff-ffff-ffffffffffff',
+      userId: '00000000-0000-0000-0000-000000000099',
       action: 'user.created',
       entity: 'User',
-      entityId: 1,
+      entityId: '00000000-0000-0000-0000-000000000001',
       metadata: { email: 'test@test.com' },
     });
 
     expect(prisma.auditLog.create).toHaveBeenCalledWith({
       data: {
-        organizationId: 1,
-        userId: 1,
+        organizationId: 'ffffffff-ffff-ffff-ffff-ffffffffffff',
+        userId: '00000000-0000-0000-0000-000000000099',
         action: 'user.created',
         entity: 'User',
-        entityId: 1,
+        entityId: '00000000-0000-0000-0000-000000000001',
         metadata: '{"email":"test@test.com"}',
         ipAddress: null,
       },

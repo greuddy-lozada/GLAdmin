@@ -4,7 +4,7 @@ import { useOptimisticCrud } from '@/hooks/use-optimistic-crud';
 import { AdminOrg, CreateAdminOrgRequest, UpdateAdminOrgRequest } from '../models/admin-org.model';
 import { adminOrgsService } from '../services/admin-orgs.service';
 
-function buildOptimistic(data: CreateAdminOrgRequest, tempId: number): AdminOrg {
+function buildOptimistic(data: CreateAdminOrgRequest, tempId: string): AdminOrg {
   return {
     id: tempId,
     name: data.name,

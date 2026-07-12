@@ -422,10 +422,9 @@
     "noDetails": "Sin detalles",
     "status": {
       "draft": "Borrador",
-      "sent": "Enviado",
-      "approved": "Aprobado",
+      "issued": "Emitido",
       "received": "Recibido",
-      "cancelled": "Cancelado"
+      "annulled": "Anulado"
     },
     "field": {
       "id": "#",
@@ -439,6 +438,7 @@
       "status": "Estado",
       "product": "Producto",
       "quantity": "Cantidad",
+      "received": "Recibido",
       "unitPrice": "Precio Unitario",
       "unitPriceUsd": "Precio USD",
       "subtotal": "Subtotal",
@@ -474,7 +474,11 @@
     "receiveSuccess": "Productos recibidos exitosamente",
     "ordered": "Pedido",
     "receivedLabel": "Recibido",
-    "allReceived": "Todos los productos han sido recibidos completamente."
+    "allReceived": "Todos los productos han sido recibidos completamente.",
+    "selectPrompt": "Selecciona un pedido o crea uno nuevo",
+    "selectPromptDesc": "Haz clic en un pedido de la lista para ver sus detalles y editar, o crea uno nuevo con el botón + Nuevo.",
+    "editCode": "Editar {{code}}",
+    "receivedStatus": "Estado de recepción"
   },
   "exchangeRates": {
     "title": "Tasas de Cambio",
@@ -544,7 +548,15 @@
       "paid": "Pagado",
       "remaining": "Faltante",
       "complete": "Completo",
-      "excess": "Excedente"
+      "excess": "Excedente",
+      "pending": "Pendiente",
+      "addMethod": "Agregar método de pago",
+      "remove": "Eliminar método",
+      "currency": "Moneda",
+      "add": "Agregar",
+      "quickCashVes": "Todo efectivo",
+      "quickCashUsd": "Todo efectivo USD",
+      "quickSplit": "Mitad y mitad"
     },
     "receipt": {
       "title": "Venta completada",

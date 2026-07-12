@@ -7,7 +7,7 @@ export const purchaseOrderService = {
     return response.data.data;
   },
 
-  async getById(id: number): Promise<PurchaseOrder> {
+  async getById(id: string): Promise<PurchaseOrder> {
     const response = await apiClient.get(`/purchase-orders/${id}`);
     return response.data.data;
   },
@@ -17,16 +17,16 @@ export const purchaseOrderService = {
     return response.data.data;
   },
 
-  async update(id: number, data: UpdatePurchaseOrderRequest): Promise<PurchaseOrder> {
+  async update(id: string, data: UpdatePurchaseOrderRequest): Promise<PurchaseOrder> {
     const response = await apiClient.patch(`/purchase-orders/${id}`, data);
     return response.data.data;
   },
 
-  async delete(id: number): Promise<void> {
+  async delete(id: string): Promise<void> {
     await apiClient.delete(`/purchase-orders/${id}`);
   },
 
-  async receive(id: number, details: { id: number; quantity: number }[]): Promise<PurchaseOrder> {
+  async receive(id: string, details: { id: string; quantity: number }[]): Promise<PurchaseOrder> {
     const response = await apiClient.post(`/purchase-orders/${id}/receive`, { details });
     return response.data;
   },

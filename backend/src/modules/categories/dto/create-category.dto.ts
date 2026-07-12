@@ -1,7 +1,7 @@
-import { IsString, IsOptional, IsNumber } from 'class-validator';
+import { IsString, IsOptional, IsUUID } from 'class-validator';
 
 export class CreateCategoryDto {
   @IsString() name: string;
   @IsOptional() @IsString() description?: string;
-  @IsOptional() @IsNumber() idParent?: number;
+  @IsOptional() @IsUUID() idParent?: string;
 }

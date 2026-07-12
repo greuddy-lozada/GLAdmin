@@ -7,7 +7,7 @@ import {
   Param,
   Delete,
   Query,
-  ParseIntPipe,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { PurchaseOrdersService } from './purchase-orders.service';
 import { CreatePurchaseOrderDto } from './dto/create-purchase-order.dto';
@@ -39,14 +39,14 @@ export class PurchaseOrdersController {
 
   @Get(':id')
   @Roles('master', 'admin', 'employee')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.purchaseOrdersService.findOne(id);
   }
 
   @Patch(':id')
   @Roles('master', 'admin')
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdatePurchaseOrderDto,
   ) {
     return this.purchaseOrdersService.update(id, dto);
@@ -55,7 +55,7 @@ export class PurchaseOrdersController {
   @Post(':id/receive')
   @Roles('master', 'admin')
   receive(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: ReceivePurchaseOrderDto,
   ) {
     return this.purchaseOrdersService.receive(id, dto);
@@ -63,7 +63,7 @@ export class PurchaseOrdersController {
 
   @Delete(':id')
   @Roles('master')
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.purchaseOrdersService.remove(id);
   }
 }

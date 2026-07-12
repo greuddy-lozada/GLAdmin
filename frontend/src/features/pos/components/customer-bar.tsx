@@ -8,11 +8,11 @@ import { useI18n } from '@/i18n';
 import { CustomerSearch } from './customer-search';
 
 interface CustomerBarProps {
-  customerId?: number;
+  customerId?: string;
   customerName?: string;
   customerTaxId?: string;
   withholdingPercentage: number | null;
-  onSelectCustomer: (id?: number, name?: string, taxId?: string, withholding?: number | null) => void;
+  onSelectCustomer: (id?: string, name?: string, taxId?: string, withholding?: number | null) => void;
   onClearCustomer: () => void;
   onQuickAdd: () => void;
 }

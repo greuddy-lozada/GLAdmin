@@ -5,7 +5,7 @@ import {
   Delete,
   Param,
   Body,
-  ParseIntPipe,
+  ParseUUIDPipe,
   Query,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
@@ -29,13 +29,13 @@ export class AdminInvitesController {
 
   @Post()
   @MinLevel(ROLE_LEVEL.master)
-  create(@Body() dto: CreateInviteDto, @CurrentUser('id') userId: number) {
+  create(@Body() dto: CreateInviteDto, @CurrentUser('id') userId: string) {
     return this.adminService.createInvite(dto, userId);
   }
 
   @Delete(':id')
   @MinLevel(ROLE_LEVEL.master)
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.adminService.removeInvite(id);
   }
 }

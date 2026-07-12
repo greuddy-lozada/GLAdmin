@@ -1,4 +1,4 @@
-import { IsOptional, IsBoolean, IsInt } from 'class-validator';
+import { IsOptional, IsBoolean, IsUUID } from 'class-validator';
 
 export class UpdateUserDto {
   @IsOptional()
@@ -6,6 +6,6 @@ export class UpdateUserDto {
   isActive?: boolean;
 
   @IsOptional()
-  @IsInt()
-  roleId?: number;
+  @IsUUID()
+  roleId?: string;
 }

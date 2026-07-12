@@ -35,12 +35,12 @@ export class AuthController {
   }
 
   @Get('me')
-  async me(@CurrentUser('id') userId: number) {
+  async me(@CurrentUser('id') userId: string) {
     return this.authService.me(userId);
   }
 
   @Post('logout')
-  async logout(@CurrentUser('id') userId: number) {
+  async logout(@CurrentUser('id') userId: string) {
     return this.authService.logout(userId);
   }
 
@@ -48,7 +48,7 @@ export class AuthController {
   @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 3, ttl: 3600000 } })
   async changePassword(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Body() dto: ChangePasswordDto,
   ) {
     return this.authService.changePassword(userId, dto);
@@ -57,8 +57,8 @@ export class AuthController {
   @Post('select-org')
   @HttpCode(200)
   async selectOrg(
-    @CurrentUser('id') userId: number,
-    @Body('organizationId') organizationId: number,
+    @CurrentUser('id') userId: string,
+    @Body('organizationId') organizationId: string,
   ) {
     return this.authService.selectOrg(userId, organizationId);
   }

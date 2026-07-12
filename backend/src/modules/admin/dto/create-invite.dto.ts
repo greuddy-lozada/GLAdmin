@@ -1,12 +1,12 @@
-import { IsInt, IsEmail } from 'class-validator';
+import { IsUUID, IsEmail } from 'class-validator';
 
 export class CreateInviteDto {
   @IsEmail()
   email: string;
 
-  @IsInt()
-  organizationId: number;
+  @IsUUID()
+  organizationId: string;
 
-  @IsInt()
-  roleId: number;
+  @IsUUID()
+  roleId: string;
 }

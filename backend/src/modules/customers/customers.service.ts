@@ -37,13 +37,13 @@ export class CustomersService {
     return { data, total, page, limit };
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const customer = await this.prisma.customer.findUnique({ where: { id } });
     if (!customer) throw new NotFoundException('CUSTOMER.NOT_FOUND');
     return customer;
   }
 
-  async update(id: number, dto: UpdateCustomerDto) {
+  async update(id: string, dto: UpdateCustomerDto) {
     await this.findOne(id);
     const customer = await this.prisma.customer.update({
       where: { id },
@@ -52,7 +52,7 @@ export class CustomersService {
     return { data: customer, message: 'CUSTOMER.UPDATED' };
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const customer = await this.findOne(id);
     await this.prisma.customer.update({
       where: { id },

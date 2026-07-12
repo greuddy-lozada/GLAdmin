@@ -1,13 +1,13 @@
 export interface User {
-  id: number;
+  id: string;
   firstName: string;
   lastName: string;
   userName: string;
   email: string;
-  idRole: number;
+  idRole: string;
   isActive: boolean;
   role?: {
-    id: number;
+    id: string;
     name: string;
     slug: string;
   };
@@ -21,7 +21,7 @@ export interface CreateUserRequest {
   userName: string;
   password: string;
   email: string;
-  idRole: number;
+  idRole: string;
 }
 
 export interface UpdateUserRequest {
@@ -30,6 +30,6 @@ export interface UpdateUserRequest {
   userName?: string;
   password?: string;
   email?: string;
-  idRole?: number;
+  idRole?: string;
   isActive?: boolean;
 }

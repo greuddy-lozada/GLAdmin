@@ -31,7 +31,7 @@ export class UsersService {
     private readonly context: ContextService,
   ) {}
 
-  private getCurrentOrgId(): number {
+  private getCurrentOrgId(): string {
     const ctx = this.context.getCurrent();
     if (!ctx?.organizationId) {
       throw new ForbiddenException();
@@ -99,7 +99,7 @@ export class UsersService {
     return { data, total, page, limit };
   }
 
-  async findById(id: number): Promise<SafeUser> {
+  async findById(id: string): Promise<SafeUser> {
     const organizationId = this.getCurrentOrgId();
 
     const membership = await this.prisma.userOrganization.findUnique({
@@ -119,7 +119,7 @@ export class UsersService {
   }
 
   async update(
-    id: number,
+    id: string,
     dto: UpdateUserDto,
   ): Promise<{ data: SafeUser; message: string }> {
     await this.findById(id);
@@ -127,7 +127,7 @@ export class UsersService {
     return { data: stripPassword(user), message: 'USER.UPDATED' };
   }
 
-  async delete(id: number): Promise<{ data: SafeUser; message: string }> {
+  async delete(id: string): Promise<{ data: SafeUser; message: string }> {
     const organizationId = this.getCurrentOrgId();
     const user = await this.findById(id);
 

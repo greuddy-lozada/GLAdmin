@@ -7,7 +7,7 @@ export const companyService = {
     return response.data.data;
   },
 
-  async getById(id: number): Promise<Company> {
+  async getById(id: string): Promise<Company> {
     const response = await apiClient.get(`/companies/${id}`);
     return response.data.data;
   },
@@ -17,12 +17,12 @@ export const companyService = {
     return response.data.data;
   },
 
-  async update(id: number, data: UpdateCompanyRequest): Promise<Company> {
+  async update(id: string, data: UpdateCompanyRequest): Promise<Company> {
     const response = await apiClient.patch(`/companies/${id}`, data);
     return response.data.data;
   },
 
-  async delete(id: number): Promise<void> {
+  async delete(id: string): Promise<void> {
     await apiClient.delete(`/companies/${id}`);
   },
 };

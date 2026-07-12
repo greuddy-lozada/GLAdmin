@@ -5,7 +5,7 @@ import {
   Patch,
   Param,
   Body,
-  ParseIntPipe,
+  ParseUUIDPipe,
   Query,
 } from '@nestjs/common';
 import { SubscriptionPaymentService } from './subscription-payment.service';
@@ -45,7 +45,7 @@ export class SubscriptionPaymentController {
   @MinLevel(ROLE_LEVEL.employee)
   create(
     @Body() dto: CreateSubscriptionPaymentDto,
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
   ) {
     return this.service.create(dto, userId);
   }
@@ -53,9 +53,9 @@ export class SubscriptionPaymentController {
   @Patch(':id/review')
   @MinLevel(ROLE_LEVEL.manager)
   review(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: ReviewSubscriptionPaymentDto,
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
   ) {
     return this.service.review(id, dto, userId);
   }

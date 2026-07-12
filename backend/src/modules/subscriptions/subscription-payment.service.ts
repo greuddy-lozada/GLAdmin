@@ -23,7 +23,7 @@ export class SubscriptionPaymentService {
     private readonly context: ContextService,
   ) {}
 
-  private getOrgId(): number {
+  private getOrgId(): string {
     const ctx = this.context.getCurrent();
     if (!ctx?.organizationId) throw new ForbiddenException();
     return ctx.organizationId;
@@ -69,7 +69,7 @@ export class SubscriptionPaymentService {
     });
   }
 
-  async create(dto: CreateSubscriptionPaymentDto, _userId: number) {
+  async create(dto: CreateSubscriptionPaymentDto, _userId: string) {
     const organizationId = this.getOrgId();
 
     const plan = await this.prisma.plan.findUnique({
@@ -90,7 +90,7 @@ export class SubscriptionPaymentService {
         organizationId,
         planId: dto.planId,
         method: dto.method,
-        amountUsd: plan.amount / 100,
+        amountUsd: Number(plan.amount) / 100,
         status: 'pending',
         bankId: dto.bankId ?? null,
         phoneNumber: dto.phoneNumber ?? null,
@@ -101,9 +101,9 @@ export class SubscriptionPaymentService {
   }
 
   async review(
-    id: number,
+    id: string,
     dto: ReviewSubscriptionPaymentDto,
-    reviewedBy: number,
+    reviewedBy: string,
   ) {
     const payment = await this.prisma.subscriptionPayment.findUnique({
       where: { id },

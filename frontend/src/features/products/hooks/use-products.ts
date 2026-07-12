@@ -4,7 +4,7 @@ import { useOptimisticCrud } from '@/hooks/use-optimistic-crud';
 import { Product, CreateProductRequest, UpdateProductRequest } from '../models/product.model';
 import { productService } from '../services/product.service';
 
-function buildOptimistic(data: CreateProductRequest, tempId: number): Product {
+function buildOptimistic(data: CreateProductRequest, tempId: string): Product {
   return {
     id: tempId,
     code: data.code,

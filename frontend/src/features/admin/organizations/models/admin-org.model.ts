@@ -1,24 +1,24 @@
 export interface AdminOrg {
-  id: number;
+  id: string;
   name: string;
   slug: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
-  plan?: { id: number; name: string; label: string } | null;
+  plan?: { id: string; name: string; label: string } | null;
   _count?: { userMemberships: number };
 }
 
 export interface CreateAdminOrgRequest {
   name: string;
   slug?: string;
-  planId?: number;
+  planId?: string;
   isActive?: boolean;
 }
 
 export interface UpdateAdminOrgRequest {
   name?: string;
   slug?: string;
-  planId?: number;
+  planId?: string;
   isActive?: boolean;
 }

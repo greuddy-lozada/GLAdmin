@@ -17,7 +17,7 @@ export function useOfflineSale() {
     totalUsd: number,
     exchangeRate: number,
     paymentMethod: PaymentMethod,
-    customerId?: number,
+    customerId?: string,
     withholdingPercentage?: number | null,
     withholdingAmount?: number,
     withholdingAmountUsd?: number,
@@ -53,7 +53,7 @@ export function useOfflineSale() {
       payments,
     };
 
-    const stockSnapshot: Record<number, number> = {};
+    const stockSnapshot: Record<string, number> = {};
     for (const item of cart) {
       const stock = await localDb.stockCache.get(item.productId);
       if (stock) {

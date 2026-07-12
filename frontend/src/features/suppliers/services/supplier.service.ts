@@ -7,7 +7,7 @@ export const supplierService = {
     return response.data.data;
   },
 
-  async getById(id: number): Promise<Supplier> {
+  async getById(id: string): Promise<Supplier> {
     const response = await apiClient.get(`/suppliers/${id}`);
     return response.data.data;
   },
@@ -17,12 +17,12 @@ export const supplierService = {
     return response.data.data;
   },
 
-  async update(id: number, data: UpdateSupplierRequest): Promise<Supplier> {
+  async update(id: string, data: UpdateSupplierRequest): Promise<Supplier> {
     const response = await apiClient.patch(`/suppliers/${id}`, data);
     return response.data.data;
   },
 
-  async delete(id: number): Promise<void> {
+  async delete(id: string): Promise<void> {
     await apiClient.delete(`/suppliers/${id}`);
   },
 };

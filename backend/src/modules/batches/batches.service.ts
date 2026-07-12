@@ -37,19 +37,19 @@ export class BatchesService {
     return { data, total, page, limit };
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const batch = await this.prisma.batch.findUnique({ where: { id } });
     if (!batch) throw new NotFoundException('BATCH.NOT_FOUND');
     return batch;
   }
 
-  async update(id: number, dto: UpdateBatchDto) {
+  async update(id: string, dto: UpdateBatchDto) {
     await this.findOne(id);
     const batch = await this.prisma.batch.update({ where: { id }, data: dto });
     return { data: batch, message: 'BATCH.UPDATED' };
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const batch = await this.findOne(id);
     await this.prisma.batch.delete({ where: { id } });
     return { data: batch, message: 'BATCH.DELETED' };

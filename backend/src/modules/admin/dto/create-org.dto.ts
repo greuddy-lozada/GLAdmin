@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsInt, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsUUID, IsBoolean } from 'class-validator';
 
 export class CreateOrgDto {
   @IsString()
@@ -9,8 +9,8 @@ export class CreateOrgDto {
   slug?: string;
 
   @IsOptional()
-  @IsInt()
-  planId?: number;
+  @IsUUID()
+  planId?: string;
 
   @IsOptional()
   @IsBoolean()

@@ -2,11 +2,11 @@ import {
   IsString,
   IsNumber,
   IsOptional,
+  IsUUID,
   IsDateString,
   ValidateNested,
   IsArray,
   IsInt,
-  IsPositive,
   Min,
   IsBoolean,
   IsIn,
@@ -14,7 +14,7 @@ import {
 import { Type } from 'class-transformer';
 
 class PurchaseOrderDetailDto {
-  @IsInt() @IsPositive() idProduct: number;
+  @IsUUID() idProduct: string;
   @IsOptional() @IsInt() @Min(1) quantity?: number;
   @IsOptional() @IsNumber() @Min(0) unitPrice?: number;
   @IsOptional() @IsNumber() @Min(0) unitPriceUsd?: number;
@@ -24,16 +24,16 @@ class PurchaseOrderDetailDto {
 }
 
 export class CreatePurchaseOrderDto {
-  @IsNumber() idSupplier: number;
+  @IsUUID() idSupplier: string;
   @IsOptional() @IsString() code?: string;
   @IsOptional() @IsDateString() date?: string;
   @IsOptional() @IsNumber() amount?: number;
   @IsOptional() @IsNumber() amountUsd?: number;
   @IsOptional() @IsNumber() exchangeRate?: number;
-  @IsOptional() @IsNumber() exchangeRateId?: number;
-  @IsOptional() @IsNumber() exchangeRateDayId?: number;
+  @IsOptional() @IsUUID() exchangeRateId?: string;
+  @IsOptional() @IsUUID() exchangeRateDayId?: string;
   @IsOptional() @IsNumber() officialExchangeRate?: number;
-  @IsOptional() @IsNumber() officialExchangeRateId?: number;
+  @IsOptional() @IsUUID() officialExchangeRateId?: string;
   @IsOptional() @IsNumber() paymentMethod?: number;
   @IsOptional() @IsNumber() status?: number;
   @IsOptional() @IsNumber() baseAmount?: number;

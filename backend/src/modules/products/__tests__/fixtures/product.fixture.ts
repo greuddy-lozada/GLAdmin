@@ -17,9 +17,9 @@ export function createTestProductDto(overrides: TestProductOverrides = {}) {
 export function createTestProductEntity(overrides: TestProductOverrides = {}) {
   const dto = createTestProductDto(overrides);
   return {
-    id: 1,
+    id: '00000000-0000-0000-0000-000000000001',
     ...dto,
-    organizationId: 1,
+    organizationId: 'ffffffff-ffff-ffff-ffff-ffffffffffff',
     tax: null,
     brand: null,
     category: null,

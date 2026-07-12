@@ -1,7 +1,7 @@
 export class AuthTokenEntity {
-  id: number;
+  id: string;
   token: string;
-  userId: number;
+  userId: string;
   createdAt: Date;
   updatedAt: Date;
 }

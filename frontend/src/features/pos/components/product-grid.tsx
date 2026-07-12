@@ -25,7 +25,7 @@ export const ProductGrid = forwardRef<ProductGridHandle, ProductGridProps>(
   function ProductGrid({ onAddToCart, refreshTrigger }: ProductGridProps, ref) {
     const { t } = useI18n();
     const [allProducts, setAllProducts] = useState<LocalProduct[]>([]);
-    const [categories, setCategories] = useState<Record<number, string>>({});
+    const [categories, setCategories] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(true);
     const [query, setQuery] = useState('');
 
@@ -43,7 +43,7 @@ export const ProductGrid = forwardRef<ProductGridHandle, ProductGridProps>(
         localDb.categories.toArray(),
       ]).then(([products, cats]) => {
         setAllProducts(products);
-        const map: Record<number, string> = {};
+        const map: Record<string, string> = {};
         for (const c of cats) map[c.id] = c.name;
         setCategories(map);
         setLoading(false);

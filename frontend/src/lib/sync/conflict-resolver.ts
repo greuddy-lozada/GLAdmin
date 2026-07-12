@@ -8,7 +8,7 @@ export class ConflictResolver {
   }
 
   async resolveConflict(
-    id: number,
+    id: string,
     status: 'resolved_server' | 'resolved_local' | 'manual',
     manualData?: Record<string, unknown>,
   ): Promise<void> {

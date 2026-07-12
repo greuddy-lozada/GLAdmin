@@ -6,7 +6,7 @@ import {
   Delete,
   Param,
   Body,
-  ParseIntPipe,
+  ParseUUIDPipe,
   Query,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
@@ -30,7 +30,7 @@ export class AdminPlansController {
 
   @Get(':id')
   @MinLevel(ROLE_LEVEL.master)
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.adminService.findOnePlan(id);
   }
 
@@ -42,13 +42,13 @@ export class AdminPlansController {
 
   @Patch(':id')
   @MinLevel(ROLE_LEVEL.master)
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdatePlanDto) {
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdatePlanDto) {
     return this.adminService.updatePlan(id, dto);
   }
 
   @Delete(':id')
   @MinLevel(ROLE_LEVEL.master)
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.adminService.removePlan(id);
   }
 }

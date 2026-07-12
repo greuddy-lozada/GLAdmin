@@ -8,7 +8,7 @@ import { localDb } from '@/lib/sync/db';
 import { useI18n } from '@/i18n';
 
 interface PinSetupProps {
-  userId: number;
+  userId: string;
   onComplete: () => void;
 }
 

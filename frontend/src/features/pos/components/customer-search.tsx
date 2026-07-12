@@ -7,8 +7,8 @@ import { useI18n } from '@/i18n';
 import { localDb, type LocalCustomer } from '@/lib/sync/db';
 
 interface CustomerSearchProps {
-  value?: number;
-  onChange: (customerId: number | undefined, customerName?: string, customerTaxId?: string, withholdingPercentage?: number | null) => void;
+  value?: string;
+  onChange: (customerId: string | undefined, customerName?: string, customerTaxId?: string, withholdingPercentage?: number | null) => void;
 }
 
 export const CustomerSearch = forwardRef<HTMLInputElement, CustomerSearchProps>(

@@ -12,7 +12,7 @@ export default function OrgPickerPage() {
   const { organizations, selectOrg, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const { t } = useI18n();
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -20,7 +20,7 @@ export default function OrgPickerPage() {
     }
   }, [isLoading, isAuthenticated, router]);
 
-  const handleSelect = async (orgId: number) => {
+  const handleSelect = async (orgId: string) => {
     setSelectedId(orgId);
     await selectOrg(orgId);
     router.push('/dashboard');

@@ -8,8 +8,8 @@ import type { CartItem } from '../models/pos.model';
 
 interface CartPanelProps {
   items: CartItem[];
-  onUpdateQuantity: (productId: number, quantity: number) => void;
-  onRemove: (productId: number) => void;
+  onUpdateQuantity: (productId: string, quantity: number) => void;
+  onRemove: (productId: string) => void;
   total: number;
   totalUsd: number;
   totalTax: number;

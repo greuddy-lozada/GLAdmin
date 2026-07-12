@@ -1,5 +1,5 @@
 export interface Customer {
-  id: number;
+  id: string;
   idCardNumber: string;
   firstName: string;
   lastName: string;

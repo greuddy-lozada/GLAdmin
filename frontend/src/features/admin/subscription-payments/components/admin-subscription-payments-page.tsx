@@ -35,7 +35,7 @@ export default function AdminSubscriptionPaymentsPage() {
   });
 
   const reviewMutation = useMutation({
-    mutationFn: ({ id, status }: { id: number; status: 'approved' | 'rejected' }) =>
+    mutationFn: ({ id, status }: { id: string; status: 'approved' | 'rejected' }) =>
       subscriptionPaymentService.review(id, { status }),
     onSuccess: (_data, variables) => {
       const key = variables.status === 'approved' ? 'subscription.admin.approved' : 'subscription.admin.rejected';

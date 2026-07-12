@@ -7,7 +7,7 @@ export const adminPlansService = {
     return response.data.data;
   },
 
-  async getById(id: number): Promise<AdminPlan> {
+  async getById(id: string): Promise<AdminPlan> {
     const response = await apiClient.get(`/admin/plans/${id}`);
     return response.data.data;
   },
@@ -17,12 +17,12 @@ export const adminPlansService = {
     return response.data.data;
   },
 
-  async update(id: number, data: UpdateAdminPlanRequest): Promise<AdminPlan> {
+  async update(id: string, data: UpdateAdminPlanRequest): Promise<AdminPlan> {
     const response = await apiClient.patch(`/admin/plans/${id}`, data);
     return response.data.data;
   },
 
-  async delete(id: number): Promise<void> {
+  async delete(id: string): Promise<void> {
     await apiClient.delete(`/admin/plans/${id}`);
   },
 };

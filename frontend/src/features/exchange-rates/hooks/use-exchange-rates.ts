@@ -4,7 +4,7 @@ import { useOptimisticCrud } from '@/hooks/use-optimistic-crud';
 import { ExchangeRateDay, CreateExchangeRateRequest, UpdateExchangeRateRequest } from '../models/exchange-rate.model';
 import { exchangeRateService } from '../services/exchange-rate.service';
 
-function buildOptimistic(data: CreateExchangeRateRequest, tempId: number): ExchangeRateDay {
+function buildOptimistic(data: CreateExchangeRateRequest, tempId: string): ExchangeRateDay {
   return {
     id: tempId,
     date: data.date ?? new Date().toISOString(),

@@ -42,7 +42,7 @@ export default function PagoMovilTransactionsPage() {
   const { items, isLoading: loading, create, review } = usePagoMovilTransactions();
   const { t, tp } = useI18n();
   const [formOpen, setFormOpen] = useState(false);
-  const [reviewDialog, setReviewDialog] = useState<{ open: boolean; id: number; action: 'approved' | 'rejected' }>({ open: false, id: 0, action: 'approved' });
+  const [reviewDialog, setReviewDialog] = useState<{ open: boolean; id: string; action: 'approved' | 'rejected' }>({ open: false, id: '', action: 'approved' });
   const [formData, setFormData] = useState<CreatePagoMovilTransactionRequest>({
     amountVes: 0,
     amountUsd: 0,

@@ -11,7 +11,7 @@ export class BrandsService {
     private readonly contextService: ContextService,
   ) {}
 
-  private get orgId(): number {
+  private get orgId(): string {
     const ctx = this.contextService?.getCurrent();
     const id = ctx?.organizationId;
     if (!id) throw new Error('No organization context');
@@ -40,7 +40,7 @@ export class BrandsService {
     return { data, total, page, limit };
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const brand = await this.prisma.brand.findFirst({
       where: { id, organizationId: this.orgId },
     });
@@ -48,13 +48,13 @@ export class BrandsService {
     return brand;
   }
 
-  async update(id: number, dto: UpdateBrandDto) {
+  async update(id: string, dto: UpdateBrandDto) {
     await this.findOne(id);
     const brand = await this.prisma.brand.update({ where: { id }, data: dto });
     return { data: brand, message: 'BRAND.UPDATED' };
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const brand = await this.findOne(id);
     await this.prisma.brand.update({
       where: { id },

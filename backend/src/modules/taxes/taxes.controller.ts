@@ -7,7 +7,7 @@ import {
   Param,
   Delete,
   Query,
-  ParseIntPipe,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { TaxesService } from './taxes.service';
 import { CreateTaxDto } from './dto/create-tax.dto';
@@ -35,19 +35,19 @@ export class TaxesController {
 
   @Get(':id')
   @Roles('master', 'admin', 'employee')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.taxesService.findOne(id);
   }
 
   @Patch(':id')
   @Roles('master', 'admin')
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateTaxDto) {
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateTaxDto) {
     return this.taxesService.update(id, dto);
   }
 
   @Delete(':id')
   @Roles('master')
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.taxesService.remove(id);
   }
 }

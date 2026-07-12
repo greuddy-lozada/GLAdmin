@@ -7,16 +7,16 @@ export interface SystemPagoMovilConfig {
 }
 
 export interface SubscriptionPlan {
-  id: number;
+  id: string;
   name: string;
   label: string;
   amount: number;
 }
 
 export interface SubscriptionPayment {
-  id: number;
-  organizationId: number;
-  planId: number;
+  id: string;
+  organizationId: string;
+  planId: string;
   method: 'pago_movil' | 'cash_usd';
   amountUsd: number;
   status: 'pending' | 'approved' | 'rejected';
@@ -24,17 +24,17 @@ export interface SubscriptionPayment {
   phoneNumber?: string | null;
   reference?: string | null;
   proofImage?: string | null;
-  reviewedBy?: number | null;
+  reviewedBy?: string | null;
   reviewedAt?: string | null;
   notes?: string | null;
   createdAt: string;
   plan: SubscriptionPlan;
-  organization?: { id: number; name: string; slug: string };
-  reviewer?: { id: number; firstName: string; lastName: string } | null;
+  organization?: { id: string; name: string; slug: string };
+  reviewer?: { id: string; firstName: string; lastName: string } | null;
 }
 
 export interface CreateSubscriptionPaymentRequest {
-  planId: number;
+  planId: string;
   method: 'pago_movil' | 'cash_usd';
   bankId?: string;
   phoneNumber?: string;

@@ -18,7 +18,7 @@ interface AuthContextType {
   currentOrg: OrganizationDetail | null;
   login: (email: string, password: string) => Promise<{ organizations?: OrganizationInfo[] }>;
   logout: () => Promise<void>;
-  selectOrg: (organizationId: number) => Promise<void>;
+  selectOrg: (organizationId: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -151,7 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { organizations: response.organizations };
   }, [scheduleRefresh]);
 
-  const selectOrg = useCallback(async (organizationId: number) => {
+  const selectOrg = useCallback(async (organizationId: string) => {
     const response = await authService.selectOrg(organizationId);
     setToken(response.accessToken);
     setUser(response.user);

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { AsyncLocalStorage } from 'async_hooks';
 
 export interface TenantContext {
-  organizationId: number;
+  organizationId: string;
   organizationSlug?: string;
   isSuperAdmin?: boolean;
   plan?: { name: string; features: string[] };

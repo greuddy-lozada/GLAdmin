@@ -5,11 +5,11 @@ import { useOptimisticCrud } from '@/hooks/use-optimistic-crud';
 import { PagoMovilTransaction, CreatePagoMovilTransactionRequest, ReviewPagoMovilTransactionRequest } from '../models/pago-movil-transaction.model';
 import { pagoMovilTransactionService } from '../services/pago-movil-transaction.service';
 
-function buildOptimistic(data: CreatePagoMovilTransactionRequest, tempId: number): PagoMovilTransaction {
+function buildOptimistic(data: CreatePagoMovilTransactionRequest, tempId: string): PagoMovilTransaction {
   return {
     id: tempId,
-    organizationId: 0,
-    userId: 0,
+    organizationId: '',
+    userId: '',
     amountVes: data.amountVes,
     amountUsd: data.amountUsd,
     bankId: data.bankId,
@@ -35,7 +35,7 @@ export function usePagoMovilTransactions() {
   });
 
   const reviewMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: ReviewPagoMovilTransactionRequest }) =>
+    mutationFn: ({ id, data }: { id: string; data: ReviewPagoMovilTransactionRequest }) =>
       pagoMovilTransactionService.review(id, data),
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['pagoMovilTransactions'] });

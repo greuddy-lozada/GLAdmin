@@ -27,7 +27,7 @@ export function OrgSwitcher() {
       <div className="flex items-center gap-2">
         <Select
           value={String(currentOrg.id)}
-          onValueChange={(v) => selectOrg(Number(v))}
+          onValueChange={(v) => selectOrg(v)}
         >
           <SelectTrigger className="h-8 border-none bg-transparent p-0 shadow-none text-sm font-medium hover:underline focus:ring-0 [&>svg]:hidden">
             <SelectValue />

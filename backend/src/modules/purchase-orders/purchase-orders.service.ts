@@ -22,7 +22,7 @@ export class PurchaseOrdersService {
   ) {}
 
   private async recalcTotalExistence(
-    productId: number,
+    productId: string,
     tx: Prisma.TransactionClient,
   ) {
     const result = await tx.stock.aggregate({
@@ -35,7 +35,7 @@ export class PurchaseOrdersService {
     });
   }
 
-  private get orgId(): number {
+  private get orgId(): string {
     const ctx = this.contextService?.getCurrent();
     const id = ctx?.organizationId;
     if (!id) throw new Error('No organization context');
@@ -60,6 +60,19 @@ export class PurchaseOrdersService {
       withholdingProof,
       ...header
     } = dto;
+
+    if (!header.code) {
+      const year = new Date().getFullYear();
+      const lastOrder = await this.prisma.purchaseOrder.findFirst({
+        where: { code: { startsWith: `OC-${year}-` }, organizationId: orgId },
+        orderBy: { code: 'desc' },
+        select: { code: true },
+      });
+      const nextSeq = lastOrder
+        ? parseInt(lastOrder.code?.split('-').pop() || '0') + 1
+        : 1;
+      header.code = `OC-${year}-${String(nextSeq).padStart(3, '0')}`;
+    }
 
     if (applyWithholding) {
       const orgCompany = await this.prisma.company.findFirst({
@@ -142,7 +155,7 @@ export class PurchaseOrdersService {
     return { data, total, page, limit };
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const purchaseOrder = await this.prisma.purchaseOrder.findUnique({
       where: { id },
       include: {
@@ -154,8 +167,33 @@ export class PurchaseOrdersService {
     return purchaseOrder;
   }
 
-  async update(id: number, dto: UpdatePurchaseOrderDto) {
+  async update(id: string, dto: UpdatePurchaseOrderDto) {
     const existing = await this.findOne(id);
+    const {
+      status: newStatus,
+      details: newDetails,
+      applyWithholding,
+      withholdingPercentage,
+      withholdingProof,
+      ...header
+    } = dto;
+
+    // Allow status-only updates even for non-mutable orders
+    if (
+      newStatus &&
+      Object.keys(header).length === 0 &&
+      newDetails == null &&
+      applyWithholding == null
+    ) {
+      const updated = await this.prisma.purchaseOrder.update({
+        where: { id },
+        data: { status: newStatus },
+        include: this.include,
+      });
+      return { data: updated, message: 'PURCHASE_ORDER.UPDATED' };
+    }
+
+    // Data edits: only allowed for mutable statuses
     if (
       existing.status &&
       !PURCHASE_ORDER_STATUS_META[existing.status as PurchaseOrderStatus]
@@ -164,12 +202,6 @@ export class PurchaseOrdersService {
       throw new AppException('PO_001', HttpStatus.FORBIDDEN);
     }
     const orgId = this.orgId;
-    const {
-      applyWithholding,
-      withholdingPercentage,
-      withholdingProof,
-      ...header
-    } = dto;
 
     if (applyWithholding) {
       const orgCompany = await this.prisma.company.findFirst({
@@ -187,6 +219,29 @@ export class PurchaseOrdersService {
     }
 
     const purchaseOrder = await this.prisma.$transaction(async (tx) => {
+      // Replace details if provided and order is in DRAFT
+      if (newDetails != null && newDetails.length > 0) {
+        if (existing.status !== PurchaseOrderStatus.DRAFT) {
+          throw new AppException('PO_001', HttpStatus.FORBIDDEN);
+        }
+        await tx.purchaseOrderDet.deleteMany({
+          where: { idPurchaseOrder: id },
+        });
+        await tx.purchaseOrderDet.createMany({
+          data: newDetails.map((d) => ({
+            idPurchaseOrder: id,
+            idProduct: d.idProduct!,
+            quantity: d.quantity ?? 0,
+            unitPrice: d.unitPrice ?? 0,
+            unitPriceUsd: d.unitPriceUsd ?? 0,
+            subtotal: d.subtotal ?? 0,
+            subtotalUsd: d.subtotalUsd ?? 0,
+            observation: d.observation,
+            organizationId: orgId,
+          })),
+        });
+      }
+
       if (applyWithholding !== undefined) {
         const existingRecord = existing.withholdingRecords?.[0];
         if (applyWithholding) {
@@ -202,8 +257,8 @@ export class PurchaseOrdersService {
             percentage: pct,
             baseAmount: baseAmt,
             baseAmountUsd: baseAmtUsd,
-            withheldAmount: baseAmt * (pct / 100),
-            withheldAmountUsd: baseAmtUsd * (pct / 100),
+            withheldAmount: Number(baseAmt) * (pct / 100),
+            withheldAmountUsd: Number(baseAmtUsd) * (pct / 100),
             withholdingProof: proof,
             organizationId: orgId,
           };
@@ -241,7 +296,7 @@ export class PurchaseOrdersService {
     return { data: purchaseOrder, message: 'PURCHASE_ORDER.UPDATED' };
   }
 
-  async receive(id: number, dto: ReceivePurchaseOrderDto) {
+  async receive(id: string, dto: ReceivePurchaseOrderDto) {
     const existing = await this.findOne(id);
     if (existing.status === PurchaseOrderStatus.RECEIVED) {
       throw new AppException('PO_003', HttpStatus.BAD_REQUEST);
@@ -258,7 +313,7 @@ export class PurchaseOrdersService {
             })
             .filter(Boolean),
         ),
-      ] as number[];
+      ] as string[];
 
       const existingStocks = await tx.stock.findMany({
         where: {
@@ -272,7 +327,7 @@ export class PurchaseOrdersService {
       );
 
       const stockDetsToCreate: {
-        idStock: number;
+        idStock: string;
         type: number;
         quantity: number;
         observation: string;
@@ -361,7 +416,7 @@ export class PurchaseOrdersService {
     return result;
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const po = await this.findOne(id);
     await this.prisma.$transaction(async (tx) => {
       await tx.withholdingRecord.deleteMany({ where: { idPurchaseOrder: id } });

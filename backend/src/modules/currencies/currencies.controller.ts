@@ -1,4 +1,4 @@
-import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe, Query } from '@nestjs/common';
 import { CurrenciesService } from './currencies.service';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { PlanLevel } from '../../common/decorators/plan-level.decorator';
@@ -17,7 +17,7 @@ export class CurrenciesController {
 
   @Get(':id')
   @Roles('master', 'admin', 'employee')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.currenciesService.findOne(id);
   }
 }

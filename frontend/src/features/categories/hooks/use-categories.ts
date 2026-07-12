@@ -4,7 +4,7 @@ import { useOptimisticCrud } from '@/hooks/use-optimistic-crud';
 import { Category, CreateCategoryRequest } from '../models/category.model';
 import { categoryService } from '../services/category.service';
 
-function buildOptimistic(data: CreateCategoryRequest, tempId: number): Category {
+function buildOptimistic(data: CreateCategoryRequest, tempId: string): Category {
   return {
     id: tempId,
     name: data.name,

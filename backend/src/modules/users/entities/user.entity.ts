@@ -1,11 +1,11 @@
 export class UserEntity {
-  id: number;
+  id: string;
   firstName: string;
   lastName: string;
   userName: string;
   password: string;
   email: string;
-  idRole: number;
+  idRole: string;
   isActive: boolean;
   mustChangePassword: boolean;
   lastLogin: Date | null;
@@ -13,7 +13,7 @@ export class UserEntity {
   updatedAt: Date;
 
   role?: {
-    id: number;
+    id: string;
     name: string;
     slug: string;
   };

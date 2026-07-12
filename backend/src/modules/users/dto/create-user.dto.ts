@@ -3,7 +3,7 @@ import {
   IsEmail,
   IsOptional,
   IsBoolean,
-  IsNumber,
+  IsUUID,
   MinLength,
   MaxLength,
 } from 'class-validator';
@@ -36,8 +36,8 @@ export class CreateUserDto {
   @IsEmail({}, { message: 'Ingrese un correo electrónico válido' })
   email: string;
 
-  @IsNumber({}, { message: 'El rol es obligatorio' })
-  idRole: number;
+  @IsUUID('4', { message: 'El rol es obligatorio' })
+  idRole: string;
 
   @IsOptional()
   @IsBoolean({ message: 'Estado activo debe ser verdadero o falso' })

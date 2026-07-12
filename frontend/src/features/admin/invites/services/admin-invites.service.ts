@@ -12,7 +12,7 @@ export const adminInvitesService = {
     return response.data.data;
   },
 
-  async delete(id: number): Promise<void> {
+  async delete(id: string): Promise<void> {
     await apiClient.delete(`/admin/invites/${id}`);
   },
 };

@@ -1,5 +1,5 @@
 export interface Plan {
-  id: number;
+  id: string;
   name: string;
   label: string;
   amount: number;

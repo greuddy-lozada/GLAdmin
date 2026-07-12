@@ -1,9 +1,8 @@
-import { IsString, IsNumber, IsOptional, IsIn, Min } from 'class-validator';
+import { IsString, IsUUID, IsOptional, IsIn } from 'class-validator';
 
 export class CreateSubscriptionPaymentDto {
-  @IsNumber()
-  @Min(1)
-  planId: number;
+  @IsUUID()
+  planId: string;
 
   @IsString()
   @IsIn(['pago_movil', 'cash_usd'])

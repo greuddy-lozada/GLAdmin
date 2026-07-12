@@ -7,7 +7,7 @@ export const productService = {
     return response.data.data;
   },
 
-  async getById(id: number): Promise<Product> {
+  async getById(id: string): Promise<Product> {
     const response = await apiClient.get(`/products/${id}`);
     return response.data.data;
   },
@@ -17,12 +17,12 @@ export const productService = {
     return response.data.data;
   },
 
-  async update(id: number, data: UpdateProductRequest): Promise<Product> {
+  async update(id: string, data: UpdateProductRequest): Promise<Product> {
     const response = await apiClient.patch(`/products/${id}`, data);
     return response.data.data;
   },
 
-  async delete(id: number): Promise<void> {
+  async delete(id: string): Promise<void> {
     await apiClient.delete(`/products/${id}`);
   },
 };

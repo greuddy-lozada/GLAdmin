@@ -4,14 +4,14 @@ import { useOptimisticCrud } from '@/hooks/use-optimistic-crud';
 import { AdminInvite, CreateAdminInviteRequest } from '../models/admin-invite.model';
 import { adminInvitesService } from '../services/admin-invites.service';
 
-function buildOptimistic(data: CreateAdminInviteRequest, tempId: number): AdminInvite {
+function buildOptimistic(data: CreateAdminInviteRequest, tempId: string): AdminInvite {
   return {
     id: tempId,
     code: '',
     email: data.email,
     organizationId: data.organizationId,
     roleId: data.roleId,
-    invitedById: 0,
+    invitedById: '',
     used: false,
     expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
     createdAt: new Date().toISOString(),

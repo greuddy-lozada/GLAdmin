@@ -1,6 +1,6 @@
 export interface PurchaseOrderDetail {
-  id: number;
-  idProduct: number;
+  id: string;
+  idProduct: string;
   quantity?: number;
   receivedQuantity?: number;
   unitPrice?: number;
@@ -11,8 +11,8 @@ export interface PurchaseOrderDetail {
 }
 
 export interface PurchaseOrder {
-  id: number;
-  idSupplier: number;
+  id: string;
+  idSupplier: string;
   code?: string;
   date?: string;
   amount?: number;
@@ -22,22 +22,22 @@ export interface PurchaseOrder {
   ivaAmount?: number;
   ivaAmountUsd?: number;
   exchangeRate?: number;
-  exchangeRateId?: number;
-  exchangeRateDayId?: number;
+  exchangeRateId?: string;
+  exchangeRateDayId?: string;
   officialExchangeRate?: number;
-  officialExchangeRateId?: number;
+  officialExchangeRateId?: string;
   paymentMethod?: number;
-  status?: number;
+  status?: string;
   createdAt: string;
   updatedAt: string;
   version: number;
-  supplier?: { id: number; companyName: string; taxWithholdingAgent?: boolean };
-  details?: (PurchaseOrderDetail & { id: number; product?: { id: number; code: string; name: string; taxPercentage?: number } })[];
-  withholdingRecords?: { id: number; percentage: number; withheldAmount: number; withheldAmountUsd?: number; withholdingProof?: string }[];
+  supplier?: { id: string; companyName: string; taxWithholdingAgent?: boolean };
+  details?: (PurchaseOrderDetail & { id: string; product?: { id: string; code: string; name: string; taxPercentage?: number } })[];
+  withholdingRecords?: { id: string; percentage: number; withheldAmount: number; withheldAmountUsd?: number; withholdingProof?: string }[];
 }
 
 export interface CreatePurchaseOrderRequest {
-  idSupplier: number;
+  idSupplier: string;
   code?: string;
   date?: string;
   amount?: number;
@@ -47,16 +47,16 @@ export interface CreatePurchaseOrderRequest {
   ivaAmount?: number;
   ivaAmountUsd?: number;
   exchangeRate?: number;
-  exchangeRateDayId?: number;
+  exchangeRateDayId?: string;
   officialExchangeRate?: number;
-  officialExchangeRateId?: number;
+  officialExchangeRateId?: string;
   paymentMethod?: number;
-  status?: number;
+  status?: string;
   applyWithholding?: boolean;
   withholdingPercentage?: number;
   withholdingProof?: string;
   details?: {
-    idProduct: number;
+    idProduct: string;
     quantity?: number;
     unitPrice?: number;
     unitPriceUsd?: number;
@@ -67,7 +67,7 @@ export interface CreatePurchaseOrderRequest {
 }
 
 export interface UpdatePurchaseOrderRequest {
-  idSupplier?: number;
+  idSupplier?: string;
   code?: string;
   date?: string;
   amount?: number;
@@ -77,16 +77,16 @@ export interface UpdatePurchaseOrderRequest {
   ivaAmount?: number;
   ivaAmountUsd?: number;
   exchangeRate?: number;
-  exchangeRateDayId?: number;
+  exchangeRateDayId?: string;
   officialExchangeRate?: number;
-  officialExchangeRateId?: number;
+  officialExchangeRateId?: string;
   paymentMethod?: number;
-  status?: number;
+  status?: string;
   applyWithholding?: boolean;
   withholdingPercentage?: number;
   withholdingProof?: string;
   details?: {
-    idProduct: number;
+    idProduct: string;
     quantity?: number;
     unitPrice?: number;
     unitPriceUsd?: number;
@@ -97,17 +97,15 @@ export interface UpdatePurchaseOrderRequest {
 }
 
 export enum PurchaseOrderStatus {
-  Draft = 1,
-  Sent = 2,
-  Approved = 3,
-  Received = 4,
-  Cancelled = 5,
+  DRAFT = 'DRAFT',
+  ISSUED = 'ISSUED',
+  RECEIVED = 'RECEIVED',
+  ANNULLED = 'ANNULLED',
 }
 
 export const PURCHASE_ORDER_TRANSITIONS: Record<PurchaseOrderStatus, PurchaseOrderStatus[]> = {
-  [PurchaseOrderStatus.Draft]: [PurchaseOrderStatus.Sent, PurchaseOrderStatus.Cancelled],
-  [PurchaseOrderStatus.Sent]: [PurchaseOrderStatus.Approved, PurchaseOrderStatus.Cancelled],
-  [PurchaseOrderStatus.Approved]: [PurchaseOrderStatus.Received, PurchaseOrderStatus.Cancelled],
-  [PurchaseOrderStatus.Received]: [],
-  [PurchaseOrderStatus.Cancelled]: [],
+  [PurchaseOrderStatus.DRAFT]: [PurchaseOrderStatus.ISSUED, PurchaseOrderStatus.ANNULLED],
+  [PurchaseOrderStatus.ISSUED]: [PurchaseOrderStatus.DRAFT, PurchaseOrderStatus.RECEIVED, PurchaseOrderStatus.ANNULLED],
+  [PurchaseOrderStatus.RECEIVED]: [],
+  [PurchaseOrderStatus.ANNULLED]: [],
 };

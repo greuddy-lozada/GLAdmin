@@ -1,17 +1,17 @@
 export interface AdminUser {
-  id: number;
+  id: string;
   firstName: string;
   lastName: string;
   userName: string;
   email: string;
-  idRole: number;
+  idRole: string;
   isActive: boolean;
   mustChangePassword: boolean;
-  role?: { id: number; name: string; slug: string };
-  organizations?: { organization: { id: number; name: string; slug: string }; role: { id: number; name: string; slug: string } }[];
+  role?: { id: string; name: string; slug: string };
+  organizations?: { organization: { id: string; name: string; slug: string }; role: { id: string; name: string; slug: string } }[];
 }
 
 export interface UpdateAdminUserRequest {
   isActive?: boolean;
-  roleId?: number;
+  roleId?: string;
 }

@@ -16,7 +16,7 @@ export class ExchangeRatesService {
     private readonly contextService: ContextService,
   ) {}
 
-  private getOrgId(): number {
+  private getOrgId(): string {
     const ctx = this.contextService?.getCurrent();
     const orgId = ctx?.organizationId;
     if (!orgId) throw new BadRequestException('Organization context required');
@@ -93,7 +93,7 @@ export class ExchangeRatesService {
     return { data: day, message: null };
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const orgId = this.getOrgId();
     const day = await this.prisma.exchangeRateDay.findFirst({
       where: { id, organizationId: orgId },
@@ -119,7 +119,7 @@ export class ExchangeRatesService {
     return { data: day, message: 'EXCHANGE_RATE.CREATED' };
   }
 
-  async update(id: number, dto: UpdateExchangeRateDto) {
+  async update(id: string, dto: UpdateExchangeRateDto) {
     this.getOrgId();
     await this.findOne(id);
 
@@ -140,7 +140,7 @@ export class ExchangeRatesService {
     return { data: day, message: 'EXCHANGE_RATE.UPDATED' };
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const day = await this.findOne(id);
     await this.prisma.exchangeRateDay.delete({ where: { id } });
     return { data: day, message: 'EXCHANGE_RATE.DELETED' };

@@ -10,7 +10,8 @@ import { UpdateSaleDto } from '../dto/update-sale.dto';
 describe('SalesService', () => {
   let service: SalesService;
 
-  const mockOrgId = 1;
+  const mockOrgId = 'ffffffff-ffff-ffff-ffff-ffffffffffff';
+  const saleId = '00000000-0000-0000-0000-000000000001';
   const mockContext = { getCurrent: () => ({ organizationId: mockOrgId }) };
 
   const mockPrisma = {
@@ -62,7 +63,7 @@ describe('SalesService', () => {
       totalTaxUsd: 0.32,
       items: [
         {
-          productId: 1,
+          productId: '00000000-0000-0000-0000-000000000099',
           quantity: 2,
           unitPrice: 50,
           unitPriceUsd: 1,
@@ -74,7 +75,7 @@ describe('SalesService', () => {
 
     it('debe crear una venta en estado DRAFT con los items proporcionados', async () => {
       const createdSale = {
-        id: 1,
+        id: saleId,
         status: 'DRAFT',
         details: [],
         customer: null,
@@ -104,7 +105,7 @@ describe('SalesService', () => {
         organizationId: mockOrgId,
         action: 'CREATE',
         entity: 'Sale',
-        entityId: expect.any(Number),
+        entityId: expect.any(String),
       });
     });
   });
@@ -117,24 +118,27 @@ describe('SalesService', () => {
 
     it('debe permitir modificar una venta en estado DRAFT', async () => {
       mockPrisma.sale.findFirst.mockResolvedValue({
-        id: 1,
+        id: saleId,
         status: 'DRAFT',
         organizationId: mockOrgId,
       });
-      mockPrisma.sale.update.mockResolvedValue({ id: 1, code: 'FAC-001-UPD' });
+      mockPrisma.sale.update.mockResolvedValue({
+        id: saleId,
+        code: 'FAC-001-UPD',
+      });
 
-      const result = await service.update(1, updateDto);
+      const result = await service.update(saleId, updateDto);
       expect(result).toBeDefined();
     });
 
     it('debe lanzar SALE_001 si la venta está emitida (ISSUED)', async () => {
       mockPrisma.sale.findFirst.mockResolvedValue({
-        id: 1,
+        id: saleId,
         status: 'ISSUED',
         organizationId: mockOrgId,
       });
 
-      await expect(service.update(1, updateDto)).rejects.toMatchObject({
+      await expect(service.update(saleId, updateDto)).rejects.toMatchObject({
         errorCode: 'SALE_001',
         status: HttpStatus.FORBIDDEN,
       });
@@ -142,12 +146,12 @@ describe('SalesService', () => {
 
     it('debe lanzar SALE_001 si la venta está anulada (ANNULLED)', async () => {
       mockPrisma.sale.findFirst.mockResolvedValue({
-        id: 1,
+        id: saleId,
         status: 'ANNULLED',
         organizationId: mockOrgId,
       });
 
-      await expect(service.update(1, updateDto)).rejects.toMatchObject({
+      await expect(service.update(saleId, updateDto)).rejects.toMatchObject({
         errorCode: 'SALE_001',
         status: HttpStatus.FORBIDDEN,
       });
@@ -156,7 +160,7 @@ describe('SalesService', () => {
     it('debe lanzar SALE_002 si la venta no existe', async () => {
       mockPrisma.sale.findFirst.mockResolvedValue(null);
 
-      await expect(service.update(1, updateDto)).rejects.toMatchObject({
+      await expect(service.update(saleId, updateDto)).rejects.toMatchObject({
         errorCode: 'SALE_002',
         status: HttpStatus.NOT_FOUND,
       });
@@ -166,20 +170,20 @@ describe('SalesService', () => {
   describe('findOne', () => {
     it('debe retornar la venta con details, customer y payments', async () => {
       mockPrisma.sale.findFirst.mockResolvedValue({
-        id: 1,
+        id: saleId,
         details: [],
         customer: null,
         payments: [],
       });
 
-      const result = await service.findOne(1);
+      const result = await service.findOne(saleId);
       expect(result).toBeDefined();
     });
 
     it('debe lanzar SALE_002 si no encuentra la venta', async () => {
       mockPrisma.sale.findFirst.mockResolvedValue(null);
 
-      await expect(service.findOne(1)).rejects.toMatchObject({
+      await expect(service.findOne(saleId)).rejects.toMatchObject({
         errorCode: 'SALE_002',
         status: HttpStatus.NOT_FOUND,
       });
@@ -189,7 +193,7 @@ describe('SalesService', () => {
   describe('findAll', () => {
     it('debe filtrar por organizationId', async () => {
       mockPrisma.sale.findMany.mockResolvedValue([
-        { id: 1, details: [], customer: null },
+        { id: saleId, details: [], customer: null },
       ]);
       mockPrisma.sale.count.mockResolvedValue(1);
 

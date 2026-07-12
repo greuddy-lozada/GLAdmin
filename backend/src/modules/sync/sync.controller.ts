@@ -6,7 +6,7 @@ import {
   Body,
   Param,
   Query,
-  ParseIntPipe,
+  ParseUUIDPipe,
   Head,
   HttpCode,
 } from '@nestjs/common';
@@ -46,7 +46,7 @@ export class SyncController {
 
   @Patch('conflicts/:id/resolve')
   async resolveConflict(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: ResolveConflictDto,
   ) {
     return this.syncService.resolveConflict(id, dto);

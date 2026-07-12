@@ -22,7 +22,7 @@ export class PagoMovilService {
     private readonly context: ContextService,
   ) {}
 
-  private getOrgId(): number {
+  private getOrgId(): string {
     const ctx = this.context.getCurrent();
     if (!ctx?.organizationId) throw new ForbiddenException();
     return ctx.organizationId;
@@ -107,7 +107,7 @@ export class PagoMovilService {
     });
   }
 
-  async createTransaction(dto: CreatePagoMovilTransactionDto, userId: number) {
+  async createTransaction(dto: CreatePagoMovilTransactionDto, userId: string) {
     const organizationId = this.getOrgId();
 
     const config = await this.prisma.pagoMovilConfig.findUnique({
@@ -134,7 +134,7 @@ export class PagoMovilService {
     });
   }
 
-  async getTransaction(id: number) {
+  async getTransaction(id: string) {
     const organizationId = this.getOrgId();
     const tx = await this.prisma.pagoMovilTransaction.findFirst({
       where: { id, organizationId },
@@ -147,9 +147,9 @@ export class PagoMovilService {
   }
 
   async reviewTransaction(
-    id: number,
+    id: string,
     dto: ReviewPagoMovilTransactionDto,
-    reviewedBy: number,
+    reviewedBy: string,
   ) {
     const organizationId = this.getOrgId();
     const tx = await this.prisma.pagoMovilTransaction.findFirst({

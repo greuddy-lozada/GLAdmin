@@ -42,9 +42,9 @@ export default function UsersPage() {
     userName: '',
     password: '',
     email: '',
-    idRole: 4,
+    idRole: '',
   });
-  const [roles, setRoles] = useState<{ id: number; name: string }[]>([]);
+  const [roles, setRoles] = useState<{ id: string; name: string }[]>([]);
   const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
 
@@ -72,7 +72,7 @@ export default function UsersPage() {
   const openCreate = () => {
     setSelectedUser(null);
     setError('');
-    setFormData({ firstName: '', lastName: '', userName: '', password: '', email: '', idRole: 4 });
+    setFormData({ firstName: '', lastName: '', userName: '', password: '', email: '', idRole: '' });
     setFormOpen(true);
   };
 
@@ -163,7 +163,7 @@ export default function UsersPage() {
           </div>
           <div className="space-y-2">
             <Label>{t('users.field.role')}</Label>
-            <Select value={String(formData.idRole)} onValueChange={(v) => setFormData({ ...formData, idRole: Number(v) })}>
+            <Select value={formData.idRole} onValueChange={(v) => setFormData({ ...formData, idRole: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {roles.map((role) => (

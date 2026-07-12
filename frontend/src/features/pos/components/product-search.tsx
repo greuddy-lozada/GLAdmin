@@ -19,20 +19,20 @@ export const ProductSearch = forwardRef<HTMLInputElement, ProductSearchProps>(
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
-    const [brandMap, setBrandMap] = useState<Record<number, string>>({});
-    const [categoryMap, setCategoryMap] = useState<Record<number, string>>({});
+    const [brandMap, setBrandMap] = useState<Record<string, string>>({});
+    const [categoryMap, setCategoryMap] = useState<Record<string, string>>({});
     const internalRef = useRef<HTMLInputElement>(null);
     const debounce = useRef<ReturnType<typeof setTimeout>>(undefined);
     const listRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
       localDb.brands.toArray().then((bs) => {
-        const map: Record<number, string> = {};
+        const map: Record<string, string> = {};
         for (const b of bs) map[b.id] = b.name;
         setBrandMap(map);
       });
       localDb.categories.toArray().then((cs) => {
-        const map: Record<number, string> = {};
+        const map: Record<string, string> = {};
         for (const c of cs) map[c.id] = c.name;
         setCategoryMap(map);
       });

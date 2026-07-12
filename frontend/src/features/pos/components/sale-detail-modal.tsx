@@ -27,7 +27,7 @@ export function SaleDetailModal({ sale, open, onOpenChange }: SaleDetailModalPro
   const { t, tp } = useI18n();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<CreateSaleRequest | null>(null);
-  const [productNames, setProductNames] = useState<Record<number, string>>({});
+    const [productNames, setProductNames] = useState<Record<string, string>>({});
   const [customerLabel, setCustomerLabel] = useState('');
 
   useEffect(() => {
@@ -44,13 +44,13 @@ export function SaleDetailModal({ sale, open, onOpenChange }: SaleDetailModalPro
         const items = Array.isArray(d.items) ? (d.items as SaleItem[]) : [];
         const ids = [...new Set(items.map((i) => i.productId))];
         const products = await localDb.products.bulkGet(ids);
-        const names: Record<number, string> = {};
+        const names: Record<string, string> = {};
         for (const p of products) {
           if (p) names[p.id] = p.name;
         }
         setProductNames(names);
 
-        if (typeof d.idCustomer === 'number' && d.idCustomer > 0) {
+        if (typeof d.idCustomer === 'string' && d.idCustomer.length > 0) {
           const c = await localDb.customers.get(d.idCustomer);
           if (c) setCustomerLabel(`${c.firstName} ${c.lastName} · ${c.taxId}`);
         }

@@ -3,6 +3,7 @@ import {
   IsOptional,
   IsInt,
   IsNumber,
+  IsUUID,
   IsDateString,
   ValidateNested,
   IsArray,
@@ -12,8 +13,8 @@ import {
 import { Type } from 'class-transformer';
 
 export class CreateSaleItemDto {
-  @IsInt()
-  productId: number;
+  @IsUUID()
+  productId: string;
 
   @IsInt()
   quantity: number;
@@ -90,8 +91,8 @@ export class CreateSaleDto {
   status: number;
 
   @IsOptional()
-  @IsInt()
-  idCustomer?: number;
+  @IsUUID()
+  idCustomer?: string;
 
   @IsOptional()
   @IsNumber()

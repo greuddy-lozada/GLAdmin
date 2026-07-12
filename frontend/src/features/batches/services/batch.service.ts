@@ -7,7 +7,7 @@ export const batchService = {
     return response.data.data;
   },
 
-  async getById(id: number): Promise<Batch> {
+  async getById(id: string): Promise<Batch> {
     const response = await apiClient.get(`/batches/${id}`);
     return response.data.data;
   },
@@ -17,12 +17,12 @@ export const batchService = {
     return response.data.data;
   },
 
-  async update(id: number, data: UpdateBatchRequest): Promise<Batch> {
+  async update(id: string, data: UpdateBatchRequest): Promise<Batch> {
     const response = await apiClient.patch(`/batches/${id}`, data);
     return response.data.data;
   },
 
-  async delete(id: number): Promise<void> {
+  async delete(id: string): Promise<void> {
     await apiClient.delete(`/batches/${id}`);
   },
 };

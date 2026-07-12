@@ -29,7 +29,7 @@ export function usePos() {
     addToCartAction(product, taxes);
   }, [addToCartAction, taxes]);
 
-  const updateQuantity = useCallback(async (productId: number, quantity: number) => {
+  const updateQuantity = useCallback(async (productId: string, quantity: number) => {
     const product = await localDb.products.get(productId);
     storeUpdateQuantity(productId, quantity, product?.stock);
   }, [storeUpdateQuantity]);
@@ -53,7 +53,7 @@ export function usePos() {
   const lastAddedProductId = usePosStore(s => s.lastAddedProductId);
   const canUndo = lastAddedProductId !== null && cart.some(i => i.productId === lastAddedProductId);
 
-  const parkCart = useCallback(async (customerId?: number, customerName?: string): Promise<{ label: string; error?: string }> => {
+  const parkCart = useCallback(async (customerId?: string, customerName?: string): Promise<{ label: string; error?: string }> => {
     const state = usePosStore.getState();
     if (state.cart.length === 0) return { label: '', error: 'empty' };
     const label = `Orden #${Date.now().toString(36).slice(-4)}`;
@@ -82,11 +82,11 @@ export function usePos() {
     }
   }, []);
 
-  const resumeCart = useCallback((order: { cartItems: CartItem[]; customerId?: number; customerName?: string }): void => {
+  const resumeCart = useCallback((order: { cartItems: CartItem[]; customerId?: string; customerName?: string }): void => {
     const state = usePosStore.getState();
     if (state.cart.length > 0) {
       const merged = [...state.cart, ...order.cartItems];
-      const unique = new Map<number, CartItem>();
+      const unique = new Map<string, CartItem>();
       for (const item of merged) {
         if (unique.has(item.productId)) {
           const existing = unique.get(item.productId)!;

@@ -1,6 +1,6 @@
 export interface PagoMovilConfig {
-  id: number;
-  organizationId: number;
+  id: string;
+  organizationId: string;
   phoneNumber: string;
   bankId: string;
   idNumber: string;

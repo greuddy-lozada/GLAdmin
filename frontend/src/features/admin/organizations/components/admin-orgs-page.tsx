@@ -30,7 +30,7 @@ export default function AdminOrgsPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selectedOrg, setSelectedOrg] = useState<AdminOrg | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AdminOrg | null>(null);
-  const [plans, setPlans] = useState<{ id: number; name: string; label: string }[]>([]);
+  const [plans, setPlans] = useState<{ id: string; name: string; label: string }[]>([]);
   const [formData, setFormData] = useState<CreateAdminOrgRequest & { isActive?: boolean }>({
     name: '',
     slug: '',
@@ -132,7 +132,7 @@ export default function AdminOrgsPage() {
             <Label>{t('admin.organizations.field.plan')}</Label>
             <Select
               value={String(formData.planId ?? '')}
-              onValueChange={(v) => setFormData({ ...formData, planId: v ? Number(v) : undefined })}
+              onValueChange={(v) => setFormData({ ...formData, planId: v || undefined })}
             >
               <SelectTrigger><SelectValue placeholder={t('common.none')} /></SelectTrigger>
               <SelectContent>

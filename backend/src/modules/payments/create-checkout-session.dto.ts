@@ -1,9 +1,9 @@
-import { IsInt } from 'class-validator';
+import { IsUUID } from 'class-validator';
 
 export class CreateCheckoutSessionDto {
-  @IsInt()
-  planId: number;
+  @IsUUID()
+  planId: string;
 
-  @IsInt()
-  organizationId: number;
+  @IsUUID()
+  organizationId: string;
 }

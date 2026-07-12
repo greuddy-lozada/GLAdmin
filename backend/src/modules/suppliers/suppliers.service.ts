@@ -46,13 +46,13 @@ export class SuppliersService {
     return { data, total, page, limit };
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const supplier = await this.prisma.supplier.findUnique({ where: { id } });
     if (!supplier) throw new NotFoundException('SUPPLIER.NOT_FOUND');
     return supplier;
   }
 
-  async update(id: number, dto: UpdateSupplierDto) {
+  async update(id: string, dto: UpdateSupplierDto) {
     await this.findOne(id);
     const supplier = await this.prisma.supplier.update({
       where: { id },
@@ -61,7 +61,7 @@ export class SuppliersService {
     return { data: supplier, message: 'SUPPLIER.UPDATED' };
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const supplier = await this.findOne(id);
     await this.prisma.supplier.update({
       where: { id },

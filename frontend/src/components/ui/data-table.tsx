@@ -55,7 +55,7 @@ function SortIcon({ direction }: { direction: 'asc' | 'desc' | false }) {
   return <ArrowUpDown className="h-3 w-3 opacity-30" />;
 }
 
-export function DataTable<T extends { id: number }>({
+export function DataTable<T extends { id: string | number }>({
   columns,
   rows,
   loading,

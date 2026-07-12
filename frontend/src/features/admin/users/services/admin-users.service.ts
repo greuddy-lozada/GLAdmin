@@ -7,17 +7,17 @@ export const adminUsersService = {
     return response.data.data;
   },
 
-  async getById(id: number): Promise<AdminUser> {
+  async getById(id: string): Promise<AdminUser> {
     const response = await apiClient.get(`/admin/users/${id}`);
     return response.data.data;
   },
 
-  async update(id: number, data: UpdateAdminUserRequest): Promise<AdminUser> {
+  async update(id: string, data: UpdateAdminUserRequest): Promise<AdminUser> {
     const response = await apiClient.patch(`/admin/users/${id}`, data);
     return response.data.data;
   },
 
-  async deactivate(id: number): Promise<void> {
+  async deactivate(id: string): Promise<void> {
     await apiClient.delete(`/admin/users/${id}`);
   },
 };

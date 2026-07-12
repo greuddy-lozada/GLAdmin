@@ -8,14 +8,14 @@ import { localDb } from '@/lib/sync/db';
 import { useI18n } from '@/i18n';
 
 interface PinUnlockProps {
-  userId: number;
+  userId: string;
   onUnlock: () => void;
 }
 
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_MS = 30_000;
 
-function getAttemptData(userId: number): { count: number; lockUntil: number } {
+function getAttemptData(userId: string): { count: number; lockUntil: number } {
   try {
     const raw = localStorage.getItem(`pin_attempts_${userId}`);
     return raw ? JSON.parse(raw) : { count: 0, lockUntil: 0 };
@@ -24,7 +24,7 @@ function getAttemptData(userId: number): { count: number; lockUntil: number } {
   }
 }
 
-function setAttemptData(userId: number, count: number, lockUntil: number) {
+function setAttemptData(userId: string, count: number, lockUntil: number) {
   localStorage.setItem(`pin_attempts_${userId}`, JSON.stringify({ count, lockUntil }));
 }
 

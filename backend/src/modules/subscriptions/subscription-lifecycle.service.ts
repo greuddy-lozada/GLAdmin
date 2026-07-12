@@ -13,7 +13,7 @@ export class SubscriptionLifecycleService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async evaluateSubscription(organizationId: number): Promise<void> {
+  async evaluateSubscription(organizationId: string): Promise<void> {
     const org = await this.prisma.organization.findUnique({
       where: { id: organizationId },
       select: {
@@ -115,7 +115,7 @@ export class SubscriptionLifecycleService {
   async evaluateAllActive(): Promise<void> {
     const BATCH_SIZE = 100;
     const CONCURRENCY = 10;
-    let cursor: number | undefined;
+    let cursor: string | undefined;
 
     do {
       const orgs = await this.prisma.organization.findMany({

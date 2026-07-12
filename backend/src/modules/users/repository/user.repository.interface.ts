@@ -4,6 +4,6 @@ import { UserEntity } from '../entities/user.entity';
 export interface IUserRepository extends IRepository<UserEntity> {
   findByUserName(userName: string): Promise<UserEntity | null>;
   findByEmail(email: string): Promise<UserEntity | null>;
-  findByRole(roleId: number): Promise<UserEntity[]>;
+  findByRole(roleId: string): Promise<UserEntity[]>;
   findWithRole(): Promise<UserEntity[]>;
 }

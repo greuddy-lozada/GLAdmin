@@ -2,13 +2,14 @@ import {
   IsArray,
   ValidateNested,
   IsInt,
+  IsUUID,
   Min,
   ArrayMinSize,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class ReceiveDetailDto {
-  @IsInt() id: number;
+  @IsUUID() id: string;
   @IsInt() @Min(1) quantity: number;
 }
 

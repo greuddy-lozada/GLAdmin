@@ -422,10 +422,9 @@
     "noDetails": "No details",
     "status": {
       "draft": "Draft",
-      "sent": "Sent",
-      "approved": "Approved",
+      "issued": "Issued",
       "received": "Received",
-      "cancelled": "Cancelled"
+      "annulled": "Annulled"
     },
     "field": {
       "id": "#",
@@ -439,6 +438,7 @@
       "status": "Status",
       "product": "Product",
       "quantity": "Quantity",
+      "received": "Received",
       "unitPrice": "Unit Price",
       "unitPriceUsd": "Unit Price (USD)",
       "subtotal": "Subtotal",
@@ -474,7 +474,11 @@
     "receiveSuccess": "Products received successfully",
     "ordered": "Ordered",
     "receivedLabel": "Received",
-    "allReceived": "All products have been fully received."
+    "allReceived": "All products have been fully received.",
+    "selectPrompt": "Select an order or create a new one",
+    "selectPromptDesc": "Click an order from the list to view details and edit, or create a new one with the + New button.",
+    "editCode": "Edit {{code}}",
+    "receivedStatus": "Receipt status"
   },
   "exchangeRates": {
     "title": "Exchange Rates",
@@ -544,7 +548,15 @@
       "paid": "Paid",
       "remaining": "Remaining",
       "complete": "Complete",
-      "excess": "Excess"
+      "excess": "Excess",
+      "pending": "Pending",
+      "addMethod": "Add payment method",
+      "remove": "Remove method",
+      "currency": "Currency",
+      "add": "Add",
+      "quickCashVes": "All cash",
+      "quickCashUsd": "All cash USD",
+      "quickSplit": "50/50 split"
     },
     "receipt": {
       "title": "Sale completed",

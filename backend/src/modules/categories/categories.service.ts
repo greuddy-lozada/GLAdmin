@@ -15,7 +15,7 @@ export class CategoriesService {
     private readonly contextService: ContextService,
   ) {}
 
-  private get orgId(): number {
+  private get orgId(): string {
     const ctx = this.contextService?.getCurrent();
     const id = ctx?.organizationId;
     if (!id) throw new Error('No organization context');
@@ -51,7 +51,7 @@ export class CategoriesService {
     return { data, total, page, limit };
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const category = await this.prisma.category.findFirst({
       where: { id, organizationId: this.orgId },
       include: {
@@ -66,7 +66,7 @@ export class CategoriesService {
     return category;
   }
 
-  async update(id: number, dto: UpdateCategoryDto) {
+  async update(id: string, dto: UpdateCategoryDto) {
     await this.findOne(id);
     if (dto.idParent) {
       if (dto.idParent === id)
@@ -83,7 +83,7 @@ export class CategoriesService {
     return { data: category, message: 'CATEGORY.UPDATED' };
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const category = await this.findOne(id);
     await this.prisma.category.update({
       where: { id },

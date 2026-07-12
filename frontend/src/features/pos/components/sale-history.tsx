@@ -24,7 +24,7 @@ export function SaleHistory({ onSelectSale }: SaleHistoryProps) {
   const [toDate, setToDate] = useState('');
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
-  const [customerNames, setCustomerNames] = useState<Record<number, string>>({});
+    const [customerNames, setCustomerNames] = useState<Record<string, string>>({});
 
   const loadAll = useCallback(async () => {
     const all = await localDb.sales.orderBy('id').reverse().toArray();
@@ -33,11 +33,11 @@ export function SaleHistory({ onSelectSale }: SaleHistoryProps) {
     const cIds = [...new Set(
       all
         .map(s => (s.data as CreateSaleRequest).idCustomer)
-        .filter((id): id is number => typeof id === 'number' && id > 0),
+        .filter((id): id is string => typeof id === 'string' && id.length > 0),
     )];
     if (cIds.length > 0) {
       const customers = await localDb.customers.bulkGet(cIds);
-      const names: Record<number, string> = {};
+      const names: Record<string, string> = {};
       for (const c of customers) {
         if (c) names[c.id] = `${c.firstName} ${c.lastName}`;
       }
