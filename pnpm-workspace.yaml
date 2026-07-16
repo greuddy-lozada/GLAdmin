@@ -1,6 +1,8 @@
 packages:
   - "backend"
   - "frontend"
+overrides:
+  multer: 2.2.0
 allowBuilds:
   '@nestjs/core': true
   '@prisma/client': true
