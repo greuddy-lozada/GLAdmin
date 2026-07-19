@@ -86,7 +86,7 @@ export function SaleDetailModal({ sale, open, onOpenChange }: SaleDetailModalPro
               <p className="text-muted-foreground">{customerLabel}</p>
             )}
 
-            <div className="border rounded-lg divide-y">
+            <div className="border border-border/50 rounded-lg divide-y">
               {items.map((item, idx) => (
                 <div key={idx} className="flex items-center justify-between px-3 py-2">
                   <div>
@@ -115,7 +115,7 @@ export function SaleDetailModal({ sale, open, onOpenChange }: SaleDetailModalPro
                   <span className="tabular-nums">-Bs. {data.withholdingAmount!.toFixed(2)}</span>
                 </div>
               )}
-              <div className="flex justify-between text-base font-bold text-foreground pt-1 border-t">
+              <div className="flex justify-between text-base font-bold text-foreground pt-1 border-t border-border/50">
                 <span>{t('pos.cart.totalVes')}</span>
                 <span className="tabular-nums text-primary">Bs. {data.amount.toFixed(2)}</span>
               </div>
@@ -134,7 +134,7 @@ export function SaleDetailModal({ sale, open, onOpenChange }: SaleDetailModalPro
             </div>
 
             {data.payments && data.payments.length > 0 && (
-              <div className="text-xs text-muted-foreground border-t pt-2">
+              <div className="text-xs text-muted-foreground border-t border-border/50 pt-2">
                 {data.payments.map((p: SalePayment, i: number) => (
                   <p key={i}>{METHOD_LABELS[p.method] ?? '—'}: {p.currency} {p.amount.toFixed(2)}</p>
                 ))}

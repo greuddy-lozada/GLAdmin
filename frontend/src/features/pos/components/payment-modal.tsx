@@ -197,7 +197,7 @@ export function PaymentModal({
           {lines.length > 0 && (
             <div className="space-y-2">
               {lines.map((line, i) => (
-                <div key={i} className="flex items-center justify-between border rounded-lg p-2.5 pr-2">
+                <div key={i} className="flex items-center justify-between border border-border/50 rounded-lg p-2.5 pr-2">
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="text-muted-foreground shrink-0">{methodIcon(line.method)}</span>
                     <span className="text-sm font-medium truncate">
@@ -224,7 +224,7 @@ export function PaymentModal({
               {t('pos.payment.addMethod')}
             </Button>
           ) : (
-            <div className="border rounded-lg p-3 space-y-3">
+            <div className="border border-border/50 rounded-lg p-3 space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs">{t('pos.payment.method')}</Label>
@@ -274,7 +274,7 @@ export function PaymentModal({
           )}
 
           {/* Status bar */}
-          <div className={`border rounded-lg p-3 space-y-1.5 ${
+          <div className={`border border-border/50 rounded-lg p-3 space-y-1.5 ${
             isExact && lines.length > 0 ? 'bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800' :
             isOver ? 'bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800' :
             paidVes > 0 ? 'bg-yellow-50 border-yellow-200 dark:bg-yellow-950/20 dark:border-yellow-800' :

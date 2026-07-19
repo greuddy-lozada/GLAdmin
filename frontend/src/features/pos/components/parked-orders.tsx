@@ -75,7 +75,7 @@ export function ParkedOrders({ currentCartCount, onResume, refreshTrigger }: Par
 
   return (
     <>
-      <div className="mt-2 border rounded-lg">
+      <div className="mt-2 border border-border/50 rounded-lg">
         <Button variant="ghost" className="w-full justify-between" onClick={() => { setOpen(!open); if (!open) loadOrders(); }}>
           <span className="flex items-center gap-2"><Pause className="h-4 w-4" />
             {t('pos.park.title')} {orders.length > 0 && `(${orders.length})`}
@@ -83,7 +83,7 @@ export function ParkedOrders({ currentCartCount, onResume, refreshTrigger }: Par
           {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </Button>
         {open && (
-          <div className="p-2 space-y-1 max-h-48 overflow-y-auto border-t">
+          <div className="p-2 space-y-1 max-h-48 overflow-y-auto border-t border-border/50">
             {orders.length === 0 && <p className="text-sm text-muted-foreground p-2">{t('pos.park.empty')}</p>}
             {orders.map(o => (
               <div key={o.id} className="flex items-center justify-between p-2 rounded hover:bg-muted/50 text-sm">

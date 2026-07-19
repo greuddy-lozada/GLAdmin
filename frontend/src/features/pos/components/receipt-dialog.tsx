@@ -51,7 +51,7 @@ export function ReceiptDialog({ open, onClose, code, items, total, totalUsd, cus
 
   const receiptContent = (
     <div id="pos-receipt" className="space-y-3 text-sm">
-      <div className="text-center pb-3 border-b border-dashed">
+      <div className="text-center pb-3 border-b border-border/50 border-dashed">
         <p className="text-lg font-bold">{company?.name ?? 'Cuadra'}</p>
         {company?.rif && <p className="text-xs text-muted-foreground">RIF: {company.rif}</p>}
         {company?.phone && <p className="text-xs text-muted-foreground">Tlf: {company.phone}</p>}
@@ -60,13 +60,13 @@ export function ReceiptDialog({ open, onClose, code, items, total, totalUsd, cus
       </div>
 
       {customerName && (
-        <div className="pb-2 border-b border-dashed">
+        <div className="pb-2 border-b border-border/50 border-dashed">
           <p className="font-medium">Cliente: {customerName}</p>
           {customerTaxId && <p className="text-xs text-muted-foreground">RIF/C.I.: {customerTaxId}</p>}
         </div>
       )}
 
-      <div className="pb-2 border-b border-dashed space-y-1">
+      <div className="pb-2 border-b border-border/50 border-dashed space-y-1">
         {items.map((item, idx) => (
           <div key={idx} className="flex justify-between text-xs">
             <span>{item.quantity}× {item.name}</span>
@@ -86,7 +86,7 @@ export function ReceiptDialog({ open, onClose, code, items, total, totalUsd, cus
             <span className="tabular-nums">Bs. {totalTax.toFixed(2)}</span>
           </div>
         )}
-        <div className="flex justify-between text-base font-bold pt-1 border-t">
+        <div className="flex justify-between text-base font-bold pt-1 border-t border-border/50">
           <span>TOTAL</span>
           <span className="tabular-nums">Bs. {total.toFixed(2)}</span>
         </div>
@@ -99,7 +99,7 @@ export function ReceiptDialog({ open, onClose, code, items, total, totalUsd, cus
       </div>
 
       {payments.length > 0 && (
-        <div className="text-xs text-muted-foreground pt-2 border-t border-dashed">
+        <div className="text-xs text-muted-foreground pt-2 border-t border-border/50 border-dashed">
           {payments.map((p, i) => (
             <p key={i} className="flex justify-between">
               <span>{t(`pos.payment.${METHOD_LABELS[p.method] as 'cash'}`)} ({p.currency})</span>
@@ -112,7 +112,7 @@ export function ReceiptDialog({ open, onClose, code, items, total, totalUsd, cus
         </div>
       )}
 
-      <p className="text-center text-xs text-muted-foreground pt-2 border-t border-dashed">
+      <p className="text-center text-xs text-muted-foreground pt-2 border-t border-border/50 border-dashed">
         {t('pos.receipt.thanks')}
       </p>
     </div>

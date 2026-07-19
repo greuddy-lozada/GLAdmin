@@ -150,7 +150,7 @@ export default function ShortcutsPage() {
                             {t('shortcuts.listening')}
                           </Button>
                         ) : (
-                          <kbd className="px-2 py-1 text-xs font-mono border rounded bg-muted">
+                          <kbd className="px-2 py-1 text-xs font-mono border border-border/50 rounded bg-muted">
                             {overrides[s.id] ? formatDisplay(currentKeys) : s.displayKeys}
                           </kbd>
                         )}
@@ -174,7 +174,7 @@ export default function ShortcutsPage() {
             </div>
           ))}
 
-          <div className="pt-4 border-t">
+          <div className="pt-4 border-t border-border/50">
             <Button variant="outline" size="sm" onClick={handleRestoreDefaults} className="gap-2">
               <RotateCcw className="h-4 w-4" />
               {t('shortcuts.restoreDefaults')}

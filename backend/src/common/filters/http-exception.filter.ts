@@ -63,7 +63,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
         }
       }
 
-      if (status === HttpStatus.UNAUTHORIZED || status === HttpStatus.FORBIDDEN) {
+      if (
+        status === HttpStatus.UNAUTHORIZED ||
+        status === HttpStatus.FORBIDDEN
+      ) {
         this.auditAccessDenied(request, status, code);
       }
 

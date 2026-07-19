@@ -78,7 +78,7 @@ export function PurchaseOrderList({
   }
 
   return (
-    <div className="flex flex-col h-full border-r">
+    <div className="flex flex-col h-full border-r border-border/50">
       <div className="p-4 pb-2 space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">{t('purchaseOrders.title')}</h2>
@@ -117,7 +117,7 @@ export function PurchaseOrderList({
             return (
               <div
                 key={order.id}
-                className={`rounded-lg border p-3 cursor-pointer transition-colors hover:border-primary/50 ${
+                className={`rounded-lg border border-border/50 p-3 cursor-pointer transition-colors hover:border-primary/50 ${
                   isSelected ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'bg-card'
                 }`}
                 onClick={() => onSelect(order)}

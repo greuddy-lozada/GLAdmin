@@ -254,7 +254,7 @@ export default function ProductsPage() {
             <Label>{t('products.field.name')}</Label>
             <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
           </div>
-          <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
+          <div className="border border-border/50 rounded-lg p-4 space-y-4 bg-muted/30">
             <h4 className="text-sm font-medium">{t('products.field.baseCost')}</h4>
             <div className="space-y-2">
               <Label>{t('products.field.baseCost')}</Label>
@@ -268,7 +268,7 @@ export default function ProductsPage() {
                 value={formData.margin}
                 onChange={(e) => handleMarginChange(e.target.value ? Number(e.target.value) : 0)} />
             </div>
-            <div className="flex items-center gap-2 pt-2 border-t">
+            <div className="flex items-center gap-2 pt-2 border-t border-border/50">
               <div className="flex-1 space-y-2">
                 <Label>{t('products.field.pvpUsd')}</Label>
                 <div className="flex items-center gap-2">
@@ -278,7 +278,7 @@ export default function ProductsPage() {
                     onChange={(e) => handleDollarPriceChange(e.target.value ? Number(e.target.value) : 0)}
                     className={pvpOverride ? 'border-amber-400' : ''} />
                   <button type="button" onClick={togglePvpOverride}
-                    className={`p-2 rounded-md border transition-colors ${pvpOverride ? 'bg-amber-100 border-amber-400 text-amber-700' : 'bg-muted text-muted-foreground'}`}
+                    className={`p-2 rounded-md border border-border/50 transition-colors ${pvpOverride ? 'bg-amber-100 border-amber-400 text-amber-700' : 'bg-muted text-muted-foreground'}`}
                     title={t('products.field.pvpOverride')}>
                     <Pencil className="h-4 w-4" />
                   </button>

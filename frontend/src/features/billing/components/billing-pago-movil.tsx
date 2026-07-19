@@ -88,7 +88,7 @@ export function BillingPagoMovil({ plan, open, onOpenChange }: BillingPagoMovilP
               {config.pagoMovil.idNumber && <p><span className="text-muted-foreground">ID:</span> {config.pagoMovil.idNumber}</p>}
             </div>
           )}
-          <div className="rounded-lg border p-3">
+          <div className="rounded-lg border border-border/50 p-3">
             <p className="text-lg font-bold">${amountUsd.toFixed(2)}</p>
           </div>
           <div className="space-y-2">

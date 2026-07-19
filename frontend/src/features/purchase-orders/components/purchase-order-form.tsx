@@ -128,7 +128,7 @@ export function PurchaseOrderForm({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="px-6 py-4 border-b flex items-center justify-between shrink-0">
+      <div className="px-6 py-4 border-b border-border/50 flex items-center justify-between shrink-0">
         <div>
           <h3 className="font-semibold">
             {isEditing ? tp('purchaseOrders.editCode', { code: selectedItem.code || `#${selectedItem.id.slice(0, 8)}` }) : t('purchaseOrders.new')}
@@ -212,7 +212,7 @@ export function PurchaseOrderForm({
         </div>
 
         {isWithholdingAgent && (
-          <div className="border rounded-lg p-3 space-y-3">
+          <div className="border border-border/50 rounded-lg p-3 space-y-3">
             <div className="flex items-center justify-between">
               <Label>{t('purchaseOrders.applyWithholding')}</Label>
               <Switch checked={formData.applyWithholding} onCheckedChange={(v) => setFormData({ ...formData, applyWithholding: v })} disabled={disabled} />
@@ -268,7 +268,7 @@ export function PurchaseOrderForm({
           ) : (
             <div className="space-y-2">
               {formData.details.map((d, i) => (
-                <div key={i} className="border rounded-lg p-3 space-y-2">
+                <div key={i} className="border border-border/50 rounded-lg p-3 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-medium text-muted-foreground">{tp('purchaseOrders.detailLabel', { index: String(i + 1) })}</span>
                     {!isReadonly && (
@@ -316,7 +316,7 @@ export function PurchaseOrderForm({
         </div>
 
         {formData.details.length > 0 && (
-          <div className="border rounded-lg p-3 space-y-1.5 bg-muted/20">
+          <div className="border border-border/50 rounded-lg p-3 space-y-1.5 bg-muted/20">
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>{t('purchaseOrders.baseAmount')}</span><span className="tabular-nums">Bs. {baseAmount.toFixed(2)}</span>
             </div>
@@ -328,7 +328,7 @@ export function PurchaseOrderForm({
                 <span>{t('purchaseOrders.withholdingAmount')}</span><span className="tabular-nums">-Bs. {withholdingAmount.toFixed(2)}</span>
               </div>
             )}
-            <div className="flex justify-between text-sm font-semibold border-t pt-1.5 mt-1">
+            <div className="flex justify-between text-sm font-semibold border-t border-border/50 pt-1.5 mt-1">
               <span>{hasWithholding ? t('purchaseOrders.totalToPay') : t('purchaseOrders.field.amount')}</span>
               <span className="tabular-nums">Bs. {(hasWithholding ? totalToPay : amount).toFixed(2)}</span>
             </div>
@@ -342,7 +342,7 @@ export function PurchaseOrderForm({
         )}
 
         {isEditing && selectedItem.details && selectedItem.details.length > 0 && (
-          <div className="border-t pt-4 mt-2">
+          <div className="border-t border-border/50 pt-4 mt-2">
             <button type="button" className="flex items-center gap-1 text-sm font-medium mb-2 hover:text-primary"
               onClick={() => setExpandedProducts({ ...expandedProducts, [selectedItem.id]: !expandedProducts[selectedItem.id] })}>
               {expandedProducts[selectedItem.id] ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
@@ -351,7 +351,7 @@ export function PurchaseOrderForm({
             {expandedProducts[selectedItem.id] && (
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b text-muted-foreground text-xs">
+                  <tr className="border-b border-border/50 text-muted-foreground text-xs">
                     <th className="text-left pb-1">{t('purchaseOrders.field.product')}</th>
                     <th className="text-right pb-1">{t('purchaseOrders.field.quantity')}</th>
                     <th className="text-right pb-1">{t('purchaseOrders.field.received')}</th>
@@ -364,7 +364,7 @@ export function PurchaseOrderForm({
                   {selectedItem.details.map((d) => {
                     const pending = Math.max(0, (d.quantity ?? 0) - (d.receivedQuantity ?? 0));
                     return (
-                      <tr key={d.id} className="border-b last:border-0">
+                      <tr key={d.id} className="border-b border-border/50 last:border-0">
                         <td className="py-1 text-xs">{d.product?.name ?? `#${d.idProduct}`}</td>
                         <td className="text-right py-1 text-xs">{d.quantity}</td>
                         <td className="text-right py-1 text-xs">

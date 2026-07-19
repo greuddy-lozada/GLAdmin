@@ -54,13 +54,13 @@ export function UserNav() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -4 }}
             transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-            className="absolute right-0 top-full mt-2 z-50 w-48 rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md"
+            className="absolute right-0 top-full mt-2 z-50 w-48 rounded-md border border-border/50 bg-popover p-1 text-popover-foreground shadow-md"
           >
             <div className="px-2 py-1.5">
               <p className="text-sm font-medium">{user?.firstName} {user?.lastName}</p>
               <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
             </div>
-            <div className="h-px bg-border my-1" />
+            <div className="h-px bg-border/50 my-1" />
             <button
               type="button"
               onClick={() => { setTheme(theme === 'dark' ? 'light' : 'dark'); setOpen(false); }}
@@ -77,7 +77,7 @@ export function UserNav() {
               <Languages className="h-4 w-4" />
               {locale === 'es' ? 'English' : 'Español'}
             </button>
-            <div className="h-px bg-border my-1" />
+            <div className="h-px bg-border/50 my-1" />
             <button
               type="button"
               onClick={handleLogout}

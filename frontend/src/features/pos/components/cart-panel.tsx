@@ -40,7 +40,7 @@ export function CartPanel({
 
   if (items.length === 0) {
     return (
-      <div className="border rounded-xl p-6 flex flex-col items-center justify-center text-muted-foreground h-full min-h-[300px]">
+      <div className="border border-border/50 rounded-xl p-6 flex flex-col items-center justify-center text-muted-foreground h-full min-h-[300px]">
         <ShoppingCart className="h-12 w-12 mb-4 opacity-40" />
         <p className="text-sm font-medium mb-4">{t('pos.cart.empty')}</p>
       </div>
@@ -48,8 +48,8 @@ export function CartPanel({
   }
 
   return (
-    <div className="border rounded-xl flex flex-col h-full">
-      <div className="p-3 border-b bg-muted/30">
+    <div className="border border-border/50 rounded-xl flex flex-col h-full">
+      <div className="p-3 border-b border-border/50 bg-muted/30">
         <h2 className="text-sm font-semibold flex items-center gap-2">
           <ShoppingCart className="h-4 w-4" />
           {t('pos.cart.title')}
@@ -61,7 +61,7 @@ export function CartPanel({
         <table className="w-full">
           <tbody>
             {items.map((item, idx) => (
-              <tr key={item.productId} className="border-b last:border-0 hover:bg-muted/30">
+              <tr key={item.productId} className="border-b border-border/50 last:border-0 hover:bg-muted/30">
                 <td className="pl-3 py-2 text-xs text-muted-foreground w-6">{idx + 1}</td>
                 <td className="py-2 pr-1">
                   <p className="text-sm font-medium leading-tight">{item.name}</p>
@@ -103,7 +103,7 @@ export function CartPanel({
         </table>
       </div>
 
-      <div className="border-t bg-muted/30 rounded-b-xl p-3 space-y-1.5">
+      <div className="border-t border-border/50 bg-muted/30 rounded-b-xl p-3 space-y-1.5">
         <div className="flex justify-between text-xs text-muted-foreground">
           <span>{t('pos.cart.subtotal')}</span>
           <span className="tabular-nums">Bs. {(total - totalTax).toFixed(2)}</span>
@@ -120,7 +120,7 @@ export function CartPanel({
             <span className="tabular-nums">-Bs. {withholdingAmount.toFixed(2)}</span>
           </div>
         )}
-        <div className="flex justify-between text-base font-bold pt-1.5 border-t">
+        <div className="flex justify-between text-base font-bold pt-1.5 border-t border-border/50">
           <span>{t('pos.cart.totalVes')}</span>
           <span className="tabular-nums text-primary">Bs. {(total + totalTax).toFixed(2)}</span>
         </div>
@@ -131,7 +131,7 @@ export function CartPanel({
           </div>
         )}
         {hasWithholding && (
-          <div className="flex justify-between text-sm font-semibold pt-1 border-t border-dashed">
+          <div className="flex justify-between text-sm font-semibold pt-1 border-t border-border/50 border-dashed">
             <span>{t('pos.withholding.netToCollect')}</span>
             <span className="tabular-nums text-primary">Bs. {netToCollect.toFixed(2)}</span>
           </div>

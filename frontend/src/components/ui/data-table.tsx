@@ -43,11 +43,6 @@ interface DataTableProps<T> {
   loading?: boolean;
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
-  total?: number;
-  page?: number;
-  pageSize?: number;
-  onPageChange?: (page: number) => void;
-  onPageSizeChange?: (pageSize: number) => void;
   emptyMessage?: string;
 }
 
@@ -76,7 +71,7 @@ function PaginationBar({
 }) {
   if (!onPageChange) return null;
   return (
-    <div className="flex items-center justify-between border-t px-3 py-3">
+    <div className="flex items-center justify-between border-t border-border/50 px-3 py-3">
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <span>{t('common.rowsPerPage')}</span>
         <Select
@@ -144,7 +139,7 @@ function MobileCardList<T extends { id: string | number }>({
         return (
           <div
             key={row.id}
-            className="rounded-lg border bg-card p-4 space-y-2"
+            className="rounded-lg border border-border/50 bg-card p-4 space-y-2"
           >
             <div className="text-sm font-semibold leading-snug">{title}</div>
             {rest.map((col) => {
@@ -171,7 +166,7 @@ function MobileCardList<T extends { id: string | number }>({
               );
             })}
             {(onEdit || onDelete) && (
-              <div className="flex justify-end gap-1 pt-2 border-t">
+              <div className="flex justify-end gap-1 pt-2 border-t border-border/50">
                 {onEdit && (
                   <Button
                     variant="ghost"
@@ -207,11 +202,6 @@ export function DataTable<T extends { id: string | number }>({
   loading,
   onEdit,
   onDelete,
-  total,
-  page = 0,
-  pageSize = 10,
-  onPageChange,
-  onPageSizeChange,
   emptyMessage,
 }: DataTableProps<T>) {
   const { t, tp } = useI18n();
@@ -260,18 +250,18 @@ export function DataTable<T extends { id: string | number }>({
     });
   }
 
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: rows,
     columns: tableColumns,
-    state: { sorting },
+    state: { sorting, pagination },
     onSortingChange: setSorting,
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    manualPagination: true,
-    pageCount: Math.max(1, Math.ceil((total || 0) / pageSize)),
-    initialState: { pagination: { pageIndex: page, pageSize } },
   });
 
   if (loading) {
@@ -309,7 +299,7 @@ export function DataTable<T extends { id: string | number }>({
         </div>
         <div className="md:hidden space-y-3 p-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-lg border p-4 space-y-2">
+            <div key={i} className="rounded-lg border border-border/50 p-4 space-y-2">
               <Skeleton className="h-5 w-2/3" />
               <Skeleton className="h-4 w-full" />
               <Skeleton className="h-4 w-4/5" />
@@ -324,12 +314,10 @@ export function DataTable<T extends { id: string | number }>({
     return <EmptyState title={emptyMessage || t('common.empty')} />;
   }
 
-  const totalPages = Math.max(1, Math.ceil((total || 0) / pageSize));
-  const showPagination = total !== undefined && !!onPageChange;
-
   return (
-    <div className="rounded-md bg-white dark:bg-card">
-      <div className="hidden md:block overflow-x-auto">
+    <div className="rounded-md bg-white dark:bg-card flex flex-col overflow-hidden" style={{ height: 'calc(100dvh - 14rem)' }}>
+      <div className="flex-1 min-h-0 overflow-auto">
+        <div className="hidden md:block">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -388,18 +376,17 @@ export function DataTable<T extends { id: string | number }>({
         onDelete={onDelete}
         t={t}
       />
+      </div>
 
-      {showPagination && (
-        <PaginationBar
-          page={page}
-          pageSize={pageSize}
-          totalPages={totalPages}
-          onPageChange={onPageChange}
-          onPageSizeChange={onPageSizeChange}
-          t={t}
-          tp={tp}
-        />
-      )}
+      <PaginationBar
+        page={table.getState().pagination.pageIndex}
+        pageSize={table.getState().pagination.pageSize}
+        totalPages={table.getPageCount()}
+        onPageChange={(p) => table.setPageIndex(p)}
+        onPageSizeChange={(s) => table.setPageSize(s)}
+        t={t}
+        tp={tp}
+      />
     </div>
   );
 }

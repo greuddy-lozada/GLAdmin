@@ -285,7 +285,7 @@ export default function PurchaseOrdersPage() {
           </DialogHeader>
           <div className="space-y-3 max-h-80 overflow-y-auto">
             {receiveTarget?.details?.filter((d) => (d.quantity ?? 0) > (d.receivedQuantity ?? 0)).map((d) => (
-              <div key={d.id} className="flex items-center gap-3 border rounded p-3">
+              <div key={d.id} className="flex items-center gap-3 border border-border/50 rounded p-3">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{d.product?.name ?? `#${d.idProduct}`}</p>
                   <p className="text-xs text-muted-foreground">{t('purchaseOrders.ordered')}: {d.quantity} | {t('purchaseOrders.receivedLabel')}: {d.receivedQuantity ?? 0}</p>

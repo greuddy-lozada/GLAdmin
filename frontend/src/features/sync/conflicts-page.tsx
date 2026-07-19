@@ -46,7 +46,7 @@ export default function ConflictsPage() {
       ) : (
         <div className="space-y-4">
           {conflicts.map(conflict => (
-            <div key={conflict.id} className="p-4 border rounded-lg space-y-2">
+            <div key={conflict.id} className="p-4 border border-border/50 rounded-lg space-y-2">
               <div className="font-medium">{conflict.description}</div>
               <div className="text-sm text-muted-foreground">
                 {t('sync.table')} {conflict.table} | {t('sync.status')} {conflict.status}

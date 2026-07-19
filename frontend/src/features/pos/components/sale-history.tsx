@@ -98,13 +98,13 @@ export function SaleHistory({ onSelectSale }: SaleHistoryProps) {
   }, [paged]);
 
   return (
-    <div className="border rounded-lg">
+    <div className="border border-border/50 rounded-lg">
       <Button variant="ghost" className="w-full justify-between" onClick={() => setOpen(!open)}>
         <span className="flex items-center gap-2"><Receipt className="h-4 w-4" />{t('pos.sales.title')}</span>
         {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
       </Button>
       {open && (
-        <div className="p-2 space-y-2 border-t">
+        <div className="p-2 space-y-2 border-t border-border/50">
           <div className="flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />

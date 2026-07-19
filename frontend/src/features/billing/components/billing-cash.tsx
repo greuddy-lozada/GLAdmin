@@ -38,7 +38,7 @@ export function BillingCash({ plan, open, onOpenChange }: BillingCashProps) {
       onClose={() => onOpenChange(false)}
       panel={
         <div className="space-y-6">
-          <div className="rounded-lg border p-4 text-center">
+          <div className="rounded-lg border border-border/50 p-4 text-center">
             <p className="text-sm text-muted-foreground mb-1">{t('subscription.payment.amountToPay')}</p>
             <p className="text-3xl font-bold">${amountUsd.toFixed(2)}</p>
           </div>

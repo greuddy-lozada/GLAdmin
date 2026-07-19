@@ -46,7 +46,7 @@ export const CustomerBar = forwardRef<HTMLInputElement, CustomerBarProps>(
     }
 
     return (
-      <div className="flex items-center gap-2 px-4 py-2.5 border rounded-lg bg-card">
+      <div className="flex items-center gap-2 px-4 py-2.5 border border-border/50 rounded-lg bg-card">
         <Search className="h-5 w-5 text-muted-foreground shrink-0" />
         <div className="flex-1">
           <CustomerSearch

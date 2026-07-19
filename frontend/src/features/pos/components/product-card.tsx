@@ -28,7 +28,7 @@ export function ProductCard({ product, onAdd }: ProductCardProps) {
   return (
     <button
       onClick={handleClick}
-      className={`card-3d relative w-full text-left border rounded-lg p-3 bg-card hover:bg-accent/10 hover:border-primary/40 transition-all duration-150 cursor-pointer group active:scale-[0.97] ${added ? 'border-primary bg-primary/5' : ''}`}
+      className={`card-3d relative w-full text-left border border-border/50 rounded-lg p-3 bg-card hover:bg-accent/10 hover:border-primary/40 transition-all duration-150 cursor-pointer group active:scale-[0.97] ${added ? 'border-primary bg-primary/5' : ''}`}
     >
       {added && (
         <span className="absolute top-2 right-2 text-primary">

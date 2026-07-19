@@ -114,7 +114,7 @@ export const ProductSearch = forwardRef<HTMLInputElement, ProductSearchProps>(
         />
         {loading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />}
         {open && results.length > 0 && (
-          <div ref={listRef} className="absolute z-50 top-full mt-1 w-full bg-card border rounded-md shadow-lg max-h-64 overflow-y-auto">
+          <div ref={listRef} className="absolute z-50 top-full mt-1 w-full bg-card border border-border/50 rounded-md shadow-lg max-h-64 overflow-y-auto">
             {results.map((p, idx) => (
               <button key={p.id} type="button" className={`w-full text-left px-3 py-2 text-sm flex items-center gap-3 ${highlightedIndex === idx ? 'bg-accent' : 'hover:bg-accent'}`} onMouseDown={() => handleSelect(p)}>
                 <span className="flex-1 font-medium">
