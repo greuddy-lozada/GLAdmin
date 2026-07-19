@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { SubscriptionLifecycleService } from '../subscription-lifecycle.service';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
+import { CacheService } from '../../../shared/cache/cache.service';
 import { SUBSCRIPTION_STATUS } from '../constants';
 
 describe('SubscriptionLifecycleService', () => {
@@ -24,11 +25,19 @@ describe('SubscriptionLifecycleService', () => {
     },
   };
 
+  const mockCache = {
+    get: jest.fn().mockResolvedValue(null),
+    set: jest.fn().mockResolvedValue(undefined),
+    del: jest.fn().mockResolvedValue(undefined),
+    delByPrefix: jest.fn().mockResolvedValue(undefined),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SubscriptionLifecycleService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: CacheService, useValue: mockCache },
       ],
     }).compile();
 

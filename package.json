@@ -13,6 +13,10 @@
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
+    "test:load": "k6 run load/smoke.k6.js",
+    "test:load:products": "k6 run load/products-read.k6.js",
+    "test:load:pos": "k6 run load/pos-sale.k6.js",
+    "test:load:sync": "k6 run load/sync-pull.k6.js",
     "clean": "pnpm -r clean",
     "prepare": "husky"
   },

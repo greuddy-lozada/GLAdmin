@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
+import { CacheService } from '../../shared/cache/cache.service';
 import {
   SUBSCRIPTION_STATUS,
   GRACE_PERIOD_DAYS,
@@ -11,7 +12,10 @@ import {
 export class SubscriptionLifecycleService {
   private readonly logger = new Logger(SubscriptionLifecycleService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cache: CacheService,
+  ) {}
 
   async evaluateSubscription(organizationId: string): Promise<void> {
     const org = await this.prisma.organization.findUnique({
@@ -109,6 +113,7 @@ export class SubscriptionLifecycleService {
         subscriptionExpiresAt: null,
       },
     });
+    await this.cache.del(`plan:${organizationId}`);
     this.logger.log(`Organization ${organizationId} downgraded to Free plan`);
   }
 

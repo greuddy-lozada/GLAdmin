@@ -5,6 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
+import { CacheService } from '../../shared/cache/cache.service';
 import { ContextService } from '../tenant/context.service';
 import {
   CreateSubscriptionPaymentDto,
@@ -21,6 +22,7 @@ export class SubscriptionPaymentService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly context: ContextService,
+    private readonly cache: CacheService,
   ) {}
 
   private getOrgId(): string {
@@ -160,6 +162,10 @@ export class SubscriptionPaymentService {
 
       return updated;
     });
+
+    if (dto.status === 'approved') {
+      await this.cache.del(`plan:${payment.organizationId}`);
+    }
 
     return result;
   }

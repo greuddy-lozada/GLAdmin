@@ -4,6 +4,7 @@ import { ValidationPipe, Logger } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
+import { SanitizePipe } from './common/pipes/sanitize.pipe';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -36,6 +37,20 @@ async function bootstrap() {
     }),
   );
 
+  app.use(
+    (
+      _req: import('express').Request,
+      res: import('express').Response,
+      next: import('express').NextFunction,
+    ) => {
+      res.setHeader(
+        'Permissions-Policy',
+        'camera=(), microphone=(), geolocation=()',
+      );
+      next();
+    },
+  );
+
   app.enableCors({
     origin: process.env.FRONTEND_URL ?? 'http://localhost:3000',
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'HEAD'],
@@ -45,6 +60,7 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   app.useGlobalPipes(
+    new SanitizePipe(),
     new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,

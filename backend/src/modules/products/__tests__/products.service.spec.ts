@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProductsService } from '../products.service';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
+import { CacheService } from '../../../shared/cache/cache.service';
 import { ContextService } from '../../tenant/context.service';
 import {
   createTestProductDto,
@@ -12,6 +13,12 @@ describe('ProductsService', () => {
 
   const mockOrgId = 'ffffffff-ffff-ffff-ffff-ffffffffffff';
   const mockContext = { getCurrent: () => ({ organizationId: mockOrgId }) };
+  const mockCache = {
+    get: jest.fn().mockResolvedValue(null),
+    set: jest.fn().mockResolvedValue(undefined),
+    del: jest.fn().mockResolvedValue(undefined),
+    delByPrefix: jest.fn().mockResolvedValue(undefined),
+  };
 
   const mockPrisma = {
     product: {
@@ -34,6 +41,7 @@ describe('ProductsService', () => {
         ProductsService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: ContextService, useValue: mockContext },
+        { provide: CacheService, useValue: mockCache },
       ],
     }).compile();
 

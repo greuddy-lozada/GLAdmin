@@ -5,9 +5,11 @@ import {
   HttpException,
   HttpStatus,
   Logger,
+  Injectable,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import { I18nService } from '../../shared/i18n/i18n.service';
+import { AuditLogService } from '../../modules/audit-log/audit-log.service';
 
 export interface ApiError {
   code: string;
@@ -15,17 +17,25 @@ export interface ApiError {
   details?: unknown;
 }
 
+@Injectable()
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(HttpExceptionFilter.name);
 
-  constructor(private readonly i18n: I18nService) {}
+  constructor(
+    private readonly i18n: I18nService,
+    private readonly auditLog: AuditLogService,
+  ) {}
 
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
-    const request: { headers: Record<string, string | string[] | undefined> } =
-      ctx.getRequest();
+    const request = ctx.getRequest<
+      Request & {
+        user?: { id?: string; orgId?: string };
+        headers: Record<string, string | string[] | undefined>;
+      }
+    >();
     const lang = this.resolveLang(request);
 
     if (exception instanceof HttpException) {
@@ -53,6 +63,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
         }
       }
 
+      if (status === HttpStatus.UNAUTHORIZED || status === HttpStatus.FORBIDDEN) {
+        this.auditAccessDenied(request, status, code);
+      }
+
       const message = this.i18n.translate(messageKey, lang);
 
       response.status(status).json({
@@ -75,6 +89,51 @@ export class HttpExceptionFilter implements ExceptionFilter {
     response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
       error: { code: 'INTERNAL_ERROR', message },
     });
+  }
+
+  private auditAccessDenied(
+    request: Request & {
+      user?: { id?: string; orgId?: string };
+      headers: Record<string, string | string[] | undefined>;
+    },
+    status: number,
+    code: string,
+  ) {
+    const ip =
+      (request.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
+      request.ip ||
+      null;
+    const path = request.originalUrl || request.url;
+    const method = request.method;
+    const userId = request.user?.id ?? null;
+    const organizationId = request.user?.orgId;
+
+    if (!organizationId) {
+      this.logger.warn('ACCESS_DENIED', {
+        status,
+        code,
+        method,
+        path,
+        userId,
+        ip,
+      });
+      return;
+    }
+
+    void this.auditLog
+      .log({
+        organizationId,
+        userId,
+        action: 'ACCESS_DENIED',
+        entity: 'http',
+        metadata: { status, code, method, path },
+        ipAddress: ip,
+      })
+      .catch((err: unknown) => {
+        this.logger.warn(
+          `Failed to audit ACCESS_DENIED: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      });
   }
 
   private resolveLang(request: {

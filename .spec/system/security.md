@@ -274,14 +274,21 @@ app.use(helmet({
 
 ### Headers obligatorios en producción
 
-| Header | Valor | Propósito |
-|---|---|---|
-| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains; preload` | Forzar HTTPS |
-| `X-Content-Type-Options` | `nosniff` | Prevenir MIME sniffing |
-| `X-Frame-Options` | `DENY` | Prevenir clickjacking |
-| `X-XSS-Protection` | `0` | Obsoleto pero incluido por compatibilidad |
-| `Referrer-Policy` | `strict-origin-when-cross-origin` | Controlar leakage de URL |
-| `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` | Deshabilitar APIs innecesarias |
+| Header | Valor | Propósito | Estado |
+|---|---|---|---|
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains; preload` | Forzar HTTPS | ✅ helmet |
+| `X-Content-Type-Options` | `nosniff` | Prevenir MIME sniffing | ✅ helmet |
+| `X-Frame-Options` | `DENY` | Prevenir clickjacking | ✅ helmet |
+| `X-XSS-Protection` | `0` | Obsoleto pero incluido por compatibilidad | ✅ helmet |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | Controlar leakage de URL | ✅ helmet |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` | Deshabilitar APIs innecesarias | ✅ middleware manual (helmet 8 no lo incluye) |
+
+### Sanitización de inputs (implementado)
+
+- Pipe global `SanitizePipe` (antes de `ValidationPipe`): `trim()` + elimina null bytes (`\0`) en body y query.
+- **Nunca toca** campos `password`, `token`, `secret`, `currentPassword`, `newPassword`, `refreshToken`, `accessToken`.
+- **No hace escaping HTML** — corrompe datos legítimos (razones sociales con `&`). XSS se previene con output encoding de React + CSP.
+- Accesos denegados (401/403) se registran en `AuditLog` (fire-and-forget) cuando hay `orgId` en el token; si no, solo warning estructurado en logs.
 
 ---
 

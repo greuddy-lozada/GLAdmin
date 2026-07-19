@@ -51,11 +51,26 @@ podman run -d --name cuadra-postgres \
   -p 5432:5432 \
   postgres:16-alpine
 
+# Redis (opcional en dev — sin REDIS_URL el backend usa cache in-memory)
+podman run -d --name cuadra-redis -p 6379:6379 redis:7-alpine
+
 # Ejecutar schema (primer inicio)
 pnpm --filter backend exec prisma db push
 
 # Sembrar datos de prueba
 pnpm --filter backend exec tsx prisma/seed.ts
+```
+
+### 2.3.1 Pruebas de carga (K6)
+
+Requiere el binario K6 instalado (`brew install k6` / `sudo dnf install k6`). Backend debe estar corriendo.
+
+```bash
+pnpm test:load              # smoke (1 VU, 1 min)
+pnpm test:load:products     # ramp 50 VUs — GET products
+pnpm test:load:sync         # 30 VUs — sync pull
+# POS crea ventas reales — solo staging:
+BASE_URL=https://staging.../api pnpm test:load:pos
 ```
 
 ### 2.4 Iniciar desarrollo

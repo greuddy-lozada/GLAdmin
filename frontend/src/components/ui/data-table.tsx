@@ -8,6 +8,7 @@ import {
   getPaginationRowModel,
   SortingState,
   flexRender,
+  Row,
 } from '@tanstack/react-table';
 import {
   Table,
@@ -32,6 +33,7 @@ export interface Column<T> {
   sortable?: boolean;
   width?: number;
   isNumeric?: boolean;
+  /** @deprecated Prefer mobile cards — all columns render on mobile as label/value */
   responsive?: 'always' | 'desktop';
 }
 
@@ -53,6 +55,150 @@ function SortIcon({ direction }: { direction: 'asc' | 'desc' | false }) {
   if (direction === 'asc') return <ArrowUp className="h-3 w-3" />;
   if (direction === 'desc') return <ArrowDown className="h-3 w-3" />;
   return <ArrowUpDown className="h-3 w-3 opacity-30" />;
+}
+
+function PaginationBar({
+  page,
+  pageSize,
+  totalPages,
+  onPageChange,
+  onPageSizeChange,
+  t,
+  tp,
+}: {
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
+  t: (key: string) => string;
+  tp: (key: string, params: Record<string, string>) => string;
+}) {
+  if (!onPageChange) return null;
+  return (
+    <div className="flex items-center justify-between border-t px-3 py-3">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <span>{t('common.rowsPerPage')}</span>
+        <Select
+          value={String(pageSize)}
+          onValueChange={(v) => onPageSizeChange?.(parseInt(v, 10))}
+        >
+          <SelectTrigger className="h-9 w-[72px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {[5, 10, 20, 50].map((size) => (
+              <SelectItem key={size} value={String(size)}>{String(size)}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex items-center gap-1">
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={page === 0}
+          onClick={() => onPageChange(page - 1)}
+        >
+          {t('common.previous')}
+        </Button>
+        <span className="px-2 text-sm text-muted-foreground">
+          {tp('common.pageOf', { current: String(page + 1), total: String(totalPages) })}
+        </span>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={page >= totalPages - 1}
+          onClick={() => onPageChange(page + 1)}
+        >
+          {t('common.next')}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function MobileCardList<T extends { id: string | number }>({
+  rows,
+  columns,
+  onEdit,
+  onDelete,
+  t,
+}: {
+  rows: Row<T>[];
+  columns: Column<T>[];
+  onEdit?: (row: T) => void;
+  onDelete?: (row: T) => void;
+  t: (key: string) => string;
+}) {
+  return (
+    <div className="md:hidden space-y-3">
+      {rows.map((row) => {
+        const original = row.original;
+        const titleCol = columns[0];
+        const rest = columns.slice(1);
+        const title = titleCol?.render
+          ? titleCol.render(original)
+          : String(original[titleCol?.field as keyof T] ?? '');
+
+        return (
+          <div
+            key={row.id}
+            className="rounded-lg border bg-card p-4 space-y-2"
+          >
+            <div className="text-sm font-semibold leading-snug">{title}</div>
+            {rest.map((col) => {
+              const value = col.render
+                ? col.render(original)
+                : String(original[col.field as keyof T] ?? '');
+              return (
+                <div
+                  key={String(col.field)}
+                  className="flex items-baseline justify-between gap-3 text-sm"
+                >
+                  <span className="text-xs text-muted-foreground shrink-0">
+                    {col.headerName}
+                  </span>
+                  <span
+                    className={cn(
+                      'text-right min-w-0',
+                      col.isNumeric && 'tabular-nums font-medium',
+                    )}
+                  >
+                    {value}
+                  </span>
+                </div>
+              );
+            })}
+            {(onEdit || onDelete) && (
+              <div className="flex justify-end gap-1 pt-2 border-t">
+                {onEdit && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onEdit(original)}
+                    aria-label={t('common.edit')}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                )}
+                {onDelete && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onDelete(original)}
+                    aria-label={t('common.delete')}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 export function DataTable<T extends { id: string | number }>({
@@ -130,35 +276,46 @@ export function DataTable<T extends { id: string | number }>({
 
   if (loading) {
     return (
-      <div className="rounded-md bg-white dark:bg-card overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {columns.map((col, i) => (
-                <TableHead key={String(col.field ?? col.headerName ?? i)} style={{ width: col.width }} className={col.responsive === 'desktop' ? 'hidden md:table-cell' : ''}>
-                  {col.headerName}
-                </TableHead>
-              ))}
-              {(onEdit || onDelete) && <TableHead className="text-right">{t('common.actions')}</TableHead>}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Array.from({ length: 5 }).map((_, i) => (
-              <TableRow key={i}>
+      <div className="rounded-md bg-white dark:bg-card">
+        <div className="hidden md:block overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
                 {columns.map((col, i) => (
-                  <TableCell key={String(col.field ?? col.headerName ?? i)} className={col.responsive === 'desktop' ? 'hidden md:table-cell' : ''}>
-                    <Skeleton className="h-5 w-full" />
-                  </TableCell>
+                  <TableHead key={String(col.field ?? col.headerName ?? i)} style={{ width: col.width }}>
+                    {col.headerName}
+                  </TableHead>
                 ))}
-                {(onEdit || onDelete) && (
-                  <TableCell>
-                    <Skeleton className="h-5 w-12 ml-auto" />
-                  </TableCell>
-                )}
+                {(onEdit || onDelete) && <TableHead className="text-right">{t('common.actions')}</TableHead>}
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                  {columns.map((col, j) => (
+                    <TableCell key={String(col.field ?? col.headerName ?? j)}>
+                      <Skeleton className="h-5 w-full" />
+                    </TableCell>
+                  ))}
+                  {(onEdit || onDelete) && (
+                    <TableCell>
+                      <Skeleton className="h-5 w-12 ml-auto" />
+                    </TableCell>
+                  )}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+        <div className="md:hidden space-y-3 p-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="rounded-lg border p-4 space-y-2">
+              <Skeleton className="h-5 w-2/3" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-4/5" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -168,98 +325,80 @@ export function DataTable<T extends { id: string | number }>({
   }
 
   const totalPages = Math.max(1, Math.ceil((total || 0) / pageSize));
+  const showPagination = total !== undefined && !!onPageChange;
 
   return (
-    <div className="rounded-md bg-white dark:bg-card overflow-x-auto">
-      <Table>
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => {
-                const meta = (header.column.columnDef.meta as { isNumeric?: boolean; responsive?: string } | undefined) || {};
-                return (
-                <TableHead
-                  key={header.id}
-                  style={{ width: header.getSize() }}
-                  className={
-                    cn(
-                      header.column.getCanSort()
-                        ? 'cursor-pointer select-none'
-                        : '',
-                      meta?.responsive === 'desktop' ? 'hidden md:table-cell' : '',
-                    )
-                  }
-                  onClick={header.column.getToggleSortingHandler()}
-                >
-                  <div className="flex items-center gap-1">
-                    {flexRender(header.column.columnDef.header, header.getContext())}
-                    {header.column.getCanSort() && (
-                      <SortIcon direction={header.column.getIsSorted()} />
-                    )}
-                  </div>
-                </TableHead>
-                );
-              })}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody>
-          {table.getRowModel().rows.map((row) => (
-            <TableRow key={row.id}>
-              {row.getVisibleCells().map((cell) => {
-                const meta = (cell.column.columnDef.meta as { isNumeric?: boolean; responsive?: string } | undefined);
-                const isNumeric = meta?.isNumeric;
-                const responsiveClass = meta?.responsive === 'desktop' ? 'hidden md:table-cell' : '';
-                return (
-                  <TableCell key={cell.id} className={cn(isNumeric ? 'text-right tabular-nums' : '', responsiveClass)}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                );
-              })}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      {total !== undefined && onPageChange && (
-        <div className="flex items-center justify-between border-t px-3 py-3">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>{t('common.rowsPerPage')}</span>
-            <Select
-              value={String(pageSize)}
-              onValueChange={(v) => onPageSizeChange?.(parseInt(v, 10))}
-            >
-              <SelectTrigger className="h-9 w-[72px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {[5, 10, 20, 50].map((size) => (
-                  <SelectItem key={size} value={String(size)}>{String(size)}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page === 0}
-              onClick={() => onPageChange(page - 1)}
-            >
-              {t('common.previous')}
-            </Button>
-            <span className="px-2 text-sm text-muted-foreground">
-              {tp('common.pageOf', { current: String(page + 1), total: String(totalPages) })}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page >= totalPages - 1}
-              onClick={() => onPageChange(page + 1)}
-            >
-              {t('common.next')}
-            </Button>
-          </div>
-        </div>
+    <div className="rounded-md bg-white dark:bg-card">
+      <div className="hidden md:block overflow-x-auto">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  const meta = (header.column.columnDef.meta as { isNumeric?: boolean; responsive?: string } | undefined) || {};
+                  return (
+                  <TableHead
+                    key={header.id}
+                    style={{ width: header.getSize() }}
+                    className={
+                      cn(
+                        header.column.getCanSort()
+                          ? 'cursor-pointer select-none'
+                          : '',
+                        meta?.responsive === 'desktop' ? 'hidden lg:table-cell' : '',
+                      )
+                    }
+                    onClick={header.column.getToggleSortingHandler()}
+                  >
+                    <div className="flex items-center gap-1">
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                      {header.column.getCanSort() && (
+                        <SortIcon direction={header.column.getIsSorted()} />
+                      )}
+                    </div>
+                  </TableHead>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows.map((row) => (
+              <TableRow key={row.id}>
+                {row.getVisibleCells().map((cell) => {
+                  const meta = (cell.column.columnDef.meta as { isNumeric?: boolean; responsive?: string } | undefined);
+                  const isNumeric = meta?.isNumeric;
+                  const responsiveClass = meta?.responsive === 'desktop' ? 'hidden lg:table-cell' : '';
+                  return (
+                    <TableCell key={cell.id} className={cn(isNumeric ? 'text-right tabular-nums' : '', responsiveClass)}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      <MobileCardList
+        rows={table.getRowModel().rows}
+        columns={columns}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        t={t}
+      />
+
+      {showPagination && (
+        <PaginationBar
+          page={page}
+          pageSize={pageSize}
+          totalPages={totalPages}
+          onPageChange={onPageChange}
+          onPageSizeChange={onPageSizeChange}
+          t={t}
+          tp={tp}
+        />
       )}
     </div>
   );

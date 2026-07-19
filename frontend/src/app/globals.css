@@ -201,6 +201,25 @@ a {
   text-decoration: none;
 }
 
+/* CSS-only 3D tilt — login, KPI cards, POS product cards */
+.card-3d {
+  transition: transform 200ms ease-out, box-shadow 200ms ease-out;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+.card-3d:hover {
+  transform: perspective(800px) rotateX(4deg) rotateY(-4deg) translateY(-4px);
+  box-shadow: 0 12px 28px -8px rgb(0 0 0 / 0.15);
+}
+.card-3d:hover .tilt-layer {
+  transform: translateZ(24px);
+}
+.tilt-layer {
+  display: block;
+  transition: transform 200ms ease-out;
+  transform: translateZ(0);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -208,6 +227,12 @@ a {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+  .card-3d,
+  .card-3d:hover,
+  .tilt-layer {
+    transform: none !important;
+    box-shadow: none !important;
   }
 }
 

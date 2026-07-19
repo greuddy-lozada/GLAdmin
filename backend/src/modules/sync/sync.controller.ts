@@ -10,6 +10,7 @@ import {
   Head,
   HttpCode,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { SyncService } from './sync.service';
 import { PushRequestDto } from './dto/push-mutation.dto';
 import { ResolveConflictDto } from './dto/resolve-conflict.dto';
@@ -20,6 +21,8 @@ import {
 
 @Controller('sync')
 @MinLevel(ROLE_LEVEL.employee)
+// Offline-first: pull/push can burst on reconnect; higher than default 100/min
+@Throttle({ default: { limit: 120, ttl: 60000 } })
 export class SyncController {
   constructor(private readonly syncService: SyncService) {}
 

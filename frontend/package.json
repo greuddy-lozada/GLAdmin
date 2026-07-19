@@ -29,6 +29,7 @@
     "serwist": "^9.5.11",
     "sileo": "^0.1.5",
     "tailwind-merge": "^3.6.0",
+    "zod": "^4.4.3",
     "zustand": "^5.0.14"
   },
   "devDependencies": {

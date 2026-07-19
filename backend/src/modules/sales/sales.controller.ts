@@ -9,6 +9,7 @@ import {
   Query,
   ParseUUIDPipe,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { SalesService } from './sales.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
 import { UpdateSaleDto } from './dto/update-sale.dto';
@@ -26,6 +27,7 @@ export class SalesController {
   constructor(private readonly salesService: SalesService) {}
 
   @Post()
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async create(@Body() dto: CreateSaleDto) {
     return this.salesService.create(dto);
   }
@@ -41,6 +43,7 @@ export class SalesController {
   }
 
   @Patch(':id')
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateSaleDto,
@@ -49,6 +52,7 @@ export class SalesController {
   }
 
   @Delete(':id')
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.salesService.remove(id);
   }

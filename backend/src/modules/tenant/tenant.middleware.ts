@@ -3,6 +3,16 @@ import { JwtService } from '@nestjs/jwt';
 import { Request, Response, NextFunction } from 'express';
 import { ContextService, TenantContext } from './context.service';
 import { PrismaService } from '../../shared/prisma/prisma.service';
+import { CacheService } from '../../shared/cache/cache.service';
+
+const PLAN_CACHE_TTL = 600;
+
+interface CachedOrgPlan {
+  organizationId: string;
+  organizationSlug: string;
+  planName?: string;
+  features: string[];
+}
 
 @Injectable()
 export class TenantMiddleware implements NestMiddleware {
@@ -10,6 +20,7 @@ export class TenantMiddleware implements NestMiddleware {
     private readonly contextService: ContextService,
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly cache: CacheService,
   ) {}
 
   async use(req: Request, res: Response, next: NextFunction) {
@@ -21,30 +32,45 @@ export class TenantMiddleware implements NestMiddleware {
       return;
     }
 
-    const org = await this.prisma.organization.findUnique({
-      where: { id: orgId, isActive: true },
-      include: { plan: true },
-    });
+    const cacheKey = `plan:${orgId}`;
+    let cached = await this.cache.get<CachedOrgPlan>(cacheKey);
 
-    if (!org) {
-      await this.contextService.run({} as TenantContext, async () => {
-        next();
+    if (!cached) {
+      const org = await this.prisma.organization.findUnique({
+        where: { id: orgId, isActive: true },
+        include: { plan: true },
       });
-      return;
-    }
 
-    let features: string[] = [];
-    try {
-      features = org.plan ? JSON.parse(org.plan.features) : [];
-    } catch {
-      features = [];
+      if (!org) {
+        await this.contextService.run({} as TenantContext, async () => {
+          next();
+        });
+        return;
+      }
+
+      let features: string[] = [];
+      try {
+        features = org.plan ? JSON.parse(org.plan.features) : [];
+      } catch {
+        features = [];
+      }
+
+      cached = {
+        organizationId: org.id,
+        organizationSlug: org.slug,
+        planName: org.plan?.name,
+        features,
+      };
+      await this.cache.set(cacheKey, cached, PLAN_CACHE_TTL);
     }
 
     const ctx: TenantContext = {
-      organizationId: org.id,
-      organizationSlug: org.slug,
-      plan: org.plan ? { name: org.plan.name, features } : undefined,
-      planFeatures: features,
+      organizationId: cached.organizationId,
+      organizationSlug: cached.organizationSlug,
+      plan: cached.planName
+        ? { name: cached.planName, features: cached.features }
+        : undefined,
+      planFeatures: cached.features,
     };
 
     await this.contextService.run(ctx, async () => {

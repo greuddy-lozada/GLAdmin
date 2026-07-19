@@ -139,9 +139,9 @@ export default function ProductsPage() {
       dollarPrice: product.dollarPrice ?? 0,
       baseCost: product.baseCost ?? 0,
       margin: product.margin ?? 20,
-      idTax: product.idTax,
-      observation: product.observation,
-      image: product.image,
+      idTax: product.idTax ?? undefined,
+      observation: product.observation ?? undefined,
+      image: product.image ?? undefined,
       available: product.available,
     });
     setFormOpen(true);

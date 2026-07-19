@@ -4,16 +4,20 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
+import { CacheService } from '../../shared/cache/cache.service';
 import { ContextService } from '../../modules/tenant/context.service';
 import { CreateExchangeRateDto } from './dto/create-exchange-rate.dto';
 import { UpdateExchangeRateDto } from './dto/update-exchange-rate.dto';
 import { Prisma } from '@prisma/client';
+
+const RATE_DAY_TTL = 300;
 
 @Injectable()
 export class ExchangeRatesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly contextService: ContextService,
+    private readonly cache: CacheService,
   ) {}
 
   private getOrgId(): string {
@@ -21,6 +25,14 @@ export class ExchangeRatesService {
     const orgId = ctx?.organizationId;
     if (!orgId) throw new BadRequestException('Organization context required');
     return orgId;
+  }
+
+  private rateDayKey(orgId: string) {
+    return `rate:day:${orgId}`;
+  }
+
+  private async invalidateRateDay(orgId: string) {
+    await this.cache.del(this.rateDayKey(orgId));
   }
 
   async syncFromApi() {
@@ -66,6 +78,7 @@ export class ExchangeRatesService {
       },
     });
 
+    await this.invalidateRateDay(orgId);
     return { data: day, message: 'EXCHANGE_RATE.SYNCED' };
   }
 
@@ -86,11 +99,19 @@ export class ExchangeRatesService {
 
   async findLatest() {
     const orgId = this.getOrgId();
+    const cacheKey = this.rateDayKey(orgId);
+    const cached = await this.cache.get<{ data: unknown; message: null }>(
+      cacheKey,
+    );
+    if (cached) return cached;
+
     const day = await this.prisma.exchangeRateDay.findFirst({
       where: { organizationId: orgId },
       orderBy: { date: 'desc' },
     });
-    return { data: day, message: null };
+    const result = { data: day, message: null };
+    await this.cache.set(cacheKey, result, RATE_DAY_TTL);
+    return result;
   }
 
   async findOne(id: string) {
@@ -116,11 +137,12 @@ export class ExchangeRatesService {
         organizationId: orgId,
       } as unknown as Prisma.ExchangeRateDayCreateInput,
     });
+    await this.invalidateRateDay(orgId);
     return { data: day, message: 'EXCHANGE_RATE.CREATED' };
   }
 
   async update(id: string, dto: UpdateExchangeRateDto) {
-    this.getOrgId();
+    const orgId = this.getOrgId();
     await this.findOne(id);
 
     const data: Partial<Prisma.ExchangeRateDayUpdateInput> = {};
@@ -137,12 +159,15 @@ export class ExchangeRatesService {
       where: { id },
       data,
     });
+    await this.invalidateRateDay(orgId);
     return { data: day, message: 'EXCHANGE_RATE.UPDATED' };
   }
 
   async remove(id: string) {
+    const orgId = this.getOrgId();
     const day = await this.findOne(id);
     await this.prisma.exchangeRateDay.delete({ where: { id } });
+    await this.invalidateRateDay(orgId);
     return { data: day, message: 'EXCHANGE_RATE.DELETED' };
   }
 }

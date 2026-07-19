@@ -1,9 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
+import { CacheService } from '../../shared/cache/cache.service';
 import { ContextService } from '../../modules/tenant/context.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Prisma } from '@prisma/client';
+
+const PRODUCTS_CACHE_TTL = 300;
 
 export interface ProductWithStock {
   id: string;
@@ -23,7 +26,18 @@ export class ProductsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly contextService: ContextService,
+    private readonly cache: CacheService,
   ) {}
+
+  private productsListPrefix(orgId: string) {
+    return `products:list:${orgId}:`;
+  }
+
+  private async invalidateProductListCache() {
+    const orgId = this.contextService?.getCurrent()?.organizationId;
+    if (!orgId) return;
+    await this.cache.delByPrefix(this.productsListPrefix(orgId));
+  }
 
   private async enrichWithPvp(
     dto: CreateProductDto | UpdateProductDto,
@@ -76,10 +90,27 @@ export class ProductsService {
       } as unknown as Prisma.ProductCreateInput,
       include: { tax: true, brand: true, category: true },
     });
+    await this.invalidateProductListCache();
     return { data: product, message: 'PRODUCT.CREATED' };
   }
 
   async findAll(page = 1, limit = 20, search?: string) {
+    const orgId = this.contextService?.getCurrent()?.organizationId;
+    const cacheKey =
+      orgId && !search
+        ? `${this.productsListPrefix(orgId)}${page}:${limit}`
+        : null;
+
+    if (cacheKey) {
+      const cached = await this.cache.get<{
+        data: unknown;
+        total: number;
+        page: number;
+        limit: number;
+      }>(cacheKey);
+      if (cached) return cached;
+    }
+
     const skip = (page - 1) * limit;
     const where: Prisma.ProductWhereInput = { available: true };
     if (search) {
@@ -97,7 +128,11 @@ export class ProductsService {
       }),
       this.prisma.product.count({ where }),
     ]);
-    return { data, total, page, limit };
+    const result = { data, total, page, limit };
+    if (cacheKey) {
+      await this.cache.set(cacheKey, result, PRODUCTS_CACHE_TTL);
+    }
+    return result;
   }
 
   async findOne(id: string) {
@@ -117,6 +152,7 @@ export class ProductsService {
       data: dto,
       include: { tax: true, brand: true, category: true },
     });
+    await this.invalidateProductListCache();
     return { data: product, message: 'PRODUCT.UPDATED' };
   }
 
@@ -126,6 +162,7 @@ export class ProductsService {
       where: { id },
       data: { available: false },
     });
+    await this.invalidateProductListCache();
     return { data: product, message: 'PRODUCT.DELETED' };
   }
 
