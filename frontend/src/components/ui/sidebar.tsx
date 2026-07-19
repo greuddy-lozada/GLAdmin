@@ -88,7 +88,7 @@ export const DesktopSidebar = ({
     <>
       <motion.div
         className={cn(
-          "h-full px-4 py-4 hidden md:flex md:flex-col bg-background border-r border-border/50 w-[300px] shrink-0 rounded-tr-xl",
+          "h-full px-4 py-4 hidden md:flex md:flex-col bg-card border-r border-border/50 w-[300px] shrink-0 rounded-tr-xl",
           className,
         )}
         animate={{
@@ -119,7 +119,7 @@ export const MobileSidebar = ({
     <>
       <div
         className={cn(
-          "h-14 px-4 flex flex-row md:hidden items-center justify-between bg-background border-b border-border/50 w-full",
+          "h-14 px-4 flex flex-row md:hidden items-center justify-between bg-card border-b border-border/50 w-full",
         )}
         {...props}
       >
@@ -145,7 +145,7 @@ export const MobileSidebar = ({
                 ease: "easeInOut",
               }}
               className={cn(
-                "fixed h-full w-full inset-0 bg-background p-6 z-[100] flex flex-col justify-between",
+                "fixed h-full w-full inset-0 bg-card p-6 z-[100] flex flex-col justify-between",
                 className,
               )}
             >
@@ -187,7 +187,7 @@ export const SidebarLink = ({
     <Link
       href={link.href}
       className={cn(
-        "flex items-center justify-start gap-2 group/sidebar py-2 pl-2",
+        "flex items-center gap-2 group/sidebar py-2 pl-1 overflow-hidden",
         className,
       )}
       {...props}
@@ -195,14 +195,13 @@ export const SidebarLink = ({
       {link.icon}
       <motion.span
         animate={{
-          display: animate ? (open ? "inline-block" : "none") : "inline-block",
           opacity: animate ? (open ? 1 : 0) : 1,
         }}
         transition={{
           duration: 0.3,
           ease: "easeInOut",
         }}
-        className="text-foreground text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
+        className="text-sm group-hover/sidebar:translate-x-1 transition-transform duration-150 whitespace-nowrap inline-block !p-0 !m-0"
       >
         {link.label}
       </motion.span>

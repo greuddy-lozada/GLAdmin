@@ -119,7 +119,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen}>
         <SidebarBody className="justify-between gap-6">
           <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
-            <div className="relative min-h-[44px]">
+            <div className="relative h-[44px] flex items-center">
               <div className={`transition-all duration-300 ${sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                 <h2 className="text-lg font-bold text-foreground">Cuadra</h2>
                 <p className="text-xs text-muted-foreground">
@@ -130,23 +130,23 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 <div className="h-5 w-6 shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm bg-primary" />
               </div>
             </div>
-            <nav className="mt-6 flex flex-col gap-1">
+            <nav className="mt-6 flex flex-col gap-1 overflow-hidden">
               {visibleGroups.map((group, gi) => {
                 const GroupIcon = group.key ? groupIconMap[group.key] : undefined;
                 return (
-                <div key={group.key}>
+                <div key={group.key} className="relative">
                   {group.label && (
                     <div className="relative h-[36px]">
                       <button
                         type="button"
                         onClick={() => toggleGroup(gi)}
-                        className={`absolute inset-0 flex w-full items-center justify-between px-3 py-1.5 text-xs uppercase tracking-wider text-muted-foreground/60 font-semibold hover:text-foreground transition-colors ${
+                        className={`group/sidebar absolute inset-0 flex w-full items-center justify-between pl-1 pr-3 py-1.5 text-xs uppercase tracking-wider text-muted-foreground/60 font-semibold hover:text-foreground transition-colors overflow-hidden ${
                           sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
                         }`}
                       >
                         <span className="flex items-center gap-2">
-                          {GroupIcon && <GroupIcon className="h-3.5 w-3.5" />}
-                          <span>{t(group.label)}</span>
+                          {GroupIcon && <GroupIcon className="h-5 w-5 shrink-0" />}
+                          <span className="group-hover/sidebar:translate-x-1 transition duration-150">{t(group.label)}</span>
                         </span>
                         {expandedGroups.has(gi) ? (
                           <ChevronDown className="h-3 w-3" />
@@ -155,7 +155,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                         )}
                       </button>
                       {GroupIcon && (
-                        <div className={`absolute inset-0 flex items-center justify-start gap-2 py-2 pl-2 transition-all duration-300 ${
+                        <div className={`absolute inset-0 flex items-center gap-2 py-2 pl-1 transition-all duration-300 ${
                           sidebarOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'
                         }`}>
                           <GroupIcon className="h-5 w-5 shrink-0 text-muted-foreground" />
@@ -163,46 +163,34 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                       )}
                     </div>
                   )}
-                  {(expandedGroups.has(gi) || !group.label) && (
-                    <div className={`flex flex-col gap-0.5 transition-all duration-300 ${
-                      sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none absolute'
-                    }`}>
-                      {group.items.map((item) => {
-                        const active = pathname.startsWith(item.path);
-                        return group.label ? (
-                          <Link
-                            key={item.path}
-                            href={item.path}
-                            className={`flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
-                              active
-                                ? 'bg-secondary text-secondary-foreground rounded-md font-medium'
-                                : 'text-muted-foreground hover:text-foreground'
-                            }`}
-                          >
-                            {(() => { const Icon = iconMap[item.key] || LayoutDashboard; return <Icon className="h-5 w-5 shrink-0 text-muted-foreground" />; })()}
-                            <span>{t(`nav.${item.key}`)}</span>
-                          </Link>
-                        ) : (
-                          <SidebarLink
-                            key={item.path}
-                            link={{
-                              label: t(`nav.${item.key}`),
-                              href: item.path,
-                              icon: (() => {
-                                const Icon = iconMap[item.key] || LayoutDashboard;
-                                return <Icon className="h-5 w-5 shrink-0 text-muted-foreground" />;
-                              })(),
-                            }}
-                            className={active ? 'bg-secondary text-secondary-foreground rounded-md' : ''}
-                          />
-                        );
-                      })}
-                    </div>
-                  )}
-                  {!group.label && (
-                    <div className={`flex flex-col transition-all duration-300 ${
-                      sidebarOpen ? 'opacity-0 pointer-events-none absolute' : 'opacity-100'
-                    }`}>
+                  {group.label ? (
+                    expandedGroups.has(gi) && (
+                      <div className={`grid transition-[grid-template-rows,opacity] duration-300 ${
+                        sidebarOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0 pointer-events-none'
+                      }`}>
+                        <div className="flex flex-col gap-0.5 overflow-hidden min-h-0">
+                        {group.items.map((item) => {
+                          const active = pathname.startsWith(item.path);
+                          return (
+                            <Link
+                              key={item.path}
+                              href={item.path}
+                              className={`flex items-center gap-2 pl-1 pr-3 py-2 text-sm transition-colors overflow-hidden group/sidebar ${
+                                active
+                                  ? 'bg-secondary text-secondary-foreground rounded-md font-medium'
+                                  : 'text-muted-foreground hover:text-foreground'
+                              }`}
+                            >
+                              {(() => { const Icon = iconMap[item.key] || LayoutDashboard; return <Icon className="h-5 w-5 shrink-0 text-muted-foreground" />; })()}
+                              <span className="group-hover/sidebar:translate-x-1 transition duration-150">{t(`nav.${item.key}`)}</span>
+                            </Link>
+                          );
+                        })}
+                        </div>
+                      </div>
+                    )
+                  ) : (
+                    <div className="flex flex-col">
                       {group.items.map((item) => {
                         const Icon = iconMap[item.key] || LayoutDashboard;
                         const active = pathname.startsWith(item.path);
@@ -214,7 +202,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                               href: item.path,
                               icon: <Icon className="h-5 w-5 shrink-0 text-muted-foreground" />,
                             }}
-                            className={active ? 'bg-secondary text-secondary-foreground rounded-md' : ''}
+                            className={active
+                              ? 'bg-secondary text-secondary-foreground rounded-md font-medium'
+                              : 'text-muted-foreground hover:text-foreground transition-colors'}
                           />
                         );
                       })}
@@ -226,12 +216,14 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             </nav>
           </div>
           {currentOrg && (
-            <div className="border-t pt-3 px-3 relative min-h-[44px]">
+            <div className="border-t border-border/50 pt-3 px-3 relative min-h-[44px]">
               <div className={`transition-all duration-300 ${sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                 <OrgSwitcher />
               </div>
               <div className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${sidebarOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`} title={currentOrg.name}>
-                <div className="h-2 w-2 rounded-full bg-primary" />
+                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-muted text-xs font-semibold text-muted-foreground border border-border/50">
+                  {currentOrg.name.charAt(0).toUpperCase()}
+                </div>
               </div>
             </div>
           )}
