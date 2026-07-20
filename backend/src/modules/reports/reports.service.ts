@@ -49,12 +49,16 @@ export class ReportsService {
     });
 
     try {
-      const results = await definition.query(orgId, dto.parameters, this.prisma);
+      const results = await definition.query(
+        orgId,
+        dto.parameters,
+        this.prisma,
+      );
 
       const updated = await this.prisma.generatedReport.update({
         where: { id: report.id },
         data: {
-          results: results as Prisma.InputJsonValue,
+          results: { rows: results } as Prisma.InputJsonValue,
           status: 'ready',
           generatedAt: new Date(),
         },
@@ -63,13 +67,20 @@ export class ReportsService {
         },
       });
 
-      return updated;
+      return {
+        ...updated,
+        user: undefined,
+        userName: updated.user
+          ? `${updated.user.firstName} ${updated.user.lastName}`
+          : null,
+      };
     } catch (error) {
       await this.prisma.generatedReport.update({
         where: { id: report.id },
         data: {
           status: 'failed',
-          errorMessage: error instanceof Error ? error.message : 'Unknown error',
+          errorMessage:
+            error instanceof Error ? error.message : 'Unknown error',
         },
       });
 
@@ -139,7 +150,9 @@ export class ReportsService {
     return {
       ...report,
       user: undefined,
-      userName: report.user ? `${report.user.firstName} ${report.user.lastName}` : null,
+      userName: report.user
+        ? `${report.user.firstName} ${report.user.lastName}`
+        : null,
     };
   }
 

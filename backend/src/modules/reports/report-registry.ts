@@ -16,16 +16,25 @@ export interface ReportDefinition {
   name: string;
   description: string;
   parameters: ParamField[];
-  query: (orgId: string, params: Record<string, unknown>, prisma: PrismaService) => Promise<unknown>;
+  query: (
+    orgId: string,
+    params: Record<string, unknown>,
+    prisma: PrismaService,
+  ) => Promise<unknown>;
 }
 
-function salesSummaryQuery(orgId: string, params: Record<string, unknown>, prisma: PrismaService) {
+function salesSummaryQuery(
+  orgId: string,
+  params: Record<string, unknown>,
+  prisma: PrismaService,
+) {
   const dateFrom = params.dateFrom as string | undefined;
   const dateTo = params.dateTo as string | undefined;
 
-  const dateFilter = dateFrom && dateTo
-    ? Prisma.sql`AND s.date >= ${dateFrom}::timestamptz AND s.date <= ${dateTo}::timestamptz`
-    : Prisma.sql``;
+  const dateFilter =
+    dateFrom && dateTo
+      ? Prisma.sql`AND s.date >= ${dateFrom}::timestamptz AND s.date <= ${dateTo}::timestamptz`
+      : Prisma.sql``;
 
   return prisma.$queryRaw`
     SELECT
@@ -43,13 +52,18 @@ function salesSummaryQuery(orgId: string, params: Record<string, unknown>, prism
   `;
 }
 
-function salesByCustomerQuery(orgId: string, params: Record<string, unknown>, prisma: PrismaService) {
+function salesByCustomerQuery(
+  orgId: string,
+  params: Record<string, unknown>,
+  prisma: PrismaService,
+) {
   const dateFrom = params.dateFrom as string | undefined;
   const dateTo = params.dateTo as string | undefined;
 
-  const dateFilter = dateFrom && dateTo
-    ? Prisma.sql`AND s.date >= ${dateFrom}::timestamptz AND s.date <= ${dateTo}::timestamptz`
-    : Prisma.sql``;
+  const dateFilter =
+    dateFrom && dateTo
+      ? Prisma.sql`AND s.date >= ${dateFrom}::timestamptz AND s.date <= ${dateTo}::timestamptz`
+      : Prisma.sql``;
 
   return prisma.$queryRaw`
     SELECT
@@ -69,13 +83,18 @@ function salesByCustomerQuery(orgId: string, params: Record<string, unknown>, pr
   `;
 }
 
-function salesByProductQuery(orgId: string, params: Record<string, unknown>, prisma: PrismaService) {
+function salesByProductQuery(
+  orgId: string,
+  params: Record<string, unknown>,
+  prisma: PrismaService,
+) {
   const dateFrom = params.dateFrom as string | undefined;
   const dateTo = params.dateTo as string | undefined;
 
-  const dateFilter = dateFrom && dateTo
-    ? Prisma.sql`AND s.date >= ${dateFrom}::timestamptz AND s.date <= ${dateTo}::timestamptz`
-    : Prisma.sql``;
+  const dateFilter =
+    dateFrom && dateTo
+      ? Prisma.sql`AND s.date >= ${dateFrom}::timestamptz AND s.date <= ${dateTo}::timestamptz`
+      : Prisma.sql``;
 
   return prisma.$queryRaw`
     SELECT
@@ -83,7 +102,7 @@ function salesByProductQuery(orgId: string, params: Record<string, unknown>, pri
       p.name AS product_name,
       SUM(sd.quantity)::int AS quantity_sold,
       COALESCE(SUM(sd.subtotal), 0) AS total_revenue
-    FROM sales_dets sd
+    FROM sale_details sd
     JOIN sales s ON s.id = sd.id_sale
     JOIN products p ON p.id = sd.id_product
     WHERE s.organization_id = ${orgId}::uuid
@@ -103,8 +122,18 @@ export const reportRegistry: ReportDefinition[] = [
     name: 'reports.types.salesSummary',
     description: 'reports.types.salesSummaryDesc',
     parameters: [
-      { key: 'dateFrom', label: 'reports.params.dateFrom', type: 'date', required: false },
-      { key: 'dateTo', label: 'reports.params.dateTo', type: 'date', required: false },
+      {
+        key: 'dateFrom',
+        label: 'reports.params.dateFrom',
+        type: 'date',
+        required: false,
+      },
+      {
+        key: 'dateTo',
+        label: 'reports.params.dateTo',
+        type: 'date',
+        required: false,
+      },
     ],
     query: salesSummaryQuery,
   },
@@ -114,8 +143,18 @@ export const reportRegistry: ReportDefinition[] = [
     name: 'reports.types.salesByCustomer',
     description: 'reports.types.salesByCustomerDesc',
     parameters: [
-      { key: 'dateFrom', label: 'reports.params.dateFrom', type: 'date', required: false },
-      { key: 'dateTo', label: 'reports.params.dateTo', type: 'date', required: false },
+      {
+        key: 'dateFrom',
+        label: 'reports.params.dateFrom',
+        type: 'date',
+        required: false,
+      },
+      {
+        key: 'dateTo',
+        label: 'reports.params.dateTo',
+        type: 'date',
+        required: false,
+      },
     ],
     query: salesByCustomerQuery,
   },
@@ -125,8 +164,18 @@ export const reportRegistry: ReportDefinition[] = [
     name: 'reports.types.salesByProduct',
     description: 'reports.types.salesByProductDesc',
     parameters: [
-      { key: 'dateFrom', label: 'reports.params.dateFrom', type: 'date', required: false },
-      { key: 'dateTo', label: 'reports.params.dateTo', type: 'date', required: false },
+      {
+        key: 'dateFrom',
+        label: 'reports.params.dateFrom',
+        type: 'date',
+        required: false,
+      },
+      {
+        key: 'dateTo',
+        label: 'reports.params.dateTo',
+        type: 'date',
+        required: false,
+      },
     ],
     query: salesByProductQuery,
   },
