@@ -13,11 +13,20 @@ import type { Request } from 'express';
 import { ReportsService } from './reports.service';
 import { GenerateReportDto } from './dto/generate-report.dto';
 import { ReportQueryDto } from './dto/report-query.dto';
-import { MinLevel, ROLE_LEVEL } from '../../common/decorators/min-level.decorator';
+import {
+  MinLevel,
+  ROLE_LEVEL,
+} from '../../common/decorators/min-level.decorator';
 import { PlanLevel } from '../../common/decorators/plan-level.decorator';
 
 interface AuthenticatedRequest extends Request {
-  user?: { id: string; email: string; role: string; orgId: string; orgRole: string };
+  user?: {
+    id: string;
+    email: string;
+    role: string;
+    orgId: string;
+    orgRole: string;
+  };
 }
 
 @Controller('reports')
