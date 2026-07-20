@@ -42,6 +42,7 @@ import { UploadsModule } from './modules/uploads/uploads.module';
 import { HealthModule } from './modules/health/health.module';
 import { AuditLogModule } from './modules/audit-log/audit-log.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscription-payments.module';
+import { ReportsModule } from './modules/reports/reports.module';
 
 import appConfig from './core/config/app.config';
 import jwtConfig from './core/config/jwt.config';
@@ -99,6 +100,7 @@ if (!jwtSecret) {
     HealthModule,
     AuditLogModule,
     SubscriptionsModule,
+    ReportsModule,
   ],
   providers: [
     {
