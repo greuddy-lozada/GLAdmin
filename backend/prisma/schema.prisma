@@ -1069,6 +1069,7 @@ model GeneratedReport {
   status         String    @default("generating") @map("status")
   errorMessage   String?   @map("error_message")
   generatedAt    DateTime? @map("generated_at") @db.Timestamptz()
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz()
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
 
