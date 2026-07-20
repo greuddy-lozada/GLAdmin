@@ -60,6 +60,7 @@ export class PrismaService
               'PagoMovilConfig',
               'PagoMovilTransaction',
               'Invite',
+              'GeneratedReport',
             ];
             if (!businessModels.includes(model)) return query(args);
 
@@ -108,6 +109,7 @@ export class PrismaService
               'AccountsReceivable',
               'PagoMovilConfig',
               'PagoMovilTransaction',
+              'GeneratedReport',
             ];
             const readOps = ['findUnique', 'findFirst', 'findMany', 'count'];
             if (

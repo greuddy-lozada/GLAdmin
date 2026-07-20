@@ -56,6 +56,7 @@ model User {
   invites                Invite[]                  @relation("InvitedBy")
   pagoMovilTransactions     PagoMovilTransaction[]
   reviewedSubscriptionPayments SubscriptionPayment[]  @relation("Reviewer")
+  generatedReports      GeneratedReport[]
 
   @@map("users")
   @@index([idRole])
@@ -141,6 +142,7 @@ model Organization {
   salePayments          SalePayment[]
   auditLogs             AuditLog[]
   subscriptionPayments  SubscriptionPayment[]
+  generatedReports      GeneratedReport[]
 
   @@map("organizations")
   @@index([planId])
@@ -1048,4 +1050,34 @@ model AuditLog {
   @@index([organizationId, createdAt])
   @@index([userId])
   @@index([entity, entityId])
+}
+
+// ────────────────────────────────────────────
+// GENERATED REPORT
+// ────────────────────────────────────────────
+model GeneratedReport {
+  id             String    @id @default(uuid()) @db.Uuid @map("id")
+  organizationId String    @db.Uuid @map("organization_id")
+  userId         String    @db.Uuid @map("user_id")
+  type           String    @map("type")
+  category       String    @map("category")
+  name           String    @map("name")
+  parameters     Json      @map("parameters") @db.JsonB
+  results        Json?     @map("results") @db.JsonB
+  htmlSnapshot   String?   @map("html_snapshot") @db.Text
+  format         String    @default("json") @map("format")
+  status         String    @default("generating") @map("status")
+  errorMessage   String?   @map("error_message")
+  generatedAt    DateTime? @map("generated_at") @db.Timestamptz()
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  user         User         @relation(fields: [userId], references: [id])
+
+  @@map("generated_reports")
+  @@index([organizationId, category])
+  @@index([organizationId, type])
+  @@index([organizationId, createdAt])
+  @@index([userId])
 }
