@@ -18,6 +18,7 @@ import {
   Wallet,
   AlertCircle,
   Keyboard,
+  BarChart3,
 } from 'lucide-react';
 import type { FeatureFlag } from '@/lib/feature-flags';
 
@@ -69,6 +70,13 @@ export const navigationGroups: NavGroup[] = [
     items: [
       { key: 'customers', label: 'Clientes', icon: UserCog, path: '/customers', minLevel: 40 },
       { key: 'pos', label: 'POS', icon: ShoppingCart, path: '/pos', minLevel: 40 },
+    ],
+  },
+  {
+    key: 'reports',
+    label: 'nav.group.reports',
+    items: [
+      { key: 'reports', label: 'Reportes', icon: BarChart3, path: '/reports', minLevel: 40 },
     ],
   },
   {

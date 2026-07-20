@@ -128,6 +128,7 @@
     "transactions": "Transacciones",
     "billing": "Facturación",
     "syncConflicts": "Conflictos de sincronización",
+    "reports": "Reportes",
     "org": "Organización",
     "logout": "Cerrar Sesión",
     "profile": "Perfil",
@@ -138,6 +139,7 @@
       "ventas": "Ventas",
       "inventario": "Inventario",
       "admin": "Administración",
+      "reports": "Reportes",
       "config": "Configuración"
     }
   },
@@ -958,5 +960,56 @@
       "pastDue": "Tu suscripción venció el {{date}}."
     },
     "downgraded": "Tu suscripción ha sido degradada al plan Free. Tus datos están intactos."
+  },
+  "reports": {
+    "title": "Reportes",
+    "generate": "Generar Reporte",
+    "generating": "Generando",
+    "selectType": "Tipo de Reporte",
+    "selectTypePlaceholder": "Selecciona un tipo...",
+    "backToList": "Volver a la lista",
+    "print": "Imprimir",
+    "deleteConfirm": "Eliminar Reporte",
+    "deleteConfirmDesc": "\u00bfEst\u00e1s seguro? Esta acci\u00f3n no se puede deshacer.",
+    "noResults": "Sin resultados",
+    "generatedBy": "Generado por",
+    "created": "Reporte generado exitosamente",
+    "deleted": "Reporte eliminado",
+    "error": {
+      "generate": "Error al generar el reporte",
+      "load": "Error al cargar el reporte",
+      "delete": "Error al eliminar el reporte"
+    },
+    "empty": {
+      "title": "No hay reportes generados",
+      "description": "Selecciona un tipo de reporte y genera el primero"
+    },
+    "types": {
+      "salesSummary": "Resumen de Ventas",
+      "salesSummaryDesc": "Total de ventas, ingresos e impuestos por mes",
+      "salesByCustomer": "Ventas por Cliente",
+      "salesByCustomerDesc": "Ventas agrupadas por cliente con totales",
+      "salesByProduct": "Ventas por Producto",
+      "salesByProductDesc": "Productos m\u00e1s vendidos por cantidad e ingresos"
+    },
+    "params": {
+      "dateFrom": "Fecha Desde",
+      "dateTo": "Fecha Hasta"
+    },
+    "fields": {
+      "month": "Mes",
+      "customer": "Cliente",
+      "product": "Producto",
+      "salesCount": "Ventas",
+      "totalSales": "Total Ventas",
+      "totalRevenue": "Ingresos Totales",
+      "totalTax": "IVA Total",
+      "totalAmount": "Monto Total",
+      "quantity": "Cantidad",
+      "revenue": "Ingresos"
+    },
+    "charts": {
+      "monthlySales": "Ventas por Mes"
+    }
   }
 }
