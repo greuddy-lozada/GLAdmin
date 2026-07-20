@@ -31,10 +31,9 @@ export function SlideForm({ open, title, onClose, children, panel, panelWidth = 
         <div
           role="button"
           tabIndex={0}
-          className="fixed inset-0 z-50"
+          className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm"
           onClick={onClose}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClose(); }}
-          style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}
         />
       )}
       <motion.div

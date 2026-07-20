@@ -140,7 +140,7 @@ export default function LoginPage() {
             </Button>
           </div>
           <div className="flex items-center justify-center p-4 h-[calc(100%-4.5rem)]">
-            <div className="card-3d w-full max-w-sm bg-background rounded-xl p-5 space-y-5">
+            <div className="w-full max-w-sm bg-background rounded-xl p-5 space-y-5">
               <LoginForm />
             </div>
           </div>

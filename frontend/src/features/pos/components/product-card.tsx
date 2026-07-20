@@ -28,18 +28,18 @@ export function ProductCard({ product, onAdd }: ProductCardProps) {
   return (
     <button
       onClick={handleClick}
-      className={`card-3d relative w-full text-left border border-border/50 rounded-lg p-3 bg-card hover:bg-accent/10 hover:border-primary/40 transition-all duration-150 cursor-pointer group active:scale-[0.97] ${added ? 'border-primary bg-primary/5' : ''}`}
+      className={`relative w-full text-left border border-border/50 rounded-lg p-3 bg-card hover:bg-accent/10 hover:border-primary/40 transition-all duration-150 cursor-pointer group active:scale-[0.97] ${added ? 'border-primary bg-primary/5' : ''}`}
     >
       {added && (
         <span className="absolute top-2 right-2 text-primary">
           <Check className="h-4 w-4" />
         </span>
       )}
-      <p className="tilt-layer text-sm font-medium leading-tight truncate pr-6">{product.name}</p>
+      <p className="text-sm font-medium leading-tight truncate pr-6">{product.name}</p>
       {product.code && (
-        <p className="tilt-layer text-[11px] text-muted-foreground font-mono mt-0.5 truncate">{product.code}</p>
+        <p className="text-[11px] text-muted-foreground font-mono mt-0.5 truncate">{product.code}</p>
       )}
-      <div className="tilt-layer flex items-center justify-between mt-2">
+      <div className="flex items-center justify-between mt-2">
         <p className="text-sm font-semibold tabular-nums">Bs. {product.price.toFixed(2)}</p>
         <Badge
           variant="secondary"

@@ -38,6 +38,7 @@ backend/dist/
 
 # Next.js
 frontend/.next/
+frontend/out/
 
 # Testing
 coverage/
