@@ -965,8 +965,23 @@
     "title": "Reportes",
     "generate": "Generar Reporte",
     "generating": "Generando",
+    "regenerate": "Regenerar",
+    "generatedReports": "Reportes generados",
+    "selectToView": "Selecciona un reporte",
+    "selectToViewDesc": "Elige un reporte de la lista de la izquierda para verlo aquí",
     "selectType": "Tipo de Reporte",
     "selectTypePlaceholder": "Selecciona un tipo...",
+    "noTypesForCategory": "No hay reportes disponibles en esta categoría",
+    "categories": {
+      "sales": "Ventas",
+      "inventory": "Inventario"
+    },
+    "presets": {
+      "today": "Hoy",
+      "thisMonth": "Este mes",
+      "lastMonth": "Mes pasado",
+      "thisYear": "Este año"
+    },
     "backToList": "Volver a la lista",
     "print": "Imprimir",
     "deleteConfirm": "Eliminar Reporte",

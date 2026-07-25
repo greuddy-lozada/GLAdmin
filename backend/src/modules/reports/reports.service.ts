@@ -42,7 +42,11 @@ export class ReportsService {
         userId,
         type: dto.type,
         category: definition.category,
-        name: new Date().toLocaleDateString('es-VE', { year: 'numeric', month: 'long', day: 'numeric' }),
+        name: new Date().toLocaleDateString('es-VE', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        }),
         parameters: dto.parameters as Prisma.InputJsonValue,
         status: 'generating',
       },

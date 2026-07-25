@@ -2,11 +2,12 @@
 
 import { useI18n } from '@/i18n';
 import { Button } from '@/components/ui/button';
-import { Eye, Trash2, Loader2, FileText } from 'lucide-react';
+import { Loader2, FileText, Trash2 } from 'lucide-react';
 import type { GeneratedReport } from '../models/report.model';
 
 interface ReportCardProps {
   report: GeneratedReport;
+  selected?: boolean;
   onView: (id: string) => void;
   onDelete: (id: string) => void;
 }
@@ -28,14 +29,22 @@ function typeLabel(type: string, t: (key: string) => string): string {
   return key ? t(key) : type;
 }
 
-export function ReportCard({ report, onView, onDelete }: ReportCardProps) {
+export function ReportCard({ report, selected, onView, onDelete }: ReportCardProps) {
   const { t } = useI18n();
 
   return (
-    <div className="rounded-lg border bg-card p-4 flex items-center justify-between">
+    <button
+      type="button"
+      onClick={() => onView(report.id)}
+      className={`w-full rounded-lg border p-3 text-left transition-colors ${
+        selected
+          ? 'border-primary/50 bg-primary/5 ring-1 ring-primary/20'
+          : 'border-border bg-card hover:bg-accent/30'
+      }`}
+    >
       <div className="flex items-center gap-3 min-w-0">
-        <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
-        <div className="min-w-0">
+        <FileText className={`h-4 w-4 shrink-0 ${selected ? 'text-primary' : 'text-muted-foreground'}`} />
+        <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold truncate">{typeLabel(report.type, t)}</p>
           <p className="text-xs text-muted-foreground">
             {formatDate(report.generatedAt)}
@@ -51,26 +60,16 @@ export function ReportCard({ report, onView, onDelete }: ReportCardProps) {
             <p className="text-xs text-destructive">{t('reports.error.generate')}</p>
           )}
         </div>
-      </div>
-      <div className="flex items-center gap-1 shrink-0">
         <Button
           variant="ghost"
           size="icon"
-          aria-label={t('common.view')}
-          onClick={() => onView(report.id)}
-          disabled={report.status === 'generating'}
-        >
-          <Eye className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
+          className="shrink-0 h-7 w-7"
           aria-label={t('common.delete')}
-          onClick={() => onDelete(report.id)}
+          onClick={(e) => { e.stopPropagation(); onDelete(report.id); }}
         >
-          <Trash2 className="h-4 w-4" />
+          <Trash2 className="h-3.5 w-3.5" />
         </Button>
       </div>
-    </div>
+    </button>
   );
 }

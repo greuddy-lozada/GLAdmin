@@ -5,8 +5,10 @@ import { useAuth } from '@/providers/auth-provider';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Printer, AlertCircle, Calendar, User, Hash } from 'lucide-react';
+import { Printer, AlertCircle, Calendar, User, Hash, Download, RefreshCw } from 'lucide-react';
 import { useReport } from '../hooks/use-reports';
+import { useGenerateReport } from '../hooks/use-reports';
+import { sileo } from 'sileo';
 import { BarChart } from './charts/bar-chart';
 
 interface ReportViewerProps {
@@ -417,11 +419,58 @@ function renderReport(type: string, results: Record<string, unknown>) {
   }
 }
 
+// ─── Utilities ──────────────────────────────────────
+
+function downloadCSV(rows: Record<string, unknown>[], filename: string) {
+  if (rows.length === 0) return;
+  const headers = Object.keys(rows[0] ?? {});
+  if (headers.length === 0) return;
+  const csv = [
+    headers.join(','),
+    ...rows.map((r) => headers.map((h) => {
+      const v = r[h];
+      if (v === null || v === undefined) return '';
+      const s = String(v);
+      return s.includes(',') || s.includes('"') || s.includes('\n')
+        ? `"${s.replace(/"/g, '""')}"`
+        : s;
+    }).join(',')),
+  ].join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 // ─── Main Report Viewer ──────────────────────────────
 
 export function ReportViewer({ reportId }: ReportViewerProps) {
   const { t } = useI18n();
   const { data: report, isLoading } = useReport(reportId);
+  const generateMutation = useGenerateReport();
+
+  const handleRegenerate = async () => {
+    if (!report) return;
+    try {
+      await generateMutation.mutateAsync({
+        type: report.type,
+        parameters: report.parameters as Record<string, unknown>,
+      });
+      sileo.success({ description: t('reports.created') });
+    } catch {
+      sileo.error({ description: t('reports.error.generate') });
+    }
+  };
+
+  const handleCSV = () => {
+    if (!report?.results) return;
+    const rows = (report.results as Record<string, unknown>).rows as Record<string, unknown>[] | undefined;
+    if (!rows || rows.length === 0) return;
+    downloadCSV(rows, `${report.type}-${new Date().toISOString().substring(0, 10)}.csv`);
+  };
 
   if (isLoading) {
     return (
@@ -489,10 +538,25 @@ export function ReportViewer({ reportId }: ReportViewerProps) {
     <div>
       <div className="flex items-center justify-between mb-6 print:hidden">
         <div />
-        <Button variant="outline" size="sm" onClick={() => window.print()}>
-          <Printer className="h-4 w-4 mr-2" />
-          {t('reports.print')}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRegenerate}
+            disabled={generateMutation.isPending}
+          >
+            <RefreshCw className={`h-4 w-4 mr-1.5 ${generateMutation.isPending ? 'animate-spin' : ''}`} />
+            {t('reports.regenerate')}
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleCSV}>
+            <Download className="h-4 w-4 mr-1.5" />
+            CSV
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => window.print()}>
+            <Printer className="h-4 w-4 mr-1.5" />
+            {t('reports.print')}
+          </Button>
+        </div>
       </div>
 
       <ReportLayout reportType={reportTypeLabel} reportName={displayName} meta={meta}>
