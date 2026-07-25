@@ -156,7 +156,6 @@ export const usePosStore = create<PosState>()(
                   }
                 : i
             ),
-            lastAddedProductId: null,
             paymentLines: [],
           });
         } else {
