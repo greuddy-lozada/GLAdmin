@@ -167,27 +167,33 @@ export default function PosPage() {
           <div className="flex-1 overflow-y-auto pr-1 min-h-0">
             <ProductGrid ref={productGridRef} onAddToCart={addToCart} refreshTrigger={gridRefresh} />
           </div>
-          <div className="mt-3 space-y-2 flex-shrink-0">
+          <div className="hidden lg:block mt-3 space-y-2 flex-shrink-0">
             <ParkedOrders currentCartCount={cart.length} onResume={handleResume} refreshTrigger={parkRefresh} />
             <SaleHistory onSelectSale={setDetailSale} />
           </div>
         </div>
 
-        <div className="lg:col-span-1 h-full min-h-0">
-          <CartPanel
-            items={cart}
-            onUpdateQuantity={updateQuantity}
-            onRemove={removeFromCart}
-            total={total}
-            totalUsd={totalUsd}
-            totalTax={totalTax}
-            totalTaxUsd={totalTaxUsd}
-            exchangeRate={exchangeRate}
-            withholdingPercentage={withholdingPercentage}
-            withholdingAmount={withholdingAmount}
-            netToCollect={netToCollect}
-            onCheckout={() => setPaymentOpen(true)}
-          />
+        <div className="lg:col-span-1 flex flex-col min-h-0 gap-3">
+          <div className="flex-1 min-h-0">
+            <CartPanel
+              items={cart}
+              onUpdateQuantity={updateQuantity}
+              onRemove={removeFromCart}
+              total={total}
+              totalUsd={totalUsd}
+              totalTax={totalTax}
+              totalTaxUsd={totalTaxUsd}
+              exchangeRate={exchangeRate}
+              withholdingPercentage={withholdingPercentage}
+              withholdingAmount={withholdingAmount}
+              netToCollect={netToCollect}
+              onCheckout={() => setPaymentOpen(true)}
+            />
+          </div>
+          <div className="block lg:hidden flex-shrink-0 space-y-2">
+            <ParkedOrders currentCartCount={cart.length} onResume={handleResume} refreshTrigger={parkRefresh} />
+            <SaleHistory onSelectSale={setDetailSale} />
+          </div>
         </div>
     </div>
 
