@@ -207,7 +207,8 @@ a {
   body * {
     visibility: hidden;
   }
-  #pos-receipt, #pos-receipt * {
+  #pos-receipt, #pos-receipt *,
+  #report-document, #report-document * {
     visibility: visible;
   }
   #pos-receipt {
@@ -216,6 +217,13 @@ a {
     top: 0;
     width: 100%;
     padding: 1rem;
+  }
+  #report-document {
+    position: relative;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 1.5rem;
   }
   .receipt-no-print {
     display: none !important;

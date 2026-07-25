@@ -115,7 +115,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="flex h-screen flex-col md:flex-row overflow-hidden">
+    <div className="flex h-screen flex-col md:flex-row overflow-hidden print:h-auto print:block print:overflow-visible">
       <div className="print:hidden">
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen}>
         <SidebarBody className="justify-between gap-6">
@@ -232,7 +232,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       </Sidebar>
       </div>
 
-      <main className="flex-1 flex flex-col overflow-hidden transition-[padding] duration-300" style={{ paddingRight: 'var(--panel-offset, 0px)' }}>
+      <main className="flex-1 flex flex-col overflow-hidden transition-[padding] duration-300 print:h-auto print:block print:overflow-visible" style={{ paddingRight: 'var(--panel-offset, 0px)' }}>
         <div className="flex items-center justify-between px-6 md:px-8 py-3 border-b border-border bg-card shrink-0 relative print:hidden">
           <div className="absolute bottom-[-0.75rem] left-[-0.75rem] w-3 h-3 bg-background rounded-tr-xl z-10 pointer-events-none" />
           <div className="flex items-center gap-3">
@@ -251,8 +251,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <div className="px-6 md:px-8 pt-4 pb-4 shrink-0 print:hidden">
           <Breadcrumb />
         </div>
-        <div className="flex-1 overflow-hidden px-6 md:px-8 pb-6 md:pb-8">
-          <div className="w-full h-full">
+        <div className="flex-1 overflow-hidden px-6 md:px-8 pb-6 md:pb-8 print:h-auto print:overflow-visible print:block print:px-4 print:pb-4">
+          <div className="w-full h-full print:h-auto">
             <Suspense fallback={<div className="flex items-center justify-center h-64"><p className="text-muted-foreground">{t('common.loading')}</p></div>}>
               <ErrorBoundary>
                 {children}

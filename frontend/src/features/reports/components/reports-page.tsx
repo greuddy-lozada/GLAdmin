@@ -36,7 +36,7 @@ export function ReportsPage() {
       <div className="space-y-4">
         <button
           onClick={() => setSelectedReportId(null)}
-          className="text-sm text-primary hover:underline"
+          className="text-sm text-primary hover:underline print:hidden"
         >
           \u2190 {t('reports.backToList')}
         </button>

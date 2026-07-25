@@ -45,7 +45,7 @@ function ReportLayout({ reportType, reportName, meta, children }: ReportLayoutPr
   const { currentOrg } = useAuth();
 
   return (
-    <div className="report-document print:block print:p-0">
+    <div id="report-document" className="report-document print:block print:p-0">
       {/* Header */}
       <header className="report-header border-b-2 border-primary pb-6 mb-6 print:border-black">
         <h1 className="text-xl font-bold tracking-tight">
