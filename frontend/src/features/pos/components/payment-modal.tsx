@@ -83,13 +83,26 @@ export function PaymentModal({
     if (l.currency === 'VES') return sum + l.amount;
     return sum + l.amount * exchangeRate;
   }, 0);
+  const paidUsd = lines.reduce((sum, l) => {
+    if (l.currency === 'USD') return sum + l.amount;
+    return sum + l.amount / exchangeRate;
+  }, 0);
   const remaining = collectTotal - paidVes;
+  const remainingUsd = collectTotalUsd - paidUsd;
   const isExact = Math.abs(remaining) < 0.01;
   const isOver = remaining < 0;
 
   const handleAddLine = () => {
-    const amount = parseFloat(editAmount);
+    let amount = parseFloat(editAmount);
     if (isNaN(amount) || amount <= 0) return;
+
+    if (editCurrency === 'USD' && exchangeRate > 0 && remainingUsd > 0) {
+      const diff = Math.abs(amount - remainingUsd);
+      if (diff > 0 && diff < 0.01) {
+        amount = remainingUsd;
+      }
+    }
+
     addLine({ method: editMethod, amount, currency: editCurrency });
     setEditAmount('');
     setEditMethod(PaymentMethod.Cash);
@@ -284,6 +297,12 @@ export function PaymentModal({
               <span>{t('pos.payment.paid')}</span>
               <span className="tabular-nums">Bs. {paidVes.toFixed(2)}</span>
             </div>
+            {remaining > 0 && exchangeRate > 0 && (
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>{t('pos.payment.remainingUsd')}</span>
+                <span className="tabular-nums">$ {remainingUsd.toFixed(2)}</span>
+              </div>
+            )}
             <div className={`flex justify-between text-sm font-semibold ${
               isExact && lines.length > 0 ? 'text-green-600 dark:text-green-400' :
               isOver ? 'text-destructive' :

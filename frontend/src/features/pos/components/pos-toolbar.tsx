@@ -1,7 +1,8 @@
 'use client';
 
-import { Undo2, Pause } from 'lucide-react';
+import { Undo2, Pause, Timer, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useI18n } from '@/i18n';
 import { useHotkey } from '@/hooks/use-hotkey';
 
@@ -11,9 +12,12 @@ interface PosToolbarProps {
   onUndo: () => void;
   canUndo: boolean;
   hasItems: boolean;
+  onOpenParked: () => void;
+  onOpenHistory: () => void;
+  parkedCount: number;
 }
 
-export function PosToolbar({ exchangeRate, onPark, onUndo, canUndo, hasItems }: PosToolbarProps) {
+export function PosToolbar({ exchangeRate, onPark, onUndo, canUndo, hasItems, onOpenParked, onOpenHistory, parkedCount }: PosToolbarProps) {
   const { t } = useI18n();
   const { displayKeys: parkKeys } = useHotkey('pos.parkOrder', () => {}, { enabled: false });
   const { displayKeys: undoKeys } = useHotkey('pos.undo', () => {}, { enabled: false });
@@ -30,6 +34,17 @@ export function PosToolbar({ exchangeRate, onPark, onUndo, canUndo, hasItems }: 
           <Undo2 className="h-4 w-4" />
           <span className="hidden md:inline md:ml-2">{t('pos.toolbar.undo')}</span>
           <span className="hidden md:inline ml-1 text-xs text-muted-foreground">{undoKeys}</span>
+        </Button>
+        <Button variant="ghost" size="sm" onClick={onOpenParked} className="relative">
+          <Timer className="h-4 w-4" />
+          {parkedCount > 0 && (
+            <Badge variant="destructive" className="absolute -top-1.5 -right-1.5 h-4 min-w-4 px-1 text-[10px] leading-none">
+              {parkedCount}
+            </Badge>
+          )}
+        </Button>
+        <Button variant="ghost" size="sm" onClick={onOpenHistory}>
+          <Receipt className="h-4 w-4" />
         </Button>
       </div>
       {exchangeRate > 0 && (
