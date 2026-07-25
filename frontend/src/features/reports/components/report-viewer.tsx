@@ -77,7 +77,7 @@ function ReportLayout({ reportType, reportName, meta, children }: ReportLayoutPr
 
       {/* Footer */}
       <footer className="report-footer mt-10 pt-4 border-t border-border text-center text-xs text-muted-foreground print:border-gray-300">
-        {t('reports.generatedBy')} Cuadra \u00b7 {new Date().toLocaleDateString('es-VE')}
+        {t('reports.generatedBy')} Cuadra{' · '}{new Date().toLocaleDateString('es-VE')}
       </footer>
     </div>
   );
