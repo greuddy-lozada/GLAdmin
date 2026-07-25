@@ -24,17 +24,18 @@ export function PosToolbar({ exchangeRate, onPark, onUndo, canUndo, hasItems, on
 
   return (
     <div className="flex items-center justify-between mb-6">
-      <div className="flex gap-2">
-        <Button variant="outline" size="sm" onClick={onPark} disabled={!hasItems}>
+      <div className="flex items-center gap-0.5">
+        <Button variant="ghost" size="sm" onClick={onPark} disabled={!hasItems}>
           <Pause className="h-4 w-4" />
           <span className="hidden md:inline md:ml-2">{t('pos.park.button')}</span>
           <span className="hidden md:inline ml-1 text-xs text-muted-foreground">{parkKeys}</span>
         </Button>
-        <Button variant="outline" size="sm" onClick={onUndo} disabled={!canUndo}>
+        <Button variant="ghost" size="sm" onClick={onUndo} disabled={!canUndo}>
           <Undo2 className="h-4 w-4" />
           <span className="hidden md:inline md:ml-2">{t('pos.toolbar.undo')}</span>
           <span className="hidden md:inline ml-1 text-xs text-muted-foreground">{undoKeys}</span>
         </Button>
+        <div className="w-px h-5 bg-border mx-1" />
         <Button variant="ghost" size="sm" onClick={onOpenParked} className="relative">
           <Timer className="h-4 w-4" />
           {parkedCount > 0 && (
