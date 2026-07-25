@@ -33,10 +33,12 @@ export function ReportCard({ report, selected, onView, onDelete }: ReportCardPro
   const { t } = useI18n();
 
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={() => onView(report.id)}
-      className={`w-full rounded-lg border p-3 text-left transition-colors ${
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onView(report.id); } }}
+      className={`w-full rounded-lg border p-3 text-left transition-colors cursor-pointer ${
         selected
           ? 'border-primary/50 bg-primary/5 ring-1 ring-primary/20'
           : 'border-border bg-card hover:bg-accent/30'
@@ -70,6 +72,6 @@ export function ReportCard({ report, selected, onView, onDelete }: ReportCardPro
           <Trash2 className="h-3.5 w-3.5" />
         </Button>
       </div>
-    </button>
+    </div>
   );
 }
