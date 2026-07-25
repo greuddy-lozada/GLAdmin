@@ -1029,7 +1029,14 @@
       "movementType": "Movement Type",
       "movementEntry": "Entry",
       "movementExit": "Exit",
-      "observation": "Observation"
+      "observation": "Observation",
+      "monthlyDetail": "Monthly Detail",
+      "totalCustomers": "Customers",
+      "totalQuantity": "Total Quantity",
+      "totalMovements": "Total Movements",
+      "period": "Period",
+      "generatedAt": "Generated",
+      "id": "Report ID"
     },
     "charts": {
       "monthlySales": "Monthly Sales"

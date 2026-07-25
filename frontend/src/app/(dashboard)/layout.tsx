@@ -116,6 +116,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex h-screen flex-col md:flex-row overflow-hidden">
+      <div className="print:hidden">
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen}>
         <SidebarBody className="justify-between gap-6">
           <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
@@ -229,9 +230,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           )}
         </SidebarBody>
       </Sidebar>
+      </div>
 
       <main className="flex-1 flex flex-col overflow-hidden transition-[padding] duration-300" style={{ paddingRight: 'var(--panel-offset, 0px)' }}>
-        <div className="flex items-center justify-between px-6 md:px-8 py-3 border-b border-border bg-card shrink-0 relative">
+        <div className="flex items-center justify-between px-6 md:px-8 py-3 border-b border-border bg-card shrink-0 relative print:hidden">
           <div className="absolute bottom-[-0.75rem] left-[-0.75rem] w-3 h-3 bg-background rounded-tr-xl z-10 pointer-events-none" />
           <div className="flex items-center gap-3">
             <h1 className="text-lg font-semibold">{pageTitle}</h1>
@@ -246,7 +248,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <UserNav />
           </div>
         </div>
-        <div className="px-6 md:px-8 pt-4 pb-4 shrink-0">
+        <div className="px-6 md:px-8 pt-4 pb-4 shrink-0 print:hidden">
           <Breadcrumb />
         </div>
         <div className="flex-1 overflow-hidden px-6 md:px-8 pb-6 md:pb-8">
