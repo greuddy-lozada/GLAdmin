@@ -23,14 +23,14 @@ export function PosToolbar({ exchangeRate, onPark, onUndo, canUndo, hasItems, on
     <div className="flex items-center justify-between mb-6">
       <div className="flex items-center gap-1">
         <Button variant="ghost" size="icon" onClick={onPark} disabled={!hasItems} title={t('pos.park.button')}>
-          <Pause className="h-5 w-5" />
+          <Pause className="h-8 w-8" />
         </Button>
         <Button variant="ghost" size="icon" onClick={onUndo} disabled={!canUndo} title={t('pos.toolbar.undo')}>
-          <Undo2 className="h-5 w-5" />
+          <Undo2 className="h-8 w-8" />
         </Button>
         <div className="w-px h-5 bg-border mx-1" />
         <Button variant="ghost" size="icon" onClick={onOpenParked} className="relative" title={t('pos.park.title')}>
-          <Timer className="h-5 w-5" />
+          <Timer className="h-8 w-8" />
           {parkedCount > 0 && (
             <Badge variant="destructive" className="absolute -top-1.5 -right-1.5 h-4 min-w-4 px-1 text-[10px] leading-none">
               {parkedCount}
@@ -38,7 +38,7 @@ export function PosToolbar({ exchangeRate, onPark, onUndo, canUndo, hasItems, on
           )}
         </Button>
         <Button variant="ghost" size="icon" onClick={onOpenHistory} title={t('pos.sales.title')}>
-          <Receipt className="h-5 w-5" />
+          <Receipt className="h-8 w-8" />
         </Button>
       </div>
       {exchangeRate > 0 && (
