@@ -115,6 +115,71 @@ function salesByProductQuery(
   `;
 }
 
+function inventoryStatusQuery(
+  orgId: string,
+  params: Record<string, unknown>,
+  prisma: PrismaService,
+) {
+  const lowStockThreshold = (params.lowStockThreshold as number) || 10;
+  const onlyLowStock = (params.onlyLowStock as boolean) || false;
+
+  const lowStockFilter = onlyLowStock
+    ? Prisma.sql`AND p.total_existence <= ${lowStockThreshold}`
+    : Prisma.sql``;
+
+  return prisma.$queryRaw`
+    SELECT
+      p.id,
+      p.code,
+      p.name AS product_name,
+      p.total_existence,
+      p.price,
+      ROUND(p.price * p.total_existence, 2) AS inventory_value,
+      CASE WHEN p.total_existence <= ${lowStockThreshold} THEN true ELSE false END AS is_low_stock
+    FROM products p
+    WHERE p.organization_id = ${orgId}::uuid
+      AND p.deleted_at IS NULL
+      AND p.available = true
+      ${lowStockFilter}
+    ORDER BY p.total_existence ASC
+    LIMIT 100
+  `;
+}
+
+function stockMovementsQuery(
+  orgId: string,
+  params: Record<string, unknown>,
+  prisma: PrismaService,
+) {
+  const dateFrom = params.dateFrom as string | undefined;
+  const dateTo = params.dateTo as string | undefined;
+
+  const dateFilter =
+    dateFrom && dateTo
+      ? Prisma.sql`AND sd.created_at >= ${dateFrom}::timestamptz AND sd.created_at <= ${dateTo}::timestamptz`
+      : Prisma.sql``;
+
+  return prisma.$queryRaw`
+    SELECT
+      DATE(sd.created_at) AS date,
+      p.name AS product_name,
+      COALESCE(b.code, '—') AS batch_code,
+      sd.type,
+      sd.quantity,
+      sd.observation
+    FROM stock_details sd
+    JOIN stocks s ON s.id = sd.id_stock
+    JOIN products p ON p.id = s.id_product
+    LEFT JOIN batches b ON b.id = s.id_batch
+    WHERE s.organization_id = ${orgId}::uuid
+      AND s.deleted_at IS NULL
+      AND p.deleted_at IS NULL
+      ${dateFilter}
+    ORDER BY sd.created_at DESC
+    LIMIT 200
+  `;
+}
+
 export const reportRegistry: ReportDefinition[] = [
   {
     type: 'sales_summary',
@@ -178,5 +243,52 @@ export const reportRegistry: ReportDefinition[] = [
       },
     ],
     query: salesByProductQuery,
+  },
+  {
+    type: 'inventory_status',
+    category: 'inventory',
+    name: 'reports.types.inventoryStatus',
+    description: 'reports.types.inventoryStatusDesc',
+    parameters: [
+      {
+        key: 'lowStockThreshold',
+        label: 'reports.params.lowStockThreshold',
+        type: 'number',
+        required: false,
+        defaultValue: 10,
+      },
+      {
+        key: 'onlyLowStock',
+        label: 'reports.params.onlyLowStock',
+        type: 'select',
+        required: false,
+        options: [
+          { value: 'false', label: 'reports.params.allProducts' },
+          { value: 'true', label: 'reports.params.lowStockOnly' },
+        ],
+      },
+    ],
+    query: inventoryStatusQuery,
+  },
+  {
+    type: 'stock_movements',
+    category: 'inventory',
+    name: 'reports.types.stockMovements',
+    description: 'reports.types.stockMovementsDesc',
+    parameters: [
+      {
+        key: 'dateFrom',
+        label: 'reports.params.dateFrom',
+        type: 'date',
+        required: false,
+      },
+      {
+        key: 'dateTo',
+        label: 'reports.params.dateTo',
+        type: 'date',
+        required: false,
+      },
+    ],
+    query: stockMovementsQuery,
   },
 ];
