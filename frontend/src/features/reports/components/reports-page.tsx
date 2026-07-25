@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useI18n } from '@/i18n';
+import { sileo } from 'sileo';
 import { useReports, useDeleteReport } from '../hooks/use-reports';
 import { ReportCard } from './report-card';
 import { ReportGenerator } from './report-generator';
@@ -12,7 +13,7 @@ import { FileText } from 'lucide-react';
 
 export function ReportsPage() {
   const { t } = useI18n();
-  const { data, isLoading } = useReports();
+  const { data, isLoading, refetch } = useReports();
   const deleteMutation = useDeleteReport();
 
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
@@ -20,7 +21,12 @@ export function ReportsPage() {
 
   const handleDelete = async () => {
     if (!reportToDelete) return;
-    await deleteMutation.mutateAsync(reportToDelete);
+    try {
+      await deleteMutation.mutateAsync(reportToDelete);
+      sileo.success({ description: t('reports.deleted') });
+    } catch {
+      sileo.error({ description: t('reports.error.delete') });
+    }
     setReportToDelete(null);
     if (selectedReportId === reportToDelete) setSelectedReportId(null);
   };
@@ -41,7 +47,7 @@ export function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <ReportGenerator onGenerated={() => {}} />
+      <ReportGenerator onGenerated={() => { refetch(); sileo.success({ description: t('reports.created') }); }} />
 
       {isLoading ? (
         <div className="space-y-3">

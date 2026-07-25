@@ -32,11 +32,15 @@ export function ReportGenerator({ onGenerated }: ReportGeneratorProps) {
 
   const handleGenerate = async () => {
     if (!selectedType) return;
-    const typedParams = convertParams(selectedDefinition?.parameters ?? []);
-    await generateMutation.mutateAsync(
-      { type: selectedType, parameters: typedParams },
-      { onSuccess: () => onGenerated() },
-    );
+    try {
+      const typedParams = convertParams(selectedDefinition?.parameters ?? []);
+      await generateMutation.mutateAsync(
+        { type: selectedType, parameters: typedParams },
+      );
+      onGenerated();
+    } catch {
+      // ponytail: error handled by the page via React Query
+    }
     setSelectedType('');
     setParams({});
   };
