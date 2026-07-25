@@ -55,7 +55,7 @@ function ReportLayout({ reportType, reportName, meta, children }: ReportLayoutPr
           {reportType}
         </h2>
         <p className="text-sm text-muted-foreground mt-1">{reportName}</p>
-        <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4 text-sm text-muted-foreground">
+        <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4 text-sm text-muted-foreground report-meta">
           {meta.map((item) => (
             <span key={item.label} className="flex items-center gap-1.5">
               {item.icon}
@@ -104,7 +104,7 @@ function ReportTable({ rows, columns, noDataMessage }: ReportTableProps) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border print:border-gray-300">
+    <div className="report-table-wrapper overflow-x-auto rounded-lg border print:border-gray-300">
       <table className="w-full text-sm">
         <thead>
           <tr className="bg-muted/50 print:bg-gray-100">
@@ -150,14 +150,14 @@ interface KpiCard {
 
 function KpiGrid({ cards }: { cards: KpiCard[] }) {
   return (
-    <div className={`grid gap-4 ${cards.length === 4 ? 'grid-cols-4' : 'grid-cols-3'} print:grid-cols-4`}>
+    <div className={`kpi-grid grid gap-4 ${cards.length === 4 ? 'grid-cols-4' : 'grid-cols-3'} print:grid-cols-4`}>
       {cards.map((card) => (
         <div
           key={card.label}
-          className="rounded-lg border bg-card p-4 print:border-gray-300 print:shadow-none"
+          className="kpi-card rounded-lg border bg-card p-4 print:border-gray-300 print:shadow-none"
         >
-          <p className="text-xs text-muted-foreground mb-1 print:text-gray-500">{card.label}</p>
-          <p className={`text-lg font-bold ${
+          <p className="kpi-label text-xs text-muted-foreground mb-1 print:text-gray-500">{card.label}</p>
+          <p className={`kpi-value text-lg font-bold ${
             card.variant === 'destructive' ? 'text-destructive' :
             card.variant === 'warning' ? 'text-amber-600' :
             'text-primary print:text-black'
@@ -174,7 +174,7 @@ function KpiGrid({ cards }: { cards: KpiCard[] }) {
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mt-6 mb-3 print:text-black">
+    <h3 className="report-section-title text-sm font-semibold uppercase tracking-wider text-muted-foreground mt-6 mb-3 print:text-black">
       {children}
     </h3>
   );
