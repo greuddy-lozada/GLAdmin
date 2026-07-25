@@ -990,11 +990,19 @@
       "salesByCustomer": "Ventas por Cliente",
       "salesByCustomerDesc": "Ventas agrupadas por cliente con totales",
       "salesByProduct": "Ventas por Producto",
-      "salesByProductDesc": "Productos m\u00e1s vendidos por cantidad e ingresos"
+      "salesByProductDesc": "Productos m\u00e1s vendidos por cantidad e ingresos",
+      "inventoryStatus": "Estado de Inventario",
+      "inventoryStatusDesc": "Niveles de stock, valor en precio y productos con stock bajo",
+      "stockMovements": "Movimientos de Inventario",
+      "stockMovementsDesc": "Detalle de entradas y salidas de inventario por producto y lote"
     },
     "params": {
       "dateFrom": "Fecha Desde",
-      "dateTo": "Fecha Hasta"
+      "dateTo": "Fecha Hasta",
+      "lowStockThreshold": "Umbral Stock Bajo",
+      "onlyLowStock": "Filtro Stock Bajo",
+      "allProducts": "Todos los productos",
+      "lowStockOnly": "Solo stock bajo"
     },
     "fields": {
       "month": "Mes",
@@ -1006,7 +1014,22 @@
       "totalTax": "IVA Total",
       "totalAmount": "Monto Total",
       "quantity": "Cantidad",
-      "revenue": "Ingresos"
+      "revenue": "Ingresos",
+      "totalProducts": "Total Productos",
+      "totalStock": "Stock Total",
+      "totalInventoryValue": "Valor Inventario",
+      "lowStockProducts": "Stock Bajo",
+      "code": "Código",
+      "stock": "Stock",
+      "price": "Precio",
+      "inventoryValue": "Valor",
+      "lowStock": "Stock Bajo",
+      "date": "Fecha",
+      "batch": "Lote",
+      "movementType": "Tipo Movimiento",
+      "movementEntry": "Entrada",
+      "movementExit": "Salida",
+      "observation": "Observación"
     },
     "charts": {
       "monthlySales": "Ventas por Mes"

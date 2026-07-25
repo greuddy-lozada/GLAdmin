@@ -990,11 +990,19 @@
       "salesByCustomer": "Sales by Customer",
       "salesByCustomerDesc": "Sales grouped by customer with totals",
       "salesByProduct": "Sales by Product",
-      "salesByProductDesc": "Top selling products by quantity and revenue"
+      "salesByProductDesc": "Top selling products by quantity and revenue",
+      "inventoryStatus": "Inventory Status",
+      "inventoryStatusDesc": "Stock levels, value at price, and low-stock products",
+      "stockMovements": "Stock Movements",
+      "stockMovementsDesc": "Detail of inventory entries and exits by product and batch"
     },
     "params": {
       "dateFrom": "Date From",
-      "dateTo": "Date To"
+      "dateTo": "Date To",
+      "lowStockThreshold": "Low Stock Threshold",
+      "onlyLowStock": "Low Stock Filter",
+      "allProducts": "All products",
+      "lowStockOnly": "Low stock only"
     },
     "fields": {
       "month": "Month",
@@ -1006,7 +1014,22 @@
       "totalTax": "Total Tax",
       "totalAmount": "Total Amount",
       "quantity": "Quantity",
-      "revenue": "Revenue"
+      "revenue": "Revenue",
+      "totalProducts": "Total Products",
+      "totalStock": "Total Stock",
+      "totalInventoryValue": "Inventory Value",
+      "lowStockProducts": "Low Stock",
+      "code": "Code",
+      "stock": "Stock",
+      "price": "Price",
+      "inventoryValue": "Value",
+      "lowStock": "Low Stock",
+      "date": "Date",
+      "batch": "Batch",
+      "movementType": "Movement Type",
+      "movementEntry": "Entry",
+      "movementExit": "Exit",
+      "observation": "Observation"
     },
     "charts": {
       "monthlySales": "Monthly Sales"
