@@ -38,7 +38,7 @@ export function ReportsPage() {
           onClick={() => setSelectedReportId(null)}
           className="text-sm text-primary hover:underline print:hidden"
         >
-          \u2190 {t('reports.backToList')}
+          {'\u2190'} {t('reports.backToList')}
         </button>
         <ReportViewer reportId={selectedReportId} />
       </div>
