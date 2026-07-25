@@ -156,7 +156,7 @@ export function ReportGenerator({ category, onGenerated }: ReportGeneratorProps)
 
       {/* Expanded params + generate */}
       {isExpanded && selectedDefinition && (
-        <div className="mt-4 space-y-3 animate-in fade-in slide-in-from-top-2">
+        <div className="mt-4 space-y-3">
           {/* Date params with presets */}
           {selectedDefinition.parameters.map((field) => {
             if (field.type === 'date') {

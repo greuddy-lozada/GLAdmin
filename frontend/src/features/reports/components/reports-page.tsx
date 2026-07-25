@@ -22,15 +22,19 @@ export function ReportsPage() {
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [reportToDelete, setReportToDelete] = useState<string | null>(null);
 
-  const { data, isLoading, refetch } = useReports({ category: activeCategory });
+  const { data, isLoading, refetch } = useReports({ limit: 100 });
   const deleteMutation = useDeleteReport();
 
-  const reports = useMemo(() => data?.data ?? [], [data]);
+  const allReports = useMemo(() => data?.data ?? [], [data]);
+  const reports = useMemo(
+    () => allReports.filter((r) => r.category === activeCategory),
+    [allReports, activeCategory],
+  );
   const reportCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    for (const r of reports) counts[r.category] = (counts[r.category] || 0) + 1;
+    for (const r of allReports) counts[r.category] = (counts[r.category] || 0) + 1;
     return counts;
-  }, [reports]);
+  }, [allReports]);
 
   const handleGenerated = () => {
     refetch();
@@ -63,7 +67,7 @@ export function ReportsPage() {
               <button
                 key={cat.key}
                 type="button"
-                onClick={() => setActiveCategory(cat.key)}
+                onClick={() => { setActiveCategory(cat.key); setSelectedReportId(null); }}
                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors border-b-2 -mb-px ${
                   active
                     ? 'border-primary text-primary bg-primary/5'
