@@ -276,27 +276,107 @@ FF_TAX_REPORTS="false"            # Reportes fiscales venezolanos (en desarrollo
 
 ---
 
-## 6. Flujo de Despliegue a Staging
+## 6. Staging on VPS (IP, automated)
+
+Target for tester demos **without a domain**: SSH + Docker VPS, served at `http://YOUR_IP:8081`.
+
+Stack on the server ([`docker-compose.prod.yml`](../../docker-compose.prod.yml)):
+
+| Service | Role |
+|---|---|
+| `postgres` | Database (not published publicly) |
+| `redis` | Cache |
+| `backend` | NestJS API on internal port 4000 |
+| `nginx` | Static `frontend/out` + reverse proxy `/api` → backend; host port **8081** |
+
+Frontend is built as a static export with `NEXT_PUBLIC_API_URL=/api` (same origin via Nginx). No separate Node process for Next.js.
+
+### 6.1 One-time server bootstrap
+
+```bash
+# On the VPS (Docker already installed)
+sudo mkdir -p /opt/cuadra && sudo chown "$USER:$USER" /opt/cuadra
+git clone <your-repo-url> /opt/cuadra
+cd /opt/cuadra
+
+cp .env.production.example .env.production
+# Edit .env.production:
+#   POSTGRES_PASSWORD=...
+#   JWT_SECRET=...   (min 32 random chars)
+#   FRONTEND_URL=http://YOUR_IP:8081
+
+# Open the published port (example with ufw; or cloud security group)
+sudo ufw allow 8081/tcp
+
+# First deploy (builds frontend + compose + migrate + seed)
+bash scripts/deploy.sh
+```
+
+Create a **deploy-only SSH key** on your laptop (or CI machine), add the public key to `~/.ssh/authorized_keys` on the VPS for the deploy user, and keep the private key for GitHub Actions only.
+
+### 6.2 GitHub Actions secrets
+
+Repo → **Settings → Secrets and variables → Actions**:
+
+| Secret | Required | Example |
+|---|---|---|
+| `DEPLOY_HOST` | yes | `203.0.113.10` |
+| `DEPLOY_USER` | yes | `deploy` |
+| `DEPLOY_SSH_KEY` | yes | Private key PEM (full contents) |
+| `DEPLOY_PATH` | no | `/opt/cuadra` (default if empty) |
+
+Workflow: [`.github/workflows/deploy.yml`](../../.github/workflows/deploy.yml)
+
+- Runs after a **successful** [`CI`](../../.github/workflows/ci.yml) workflow on `main` (`workflow_run`)
+- Also runnable manually: **Actions → Deploy → Run workflow**
+
+### 6.3 Automated flow
 
 ```
-1. PR mergeado a main
+1. Push / merge to main
      ↓
-2. CI (GitHub Actions):
-   - pnpm install
-   - pnpm lint         (0 warnings)
-   - pnpm typecheck    (0 errors)
-   - pnpm test         (todos los tests pasan)
-   - pnpm build        (build exitoso)
+2. CI (lint + typecheck for backend & frontend)
      ↓
-3. CD (GitHub Actions):
-   - docker compose build
-   - docker push (imagen a registry)
-   - ssh → servidor staging
-   - docker compose pull && docker compose up -d
-   - pnpm --filter backend prisma:migrate:deploy
-   - Smoke tests (ver release-policy.md)
+3. Deploy workflow SSHs to the VPS and runs scripts/deploy.sh:
+   - git fetch + reset --hard origin/main
+   - Build frontend/out via ephemeral node:22 container
+   - docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
+   - prisma migrate deploy
+   - seed (no-op if already seeded)
+   - Smoke GET http://127.0.0.1:8081/api/health
      ↓
-4. Staging listo para validación manual
+4. Testers use http://YOUR_IP:8081
+```
+
+### 6.4 Tester access
+
+| Item | Value |
+|---|---|
+| App URL | `http://YOUR_IP:8081` |
+| Health | `http://YOUR_IP:8081/api/health` |
+| Admin email | `admin@cuadra.app` |
+| Admin password | `000000` (from seed — change after first login in real use) |
+
+Notes:
+
+- HTTP only (no domain / TLS in this setup). PWA service worker may not register outside localhost — fine for demos.
+- Seed skips if organizations already exist; wipe volumes only if you intentionally want a fresh DB.
+
+### 6.5 Verify & rollback
+
+```bash
+# On the VPS
+cd /opt/cuadra
+docker compose --env-file .env.production -f docker-compose.prod.yml ps
+curl -sf http://127.0.0.1:8081/api/health
+
+# Re-run deploy manually
+bash scripts/deploy.sh
+
+# Rollback to a previous commit, then redeploy
+git fetch origin
+git reset --hard <good-commit-sha>
+bash scripts/deploy.sh
 ```
 
 ---
