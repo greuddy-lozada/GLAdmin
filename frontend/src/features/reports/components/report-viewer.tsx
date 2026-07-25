@@ -140,6 +140,82 @@ function SalesByProductRenderer({ results }: { results: Record<string, unknown> 
   );
 }
 
+function InventoryStatusRenderer({ results }: { results: Record<string, unknown> }) {
+  const { t } = useI18n();
+  const rows = (results.rows as Record<string, unknown>[]) || [];
+
+  const totals = rows.reduce<{ totalProducts: number; totalStock: number; totalValue: number; lowStockCount: number }>(
+    (acc, r) => ({
+      totalProducts: acc.totalProducts + 1,
+      totalStock: acc.totalStock + (Number(r.total_existence) || 0),
+      totalValue: acc.totalValue + (Number(r.inventory_value) || 0),
+      lowStockCount: acc.lowStockCount + (r.is_low_stock ? 1 : 0),
+    }),
+    { totalProducts: 0, totalStock: 0, totalValue: 0, lowStockCount: 0 },
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-4 gap-4">
+        <div className="rounded-lg border bg-muted/30 p-4">
+          <p className="text-xs text-muted-foreground">{t('reports.fields.totalProducts')}</p>
+          <p className="text-lg font-bold text-primary">{totals.totalProducts}</p>
+        </div>
+        <div className="rounded-lg border bg-muted/30 p-4">
+          <p className="text-xs text-muted-foreground">{t('reports.fields.totalStock')}</p>
+          <p className="text-lg font-bold text-primary">{totals.totalStock.toLocaleString()}</p>
+        </div>
+        <div className="rounded-lg border bg-muted/30 p-4">
+          <p className="text-xs text-muted-foreground">{t('reports.fields.totalInventoryValue')}</p>
+          <p className="text-lg font-bold text-primary">{formatCurrency(totals.totalValue)}</p>
+        </div>
+        <div className="rounded-lg border bg-muted/30 p-4">
+          <p className="text-xs text-muted-foreground">{t('reports.fields.lowStockProducts')}</p>
+          <p className={`text-lg font-bold ${totals.lowStockCount > 0 ? 'text-destructive' : 'text-primary'}`}>
+            {totals.lowStockCount}
+          </p>
+        </div>
+      </div>
+      <DataTableRenderer
+        rows={rows}
+        columns={[
+          { key: 'code', label: t('reports.fields.code') },
+          { key: 'product_name', label: t('reports.fields.product') },
+          { key: 'total_existence', label: t('reports.fields.stock'), align: 'right' },
+          { key: 'price', label: t('reports.fields.price'), align: 'right', format: (v) => formatCurrency(Number(v)) },
+          { key: 'inventory_value', label: t('reports.fields.inventoryValue'), align: 'right', format: (v) => formatCurrency(Number(v)) },
+          { key: 'is_low_stock', label: t('reports.fields.lowStock'), align: 'right', format: (v) => v ? '⚠️' : '—' },
+        ]}
+      />
+    </div>
+  );
+}
+
+function StockMovementsRenderer({ results }: { results: Record<string, unknown> }) {
+  const { t } = useI18n();
+  const rows = (results.rows as Record<string, unknown>[]) || [];
+
+  const typeLabel = (type: number): string => {
+    if (type === 1) return t('reports.fields.movementEntry');
+    if (type === 2) return t('reports.fields.movementExit');
+    return String(type);
+  };
+
+  return (
+    <DataTableRenderer
+      rows={rows}
+      columns={[
+        { key: 'date', label: t('reports.fields.date') },
+        { key: 'product_name', label: t('reports.fields.product') },
+        { key: 'batch_code', label: t('reports.fields.batch') },
+        { key: 'type', label: t('reports.fields.movementType'), format: (v) => typeLabel(Number(v)) },
+        { key: 'quantity', label: t('reports.fields.quantity'), align: 'right' },
+        { key: 'observation', label: t('reports.fields.observation') },
+      ]}
+    />
+  );
+}
+
 function renderReport(type: string, results: Record<string, unknown>) {
   switch (type) {
     case 'sales_summary':
@@ -148,6 +224,10 @@ function renderReport(type: string, results: Record<string, unknown>) {
       return <SalesByCustomerRenderer results={results} />;
     case 'sales_by_product':
       return <SalesByProductRenderer results={results} />;
+    case 'inventory_status':
+      return <InventoryStatusRenderer results={results} />;
+    case 'stock_movements':
+      return <StockMovementsRenderer results={results} />;
     default:
       return <pre className="text-xs overflow-auto">{JSON.stringify(results, null, 2)}</pre>;
   }
