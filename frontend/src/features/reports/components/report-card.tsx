@@ -21,6 +21,8 @@ function typeLabel(type: string, t: (key: string) => string): string {
     sales_summary: 'reports.types.salesSummary',
     sales_by_customer: 'reports.types.salesByCustomer',
     sales_by_product: 'reports.types.salesByProduct',
+    inventory_status: 'reports.types.inventoryStatus',
+    stock_movements: 'reports.types.stockMovements',
   };
   const key = map[type];
   return key ? t(key) : type;
