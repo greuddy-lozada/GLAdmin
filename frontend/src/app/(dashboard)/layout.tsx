@@ -48,6 +48,7 @@ const groupIconMap: Record<string, React.ComponentType<{ className?: string }>> 
   compras: ShoppingCart,
   ventas: UserCog,
   inventario: Package,
+  reports: BarChart3,
   admin: ShieldCheck,
   config: Settings,
 };
