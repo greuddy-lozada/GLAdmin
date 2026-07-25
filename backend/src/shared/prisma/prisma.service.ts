@@ -22,6 +22,43 @@ export class PrismaService
 
   async onModuleInit() {
     const contextService = this.contextService;
+
+    // ponytail: save raw delegates before Object.assign(extended) overwrites them
+    const modelsRequiringDelegateAccess = [
+      'Organization',
+      'User',
+      'Plan',
+      'Customer',
+      'Supplier',
+      'Company',
+      'Brand',
+      'Category',
+      'Product',
+      'Tax',
+      'Batch',
+      'Stock',
+      'PurchaseOrder',
+      'WithholdingRecord',
+      'Sale',
+      'SubscriptionPayment',
+      'AccountsPayable',
+      'AccountsReceivable',
+      'PagoMovilConfig',
+      'PagoMovilTransaction',
+      'GeneratedReport',
+    ];
+    const rawDelegates: Record<
+      string,
+      Record<string, (...a: unknown[]) => unknown>
+    > = {};
+    for (const m of modelsRequiringDelegateAccess) {
+      const d = m.charAt(0).toLowerCase() + m.slice(1);
+      rawDelegates[d] = (this as Record<string, unknown>)[d] as Record<
+        string,
+        (...a: unknown[]) => unknown
+      >;
+    }
+
     const extended = this.$extends({
       query: {
         $allModels: {
@@ -126,16 +163,14 @@ export class PrismaService
             if (softDeleteModels.includes(model)) {
               const delegateName =
                 model.charAt(0).toLowerCase() + model.slice(1);
-              const rawDelegate = (this as Record<string, unknown>)[
-                delegateName
-              ] as Record<string, (...a: unknown[]) => unknown>;
-              if (operation === 'delete') {
+              const rawDelegate = rawDelegates[delegateName];
+              if (rawDelegate && operation === 'delete') {
                 return rawDelegate.update({
                   where: args.where,
                   data: { deletedAt: new Date() },
                 });
               }
-              if (operation === 'deleteMany') {
+              if (rawDelegate && operation === 'deleteMany') {
                 return rawDelegate.updateMany({
                   where: args.where,
                   data: { deletedAt: new Date() },

@@ -8,6 +8,7 @@ import { networkStatus } from '@/lib/sync/network-status';
 import { syncEngine } from '@/lib/sync/sync-engine';
 import { PinSetup } from '@/features/auth/components/pin-setup';
 import { PinUnlock } from '@/features/auth/components/pin-unlock';
+import { useTabsStore } from '@/stores/tabs-store';
 
 interface AuthContextType {
   user: User | null;
@@ -181,6 +182,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(REFRESH_KEY);
     localStorage.removeItem(USER_KEY);
     localStorage.removeItem(ORG_ID_KEY);
+    useTabsStore.getState().clearTabs();
   }, []);
 
   return (

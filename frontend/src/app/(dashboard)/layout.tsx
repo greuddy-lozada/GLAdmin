@@ -5,17 +5,18 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/providers/auth-provider';
 import { useUiStore } from '@/stores/ui-store';
+import { useTabsStore } from '@/stores/tabs-store';
 import { navigationGroups, navigationConfig } from '@/config/navigation.config';
 import { hasMinLevel } from '@/lib/auth/roles';
 import { parsePlanFeatures } from '@/lib/parse-features';
 
 import { useI18n } from '@/i18n';
-import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { UserNav } from '@/components/ui/user-nav';
 import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar';
 import { SyncIndicator } from '@/components/sync-indicator';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { OrgSwitcher } from '@/components/ui/org-switcher';
+import { VisitedTabs } from '@/features/visited-tabs/visited-tabs';
 import { LayoutDashboard, Users, UserCog, Truck, Building2, Package, Receipt, Tags, Store, ShoppingCart, DollarSign, ShieldCheck, Settings, CreditCard, Mail, ArrowLeftRight, Wallet, BarChart3, ChevronDown, ChevronRight, AlertCircle } from 'lucide-react';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -72,6 +73,16 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       setLastVisitedPath(pathname);
     }
   }, [isAuthenticated, pathname, setLastVisitedPath]);
+
+  const addTab = useTabsStore(s => s.addTab);
+  useEffect(() => {
+    if (!isAuthenticated || !pathname) return;
+    if (pathname === '/dashboard') return;
+    const navItem = navigationConfig.find((item) => pathname.startsWith(item.path));
+    if (navItem) {
+      addTab({ path: navItem.path, key: navItem.key });
+    }
+  }, [pathname, isAuthenticated, addTab]);
 
   if (isLoading) {
     return (
@@ -250,7 +261,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
         </div>
         <div className="px-6 md:px-8 pt-4 pb-4 shrink-0 print:hidden">
-          <Breadcrumb />
+          <VisitedTabs iconMap={iconMap} />
         </div>
         <div className="flex-1 overflow-hidden px-6 md:px-8 pb-6 md:pb-8 print:h-auto print:overflow-visible print:block print:px-4 print:pb-4">
           <div className="w-full h-full print:h-auto">
