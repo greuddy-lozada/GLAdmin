@@ -54,6 +54,7 @@ export class SyncService {
       taxes,
       brands,
       categories,
+      cashRegisters,
     ] = await Promise.all([
       this.prisma.product.findMany({
         where: { organizationId: orgId, updatedAt: { gt: sinceDate } },
@@ -150,6 +151,18 @@ export class SyncService {
         orderBy,
         take,
       }),
+      this.prisma.cashRegister.findMany({
+        where: { organizationId: orgId, updatedAt: { gt: sinceDate } },
+        select: {
+          id: true,
+          name: true,
+          code: true,
+          isActive: true,
+          updatedAt: true,
+        },
+        orderBy,
+        take,
+      }),
     ]);
 
     const hasMore =
@@ -161,7 +174,8 @@ export class SyncService {
       companies.length >= take ||
       taxes.length >= take ||
       brands.length >= take ||
-      categories.length >= take;
+      categories.length >= take ||
+      cashRegisters.length >= take;
 
     const lastPullAt = new Date();
 
@@ -206,6 +220,7 @@ export class SyncService {
       taxes,
       brands,
       categories,
+      cashRegisters,
       hasMore,
       cursor: { lastPullAt: (hasMore ? sinceDate : lastPullAt).toISOString() },
     };
@@ -338,6 +353,9 @@ export class SyncService {
             paymentMethod: mutation.data.paymentMethod as number,
             status: mutation.data.status as number,
             idCustomer: mutation.data.idCustomer as string,
+            registerSessionId: mutation.data.registerSessionId as
+              | string
+              | undefined,
             items: (
               mutation.data.items as Array<{
                 productId: string;

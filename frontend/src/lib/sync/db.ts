@@ -92,6 +92,15 @@ export interface LocalBrand {
   updatedAt: string;
 }
 
+export interface LocalCashRegister {
+  id: string;
+  organizationId: string;
+  name: string;
+  code: string;
+  isActive: boolean;
+  updatedAt: string;
+}
+
 export interface LocalCategory {
   id: string;
   organizationId: string;
@@ -147,6 +156,7 @@ export const localDb = new Dexie('Cuadra') as Dexie & {
   taxes: EntityTable<LocalTax, 'id'>;
   brands: EntityTable<LocalBrand, 'id'>;
   categories: EntityTable<LocalCategory, 'id'>;
+  cashRegisters: EntityTable<LocalCashRegister, 'id'>;
   exchangeRates: EntityTable<LocalExchangeRate, 'id'>;
   exchangeRateDays: EntityTable<LocalExchangeRateDay, 'id'>;
   parkedOrders: EntityTable<ParkedOrder, 'id'>;
@@ -280,6 +290,25 @@ localDb.version(9).stores({
   taxes: 'id, updatedAt, organizationId',
   brands: 'id, updatedAt, organizationId',
   categories: 'id, updatedAt, organizationId',
+  exchangeRates: 'id, updatedAt',
+  exchangeRateDays: 'id, updatedAt',
+  parkedOrders: '++id, createdAt',
+  shortcutBindings: '++id, shortcutId',
+});
+
+localDb.version(10).stores({
+  products: 'id, updatedAt, organizationId, name, code',
+  customers: 'id, updatedAt, organizationId, firstName, lastName, taxId',
+  syncQueue: '++id, status, localTimestamp',
+  stockCache: 'productId',
+  sales: '++id, syncedAt',
+  syncMetadata: 'key',
+  suppliers: 'id, updatedAt, organizationId',
+  companies: 'id, updatedAt, organizationId',
+  taxes: 'id, updatedAt, organizationId',
+  brands: 'id, updatedAt, organizationId',
+  categories: 'id, updatedAt, organizationId',
+  cashRegisters: 'id, updatedAt, organizationId',
   exchangeRates: 'id, updatedAt',
   exchangeRateDays: 'id, updatedAt',
   parkedOrders: '++id, createdAt',

@@ -126,6 +126,10 @@ export class CreateSaleDto {
   items: CreateSaleItemDto[];
 
   @IsOptional()
+  @IsUUID()
+  registerSessionId?: string;
+
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateSalePaymentDto)

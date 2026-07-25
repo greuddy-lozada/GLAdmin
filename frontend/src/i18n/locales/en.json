@@ -108,6 +108,7 @@
     "customers": "Customers",
     "suppliers": "Suppliers",
     "companies": "Companies",
+    "cashRegisters": "Cash Registers",
     "products": "Products",
     "categories": "Categories",
     "taxes": "Taxes",
@@ -256,6 +257,55 @@
       "save": "Error saving company",
       "load": "Error loading companies",
       "delete": "Error deleting company"
+    }
+  },
+  "cashRegisters": {
+    "title": "Cash Registers",
+    "new": "New Cash Register",
+    "edit": "Edit Cash Register",
+    "delete": "Delete Cash Register",
+    "deleteConfirm": "Are you sure you want to delete cash register {{name}}?",
+    "empty": "No cash registers registered",
+    "field": {
+      "id": "#",
+      "name": "Name",
+      "code": "Code",
+      "isActive": "Active"
+    },
+    "created": "Cash register created successfully",
+    "updated": "Cash register updated successfully",
+    "deleted": "Cash register deleted successfully",
+    "error": {
+      "save": "Error saving cash register",
+      "load": "Error loading cash registers",
+      "delete": "Error deleting cash register"
+    }
+  },
+  "registerSession": {
+    "abrir": "Open Register",
+    "cerrar": "Close Register",
+    "initialCash": "Starting Cash",
+    "countedCash": "Counted Cash",
+    "notes": "Notes",
+    "expectedCash": "Expected",
+    "difference": "Difference",
+    "sobrante": "Surplus",
+    "faltante": "Shortage",
+    "aperturaActiva": "Register: {{name}}",
+    "selectCaja": "Select Register",
+    "noCajaActiva": "No open register",
+    "cashier": "Cashier",
+    "openedAt": "Opened",
+    "closedAt": "Closed",
+    "totalSales": "Total Sales",
+    "salesCount": "Shift Sales",
+    "successOpen": "Register opened successfully",
+    "successClose": "Register closed successfully",
+    "error": {
+      "open": "Error opening register",
+      "close": "Error closing register",
+      "alreadyOpen": "You already have an open register",
+      "inactive": "Register is not active"
     }
   },
   "products": {
@@ -549,6 +599,7 @@
       "confirm": "Confirm payment",
       "paid": "Paid",
       "remaining": "Remaining",
+      "remainingUsd": "Remaining USD",
       "complete": "Complete",
       "excess": "Excess",
       "pending": "Pending",

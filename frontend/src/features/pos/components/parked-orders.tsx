@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { ChevronDown, ChevronUp, Pause } from 'lucide-react';
+import { ChevronDown, ChevronUp, Pause, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useI18n } from '@/i18n';
@@ -75,24 +75,38 @@ export function ParkedOrders({ currentCartCount, onResume, refreshTrigger, varia
   }, [now]);
 
   const listContent = (
-    <div className={variant === 'sheet' ? 'space-y-1' : 'p-2 space-y-1 max-h-48 overflow-y-auto border-t border-border/50'}>
-      {orders.length === 0 && <p className="text-sm text-muted-foreground p-2">{t('pos.park.empty')}</p>}
-      {orders.map(o => (
-        <div key={o.id} className="flex items-center justify-between p-2 rounded hover:bg-muted/50 text-sm">
-          <div>
-            <span className="font-mono text-xs">{o.label}</span>
-            <span className="text-muted-foreground ml-2">
-              — {tp('pos.park.item', { n: o.label.replace(/\D/g, ''), count: String(o.cartItems.length) })}
-            </span>
-            <span className="text-muted-foreground ml-1">— Bs. {o.total.toFixed(2)}</span>
-            <span className="text-xs text-muted-foreground ml-1">— {formatRelative(o.createdAt)}</span>
+    <div className={variant === 'sheet' ? 'space-y-2 px-4 pb-4' : 'p-2 space-y-1 max-h-48 overflow-y-auto border-t border-border/50'}>
+      {orders.length === 0 && <p className="text-sm text-muted-foreground p-4 text-center">{t('pos.park.empty')}</p>}
+      {orders.map(o => {
+        const itemCount = o.cartItems.length;
+        const itemLabel = itemCount === 1 ? '1 item' : `${itemCount} items`;
+        return (
+          <div key={o.id} className="border border-border/50 rounded-lg p-3 space-y-2 hover:border-border transition-colors">
+            <div className="flex items-start justify-between">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-sm">{o.label}</span>
+                  <span className="text-xs text-muted-foreground">{formatRelative(o.createdAt)}</span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {itemLabel} — Bs. {o.total.toFixed(2)}{o.totalUsd > 0 ? ` / $${o.totalUsd.toFixed(2)}` : ''}
+                </p>
+                {o.customerName && (
+                  <p className="text-xs text-muted-foreground">{o.customerName}</p>
+                )}
+              </div>
+            </div>
+            <div className="flex justify-end gap-1.5">
+              <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => handleResume(o)}>
+                {t('pos.park.resume')}
+              </Button>
+              <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-destructive" onClick={() => setConfirmDelete(o.id!)}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-          <div className="flex gap-1">
-            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => handleResume(o)}>{t('pos.park.resume')}</Button>
-            <Button size="sm" variant="ghost" className="h-7 text-xs text-destructive" onClick={() => setConfirmDelete(o.id!)}>{t('pos.park.delete')}</Button>
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 

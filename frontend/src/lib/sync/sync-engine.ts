@@ -68,7 +68,7 @@ export class SyncEngine {
         params: since ? { since } : undefined,
       });
 
-      const { products, customers, exchangeRates, exchangeRateDays, suppliers, companies, taxes, brands, categories, hasMore, cursor } = response.data.data;
+      const { products, customers, exchangeRates, exchangeRateDays, suppliers, companies, taxes, brands, categories, cashRegisters, hasMore, cursor } = response.data.data;
 
       for (const product of products) {
         await localDb.products.put({
@@ -152,6 +152,19 @@ export class SyncEngine {
           idParent: category.idParent,
           updatedAt: category.updatedAt,
         });
+      }
+
+      if (cashRegisters) {
+        for (const cr of cashRegisters) {
+          await localDb.cashRegisters.put({
+            id: cr.id,
+            organizationId: orgId,
+            name: cr.name,
+            code: cr.code,
+            isActive: cr.isActive,
+            updatedAt: cr.updatedAt,
+          });
+        }
       }
 
       for (const rate of exchangeRates) {

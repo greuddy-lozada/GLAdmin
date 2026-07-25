@@ -29,6 +29,7 @@ export interface PullResponse {
     taxes: Array<{ id: string; name: string; percentage: number; updatedAt: string }>;
     brands: Array<{ id: string; name: string; description?: string; updatedAt: string }>;
     categories: Array<{ id: string; name: string; description?: string; idParent?: string; updatedAt: string }>;
+    cashRegisters?: Array<{ id: string; name: string; code: string; isActive: boolean; updatedAt: string }>;
     hasMore?: boolean;
     cursor: { lastPullAt: string };
   };

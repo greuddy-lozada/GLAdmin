@@ -108,6 +108,7 @@
     "customers": "Clientes",
     "suppliers": "Proveedores",
     "companies": "Empresas",
+    "cashRegisters": "Cajas",
     "products": "Productos",
     "categories": "Categorías",
     "taxes": "Impuestos",
@@ -256,6 +257,55 @@
       "save": "Error al guardar empresa",
       "load": "Error al cargar empresas",
       "delete": "Error al eliminar empresa"
+    }
+  },
+  "cashRegisters": {
+    "title": "Cajas",
+    "new": "Nueva Caja",
+    "edit": "Editar Caja",
+    "delete": "Eliminar Caja",
+    "deleteConfirm": "¿Está seguro de eliminar la caja {{name}}?",
+    "empty": "No hay cajas registradas",
+    "field": {
+      "id": "#",
+      "name": "Nombre",
+      "code": "Código",
+      "isActive": "Activa"
+    },
+    "created": "Caja creada exitosamente",
+    "updated": "Caja actualizada exitosamente",
+    "deleted": "Caja eliminada exitosamente",
+    "error": {
+      "save": "Error al guardar caja",
+      "load": "Error al cargar cajas",
+      "delete": "Error al eliminar caja"
+    }
+  },
+  "registerSession": {
+    "abrir": "Abrir Caja",
+    "cerrar": "Cerrar Caja",
+    "initialCash": "Fondo Inicial",
+    "countedCash": "Efectivo Contado",
+    "notes": "Notas",
+    "expectedCash": "Esperado",
+    "difference": "Diferencia",
+    "sobrante": "Sobrante",
+    "faltante": "Faltante",
+    "aperturaActiva": "Caja: {{name}}",
+    "selectCaja": "Seleccionar Caja",
+    "noCajaActiva": "No hay caja abierta",
+    "cashier": "Cajero",
+    "openedAt": "Apertura",
+    "closedAt": "Cierre",
+    "totalSales": "Total Ventas",
+    "salesCount": "Ventas del turno",
+    "successOpen": "Caja abierta exitosamente",
+    "successClose": "Caja cerrada exitosamente",
+    "error": {
+      "open": "Error al abrir caja",
+      "close": "Error al cerrar caja",
+      "alreadyOpen": "Ya tienes una caja abierta",
+      "inactive": "La caja no está activa"
     }
   },
   "products": {
@@ -549,6 +599,7 @@
       "confirm": "Confirmar pago",
       "paid": "Pagado",
       "remaining": "Faltante",
+      "remainingUsd": "Faltante USD",
       "complete": "Completo",
       "excess": "Excedente",
       "pending": "Pendiente",

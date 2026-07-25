@@ -1,6 +1,9 @@
+-- CreateEnum
+CREATE TYPE "CajaAperturaStatus" AS ENUM ('abierta', 'cerrada');
+
 -- CreateTable
 CREATE TABLE "roles" (
-    "id" SERIAL NOT NULL,
+    "id" UUID NOT NULL,
     "name" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -11,13 +14,13 @@ CREATE TABLE "roles" (
 
 -- CreateTable
 CREATE TABLE "users" (
-    "id" SERIAL NOT NULL,
+    "id" UUID NOT NULL,
     "email" TEXT NOT NULL,
     "user_name" TEXT NOT NULL,
     "password" TEXT NOT NULL,
     "first_name" TEXT NOT NULL,
     "last_name" TEXT NOT NULL,
-    "id_role" INTEGER NOT NULL,
+    "id_role" UUID NOT NULL,
     "must_change_password" BOOLEAN NOT NULL DEFAULT false,
     "last_login" TIMESTAMP(3),
     "is_active" BOOLEAN NOT NULL DEFAULT true,
@@ -25,17 +28,17 @@ CREATE TABLE "users" (
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
-    "current_organization_id" INTEGER,
+    "current_organization_id" UUID,
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "refresh_tokens" (
-    "id" SERIAL NOT NULL,
+    "id" UUID NOT NULL,
     "token_id" TEXT NOT NULL,
     "token_hash" TEXT NOT NULL,
-    "user_id" INTEGER NOT NULL,
+    "user_id" UUID NOT NULL,
     "device_info" TEXT,
     "expires_at" TIMESTAMP(3) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -45,7 +48,7 @@ CREATE TABLE "refresh_tokens" (
 
 -- CreateTable
 CREATE TABLE "permissions" (
-    "id" SERIAL NOT NULL,
+    "id" UUID NOT NULL,
     "name" TEXT,
     "slug" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -56,13 +59,13 @@ CREATE TABLE "permissions" (
 
 -- CreateTable
 CREATE TABLE "organizations" (
-    "id" SERIAL NOT NULL,
+    "id" UUID NOT NULL,
     "name" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "version" INTEGER NOT NULL DEFAULT 0,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "settings" TEXT,
-    "plan_id" INTEGER,
+    "plan_id" UUID,
     "subscription_status" TEXT NOT NULL DEFAULT 'inactive',
     "subscription_expires_at" TIMESTAMP(3),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -74,10 +77,10 @@ CREATE TABLE "organizations" (
 
 -- CreateTable
 CREATE TABLE "plans" (
-    "id" SERIAL NOT NULL,
+    "id" UUID NOT NULL,
     "name" TEXT NOT NULL,
     "label" TEXT NOT NULL,
-    "amount" INTEGER NOT NULL,
+    "amount" DECIMAL(18,4) NOT NULL,
     "currency" TEXT NOT NULL DEFAULT 'usd',
     "interval" TEXT NOT NULL,
     "features" TEXT NOT NULL,
@@ -93,17 +96,17 @@ CREATE TABLE "plans" (
 
 -- CreateTable
 CREATE TABLE "subscription_payments" (
-    "id" SERIAL NOT NULL,
-    "organization_id" INTEGER NOT NULL,
-    "plan_id" INTEGER NOT NULL,
+    "id" UUID NOT NULL,
+    "organization_id" UUID NOT NULL,
+    "plan_id" UUID NOT NULL,
     "method" TEXT NOT NULL,
-    "amount_usd" DOUBLE PRECISION NOT NULL,
+    "amount_usd" DECIMAL(18,4) NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'pending',
     "bank_id" TEXT,
     "phone_number" TEXT,
     "reference" TEXT,
     "proof_image" TEXT,
-    "reviewed_by" INTEGER,
+    "reviewed_by" UUID,
     "reviewed_at" TIMESTAMP(3),
     "notes" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -115,21 +118,21 @@ CREATE TABLE "subscription_payments" (
 
 -- CreateTable
 CREATE TABLE "user_organizations" (
-    "user_id" INTEGER NOT NULL,
-    "organization_id" INTEGER NOT NULL,
-    "role_id" INTEGER NOT NULL,
+    "user_id" UUID NOT NULL,
+    "organization_id" UUID NOT NULL,
+    "role_id" UUID NOT NULL,
 
     CONSTRAINT "user_organizations_pkey" PRIMARY KEY ("user_id","organization_id")
 );
 
 -- CreateTable
 CREATE TABLE "invites" (
-    "id" SERIAL NOT NULL,
+    "id" UUID NOT NULL,
     "code" TEXT NOT NULL,
     "email" TEXT NOT NULL,
-    "organization_id" INTEGER NOT NULL,
-    "role_id" INTEGER NOT NULL,
-    "invited_by_id" INTEGER NOT NULL,
+    "organization_id" UUID NOT NULL,
+    "role_id" UUID NOT NULL,
+    "invited_by_id" UUID NOT NULL,
     "expires_at" TIMESTAMP(3) NOT NULL,
     "version" INTEGER NOT NULL DEFAULT 0,
     "used" BOOLEAN NOT NULL DEFAULT false,
@@ -140,8 +143,8 @@ CREATE TABLE "invites" (
 
 -- CreateTable
 CREATE TABLE "pago_movil_configs" (
-    "id" SERIAL NOT NULL,
-    "organization_id" INTEGER NOT NULL,
+    "id" UUID NOT NULL,
+    "organization_id" UUID NOT NULL,
     "phone_number" TEXT NOT NULL,
     "bank_id" TEXT NOT NULL,
     "id_number" TEXT NOT NULL,
@@ -150,34 +153,36 @@ CREATE TABLE "pago_movil_configs" (
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
+    "deleted_at" TIMESTAMP(3),
 
     CONSTRAINT "pago_movil_configs_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "pago_movil_transactions" (
-    "id" SERIAL NOT NULL,
-    "organization_id" INTEGER NOT NULL,
-    "user_id" INTEGER NOT NULL,
-    "amount_ves" DOUBLE PRECISION NOT NULL,
-    "amount_usd" DOUBLE PRECISION NOT NULL,
+    "id" UUID NOT NULL,
+    "organization_id" UUID NOT NULL,
+    "user_id" UUID NOT NULL,
+    "amount_ves" DECIMAL(18,4) NOT NULL,
+    "amount_usd" DECIMAL(18,4) NOT NULL,
     "bank_id" TEXT NOT NULL,
     "phone_number" TEXT NOT NULL,
     "reference" TEXT NOT NULL,
     "proof_image" TEXT,
     "version" INTEGER NOT NULL DEFAULT 0,
     "status" TEXT NOT NULL DEFAULT 'pending',
-    "reviewed_by" INTEGER,
+    "reviewed_by" UUID,
     "reviewed_at" TIMESTAMP(3),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
+    "deleted_at" TIMESTAMP(3),
 
     CONSTRAINT "pago_movil_transactions_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "customers" (
-    "id" SERIAL NOT NULL,
+    "id" UUID NOT NULL,
     "id_card_number" TEXT NOT NULL,
     "first_name" TEXT NOT NULL,
     "last_name" TEXT NOT NULL,
@@ -192,14 +197,14 @@ CREATE TABLE "customers" (
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
-    "organization_id" INTEGER NOT NULL,
+    "organization_id" UUID NOT NULL,
 
     CONSTRAINT "customers_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "suppliers" (
-    "id" SERIAL NOT NULL,
+    "id" UUID NOT NULL,
     "company_name" TEXT NOT NULL,
     "business_name" TEXT,
     "fiscal_address" TEXT,
@@ -215,14 +220,14 @@ CREATE TABLE "suppliers" (
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
-    "organization_id" INTEGER NOT NULL,
+    "organization_id" UUID NOT NULL,
 
     CONSTRAINT "suppliers_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "companies" (
-    "id" SERIAL NOT NULL,
+    "id" UUID NOT NULL,
     "tax_id" TEXT NOT NULL DEFAULT '',
     "name" TEXT NOT NULL,
     "address" TEXT NOT NULL,
@@ -235,16 +240,16 @@ CREATE TABLE "companies" (
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
-    "organization_id" INTEGER NOT NULL,
+    "organization_id" UUID NOT NULL,
 
     CONSTRAINT "companies_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "licenses" (
-    "id" SERIAL NOT NULL,
+    "id" UUID NOT NULL,
     "code" TEXT,
-    "id_company" INTEGER NOT NULL,
+    "id_company" UUID NOT NULL,
     "version" INTEGER NOT NULL DEFAULT 0,
     "available" BOOLEAN,
     "expiry_date" TIMESTAMP(3),
@@ -256,7 +261,7 @@ CREATE TABLE "licenses" (
 
 -- CreateTable
 CREATE TABLE "currencies" (
-    "id" SERIAL NOT NULL,
+    "id" UUID NOT NULL,
     "code" TEXT,
     "name" TEXT,
     "symbol" TEXT,
@@ -268,27 +273,27 @@ CREATE TABLE "currencies" (
 
 -- CreateTable
 CREATE TABLE "exchange_rates" (
-    "id" SERIAL NOT NULL,
+    "id" UUID NOT NULL,
     "rate" DOUBLE PRECISION NOT NULL,
-    "currency_id" INTEGER,
+    "currency_id" UUID,
     "type" TEXT NOT NULL DEFAULT 'official',
     "date" TIMESTAMP(3) NOT NULL,
     "source" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
-    "organization_id" INTEGER NOT NULL,
+    "organization_id" UUID NOT NULL,
 
     CONSTRAINT "exchange_rates_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "exchange_rate_days" (
-    "id" SERIAL NOT NULL,
+    "id" UUID NOT NULL,
     "date" TIMESTAMP(3) NOT NULL,
     "rate_bcv_usd" DOUBLE PRECISION,
     "rate_paralelo" DOUBLE PRECISION,
     "source" TEXT DEFAULT 'dolarapi',
-    "organization_id" INTEGER NOT NULL,
+    "organization_id" UUID NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -297,7 +302,7 @@ CREATE TABLE "exchange_rate_days" (
 
 -- CreateTable
 CREATE TABLE "modules" (
-    "id" SERIAL NOT NULL,
+    "id" UUID NOT NULL,
     "name" TEXT,
     "available" BOOLEAN,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -308,7 +313,7 @@ CREATE TABLE "modules" (
 
 -- CreateTable
 CREATE TABLE "taxes" (
-    "id" SERIAL NOT NULL,
+    "id" UUID NOT NULL,
     "name" TEXT,
     "percentage" INTEGER NOT NULL,
     "formula" TEXT,
@@ -316,14 +321,14 @@ CREATE TABLE "taxes" (
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
-    "organization_id" INTEGER NOT NULL,
+    "organization_id" UUID NOT NULL,
 
     CONSTRAINT "taxes_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "brands" (
-    "id" SERIAL NOT NULL,
+    "id" UUID NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
     "version" INTEGER NOT NULL DEFAULT 0,
@@ -331,40 +336,40 @@ CREATE TABLE "brands" (
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
-    "organization_id" INTEGER NOT NULL,
+    "organization_id" UUID NOT NULL,
 
     CONSTRAINT "brands_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "categories" (
-    "id" SERIAL NOT NULL,
+    "id" UUID NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
-    "id_parent" INTEGER,
+    "id_parent" UUID,
     "version" INTEGER NOT NULL DEFAULT 0,
     "available" BOOLEAN NOT NULL DEFAULT true,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
-    "organization_id" INTEGER NOT NULL,
+    "organization_id" UUID NOT NULL,
 
     CONSTRAINT "categories_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "products" (
-    "id" SERIAL NOT NULL,
+    "id" UUID NOT NULL,
     "code" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "price" DOUBLE PRECISION NOT NULL,
-    "dollar_price" DOUBLE PRECISION,
-    "base_cost" DOUBLE PRECISION,
+    "price" DECIMAL(18,4) NOT NULL,
+    "dollar_price" DECIMAL(18,4),
+    "base_cost" DECIMAL(18,4),
     "margin" DOUBLE PRECISION NOT NULL DEFAULT 20,
     "total_existence" INTEGER NOT NULL DEFAULT 0,
-    "id_tax" INTEGER,
-    "id_brand" INTEGER,
-    "id_category" INTEGER,
+    "id_tax" UUID,
+    "id_brand" UUID,
+    "id_category" UUID,
     "observation" TEXT,
     "version" INTEGER NOT NULL DEFAULT 0,
     "available" BOOLEAN NOT NULL DEFAULT true,
@@ -372,47 +377,47 @@ CREATE TABLE "products" (
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
-    "organization_id" INTEGER NOT NULL,
+    "organization_id" UUID NOT NULL,
 
     CONSTRAINT "products_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "batches" (
-    "id" SERIAL NOT NULL,
+    "id" UUID NOT NULL,
     "code" TEXT NOT NULL,
     "description" TEXT,
     "version" INTEGER NOT NULL DEFAULT 0,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
-    "organization_id" INTEGER NOT NULL,
+    "organization_id" UUID NOT NULL,
 
     CONSTRAINT "batches_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "stocks" (
-    "id" SERIAL NOT NULL,
-    "id_product" INTEGER NOT NULL,
-    "id_supplier" INTEGER,
-    "id_batch" INTEGER,
-    "id_purchase_order" INTEGER,
+    "id" UUID NOT NULL,
+    "id_product" UUID NOT NULL,
+    "id_supplier" UUID,
+    "id_batch" UUID,
+    "id_purchase_order" UUID,
     "existence" INTEGER NOT NULL,
     "version" INTEGER NOT NULL DEFAULT 0,
     "available" BOOLEAN NOT NULL DEFAULT true,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
-    "organization_id" INTEGER NOT NULL,
+    "organization_id" UUID NOT NULL,
 
     CONSTRAINT "stocks_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "stock_details" (
-    "id" SERIAL NOT NULL,
-    "id_stock" INTEGER NOT NULL,
+    "id" UUID NOT NULL,
+    "id_stock" UUID NOT NULL,
     "type" INTEGER NOT NULL,
     "quantity" INTEGER NOT NULL,
     "expiry_date" TIMESTAMP(3),
@@ -425,21 +430,21 @@ CREATE TABLE "stock_details" (
 
 -- CreateTable
 CREATE TABLE "purchase_orders" (
-    "id" SERIAL NOT NULL,
-    "id_supplier" INTEGER NOT NULL,
+    "id" UUID NOT NULL,
+    "id_supplier" UUID NOT NULL,
     "code" TEXT,
     "date" TIMESTAMP(3),
-    "amount" DOUBLE PRECISION,
-    "amount_usd" DOUBLE PRECISION,
-    "base_amount" DOUBLE PRECISION,
-    "base_amount_usd" DOUBLE PRECISION,
-    "iva_amount" DOUBLE PRECISION,
-    "iva_amount_usd" DOUBLE PRECISION,
+    "amount" DECIMAL(18,4),
+    "amount_usd" DECIMAL(18,4),
+    "base_amount" DECIMAL(18,4),
+    "base_amount_usd" DECIMAL(18,4),
+    "iva_amount" DECIMAL(18,4),
+    "iva_amount_usd" DECIMAL(18,4),
     "exchange_rate" DOUBLE PRECISION,
-    "exchange_rate_id" INTEGER,
-    "exchange_rate_day_id" INTEGER,
+    "exchange_rate_id" UUID,
+    "exchange_rate_day_id" UUID,
     "official_exchange_rate" DOUBLE PRECISION,
-    "official_exchange_rate_id" INTEGER,
+    "official_exchange_rate_id" UUID,
     "payment_method" INTEGER,
     "status" TEXT DEFAULT 'DRAFT',
     "version" INTEGER NOT NULL DEFAULT 0,
@@ -448,62 +453,62 @@ CREATE TABLE "purchase_orders" (
     "deleted_at" TIMESTAMP(3),
     "annulled_at" TIMESTAMP(3),
     "annulment_reason" TEXT,
-    "organization_id" INTEGER NOT NULL,
+    "organization_id" UUID NOT NULL,
 
     CONSTRAINT "purchase_orders_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "purchase_order_details" (
-    "id" SERIAL NOT NULL,
-    "id_purchase_order" INTEGER NOT NULL,
-    "id_product" INTEGER NOT NULL,
+    "id" UUID NOT NULL,
+    "id_purchase_order" UUID NOT NULL,
+    "id_product" UUID NOT NULL,
     "quantity" INTEGER,
     "received_quantity" INTEGER NOT NULL DEFAULT 0,
-    "unit_price" DOUBLE PRECISION,
-    "unit_price_usd" DOUBLE PRECISION,
-    "subtotal" DOUBLE PRECISION,
-    "subtotal_usd" DOUBLE PRECISION,
+    "unit_price" DECIMAL(18,4),
+    "unit_price_usd" DECIMAL(18,4),
+    "subtotal" DECIMAL(18,4),
+    "subtotal_usd" DECIMAL(18,4),
     "observation" TEXT,
     "version" INTEGER NOT NULL DEFAULT 0,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
-    "organization_id" INTEGER NOT NULL,
+    "organization_id" UUID NOT NULL,
 
     CONSTRAINT "purchase_order_details_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "accounts_payable" (
-    "id" SERIAL NOT NULL,
-    "id_purchase_order" INTEGER NOT NULL,
+    "id" UUID NOT NULL,
+    "id_purchase_order" UUID NOT NULL,
     "due_date" TIMESTAMP(3),
     "issue_date" TIMESTAMP(3),
-    "amount" DOUBLE PRECISION,
-    "amount_usd" DOUBLE PRECISION,
+    "amount" DECIMAL(18,4),
+    "amount_usd" DECIMAL(18,4),
     "exchange_rate" DOUBLE PRECISION,
-    "credit" DOUBLE PRECISION,
+    "credit" DECIMAL(18,4),
     "status" INTEGER,
     "version" INTEGER NOT NULL DEFAULT 0,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
-    "organization_id" INTEGER NOT NULL,
+    "organization_id" UUID NOT NULL,
 
     CONSTRAINT "accounts_payable_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "withholding_records" (
-    "id" SERIAL NOT NULL,
-    "id_supplier" INTEGER NOT NULL,
-    "id_purchase_order" INTEGER,
+    "id" UUID NOT NULL,
+    "id_supplier" UUID NOT NULL,
+    "id_purchase_order" UUID,
     "type" TEXT NOT NULL,
     "percentage" DOUBLE PRECISION NOT NULL,
-    "base_amount" DOUBLE PRECISION NOT NULL,
-    "base_amount_usd" DOUBLE PRECISION,
-    "withheld_amount" DOUBLE PRECISION NOT NULL,
-    "withheld_amount_usd" DOUBLE PRECISION,
+    "base_amount" DECIMAL(18,4) NOT NULL,
+    "base_amount_usd" DECIMAL(18,4),
+    "withheld_amount" DECIMAL(18,4) NOT NULL,
+    "withheld_amount_usd" DECIMAL(18,4),
     "exchange_rate" DOUBLE PRECISION,
     "document_number" TEXT,
     "period" TEXT,
@@ -512,28 +517,28 @@ CREATE TABLE "withholding_records" (
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
-    "organization_id" INTEGER NOT NULL,
+    "organization_id" UUID NOT NULL,
 
     CONSTRAINT "withholding_records_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "sales" (
-    "id" SERIAL NOT NULL,
-    "id_customer" INTEGER,
+    "id" UUID NOT NULL,
+    "id_customer" UUID,
     "code" TEXT,
     "date" TIMESTAMP(3),
-    "amount" DOUBLE PRECISION,
-    "amount_usd" DOUBLE PRECISION,
+    "amount" DECIMAL(18,4),
+    "amount_usd" DECIMAL(18,4),
     "exchange_rate" DOUBLE PRECISION,
-    "exchange_rate_id" INTEGER,
+    "exchange_rate_id" UUID,
     "official_exchange_rate" DOUBLE PRECISION,
-    "official_exchange_rate_id" INTEGER,
-    "total_tax" DOUBLE PRECISION,
-    "total_tax_usd" DOUBLE PRECISION,
+    "official_exchange_rate_id" UUID,
+    "total_tax" DECIMAL(18,4),
+    "total_tax_usd" DECIMAL(18,4),
     "withholding_percentage" DOUBLE PRECISION,
-    "withholding_amount" DOUBLE PRECISION,
-    "withholding_amount_usd" DOUBLE PRECISION,
+    "withholding_amount" DECIMAL(18,4),
+    "withholding_amount_usd" DECIMAL(18,4),
     "payment_method" INTEGER,
     "status" TEXT DEFAULT 'DRAFT',
     "version" INTEGER NOT NULL DEFAULT 0,
@@ -542,72 +547,73 @@ CREATE TABLE "sales" (
     "deleted_at" TIMESTAMP(3),
     "annulled_at" TIMESTAMP(3),
     "annulment_reason" TEXT,
-    "organization_id" INTEGER NOT NULL,
+    "organization_id" UUID NOT NULL,
+    "caja_apertura_id" UUID,
 
     CONSTRAINT "sales_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "sale_details" (
-    "id" SERIAL NOT NULL,
-    "id_sale" INTEGER NOT NULL,
-    "id_product" INTEGER NOT NULL,
+    "id" UUID NOT NULL,
+    "id_sale" UUID NOT NULL,
+    "id_product" UUID NOT NULL,
     "quantity" INTEGER,
-    "unit_price" DOUBLE PRECISION,
-    "unit_price_usd" DOUBLE PRECISION,
-    "subtotal" DOUBLE PRECISION,
-    "subtotal_usd" DOUBLE PRECISION,
+    "unit_price" DECIMAL(18,4),
+    "unit_price_usd" DECIMAL(18,4),
+    "subtotal" DECIMAL(18,4),
+    "subtotal_usd" DECIMAL(18,4),
     "tax_name" TEXT,
     "tax_percentage" DOUBLE PRECISION,
-    "tax_amount" DOUBLE PRECISION,
-    "tax_amount_usd" DOUBLE PRECISION,
+    "tax_amount" DECIMAL(18,4),
+    "tax_amount_usd" DECIMAL(18,4),
     "observation" TEXT,
     "version" INTEGER NOT NULL DEFAULT 0,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
-    "organization_id" INTEGER NOT NULL,
+    "organization_id" UUID NOT NULL,
 
     CONSTRAINT "sale_details_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "sale_payments" (
-    "id" SERIAL NOT NULL,
-    "sale_id" INTEGER NOT NULL,
+    "id" UUID NOT NULL,
+    "sale_id" UUID NOT NULL,
     "method" INTEGER NOT NULL,
-    "amount" DOUBLE PRECISION NOT NULL,
+    "amount" DECIMAL(18,4) NOT NULL,
     "currency" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "organization_id" INTEGER NOT NULL,
+    "organization_id" UUID NOT NULL,
 
     CONSTRAINT "sale_payments_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "accounts_receivable" (
-    "id" SERIAL NOT NULL,
-    "id_sale" INTEGER,
+    "id" UUID NOT NULL,
+    "id_sale" UUID,
     "due_date" TIMESTAMP(3),
     "issue_date" TIMESTAMP(3),
-    "amount" DOUBLE PRECISION,
-    "amount_usd" DOUBLE PRECISION,
+    "amount" DECIMAL(18,4),
+    "amount_usd" DECIMAL(18,4),
     "exchange_rate" DOUBLE PRECISION,
-    "credit" DOUBLE PRECISION,
+    "credit" DECIMAL(18,4),
     "status" INTEGER,
     "version" INTEGER NOT NULL DEFAULT 0,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
-    "organization_id" INTEGER NOT NULL,
+    "organization_id" UUID NOT NULL,
 
     CONSTRAINT "accounts_receivable_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "products_exchange_rates" (
-    "id" SERIAL NOT NULL,
-    "id_product" INTEGER NOT NULL,
-    "id_exchange_rate" INTEGER NOT NULL,
+    "id" UUID NOT NULL,
+    "id_product" UUID NOT NULL,
+    "id_exchange_rate" UUID NOT NULL,
     "value" DOUBLE PRECISION,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -617,8 +623,8 @@ CREATE TABLE "products_exchange_rates" (
 
 -- CreateTable
 CREATE TABLE "sync_cursors" (
-    "id" SERIAL NOT NULL,
-    "organization_id" INTEGER NOT NULL,
+    "id" UUID NOT NULL,
+    "organization_id" UUID NOT NULL,
     "last_pull_at" TIMESTAMP(3) NOT NULL,
     "last_push_at" TIMESTAMP(3) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -629,16 +635,16 @@ CREATE TABLE "sync_cursors" (
 
 -- CreateTable
 CREATE TABLE "sync_conflicts" (
-    "id" SERIAL NOT NULL,
-    "organization_id" INTEGER NOT NULL,
+    "id" UUID NOT NULL,
+    "organization_id" UUID NOT NULL,
     "table" TEXT NOT NULL,
-    "record_id" INTEGER,
+    "record_id" UUID,
     "local_data" TEXT NOT NULL,
     "server_data" TEXT NOT NULL,
     "local_timestamp" TIMESTAMP(3) NOT NULL,
     "description" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'pending',
-    "resolved_by" INTEGER,
+    "resolved_by" UUID,
     "resolved_at" TIMESTAMP(3),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -648,17 +654,86 @@ CREATE TABLE "sync_conflicts" (
 
 -- CreateTable
 CREATE TABLE "audit_logs" (
-    "id" SERIAL NOT NULL,
-    "organization_id" INTEGER NOT NULL,
-    "user_id" INTEGER,
+    "id" UUID NOT NULL,
+    "organization_id" UUID NOT NULL,
+    "user_id" UUID,
     "action" TEXT NOT NULL,
     "entity" TEXT NOT NULL,
-    "entity_id" INTEGER,
+    "entity_id" UUID,
     "metadata" TEXT,
     "ip_address" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "audit_logs_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "generated_reports" (
+    "id" UUID NOT NULL,
+    "organization_id" UUID NOT NULL,
+    "user_id" UUID NOT NULL,
+    "type" TEXT NOT NULL,
+    "category" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "parameters" JSONB NOT NULL,
+    "results" JSONB,
+    "html_snapshot" TEXT,
+    "format" TEXT NOT NULL DEFAULT 'json',
+    "status" TEXT NOT NULL DEFAULT 'generating',
+    "error_message" TEXT,
+    "generated_at" TIMESTAMPTZ,
+    "deleted_at" TIMESTAMPTZ,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT "generated_reports_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "cajas" (
+    "id" UUID NOT NULL,
+    "organization_id" UUID NOT NULL,
+    "name" TEXT NOT NULL,
+    "code" TEXT NOT NULL,
+    "is_active" BOOLEAN NOT NULL DEFAULT true,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "deleted_at" TIMESTAMP(3),
+
+    CONSTRAINT "cajas_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "caja_aperturas" (
+    "id" UUID NOT NULL,
+    "caja_id" UUID NOT NULL,
+    "user_id" UUID NOT NULL,
+    "organization_id" UUID NOT NULL,
+    "initial_cash" DECIMAL(18,4) NOT NULL DEFAULT 0,
+    "status" "CajaAperturaStatus" NOT NULL DEFAULT 'abierta',
+    "opened_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "closed_at" TIMESTAMP(3),
+    "notes" TEXT,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "caja_aperturas_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "corte_cajas" (
+    "id" UUID NOT NULL,
+    "caja_apertura_id" UUID NOT NULL,
+    "organization_id" UUID NOT NULL,
+    "expected_cash" DECIMAL(18,4) NOT NULL,
+    "counted_cash" DECIMAL(18,4) NOT NULL,
+    "difference" DECIMAL(18,4) NOT NULL,
+    "closed_by_id" UUID NOT NULL,
+    "notes" TEXT,
+    "closed_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "corte_cajas_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -749,7 +824,7 @@ CREATE UNIQUE INDEX "pago_movil_configs_organization_id_key" ON "pago_movil_conf
 CREATE INDEX "pago_movil_configs_organization_id_idx" ON "pago_movil_configs"("organization_id");
 
 -- CreateIndex
-CREATE INDEX "pago_movil_transactions_organization_id_idx" ON "pago_movil_transactions"("organization_id");
+CREATE INDEX "pago_movil_configs_deleted_at_idx" ON "pago_movil_configs"("deleted_at");
 
 -- CreateIndex
 CREATE INDEX "pago_movil_transactions_user_id_idx" ON "pago_movil_transactions"("user_id");
@@ -759,6 +834,9 @@ CREATE INDEX "pago_movil_transactions_reviewed_by_idx" ON "pago_movil_transactio
 
 -- CreateIndex
 CREATE INDEX "pago_movil_transactions_status_idx" ON "pago_movil_transactions"("status");
+
+-- CreateIndex
+CREATE INDEX "pago_movil_transactions_deleted_at_idx" ON "pago_movil_transactions"("deleted_at");
 
 -- CreateIndex
 CREATE INDEX "customers_organization_id_idx" ON "customers"("organization_id");
@@ -843,6 +921,9 @@ CREATE INDEX "categories_id_parent_idx" ON "categories"("id_parent");
 
 -- CreateIndex
 CREATE INDEX "categories_deleted_at_idx" ON "categories"("deleted_at");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "categories_name_organization_id_key" ON "categories"("name", "organization_id");
 
 -- CreateIndex
 CREATE INDEX "products_organization_id_idx" ON "products"("organization_id");
@@ -998,6 +1079,9 @@ CREATE INDEX "sales_code_idx" ON "sales"("code");
 CREATE INDEX "sales_deleted_at_idx" ON "sales"("deleted_at");
 
 -- CreateIndex
+CREATE INDEX "sales_caja_apertura_id_idx" ON "sales"("caja_apertura_id");
+
+-- CreateIndex
 CREATE INDEX "sale_details_organization_id_idx" ON "sale_details"("organization_id");
 
 -- CreateIndex
@@ -1053,6 +1137,42 @@ CREATE INDEX "audit_logs_user_id_idx" ON "audit_logs"("user_id");
 
 -- CreateIndex
 CREATE INDEX "audit_logs_entity_entity_id_idx" ON "audit_logs"("entity", "entity_id");
+
+-- CreateIndex
+CREATE INDEX "generated_reports_organization_id_category_idx" ON "generated_reports"("organization_id", "category");
+
+-- CreateIndex
+CREATE INDEX "generated_reports_organization_id_type_idx" ON "generated_reports"("organization_id", "type");
+
+-- CreateIndex
+CREATE INDEX "generated_reports_organization_id_created_at_idx" ON "generated_reports"("organization_id", "created_at");
+
+-- CreateIndex
+CREATE INDEX "generated_reports_user_id_idx" ON "generated_reports"("user_id");
+
+-- CreateIndex
+CREATE INDEX "cajas_organization_id_idx" ON "cajas"("organization_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "cajas_organization_id_code_key" ON "cajas"("organization_id", "code");
+
+-- CreateIndex
+CREATE INDEX "caja_aperturas_caja_id_idx" ON "caja_aperturas"("caja_id");
+
+-- CreateIndex
+CREATE INDEX "caja_aperturas_user_id_idx" ON "caja_aperturas"("user_id");
+
+-- CreateIndex
+CREATE INDEX "caja_aperturas_organization_id_status_idx" ON "caja_aperturas"("organization_id", "status");
+
+-- CreateIndex
+CREATE INDEX "caja_aperturas_user_id_status_idx" ON "caja_aperturas"("user_id", "status");
+
+-- CreateIndex
+CREATE INDEX "corte_cajas_caja_apertura_id_idx" ON "corte_cajas"("caja_apertura_id");
+
+-- CreateIndex
+CREATE INDEX "corte_cajas_organization_id_idx" ON "corte_cajas"("organization_id");
 
 -- AddForeignKey
 ALTER TABLE "users" ADD CONSTRAINT "users_id_role_fkey" FOREIGN KEY ("id_role") REFERENCES "roles"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -1220,6 +1340,9 @@ ALTER TABLE "sales" ADD CONSTRAINT "sales_exchange_rate_id_fkey" FOREIGN KEY ("e
 ALTER TABLE "sales" ADD CONSTRAINT "sales_official_exchange_rate_id_fkey" FOREIGN KEY ("official_exchange_rate_id") REFERENCES "exchange_rates"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "sales" ADD CONSTRAINT "sales_caja_apertura_id_fkey" FOREIGN KEY ("caja_apertura_id") REFERENCES "caja_aperturas"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "sale_details" ADD CONSTRAINT "sale_details_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -1254,3 +1377,30 @@ ALTER TABLE "sync_conflicts" ADD CONSTRAINT "sync_conflicts_organization_id_fkey
 
 -- AddForeignKey
 ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "generated_reports" ADD CONSTRAINT "generated_reports_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "generated_reports" ADD CONSTRAINT "generated_reports_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "cajas" ADD CONSTRAINT "cajas_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "caja_aperturas" ADD CONSTRAINT "caja_aperturas_caja_id_fkey" FOREIGN KEY ("caja_id") REFERENCES "cajas"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "caja_aperturas" ADD CONSTRAINT "caja_aperturas_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "caja_aperturas" ADD CONSTRAINT "caja_aperturas_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "corte_cajas" ADD CONSTRAINT "corte_cajas_caja_apertura_id_fkey" FOREIGN KEY ("caja_apertura_id") REFERENCES "caja_aperturas"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "corte_cajas" ADD CONSTRAINT "corte_cajas_closed_by_id_fkey" FOREIGN KEY ("closed_by_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "corte_cajas" ADD CONSTRAINT "corte_cajas_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

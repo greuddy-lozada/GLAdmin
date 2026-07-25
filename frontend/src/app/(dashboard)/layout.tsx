@@ -17,7 +17,7 @@ import { SyncIndicator } from '@/components/sync-indicator';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { OrgSwitcher } from '@/components/ui/org-switcher';
 import { VisitedTabs } from '@/features/visited-tabs/visited-tabs';
-import { LayoutDashboard, Users, UserCog, Truck, Building2, Package, Receipt, Tags, Store, ShoppingCart, DollarSign, ShieldCheck, Settings, CreditCard, Mail, ArrowLeftRight, Wallet, BarChart3, ChevronDown, ChevronRight, AlertCircle } from 'lucide-react';
+import { LayoutDashboard, Users, UserCog, Truck, Building2, Package, Receipt, Tags, Store, ShoppingCart, DollarSign, ShieldCheck, Settings, CreditCard, Mail, ArrowLeftRight, Wallet, BarChart3, Banknote, ChevronDown, ChevronRight, AlertCircle } from 'lucide-react';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   dashboard: LayoutDashboard,
@@ -42,6 +42,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   billing: CreditCard,
   syncConflicts: AlertCircle,
   reports: BarChart3,
+  cashRegisters: Banknote,
 };
 
 const groupIconMap: Record<string, React.ComponentType<{ className?: string }>> = {

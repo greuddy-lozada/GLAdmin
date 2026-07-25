@@ -22,6 +22,9 @@ import type { CartItem } from './models/pos.model';
 import type { ParkedOrder, LocalSale } from '@/lib/sync/db';
 import { localDb } from '@/lib/sync/db';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { useMyActiveSession } from '@/features/cash-register/hooks/use-cash-register';
+import RegisterSelector from '@/features/cash-register/components/register-selector';
+import CloseRegisterDialog from '@/features/cash-register/components/close-register-dialog';
 
 interface ReceiptData {
   open: boolean;
@@ -64,6 +67,9 @@ export default function PosPage() {
   const [parkedSheetOpen, setParkedSheetOpen] = useState(false);
   const [historySheetOpen, setHistorySheetOpen] = useState(false);
   const [parkedCount, setParkedCount] = useState(0);
+  const { data: activeSession, isLoading: loadingSession } = useMyActiveSession();
+  const [selectRegisterOpen, setSelectRegisterOpen] = useState(false);
+  const [closeRegisterOpen, setCloseRegisterOpen] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -127,7 +133,7 @@ export default function PosPage() {
 
   const handlePayment = async (payments: SalePayment[]) => {
     const primaryMethod = payments.length === 1 ? payments[0].method : PaymentMethod.Mixed;
-    const saleCode = await createSale(cart, total, totalUsd, exchangeRate, primaryMethod, customerId, withholdingPercentage, withholdingAmount, withholdingAmountUsd, payments);
+    const saleCode = await createSale(cart, total, totalUsd, exchangeRate, primaryMethod, customerId, withholdingPercentage, withholdingAmount, withholdingAmountUsd, activeSession?.id, payments);
     setReceipt({ open: true, code: saleCode, items: [...cart], total, totalUsd, customerName, customerTaxId, payments, exchangeRate });
     clearCart();
     clearCustomer();
@@ -160,10 +166,16 @@ export default function PosPage() {
     return () => window.removeEventListener('keydown', handler);
   }, [addToCart]);
 
+  useEffect(() => {
+    if (!loadingSession && !activeSession) {
+      setSelectRegisterOpen(true);
+    }
+  }, [loadingSession, activeSession]);
+
   return (
     <>
       <div className="flex flex-col h-[calc(100vh-8rem)] pb-6">
-      <PosToolbar exchangeRate={exchangeRate} onPark={handlePark} onUndo={undoLastItem} canUndo={canUndo} hasItems={cart.length > 0} onOpenParked={() => setParkedSheetOpen(true)} onOpenHistory={() => setHistorySheetOpen(true)} parkedCount={parkedCount} />
+      <PosToolbar exchangeRate={exchangeRate} onPark={handlePark} onUndo={undoLastItem} canUndo={canUndo} hasItems={cart.length > 0} onOpenParked={() => setParkedSheetOpen(true)} onOpenHistory={() => setHistorySheetOpen(true)} parkedCount={parkedCount} onCloseRegister={() => setCloseRegisterOpen(true)} activeSession={!!activeSession} />
 
       <CustomerBar
         ref={customerSearchRef}
@@ -256,6 +268,8 @@ export default function PosPage() {
 
     <QuickAddCustomer key={quickAddKey} open={quickAddOpen} onOpenChange={setQuickAddOpen} onCreated={handleQuickAddCustomer} />
     <SaleDetailModal sale={detailSale} open={detailSale !== null} onOpenChange={(o) => !o && setDetailSale(null)} />
+    <RegisterSelector open={selectRegisterOpen} onSuccess={() => setSelectRegisterOpen(false)} />
+    <CloseRegisterDialog open={closeRegisterOpen} onClose={() => setCloseRegisterOpen(false)} onSuccess={() => setCloseRegisterOpen(false)} />
     </>
   );
 }

@@ -24,6 +24,7 @@ import { SuppliersModule } from './modules/suppliers/suppliers.module';
 import { CompaniesModule } from './modules/companies/companies.module';
 import { TaxesModule } from './modules/taxes/taxes.module';
 import { BrandsModule } from './modules/brands/brands.module';
+import { CashRegisterModule } from './modules/cash-register/cash-register.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { BatchesModule } from './modules/batches/batches.module';
 import { StocksModule } from './modules/stocks/stocks.module';
@@ -82,6 +83,7 @@ if (!jwtSecret) {
     CompaniesModule,
     TaxesModule,
     BrandsModule,
+    CashRegisterModule,
     CategoriesModule,
     BatchesModule,
     StocksModule,

@@ -57,6 +57,7 @@ export interface CreateSaleRequest {
   withholdingPercentage?: number;
   withholdingAmount?: number;
   withholdingAmountUsd?: number;
+  registerSessionId?: string;
   payments?: SalePayment[];
 }
 

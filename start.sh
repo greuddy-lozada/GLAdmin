@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-echo "🚀 Starting GLAdmin..."
+echo "🚀 Starting Cuadra..."
 echo ""
 
 # Start backend

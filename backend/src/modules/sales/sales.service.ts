@@ -50,6 +50,7 @@ export class SalesService {
           idCustomer: dto.idCustomer,
           totalTax: dto.totalTax,
           totalTaxUsd: dto.totalTaxUsd,
+          registerSessionId: dto.registerSessionId,
           withholdingPercentage: dto.withholdingPercentage,
           withholdingAmount: dto.withholdingAmount,
           withholdingAmountUsd: dto.withholdingAmountUsd,

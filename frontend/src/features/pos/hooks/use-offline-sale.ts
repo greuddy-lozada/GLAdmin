@@ -21,6 +21,7 @@ export function useOfflineSale() {
     withholdingPercentage?: number | null,
     withholdingAmount?: number,
     withholdingAmountUsd?: number,
+    registerSessionId?: string,
     payments?: SalePayment[],
   ) => {
     const code = await getNextCode();
@@ -50,6 +51,7 @@ export function useOfflineSale() {
       withholdingPercentage: withholdingPercentage ?? undefined,
       withholdingAmount,
       withholdingAmountUsd,
+      registerSessionId,
       payments,
     };
 

@@ -57,6 +57,8 @@ model User {
   pagoMovilTransactions     PagoMovilTransaction[]
   reviewedSubscriptionPayments SubscriptionPayment[]  @relation("Reviewer")
   generatedReports      GeneratedReport[]
+  registerSessions      RegisterSession[]
+  closedSettlements     RegisterSettlement[] @relation("SettlementClosedBy")
 
   @@map("users")
   @@index([idRole])
@@ -143,6 +145,9 @@ model Organization {
   auditLogs             AuditLog[]
   subscriptionPayments  SubscriptionPayment[]
   generatedReports      GeneratedReport[]
+  cashRegisters          CashRegister[]
+  registerSessions       RegisterSession[]
+  registerSettlements    RegisterSettlement[]
 
   @@map("organizations")
   @@index([planId])
@@ -865,6 +870,7 @@ model Sale {
   annulledAt             DateTime?  @map("annulled_at")
   annulmentReason        String?    @map("annulment_reason")
   organizationId         String @db.Uuid @map("organization_id")
+  registerSessionId     String? @db.Uuid @map("caja_apertura_id")
 
   organization               Organization        @relation(fields: [organizationId], references: [id])
   customer                   Customer?           @relation(fields: [idCustomer], references: [id])
@@ -873,6 +879,7 @@ model Sale {
   accountsReceivables        AccountsReceivable[]
   exchangeRateRef            ExchangeRate?       @relation("CalculationRate", fields: [exchangeRateId], references: [id])
   officialExchangeRateRef    ExchangeRate?       @relation("OfficialRate", fields: [officialExchangeRateId], references: [id])
+  registerSession            RegisterSession?    @relation(fields: [registerSessionId], references: [id])
 
   @@map("sales")
   @@index([organizationId])
@@ -885,6 +892,7 @@ model Sale {
   @@index([date])
   @@index([code])
   @@index([deletedAt])
+  @@index([registerSessionId])
 }
 
 // ────────────────────────────────────────────
@@ -1081,4 +1089,80 @@ model GeneratedReport {
   @@index([organizationId, type])
   @@index([organizationId, createdAt])
   @@index([userId])
+}
+
+// ────────────────────────────────────────────
+// CASH REGISTER
+// ────────────────────────────────────────────
+
+enum RegisterSessionStatus {
+  abierta
+  cerrada
+}
+
+model CashRegister {
+  id             String   @id @default(uuid()) @db.Uuid @map("id")
+  organizationId String   @db.Uuid @map("organization_id")
+  name           String   @map("name")
+  code           String   @map("code")
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at")
+
+  sessions       RegisterSession[]
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([organizationId, code])
+  @@map("cajas")
+  @@index([organizationId])
+}
+
+model RegisterSession {
+  id              String               @id @default(uuid()) @db.Uuid @map("id")
+  cashRegisterId  String               @db.Uuid @map("caja_id")
+  userId          String               @db.Uuid @map("user_id")
+  organizationId  String               @db.Uuid @map("organization_id")
+  initialCash     Decimal              @default(0) @db.Decimal(18,4) @map("initial_cash")
+  initialCashUsd  Decimal              @default(0) @db.Decimal(18,4) @map("initial_cash_usd")
+  status          RegisterSessionStatus @default(abierta) @map("status")
+  openedAt        DateTime             @default(now()) @map("opened_at")
+  closedAt        DateTime?            @map("closed_at")
+  notes           String?              @map("notes")
+  createdAt       DateTime             @default(now()) @map("created_at")
+  updatedAt       DateTime             @updatedAt @map("updated_at")
+
+  cashRegister    CashRegister         @relation(fields: [cashRegisterId], references: [id])
+  user            User                 @relation(fields: [userId], references: [id])
+  organization    Organization         @relation(fields: [organizationId], references: [id])
+  sales           Sale[]
+  settlements     RegisterSettlement[]
+
+  @@map("caja_aperturas")
+  @@index([cashRegisterId])
+  @@index([userId])
+  @@index([organizationId, status])
+  @@index([userId, status])
+}
+
+model RegisterSettlement {
+  id              String          @id @default(uuid()) @db.Uuid @map("id")
+  sessionId       String          @db.Uuid @map("caja_apertura_id")
+  organizationId  String          @db.Uuid @map("organization_id")
+  expectedCash    Decimal         @db.Decimal(18,4) @map("expected_cash")
+  countedCash     Decimal         @db.Decimal(18,4) @map("counted_cash")
+  difference      Decimal         @db.Decimal(18,4) @map("difference")
+  closedById      String          @db.Uuid @map("closed_by_id")
+  notes           String?         @map("notes")
+  closedAt        DateTime        @default(now()) @map("closed_at")
+  createdAt       DateTime        @default(now()) @map("created_at")
+
+  session         RegisterSession @relation(fields: [sessionId], references: [id])
+  closedBy        User            @relation("SettlementClosedBy", fields: [closedById], references: [id])
+  organization    Organization    @relation(fields: [organizationId], references: [id])
+
+  @@map("corte_cajas")
+  @@index([sessionId])
+  @@index([organizationId])
 }
