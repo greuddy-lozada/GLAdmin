@@ -120,8 +120,9 @@ function inventoryStatusQuery(
   params: Record<string, unknown>,
   prisma: PrismaService,
 ) {
-  const lowStockThreshold = (params.lowStockThreshold as number) || 10;
-  const onlyLowStock = (params.onlyLowStock as boolean) || false;
+  const lowStockThreshold = Number(params.lowStockThreshold) || 10;
+  const onlyLowStock =
+    params.onlyLowStock === true || params.onlyLowStock === 'true';
 
   const lowStockFilter = onlyLowStock
     ? Prisma.sql`AND p.total_existence <= ${lowStockThreshold}`

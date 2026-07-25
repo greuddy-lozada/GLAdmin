@@ -32,12 +32,26 @@ export function ReportGenerator({ onGenerated }: ReportGeneratorProps) {
 
   const handleGenerate = async () => {
     if (!selectedType) return;
+    const typedParams = convertParams(selectedDefinition?.parameters ?? []);
     await generateMutation.mutateAsync(
-      { type: selectedType, parameters: params },
+      { type: selectedType, parameters: typedParams },
       { onSuccess: () => onGenerated() },
     );
     setSelectedType('');
     setParams({});
+  };
+
+  const convertParams = (paramFields: ParamField[]): Record<string, unknown> => {
+    const result: Record<string, unknown> = {};
+    for (const f of paramFields) {
+      const val = params[f.key];
+      if (val === undefined || val === '') continue;
+      if (f.type === 'number') result[f.key] = Number(val);
+      else if (f.type === 'select' && f.options?.every((o) => o.value === 'true' || o.value === 'false'))
+        result[f.key] = val === 'true';
+      else result[f.key] = val;
+    }
+    return result;
   };
 
   const renderParamField = (field: ParamField) => {
@@ -50,6 +64,42 @@ export function ReportGenerator({ onGenerated }: ReportGeneratorProps) {
             value={params[field.key] || ''}
             onChange={(e) => setParams({ ...params, [field.key]: e.target.value })}
           />
+        </div>
+      );
+    }
+
+    if (field.type === 'number') {
+      return (
+        <div key={field.key} className="space-y-2">
+          <Label className="text-sm font-semibold">{t(field.label)}</Label>
+          <Input
+            type="number"
+            value={params[field.key] ?? (field.defaultValue !== undefined ? String(field.defaultValue) : '')}
+            onChange={(e) => setParams({ ...params, [field.key]: e.target.value })}
+          />
+        </div>
+      );
+    }
+
+    if (field.type === 'select' && field.options) {
+      return (
+        <div key={field.key} className="space-y-2">
+          <Label className="text-sm font-semibold">{t(field.label)}</Label>
+          <Select
+            value={params[field.key] || ''}
+            onValueChange={(v) => setParams({ ...params, [field.key]: v })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={t('reports.selectTypePlaceholder')} />
+            </SelectTrigger>
+            <SelectContent>
+              {field.options.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {t(opt.label)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       );
     }
