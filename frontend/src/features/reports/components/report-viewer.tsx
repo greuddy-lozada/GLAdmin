@@ -475,6 +475,9 @@ export function ReportViewer({ reportId }: ReportViewerProps) {
   meta.push({ icon: <Hash className="h-3.5 w-3.5" />, label: t('reports.fields.id'), value: report.id.substring(0, 8) });
 
   const reportTypeLabel = getReportTypeLabel(report.type, t);
+  const displayName = report.name.includes('_')
+    ? report.name.replace(/^[a-z_]+ - /, '')
+    : report.name;
 
   return (
     <div>
@@ -486,7 +489,7 @@ export function ReportViewer({ reportId }: ReportViewerProps) {
         </Button>
       </div>
 
-      <ReportLayout reportType={reportTypeLabel} reportName={report.name} meta={meta}>
+      <ReportLayout reportType={reportTypeLabel} reportName={displayName} meta={meta}>
         {report.results ? renderReport(report.type, report.results) : (
           <p className="text-sm text-muted-foreground text-center py-12">{t('reports.noResults')}</p>
         )}
