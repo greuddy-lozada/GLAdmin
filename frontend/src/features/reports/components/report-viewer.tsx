@@ -46,6 +46,12 @@ function ReportLayout({ reportType, reportName, meta, children }: ReportLayoutPr
 
   return (
     <div id="report-document" className="report-document print:block print:p-0">
+      {/* Print-only header band */}
+      <div className="report-band hidden print:flex">
+        <span className="band-title">Cuadra</span>
+        <span className="band-subtitle">{t('reports.title')}</span>
+      </div>
+
       {/* Header */}
       <header className="report-header border-b-2 border-primary pb-6 mb-6 print:border-black">
         <h1 className="text-xl font-bold tracking-tight">

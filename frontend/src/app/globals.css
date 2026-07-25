@@ -205,7 +205,7 @@ a {
 
 @media print {
   @page {
-    margin: 2cm;
+    margin: 2cm 1.8cm 2.5cm 1.8cm;
     size: A4;
   }
 
@@ -229,148 +229,193 @@ a {
     top: 0;
     width: 100%;
     padding: 0 !important;
-    font-family: 'Georgia', 'Times New Roman', serif;
-    font-size: 11pt;
-    line-height: 1.5;
-    color: #1a1a1a;
+    font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.55;
+    color: #1e293b;
   }
 
-  /* Header */
+  /* ── Header band ── */
+  #report-document .report-band {
+    background: #3e93c1;
+    color: #fff;
+    padding: 10pt 16pt;
+    margin: -2cm -1.8cm 0 -1.8cm;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  #report-document .report-band .band-title {
+    font-size: 14pt;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  #report-document .report-band .band-subtitle {
+    font-size: 8pt;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    opacity: 0.85;
+  }
+
+  /* ── Header ── */
   #report-document .report-header {
-    border-bottom: 2.5px solid #1a1a1a;
-    padding-bottom: 14pt;
-    margin-bottom: 18pt;
+    border-bottom: 1.5px solid #3e93c1;
+    padding: 16pt 0 12pt 0;
+    margin-bottom: 16pt;
   }
   #report-document .report-header h1 {
-    font-size: 18pt;
+    font-size: 17pt;
     font-weight: 700;
-    color: #1a1a1a;
-    letter-spacing: 0.5px;
+    color: #0f172a;
+    letter-spacing: -0.3px;
   }
   #report-document .report-header h2 {
-    font-size: 13pt;
+    font-size: 12pt;
     font-weight: 600;
-    color: #555;
-    margin-top: 2pt;
+    color: #475569;
+    margin-top: 3pt;
   }
   #report-document .report-header p {
     font-size: 9pt;
-    color: #777;
+    color: #64748b;
     margin-top: 1pt;
   }
-  #report-document .report-header .report-meta {
-    margin-top: 12pt;
-    font-size: 8.5pt;
-    color: #666;
+
+  /* ── Metadata box ── */
+  #report-document .report-meta {
+    margin-top: 10pt;
+    padding: 8pt 12pt;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-left: 3px solid #3e93c1;
+    font-size: 8pt;
+    color: #475569;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4pt 24pt;
   }
-  #report-document .report-header .report-meta span {
+  #report-document .report-meta span {
     display: inline-flex;
     align-items: center;
-    gap: 3pt;
-    margin-right: 18pt;
+    gap: 4pt;
+  }
+  #report-document .report-meta svg {
+    width: 10pt;
+    height: 10pt;
+    color: #3e93c1;
   }
 
-  /* Section titles */
+  /* ── Section titles ── */
   #report-document .report-section-title {
-    font-size: 10pt;
-    font-weight: 600;
+    font-size: 9.5pt;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1.2px;
-    color: #555;
-    margin-top: 20pt;
+    color: #3e93c1;
+    margin-top: 18pt;
     margin-bottom: 8pt;
     padding-bottom: 4pt;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1.5px solid #3e93c1;
   }
 
-  /* KPI cards */
+  /* ── KPI cards ── */
   #report-document .kpi-grid {
     display: flex;
-    gap: 0;
-    margin-bottom: 14pt;
+    gap: 10pt;
+    margin-bottom: 12pt;
   }
   #report-document .kpi-card {
     flex: 1;
-    border: 1px solid #d0d0d0;
+    border: 1px solid #e2e8f0;
+    border-top: 3px solid #3e93c1;
     padding: 10pt 12pt;
     text-align: center;
-    border-right: none;
-    background: none !important;
+    background: #fff !important;
     box-shadow: none !important;
     border-radius: 0 !important;
   }
-  #report-document .kpi-card:last-child {
-    border-right: 1px solid #d0d0d0;
-  }
+  #report-document .kpi-card:nth-child(2) { border-top-color: #0ea5e9; }
+  #report-document .kpi-card:nth-child(3) { border-top-color: #8b5cf6; }
+  #report-document .kpi-card:nth-child(4) { border-top-color: #ef4444; }
   #report-document .kpi-card .kpi-label {
-    font-size: 7.5pt;
-    color: #777;
+    font-size: 7pt;
+    color: #64748b;
     text-transform: uppercase;
-    letter-spacing: 0.8px;
+    letter-spacing: 0.6px;
     margin-bottom: 4pt;
   }
   #report-document .kpi-card .kpi-value {
-    font-size: 16pt;
-    font-weight: 700;
-    color: #1a1a1a;
+    font-size: 15pt;
+    font-weight: 800;
+    color: #0f172a;
   }
 
-  /* Tables */
+  /* ── Tables ── */
   #report-document .report-table-wrapper {
-    border: 1px solid #ccc;
+    border: 1px solid #e2e8f0;
     border-radius: 0 !important;
     overflow: visible !important;
   }
   #report-document table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 9pt;
+    font-size: 8.5pt;
   }
   #report-document thead tr {
-    background: #f2f2f2 !important;
+    background: #3e93c1 !important;
   }
   #report-document th {
     font-weight: 600;
-    color: #333;
-    padding: 6pt 8pt;
-    border-bottom: 2px solid #999;
+    color: #ffffff;
+    padding: 7pt 9pt;
+    border-bottom: none;
     white-space: nowrap;
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
   #report-document td {
-    padding: 5pt 8pt;
-    border-bottom: 1px solid #e8e8e8;
+    padding: 6pt 9pt;
+    border-bottom: 1px solid #f1f5f9;
     vertical-align: top;
   }
   #report-document tbody tr:nth-child(even) td {
-    background: #fafafa;
+    background: #f8fafc;
   }
   #report-document tbody tr:last-child td {
     border-bottom: none;
   }
 
-  /* Footer */
+  /* ── Footer ── */
   #report-document .report-footer {
-    border-top: 1px solid #ddd;
-    margin-top: 24pt;
+    border-top: 1.5px solid #3e93c1;
+    margin-top: 22pt;
     padding-top: 8pt;
-    font-size: 7.5pt;
+    font-size: 7pt;
     text-align: center;
-    color: #aaa;
+    color: #94a3b8;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
   }
 
-  /* Utility overrides */
+  /* ── Utilities ── */
   #report-document *,
   #report-document *::before,
   #report-document *::after {
     background-image: none !important;
     box-shadow: none !important;
   }
-  #report-document .text-muted-foreground { color: #555 !important; }
-  #report-document .text-primary { color: #1a1a1a !important; }
-  #report-document .text-destructive { color: #c00 !important; }
-  #report-document [class*="bg-"] { background-color: transparent !important; }
+  #report-document .text-muted-foreground { color: #64748b !important; }
+  #report-document .text-primary { color: #0f172a !important; }
+  #report-document .text-destructive { color: #dc2626 !important; }
+  #report-document [class*="bg-card"],
+  #report-document [class*="bg-muted"],
+  #report-document [class*="bg-background"] { background-color: #fff !important; }
 
-  /* Page breaks */
+  /* ── Page breaks ── */
+  #report-document .report-band { page-break-after: avoid; }
   #report-document .report-header { page-break-after: avoid; }
   #report-document .kpi-grid { page-break-inside: avoid; }
   #report-document .kpi-card { page-break-inside: avoid; }
