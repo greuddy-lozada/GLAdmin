@@ -21,15 +21,15 @@ export function PosToolbar({ exchangeRate, onPark, onUndo, canUndo, hasItems }: 
   return (
     <div className="flex items-center justify-between mb-6">
       <div className="flex gap-2">
-        <Button variant="outline" size="sm" onClick={onPark} disabled={!hasItems} title={`${t('pos.park.button')} (${parkKeys})`}>
-          <Pause className="mr-2 h-4 w-4" />
-          {t('pos.park.button')}
-          <span className="ml-1 text-xs text-muted-foreground">{parkKeys}</span>
+        <Button variant="outline" size="sm" onClick={onPark} disabled={!hasItems}>
+          <Pause className="h-4 w-4" />
+          <span className="hidden md:inline md:ml-2">{t('pos.park.button')}</span>
+          <span className="hidden md:inline ml-1 text-xs text-muted-foreground">{parkKeys}</span>
         </Button>
-        <Button variant="outline" size="sm" onClick={onUndo} disabled={!canUndo} title={`${t('pos.toolbar.undo')} (${undoKeys})`}>
-          <Undo2 className="mr-2 h-4 w-4" />
-          {t('pos.toolbar.undo')}
-          <span className="ml-1 text-xs text-muted-foreground">{undoKeys}</span>
+        <Button variant="outline" size="sm" onClick={onUndo} disabled={!canUndo}>
+          <Undo2 className="h-4 w-4" />
+          <span className="hidden md:inline md:ml-2">{t('pos.toolbar.undo')}</span>
+          <span className="hidden md:inline ml-1 text-xs text-muted-foreground">{undoKeys}</span>
         </Button>
       </div>
       {exchangeRate > 0 && (
