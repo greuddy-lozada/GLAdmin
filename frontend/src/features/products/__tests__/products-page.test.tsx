@@ -73,6 +73,7 @@ function mockMasterRole() {
     isLoading: false,
     organizations: [],
     currentOrg: null,
+    effectiveRoleSlug: 'master',
     login: vi.fn(),
     logout: vi.fn(),
     selectOrg: vi.fn(),

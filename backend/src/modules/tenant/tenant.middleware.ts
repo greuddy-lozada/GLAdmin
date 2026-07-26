@@ -64,9 +64,11 @@ export class TenantMiddleware implements NestMiddleware {
       await this.cache.set(cacheKey, cached, PLAN_CACHE_TTL);
     }
 
+    const tokenPayload = this.extractTokenPayload(req);
     const ctx: TenantContext = {
       organizationId: cached.organizationId,
       organizationSlug: cached.organizationSlug,
+      orgRole: tokenPayload.orgRole,
       plan: cached.planName
         ? { name: cached.planName, features: cached.features }
         : undefined,
@@ -78,13 +80,21 @@ export class TenantMiddleware implements NestMiddleware {
     });
   }
 
-  private extractTokenPayload(req: Request): { sub?: string; orgId?: string } {
+  private extractTokenPayload(req: Request): {
+    sub?: string;
+    orgId?: string;
+    orgRole?: string;
+  } {
     const authHeader = req.headers['authorization'];
     if (!authHeader || typeof authHeader !== 'string') return {};
     const [type, token] = authHeader.split(' ');
     if (type !== 'Bearer' || !token) return {};
     try {
-      return this.jwtService.verify(token) as { sub?: string; orgId?: string };
+      return this.jwtService.verify(token) as {
+        sub?: string;
+        orgId?: string;
+        orgRole?: string;
+      };
     } catch {
       return {};
     }

@@ -21,7 +21,9 @@
     "UPDATED": "Usuario actualizado exitosamente",
     "DELETED": "El usuario fue eliminado",
     "ALREADY_EXISTS": "El usuario ya existe",
-    "NOT_FOUND": "Usuario no encontrado"
+    "NOT_FOUND": "Usuario no encontrado",
+    "ROLE_NOT_FOUND": "Rol no encontrado",
+    "ROLE_HIERARCHY": "No puedes asignar o gestionar este rol"
   },
   "CUSTOMER": {
     "CREATED": "Cliente creado exitosamente",

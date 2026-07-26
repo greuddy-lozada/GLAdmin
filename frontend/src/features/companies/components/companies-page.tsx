@@ -22,8 +22,8 @@ import { hasMinLevel } from '@/lib/auth/roles';
 export default function CompaniesPage() {
   const { items: companiesData, isLoading: loading, create, update, remove } = useCompanies();
   const { t, tp } = useI18n();
-  const { user } = useAuth();
-  const role = user?.role?.slug ?? 'employee';
+  const { effectiveRoleSlug } = useAuth();
+  const role = effectiveRoleSlug;
   const canEdit = hasMinLevel(role, 80);
   const canDelete = hasMinLevel(role, 100);
   const [formOpen, setFormOpen] = useState(false);

@@ -22,16 +22,16 @@ import { User, CreateUserRequest } from '@/features/users/models/user.model';
 import { useI18n } from '@/i18n';
 import { RoleGuard } from '@/components/ui/role-guard';
 import { useAuth } from '@/providers/auth-provider';
-import { hasMinLevel } from '@/lib/auth/roles';
+import { hasMinLevel, canAssignRole } from '@/lib/auth/roles';
 import { sileo } from 'sileo';
 import apiClient from '@/lib/api/api-client';
 
 export default function UsersPage() {
   const { items: usersData, isLoading: loading, create, update, remove } = useUsers();
   const { t, tp } = useI18n();
-  const { user: currentUser } = useAuth();
-  const role = currentUser?.role?.slug ?? 'employee';
-  const canEdit = hasMinLevel(role, 80);
+  const { effectiveRoleSlug } = useAuth();
+  const role = effectiveRoleSlug;
+  const canEdit = hasMinLevel(role, 60);
   const canDelete = hasMinLevel(role, 100);
   const [formOpen, setFormOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -44,9 +44,11 @@ export default function UsersPage() {
     email: '',
     idRole: '',
   });
-  const [roles, setRoles] = useState<{ id: string; name: string }[]>([]);
+  const [roles, setRoles] = useState<{ id: string; name: string; slug: string }[]>([]);
   const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
+
+  const assignableRoles = roles.filter((r) => canAssignRole(role, r.slug));
 
   const columns: Column<User>[] = [
     { field: 'firstName', headerName: t('users.field.firstName') },
@@ -166,8 +168,8 @@ export default function UsersPage() {
             <Select value={formData.idRole} onValueChange={(v) => setFormData({ ...formData, idRole: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {roles.map((role) => (
-                  <SelectItem key={role.id} value={String(role.id)}>{role.name}</SelectItem>
+                {assignableRoles.map((r) => (
+                  <SelectItem key={r.id} value={String(r.id)}>{r.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -187,7 +189,7 @@ export default function UsersPage() {
     >
       <div className="max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <RoleGuard minLevel={80}>
+        <RoleGuard minLevel={60}>
           <Button onClick={openCreate}>
             <Plus className="mr-2 h-4 w-4" />
             {t('users.new')}

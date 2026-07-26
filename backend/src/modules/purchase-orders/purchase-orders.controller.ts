@@ -13,7 +13,10 @@ import { PurchaseOrdersService } from './purchase-orders.service';
 import { CreatePurchaseOrderDto } from './dto/create-purchase-order.dto';
 import { UpdatePurchaseOrderDto } from './dto/update-purchase-order.dto';
 import { ReceivePurchaseOrderDto } from './dto/receive-purchase-order.dto';
-import { Roles } from '../../common/decorators/roles.decorator';
+import {
+  MinLevel,
+  ROLE_LEVEL,
+} from '../../common/decorators/min-level.decorator';
 import { PlanLevel } from '../../common/decorators/plan-level.decorator';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
@@ -23,13 +26,13 @@ export class PurchaseOrdersController {
   constructor(private readonly purchaseOrdersService: PurchaseOrdersService) {}
 
   @Post()
-  @Roles('master', 'admin')
+  @MinLevel(ROLE_LEVEL.manager)
   create(@Body() dto: CreatePurchaseOrderDto) {
     return this.purchaseOrdersService.create(dto);
   }
 
   @Get()
-  @Roles('master', 'admin', 'employee')
+  @MinLevel(ROLE_LEVEL.employee)
   async findAll(@Query() pagination: PaginationQueryDto) {
     return this.purchaseOrdersService.findAll(
       pagination.page,
@@ -38,13 +41,13 @@ export class PurchaseOrdersController {
   }
 
   @Get(':id')
-  @Roles('master', 'admin', 'employee')
+  @MinLevel(ROLE_LEVEL.employee)
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.purchaseOrdersService.findOne(id);
   }
 
   @Patch(':id')
-  @Roles('master', 'admin')
+  @MinLevel(ROLE_LEVEL.manager)
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdatePurchaseOrderDto,
@@ -53,7 +56,7 @@ export class PurchaseOrdersController {
   }
 
   @Post(':id/receive')
-  @Roles('master', 'admin')
+  @MinLevel(ROLE_LEVEL.manager)
   receive(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: ReceivePurchaseOrderDto,
@@ -62,7 +65,7 @@ export class PurchaseOrdersController {
   }
 
   @Delete(':id')
-  @Roles('master')
+  @MinLevel(ROLE_LEVEL.master)
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.purchaseOrdersService.remove(id);
   }

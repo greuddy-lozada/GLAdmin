@@ -16,7 +16,10 @@ import { CreateCashRegisterDto } from './dto/create-cash-register.dto';
 import { UpdateCashRegisterDto } from './dto/update-cash-register.dto';
 import { OpenRegisterDto } from './dto/open-register.dto';
 import { CloseRegisterDto } from './dto/close-register.dto';
-import { Roles } from '../../common/decorators/roles.decorator';
+import {
+  MinLevel,
+  ROLE_LEVEL,
+} from '../../common/decorators/min-level.decorator';
 import { PlanLevel } from '../../common/decorators/plan-level.decorator';
 
 interface AuthenticatedRequest extends Request {
@@ -29,37 +32,37 @@ export class CashRegisterController {
   constructor(private readonly cashRegisterService: CashRegisterService) {}
 
   @Post()
-  @Roles('master', 'admin')
+  @MinLevel(ROLE_LEVEL.manager)
   create(@Body() dto: CreateCashRegisterDto) {
     return this.cashRegisterService.create(dto);
   }
 
   @Get()
-  @Roles('master', 'admin', 'employee')
+  @MinLevel(ROLE_LEVEL.employee)
   findAll() {
     return this.cashRegisterService.findAll();
   }
 
   @Get('my-active-session')
-  @Roles('master', 'admin', 'employee')
+  @MinLevel(ROLE_LEVEL.employee)
   myActiveSession(@Req() req: AuthenticatedRequest) {
     return this.cashRegisterService.findMyActiveSession(req.user!.id);
   }
 
   @Get('sessions')
-  @Roles('master', 'admin', 'employee')
+  @MinLevel(ROLE_LEVEL.employee)
   findSessions(@Query('status') status?: string) {
     return this.cashRegisterService.findSessions(status);
   }
 
   @Get(':id')
-  @Roles('master', 'admin', 'employee')
+  @MinLevel(ROLE_LEVEL.employee)
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.cashRegisterService.findOne(id);
   }
 
   @Patch(':id')
-  @Roles('master', 'admin')
+  @MinLevel(ROLE_LEVEL.manager)
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateCashRegisterDto,
@@ -68,13 +71,13 @@ export class CashRegisterController {
   }
 
   @Delete(':id')
-  @Roles('master')
+  @MinLevel(ROLE_LEVEL.master)
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.cashRegisterService.remove(id);
   }
 
   @Post(':id/open')
-  @Roles('master', 'admin', 'employee')
+  @MinLevel(ROLE_LEVEL.employee)
   open(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: OpenRegisterDto,
@@ -84,7 +87,7 @@ export class CashRegisterController {
   }
 
   @Post('sessions/:id/close')
-  @Roles('master', 'admin', 'employee')
+  @MinLevel(ROLE_LEVEL.employee)
   close(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: CloseRegisterDto,

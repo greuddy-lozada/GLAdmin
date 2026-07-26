@@ -11,6 +11,7 @@ import { UserFactory } from './user.factory';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserEntity } from './entities/user.entity';
+import { assertCanAssignRole } from '../../common/auth/role-hierarchy';
 
 type SafeUser = Omit<UserEntity, 'password'>;
 
@@ -39,10 +40,27 @@ export class UsersService {
     return ctx.organizationId;
   }
 
+  private getActorRoleSlug(): string {
+    const ctx = this.context.getCurrent();
+    if (!ctx?.orgRole) {
+      throw new ForbiddenException();
+    }
+    return ctx.orgRole;
+  }
+
   async create(
     dto: CreateUserDto,
   ): Promise<{ data: SafeUser; message: string }> {
     const organizationId = this.getCurrentOrgId();
+    const actorSlug = this.getActorRoleSlug();
+
+    const targetRole = await this.prisma.role.findUnique({
+      where: { id: dto.idRole },
+    });
+    if (!targetRole) {
+      throw new NotFoundException('USER.ROLE_NOT_FOUND');
+    }
+    assertCanAssignRole(actorSlug, targetRole.slug);
 
     const existing = await this.userRepository.findByUserName(dto.userName);
     if (existing) {
@@ -73,7 +91,18 @@ export class UsersService {
       },
     });
 
-    return { data: stripPassword(user), message: 'USER.CREATED' };
+    return {
+      data: {
+        ...stripPassword(user),
+        idRole: targetRole.id,
+        role: {
+          id: targetRole.id,
+          name: targetRole.name,
+          slug: targetRole.slug,
+        },
+      },
+      message: 'USER.CREATED',
+    };
   }
 
   async findAll(page = 1, limit = 20) {
@@ -88,13 +117,26 @@ export class UsersService {
         take: limit,
         include: {
           user: { include: { role: true } },
+          role: true,
         },
       }),
       this.prisma.userOrganization.count({ where }),
     ]);
 
-    const data = memberships.map((m: { user: UserEntity }) =>
-      stripPassword(m.user),
+    const data = memberships.map(
+      (m: {
+        user: UserEntity;
+        roleId: string;
+        role: { id: string; name: string; slug: string };
+      }) => ({
+        ...stripPassword(m.user),
+        idRole: m.roleId,
+        role: {
+          id: m.role.id,
+          name: m.role.name,
+          slug: m.role.slug,
+        },
+      }),
     );
     return { data, total, page, limit };
   }
@@ -108,6 +150,7 @@ export class UsersService {
       },
       include: {
         user: { include: { role: true } },
+        role: true,
       },
     });
 
@@ -115,16 +158,56 @@ export class UsersService {
       throw new NotFoundException('USER.NOT_FOUND');
     }
 
-    return stripPassword(membership.user);
+    return {
+      ...stripPassword(membership.user),
+      idRole: membership.roleId,
+      role: {
+        id: membership.role.id,
+        name: membership.role.name,
+        slug: membership.role.slug,
+      },
+    };
   }
 
   async update(
     id: string,
     dto: UpdateUserDto,
   ): Promise<{ data: SafeUser; message: string }> {
-    await this.findById(id);
-    const user = await this.userRepository.update(id, dto);
-    return { data: stripPassword(user), message: 'USER.UPDATED' };
+    const organizationId = this.getCurrentOrgId();
+    const actorSlug = this.getActorRoleSlug();
+
+    const membership = await this.prisma.userOrganization.findUnique({
+      where: {
+        userId_organizationId: { userId: id, organizationId },
+      },
+      include: { role: true },
+    });
+    if (!membership) {
+      throw new NotFoundException('USER.NOT_FOUND');
+    }
+
+    assertCanAssignRole(actorSlug, membership.role.slug);
+
+    if (dto.idRole !== undefined) {
+      const targetRole = await this.prisma.role.findUnique({
+        where: { id: dto.idRole },
+      });
+      if (!targetRole) {
+        throw new NotFoundException('USER.ROLE_NOT_FOUND');
+      }
+      assertCanAssignRole(actorSlug, targetRole.slug);
+
+      await this.prisma.userOrganization.update({
+        where: {
+          userId_organizationId: { userId: id, organizationId },
+        },
+        data: { roleId: dto.idRole },
+      });
+    }
+
+    await this.userRepository.update(id, dto);
+    const updated = await this.findById(id);
+    return { data: updated, message: 'USER.UPDATED' };
   }
 
   async delete(id: string): Promise<{ data: SafeUser; message: string }> {

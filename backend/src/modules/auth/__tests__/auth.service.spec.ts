@@ -53,6 +53,11 @@ describe('AuthService', () => {
     },
     userOrganization: {
       findMany: jest.fn(),
+      findUnique: jest.fn(),
+    },
+    role: {
+      findFirst: jest.fn(),
+      findUnique: jest.fn(),
     },
   };
 
@@ -191,6 +196,11 @@ describe('AuthService', () => {
       mockAuthFactory.createOrgAccessToken.mockReturnValue(
         'org.access.token.xyz',
       );
+      mockPrisma.role.findFirst.mockResolvedValue({
+        id: user.role.id,
+        name: user.role.name,
+        slug: 'admin',
+      });
 
       const result = await service.login(dto);
 
@@ -337,6 +347,7 @@ describe('AuthService', () => {
       mockAuthFactory.generateRefreshToken.mockResolvedValue(tokenResult);
       mockPrisma.refreshToken.create.mockResolvedValue(undefined);
       mockAuthFactory.createAccessToken.mockReturnValue('new.access.token');
+      mockUserRepository.findById.mockResolvedValue(user);
 
       const result = await service.refresh(dto);
 

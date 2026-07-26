@@ -134,10 +134,24 @@ export class AuthService {
         org.id,
         org.role,
       );
+      const membershipRole = await this.prisma.role.findFirst({
+        where: { slug: org.role },
+      });
       return {
         data: {
           ...loginResponse,
           accessToken,
+          user: {
+            ...loginResponse.user,
+            idRole: membershipRole?.id ?? loginResponse.user.role?.id,
+            role: membershipRole
+              ? {
+                  id: membershipRole.id,
+                  name: membershipRole.name,
+                  slug: membershipRole.slug,
+                }
+              : loginResponse.user.role,
+          },
           organizations,
           organization: {
             id: org.id,
@@ -231,7 +245,15 @@ export class AuthService {
         accessToken,
         refreshToken: raw,
         expiresIn: 900,
-        user: userWithoutPassword,
+        user: {
+          ...userWithoutPassword,
+          idRole: membership.role.id,
+          role: {
+            id: membership.role.id,
+            name: membership.role.name,
+            slug: membership.role.slug,
+          },
+        },
         organization: {
           id: membership.organization.id,
           name: membership.organization.name,
@@ -297,7 +319,35 @@ export class AuthService {
       },
     });
 
-    const accessToken = this.authFactory.createAccessToken(user);
+    const fullUser = await this.userRepository.findById(user.id);
+    if (!fullUser) {
+      throw new NotFoundException('AUTH.USER_NOT_FOUND');
+    }
+
+    let accessToken: string;
+    if (fullUser.currentOrganizationId) {
+      const membership = await this.prisma.userOrganization.findUnique({
+        where: {
+          userId_organizationId: {
+            userId: user.id,
+            organizationId: fullUser.currentOrganizationId,
+          },
+        },
+        include: { role: true },
+      });
+      if (membership) {
+        accessToken = this.authFactory.createOrgAccessToken(
+          fullUser,
+          fullUser.currentOrganizationId,
+          membership.role.slug,
+        );
+      } else {
+        accessToken = this.authFactory.createAccessToken(fullUser);
+      }
+    } else {
+      accessToken = this.authFactory.createAccessToken(fullUser);
+    }
+
     return {
       data: { accessToken, refreshToken: raw, expiresIn: 900 },
       message: 'AUTH.TOKEN_REFRESHED',
@@ -315,6 +365,33 @@ export class AuthService {
     }
 
     const { password: _, ...userWithoutPassword } = user;
+
+    if (user.currentOrganizationId) {
+      const membership = await this.prisma.userOrganization.findUnique({
+        where: {
+          userId_organizationId: {
+            userId,
+            organizationId: user.currentOrganizationId,
+          },
+        },
+        include: { role: true },
+      });
+      if (membership) {
+        return {
+          data: {
+            ...userWithoutPassword,
+            idRole: membership.role.id,
+            role: {
+              id: membership.role.id,
+              name: membership.role.name,
+              slug: membership.role.slug,
+            },
+          },
+          message: 'AUTH.USER_FOUND',
+        };
+      }
+    }
+
     return { data: userWithoutPassword, message: 'AUTH.USER_FOUND' };
   }
 

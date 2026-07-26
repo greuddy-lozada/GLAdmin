@@ -12,7 +12,10 @@ import {
 import { SuppliersService } from './suppliers.service';
 import { CreateSupplierDto } from './dto/create-supplier.dto';
 import { UpdateSupplierDto } from './dto/update-supplier.dto';
-import { Roles } from '../../common/decorators/roles.decorator';
+import {
+  MinLevel,
+  ROLE_LEVEL,
+} from '../../common/decorators/min-level.decorator';
 import { PlanLevel } from '../../common/decorators/plan-level.decorator';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
@@ -22,13 +25,13 @@ export class SuppliersController {
   constructor(private readonly suppliersService: SuppliersService) {}
 
   @Post()
-  @Roles('master', 'admin', 'employee')
+  @MinLevel(ROLE_LEVEL.manager)
   create(@Body() dto: CreateSupplierDto) {
     return this.suppliersService.create(dto);
   }
 
   @Get()
-  @Roles('master', 'admin', 'employee')
+  @MinLevel(ROLE_LEVEL.employee)
   async findAll(@Query() pagination: PaginationQueryDto) {
     return this.suppliersService.findAll(
       pagination.page,
@@ -38,13 +41,13 @@ export class SuppliersController {
   }
 
   @Get(':id')
-  @Roles('master', 'admin', 'employee')
+  @MinLevel(ROLE_LEVEL.employee)
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.suppliersService.findOne(id);
   }
 
   @Patch(':id')
-  @Roles('master', 'admin', 'employee')
+  @MinLevel(ROLE_LEVEL.manager)
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateSupplierDto,
@@ -53,7 +56,7 @@ export class SuppliersController {
   }
 
   @Delete(':id')
-  @Roles('master', 'admin')
+  @MinLevel(ROLE_LEVEL.master)
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.suppliersService.remove(id);
   }

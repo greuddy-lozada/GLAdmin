@@ -12,7 +12,10 @@ import {
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-import { Roles } from '../../common/decorators/roles.decorator';
+import {
+  MinLevel,
+  ROLE_LEVEL,
+} from '../../common/decorators/min-level.decorator';
 import { PlanLevel } from '../../common/decorators/plan-level.decorator';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
@@ -22,25 +25,25 @@ export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
   @Post()
-  @Roles('master', 'admin')
+  @MinLevel(ROLE_LEVEL.manager)
   create(@Body() dto: CreateCategoryDto) {
     return this.categoriesService.create(dto);
   }
 
   @Get()
-  @Roles('master', 'admin', 'employee')
+  @MinLevel(ROLE_LEVEL.employee)
   findAll(@Query() pagination?: PaginationQueryDto) {
     return this.categoriesService.findAll(pagination?.page, pagination?.limit);
   }
 
   @Get(':id')
-  @Roles('master', 'admin', 'employee')
+  @MinLevel(ROLE_LEVEL.employee)
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.categoriesService.findOne(id);
   }
 
   @Patch(':id')
-  @Roles('master', 'admin')
+  @MinLevel(ROLE_LEVEL.manager)
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateCategoryDto,
@@ -49,7 +52,7 @@ export class CategoriesController {
   }
 
   @Delete(':id')
-  @Roles('master')
+  @MinLevel(ROLE_LEVEL.master)
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.categoriesService.remove(id);
   }

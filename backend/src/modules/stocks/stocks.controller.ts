@@ -12,7 +12,10 @@ import {
 import { StocksService } from './stocks.service';
 import { CreateStockDto } from './dto/create-stock.dto';
 import { UpdateStockDto } from './dto/update-stock.dto';
-import { Roles } from '../../common/decorators/roles.decorator';
+import {
+  MinLevel,
+  ROLE_LEVEL,
+} from '../../common/decorators/min-level.decorator';
 import { PlanLevel } from '../../common/decorators/plan-level.decorator';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
@@ -22,37 +25,37 @@ export class StocksController {
   constructor(private readonly stocksService: StocksService) {}
 
   @Post()
-  @Roles('master', 'admin')
+  @MinLevel(ROLE_LEVEL.manager)
   create(@Body() dto: CreateStockDto) {
     return this.stocksService.create(dto);
   }
 
   @Get()
-  @Roles('master', 'admin', 'employee')
+  @MinLevel(ROLE_LEVEL.employee)
   async findAll(@Query() pagination: PaginationQueryDto) {
     return this.stocksService.findAll(pagination.page, pagination.limit);
   }
 
   @Get('alerts')
-  @Roles('master', 'admin', 'employee')
+  @MinLevel(ROLE_LEVEL.employee)
   getAlerts(@Query('threshold') threshold?: string) {
     return this.stocksService.getAlerts(threshold ? Number(threshold) : 5);
   }
 
   @Get(':id')
-  @Roles('master', 'admin', 'employee')
+  @MinLevel(ROLE_LEVEL.employee)
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.stocksService.findOne(id);
   }
 
   @Patch(':id')
-  @Roles('master', 'admin')
+  @MinLevel(ROLE_LEVEL.manager)
   update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateStockDto) {
     return this.stocksService.update(id, dto);
   }
 
   @Delete(':id')
-  @Roles('master')
+  @MinLevel(ROLE_LEVEL.master)
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.stocksService.remove(id);
   }

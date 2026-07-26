@@ -14,6 +14,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { CreatePlanDto } from './dto/create-plan.dto';
 import { UpdatePlanDto } from './dto/update-plan.dto';
 import { CreateInviteDto } from './dto/create-invite.dto';
+import { assertCanAssignRole } from '../../common/auth/role-hierarchy';
 
 export interface UserWithRelations {
   id: string;
@@ -187,6 +188,7 @@ export class AdminService {
       where: { id: dto.roleId },
     });
     if (!role) throw new NotFoundException('ADMIN.ROLE_NOT_FOUND');
+    assertCanAssignRole('master', role.slug);
 
     const existing = await this.prisma.userOrganization.findUnique({
       where: {
@@ -228,6 +230,7 @@ export class AdminService {
       where: { id: roleId },
     });
     if (!role) throw new NotFoundException('ADMIN.ROLE_NOT_FOUND');
+    assertCanAssignRole('master', role.slug);
 
     const updated = await this.prisma.userOrganization.update({
       where: { userId_organizationId: { userId, organizationId: orgId } },

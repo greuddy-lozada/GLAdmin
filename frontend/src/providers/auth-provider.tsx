@@ -17,6 +17,8 @@ interface AuthContextType {
   isLoading: boolean;
   organizations: OrganizationInfo[];
   currentOrg: OrganizationDetail | null;
+  /** Org membership role slug (falls back to global user.role). */
+  effectiveRoleSlug: string;
   login: (email: string, password: string) => Promise<{ organizations?: OrganizationInfo[] }>;
   logout: () => Promise<void>;
   selectOrg: (organizationId: string) => Promise<void>;
@@ -194,6 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         organizations,
         currentOrg,
+        effectiveRoleSlug: user?.role?.slug ?? 'employee',
         login,
         logout,
         selectOrg,

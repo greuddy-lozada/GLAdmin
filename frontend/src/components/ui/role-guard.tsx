@@ -11,7 +11,6 @@ interface RoleGuardProps {
 }
 
 export function RoleGuard({ minLevel, children, fallback = null }: RoleGuardProps) {
-  const { user } = useAuth();
-  const role = user?.role?.slug ?? 'employee';
-  return hasMinLevel(role, minLevel) ? children : fallback;
+  const { effectiveRoleSlug } = useAuth();
+  return hasMinLevel(effectiveRoleSlug, minLevel) ? children : fallback;
 }

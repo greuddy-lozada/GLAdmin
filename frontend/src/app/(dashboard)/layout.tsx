@@ -55,7 +55,7 @@ const groupIconMap: Record<string, React.ComponentType<{ className?: string }>> 
 };
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const { user, isAuthenticated, isLoading, currentOrg } = useAuth();
+  const { user, isAuthenticated, isLoading, currentOrg, effectiveRoleSlug } = useAuth();
   const { t, tp } = useI18n();
   const router = useRouter();
   const pathname = usePathname();
@@ -99,7 +99,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   if (!isAuthenticated) return null;
 
-  const userRole = user?.role?.slug || 'employee';
+  const userRole = effectiveRoleSlug;
   const userFeatures = parsePlanFeatures(currentOrg?.plan?.features);
 
   const visibleGroups = navigationGroups

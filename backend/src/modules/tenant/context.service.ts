@@ -4,6 +4,7 @@ import { AsyncLocalStorage } from 'async_hooks';
 export interface TenantContext {
   organizationId: string;
   organizationSlug?: string;
+  orgRole?: string;
   isSuperAdmin?: boolean;
   plan?: { name: string; features: string[] };
   planFeatures?: string[];

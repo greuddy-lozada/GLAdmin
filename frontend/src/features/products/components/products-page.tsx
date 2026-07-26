@@ -38,8 +38,8 @@ function computePvpVes(pvpUsd: number, bcvRate: number): number {
 export default function ProductsPage() {
   const { items: productsData, isLoading: loading, create, update, remove } = useProducts();
   const { t, tp } = useI18n();
-  const { user } = useAuth();
-  const role = user?.role?.slug ?? 'employee';
+  const { effectiveRoleSlug } = useAuth();
+  const role = effectiveRoleSlug;
   const canEdit = hasMinLevel(role, 60);
   const canDelete = hasMinLevel(role, 100);
   const [formOpen, setFormOpen] = useState(false);

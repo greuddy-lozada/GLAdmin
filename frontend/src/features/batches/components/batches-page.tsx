@@ -20,8 +20,8 @@ import { hasMinLevel } from '@/lib/auth/roles';
 export default function BatchesPage() {
   const { items: batchesData, isLoading: loading, create, update, remove } = useBatches();
   const { t, tp } = useI18n();
-  const { user } = useAuth();
-  const role = user?.role?.slug ?? 'employee';
+  const { effectiveRoleSlug } = useAuth();
+  const role = effectiveRoleSlug;
   const canEdit = hasMinLevel(role, 60);
   const canDelete = hasMinLevel(role, 100);
   const [formOpen, setFormOpen] = useState(false);

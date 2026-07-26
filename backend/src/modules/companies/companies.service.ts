@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { ContextService } from '../../modules/tenant/context.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
@@ -12,29 +16,41 @@ export class CompaniesService {
     private readonly contextService: ContextService,
   ) {}
 
+  private getOrgId(): string {
+    const orgId = this.contextService.getCurrent()?.organizationId;
+    if (!orgId) {
+      throw new ForbiddenException();
+    }
+    return orgId;
+  }
+
   async create(dto: CreateCompanyDto) {
-    const ctx = this.contextService?.getCurrent();
-    const orgId = ctx?.organizationId;
+    const organizationId = this.getOrgId();
     const company = await this.prisma.company.create({
       data: {
         ...dto,
-        organizationId: orgId!,
+        organizationId,
       } as unknown as Prisma.CompanyCreateInput,
     });
     return { data: company, message: 'COMPANY.CREATED' };
   }
 
   async findAll(page = 1, limit = 20) {
+    const organizationId = this.getOrgId();
     const skip = (page - 1) * limit;
+    const where = { organizationId };
     const [data, total] = await Promise.all([
-      this.prisma.company.findMany({ skip, take: limit }),
-      this.prisma.company.count(),
+      this.prisma.company.findMany({ where, skip, take: limit }),
+      this.prisma.company.count({ where }),
     ]);
     return { data, total, page, limit };
   }
 
   async findOne(id: string) {
-    const company = await this.prisma.company.findUnique({ where: { id } });
+    const organizationId = this.getOrgId();
+    const company = await this.prisma.company.findFirst({
+      where: { id, organizationId },
+    });
     if (!company) throw new NotFoundException('COMPANY.NOT_FOUND');
     return company;
   }

@@ -21,9 +21,9 @@ import { hasMinLevel } from '@/lib/auth/roles';
 export default function SuppliersPage() {
   const { items: suppliersData, isLoading: loading, create, update, remove } = useSuppliers();
   const { t, tp } = useI18n();
-  const { user } = useAuth();
-  const role = user?.role?.slug ?? 'employee';
-  const canEdit = hasMinLevel(role, 40);
+  const { effectiveRoleSlug } = useAuth();
+  const role = effectiveRoleSlug;
+  const canEdit = hasMinLevel(role, 60);
   const canDelete = hasMinLevel(role, 100);
   const [formOpen, setFormOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -196,7 +196,7 @@ export default function SuppliersPage() {
     >
       <div className="max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <RoleGuard minLevel={40}>
+        <RoleGuard minLevel={60}>
           <Button onClick={openCreate}>
             <Plus className="mr-2 h-4 w-4" />
             {t('suppliers.new')}

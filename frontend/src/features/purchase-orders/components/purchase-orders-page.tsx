@@ -66,8 +66,8 @@ export default function PurchaseOrdersPage() {
   const { items: purchaseOrdersData, isLoading: loading, create, update, remove } = usePurchaseOrders();
   const queryClient = useQueryClient();
   const { t, tp } = useI18n();
-  const { user } = useAuth();
-  const role = user?.role?.slug ?? 'employee';
+  const { effectiveRoleSlug } = useAuth();
+  const role = effectiveRoleSlug;
   const canEdit = hasMinLevel(role, 60);
 
   const [selectedItem, setSelectedItem] = useState<PurchaseOrder | null>(() => {

@@ -21,7 +21,9 @@
     "UPDATED": "User has been updated",
     "DELETED": "User has been deleted",
     "ALREADY_EXISTS": "User already exists",
-    "NOT_FOUND": "User not found"
+    "NOT_FOUND": "User not found",
+    "ROLE_NOT_FOUND": "Role not found",
+    "ROLE_HIERARCHY": "You cannot assign or manage this role"
   },
   "CUSTOMER": {
     "CREATED": "Customer has been created",

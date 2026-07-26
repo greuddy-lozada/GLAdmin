@@ -9,6 +9,7 @@ export class UserEntity {
   isActive: boolean;
   mustChangePassword: boolean;
   lastLogin: Date | null;
+  currentOrganizationId?: string | null;
   createdAt: Date;
   updatedAt: Date;
 
