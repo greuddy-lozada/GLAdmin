@@ -26,6 +26,12 @@ log "Updating code to origin/${BRANCH}..."
 git fetch origin "$BRANCH"
 git reset --hard "origin/${BRANCH}"
 
+# Re-exec after pull so we don't keep running a stale in-memory script body.
+if [[ "${DEPLOY_REEXEC:-}" != "1" ]]; then
+  export DEPLOY_REEXEC=1
+  exec bash "$ROOT_DIR/scripts/deploy.sh"
+fi
+
 log "Ensuring LAN TLS certs exist..."
 bash "$ROOT_DIR/scripts/generate-lan-tls.sh"
 
