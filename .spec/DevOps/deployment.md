@@ -278,7 +278,7 @@ FF_TAX_REPORTS="false"            # Reportes fiscales venezolanos (en desarrollo
 
 ## 6. Staging on VPS (IP, automated)
 
-Target for tester demos **without a domain**: SSH + Docker VPS, served at `http://YOUR_IP:8081`.
+Target for tester demos **without a domain**: SSH + Docker VPS, served at `https://YOUR_IP:8443` (self-signed LAN TLS). HTTP remains on `http://YOUR_IP:8081` as a fallback.
 
 Stack on the server ([`docker-compose.prod.yml`](../../docker-compose.prod.yml)):
 
@@ -287,7 +287,7 @@ Stack on the server ([`docker-compose.prod.yml`](../../docker-compose.prod.yml))
 | `postgres` | Database (not published publicly) |
 | `redis` | Cache |
 | `backend` | NestJS API on internal port 4000 |
-| `nginx` | Static `frontend/out` + reverse proxy `/api` → backend; host port **8081** |
+| `nginx` | Static `frontend/out` + reverse proxy `/api` → backend; host ports **8081** (HTTP) and **8443** (HTTPS) |
 
 Frontend is built as a static export with `NEXT_PUBLIC_API_URL=/api` (same origin via Nginx). No separate Node process for Next.js.
 
@@ -303,14 +303,17 @@ cp .env.production.example .env.production
 # Edit .env.production:
 #   POSTGRES_PASSWORD=...
 #   JWT_SECRET=...   (min 32 random chars)
-#   FRONTEND_URL=http://YOUR_IP:8081
+#   FRONTEND_URL=https://YOUR_IP:8443
 
-# Open the published port (example with ufw; or cloud security group)
+# Open the published ports (example with ufw; Alpine may use iptables instead)
 sudo ufw allow 8081/tcp
+sudo ufw allow 8443/tcp
 
-# First deploy (builds frontend + compose + migrate + seed)
+# First deploy (TLS cert + frontend build + compose + migrate + seed)
 bash scripts/deploy.sh
 ```
+
+`scripts/deploy.sh` calls [`scripts/generate-lan-tls.sh`](../../scripts/generate-lan-tls.sh), which writes a self-signed cert with an **IP SAN** to `nginx/certs/` (gitignored). Host port **8443** is used because many VPS already run OpenResty/nginx on **443**.
 
 Create a **deploy-only SSH key** on your laptop (or CI machine), add the public key to `~/.ssh/authorized_keys` on the VPS for the deploy user, and keep the private key for GitHub Actions only.
 
@@ -327,39 +330,42 @@ Repo → **Settings → Secrets and variables → Actions**:
 
 Workflow: [`.github/workflows/deploy.yml`](../../.github/workflows/deploy.yml)
 
-- Runs after a **successful** [`CI`](../../.github/workflows/ci.yml) workflow on `main` (`workflow_run`)
+- Runs after a **successful** [`CI`](../../.github/workflows/ci.yml) workflow on `dev` (`workflow_run`)
 - Also runnable manually: **Actions → Deploy → Run workflow**
 
 ### 6.3 Automated flow
 
 ```
-1. Push / merge to main
+1. Push / merge to dev
      ↓
 2. CI (lint + typecheck for backend & frontend)
      ↓
 3. Deploy workflow SSHs to the VPS and runs scripts/deploy.sh:
-   - git fetch + reset --hard origin/main
+   - Ensure nginx/certs self-signed LAN TLS (IP SAN)
+   - git fetch + reset --hard origin/dev
    - Build frontend/out via ephemeral node:22 container
    - docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
    - prisma migrate deploy
    - seed (no-op if already seeded)
-   - Smoke GET http://127.0.0.1:8081/api/health
+   - Smoke GET https://127.0.0.1:8443/api/health (-k)
      ↓
-4. Testers use http://YOUR_IP:8081
+4. Testers use https://YOUR_IP:8443 (accept the certificate warning once)
 ```
 
 ### 6.4 Tester access
 
 | Item | Value |
 |---|---|
-| App URL | `http://YOUR_IP:8081` |
-| Health | `http://YOUR_IP:8081/api/health` |
+| App URL (preferred) | `https://YOUR_IP:8443` |
+| App URL (HTTP fallback) | `http://YOUR_IP:8081` |
+| Health | `https://YOUR_IP:8443/api/health` |
 | Admin email | `admin@cuadra.app` |
 | Admin password | `000000` (from seed — change after first login in real use) |
 
 Notes:
 
-- HTTP only (no domain / TLS in this setup). PWA service worker may not register outside localhost — fine for demos.
+- **Use HTTPS** so browsers expose `crypto.subtle` (offline PIN) and allow service workers. Self-signed certs show a one-time warning — click through / “Advanced → proceed”.
+- Regenerate cert after changing IP: `TLS_FORCE=1 bash scripts/generate-lan-tls.sh YOUR_IP` then restart nginx.
 - Seed skips if organizations already exist; wipe volumes only if you intentionally want a fresh DB.
 
 ### 6.5 Verify & rollback
@@ -368,7 +374,7 @@ Notes:
 # On the VPS
 cd /opt/cuadra
 docker compose --env-file .env.production -f docker-compose.prod.yml ps
-curl -sf http://127.0.0.1:8081/api/health
+curl -skf https://127.0.0.1:8443/api/health
 
 # Re-run deploy manually
 bash scripts/deploy.sh

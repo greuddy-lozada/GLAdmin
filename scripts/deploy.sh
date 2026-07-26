@@ -7,8 +7,8 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
 COMPOSE=(docker compose --env-file .env.production -f docker-compose.prod.yml)
-BRANCH="${DEPLOY_BRANCH:-main}"
-SMOKE_URL="${SMOKE_URL:-http://127.0.0.1:8081/api/health}"
+BRANCH="${DEPLOY_BRANCH:-dev}"
+SMOKE_URL="${SMOKE_URL:-https://127.0.0.1:8443/api/health}"
 
 log() { echo "[deploy] $*"; }
 
@@ -25,6 +25,14 @@ fi
 log "Updating code to origin/${BRANCH}..."
 git fetch origin "$BRANCH"
 git reset --hard "origin/${BRANCH}"
+
+log "Ensuring LAN TLS certs exist..."
+bash "$ROOT_DIR/scripts/generate-lan-tls.sh"
+
+if [[ ! -f nginx/certs/cert.pem || ! -f nginx/certs/key.pem ]]; then
+  echo "Missing nginx/certs/{cert,key}.pem after generate-lan-tls.sh." >&2
+  exit 1
+fi
 
 log "Building frontend static export (NEXT_PUBLIC_API_URL=/api)..."
 docker run --rm \
@@ -75,9 +83,10 @@ log "Seeding database (no-op if already seeded)..."
 
 smoke() {
   if command -v curl >/dev/null 2>&1; then
-    curl -sf "$SMOKE_URL" >/dev/null
+    # -k: self-signed LAN cert
+    curl -skf "$SMOKE_URL" >/dev/null
   elif command -v wget >/dev/null 2>&1; then
-    wget -q -O /dev/null "$SMOKE_URL"
+    wget --no-check-certificate -q -O /dev/null "$SMOKE_URL"
   else
     echo "Need curl or wget for smoke check." >&2
     return 1
