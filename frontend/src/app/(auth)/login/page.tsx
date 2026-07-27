@@ -18,7 +18,7 @@ const features = [
 ];
 
 export default function LoginPage() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user, organizations } = useAuth();
   const router = useRouter();
   const [panelOpen, setPanelOpen] = useState(false);
   const [checkingBootstrap, setCheckingBootstrap] = useState(true);
@@ -43,13 +43,19 @@ export default function LoginPage() {
   useEffect(() => {
     if (checkingBootstrap) return;
     if (!isLoading && isAuthenticated) {
+      const slug = user?.role?.slug ?? '';
+      const isSystemRole = slug === 'master' || slug === 'admin';
+      if (isSystemRole && organizations.length === 0) {
+        router.replace('/dashboard');
+        return;
+      }
       const savedOrgId = localStorage.getItem('currentOrgId');
       const lastPath = useUiStore.getState().lastVisitedPath;
       useUiStore.getState().clearLastVisitedPath();
       const target = savedOrgId && lastPath ? lastPath : savedOrgId ? '/dashboard' : '/org-picker';
       router.replace(target);
     }
-  }, [isLoading, isAuthenticated, checkingBootstrap, router]);
+  }, [isLoading, isAuthenticated, checkingBootstrap, router, user, organizations]);
 
   if (isLoading || checkingBootstrap) return null;
 

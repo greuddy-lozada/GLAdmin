@@ -17,6 +17,7 @@ import { usePagoMovilTransactions } from '../hooks/use-pago-movil-transactions';
 import { PagoMovilTransaction, CreatePagoMovilTransactionRequest } from '../models/pago-movil-transaction.model';
 import { sileo } from 'sileo';
 import { uploadFile } from '@/lib/api/upload';
+import { extractApiError } from '@/lib/api/extract-api-error';
 
 import { VENEZUELA_BANKS, getBankName } from '@/lib/venezuela-banks';
 
@@ -103,8 +104,8 @@ export default function PagoMovilTransactionsPage() {
     try {
       const path = await uploadFile(file);
       setFormData((prev) => ({ ...prev, proofImage: path }));
-    } catch {
-      setFormError(t('pagoMovil.transactions.error.upload'));
+    } catch (err) {
+      setFormError(extractApiError(err) ?? t('pagoMovil.transactions.error.upload'));
     } finally {
       setUploadingProof(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -124,7 +125,7 @@ export default function PagoMovilTransactionsPage() {
     setFormOpen(false);
     create.mutate(formData, {
       onSuccess: () => sileo.success({ description: t('pagoMovil.transactions.submitted') }),
-      onError: () => { setFormError(t('pagoMovil.transactions.error.save')); setFormOpen(true); },
+      onError: (err) => { setFormError(extractApiError(err) ?? t('pagoMovil.transactions.error.save')); setFormOpen(true); },
     });
   };
 
@@ -137,7 +138,7 @@ export default function PagoMovilTransactionsPage() {
           const key = reviewDialog.action === 'approved' ? 'pagoMovil.review.approved' : 'pagoMovil.review.rejected';
           sileo.success({ description: t(key) });
         },
-        onError: () => { setFormError(t('pagoMovil.review.error')); },
+        onError: (err) => { setFormError(extractApiError(err) ?? t('pagoMovil.review.error')); },
       },
     );
   };

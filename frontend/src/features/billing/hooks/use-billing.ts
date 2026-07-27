@@ -5,7 +5,8 @@ import { useSearchParams } from 'next/navigation';
 import { sileo } from 'sileo';
 import { useI18n } from '@/i18n';
 import { Plan } from '../models/billing.model';
-import { billingService, extractError } from '../services/billing.service';
+import { billingService } from '../services/billing.service';
+import { extractApiError, extractApiErrorCode } from '@/lib/api/extract-api-error';
 
 export function useBilling() {
   const { t } = useI18n();
@@ -30,8 +31,7 @@ export function useBilling() {
       const data = await billingService.getPlans();
       setPlans(data);
     } catch (err) {
-      const key = extractError(err);
-      setError(key ?? t('billing.error.load'));
+      setError(extractApiError(err) ?? t('billing.error.load'));
     } finally {
       setLoading(false);
     }
@@ -48,11 +48,11 @@ export function useBilling() {
       const result = await billingService.createCheckoutSession(planId, organizationId);
       return result;
     } catch (err) {
-      const key = extractError(err);
-      if (key === 'BILLING.STRIPE_NOT_CONFIGURED') {
+      const code = extractApiErrorCode(err);
+      if (code === 'BILLING.STRIPE_NOT_CONFIGURED') {
         setError(t('billing.error.notConfigured'));
       } else {
-        setError(key ?? t('billing.error.checkout'));
+        setError(extractApiError(err) ?? t('billing.error.checkout'));
       }
       return null;
     } finally {

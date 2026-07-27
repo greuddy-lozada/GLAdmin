@@ -1,7 +1,7 @@
 import { Controller, Get, Param, ParseUUIDPipe, Query } from '@nestjs/common';
 import { CurrenciesService } from './currencies.service';
 import {
-  MinLevel,
+  MinOrgLevel,
   ROLE_LEVEL,
 } from '../../common/decorators/min-level.decorator';
 import { PlanLevel } from '../../common/decorators/plan-level.decorator';
@@ -13,13 +13,13 @@ export class CurrenciesController {
   constructor(private readonly currenciesService: CurrenciesService) {}
 
   @Get()
-  @MinLevel(ROLE_LEVEL.employee)
+  @MinOrgLevel(ROLE_LEVEL.employee)
   findAll(@Query() pagination: PaginationQueryDto) {
     return this.currenciesService.findAll(pagination.page, pagination.limit);
   }
 
   @Get(':id')
-  @MinLevel(ROLE_LEVEL.employee)
+  @MinOrgLevel(ROLE_LEVEL.employee)
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.currenciesService.findOne(id);
   }

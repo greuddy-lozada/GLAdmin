@@ -11,7 +11,7 @@ import Stripe from 'stripe';
 import { PaymentsService } from './payments.service';
 import { CreateCheckoutSessionDto } from './create-checkout-session.dto';
 import {
-  MinLevel,
+  MinOrgLevel,
   ROLE_LEVEL,
 } from '../../common/decorators/min-level.decorator';
 import { Public } from '../../common/decorators/public.decorator';
@@ -27,7 +27,7 @@ export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
   @Post('create-checkout-session')
-  @MinLevel(ROLE_LEVEL.master)
+  @MinOrgLevel(ROLE_LEVEL.master)
   createCheckoutSession(@Body() dto: CreateCheckoutSessionDto) {
     return this.paymentsService.createCheckoutSession(
       dto.planId,

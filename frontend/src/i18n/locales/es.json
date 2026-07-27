@@ -121,6 +121,7 @@
     "adminUsers": "Usuarios Admin",
     "adminPlans": "Planes",
     "adminInvites": "Invitaciones",
+    "adminApprovals": "Aprobaciones Pendientes",
     "adminSubscriptionPayments": "Suscripciones",
     "settings": "Configuración",
     "shortcuts": "Atajos",
@@ -727,20 +728,64 @@
         "save": "Error al guardar organización",
         "load": "Error al cargar organizaciones",
         "delete": "Error al eliminar organización"
+      },
+      "filter": {
+        "active": "Activas",
+        "inactive": "Inactivas",
+        "all": "Todas"
+      },
+      "members": {
+        "title": "Miembros",
+        "assign": "Asignar Usuario",
+        "noUsers": "No se encontraron usuarios",
+        "noRoles": "No se encontraron roles",
+        "placeholder": {
+          "user": "Seleccionar usuario...",
+          "role": "Seleccionar rol..."
+        },
+        "remove": "Quitar",
+        "removeConfirm": "¿Quitar a {{name}} de esta organización?",
+        "removed": "Usuario removido exitosamente",
+        "assigned": "Usuario asignado exitosamente",
+        "roleChanged": "Rol cambiado exitosamente",
+        "empty": "Sin miembros",
+        "field": {
+          "user": "Usuario",
+          "role": "Rol",
+          "actions": "Acciones"
+        },
+        "error": {
+          "assign": "Error al asignar usuario",
+          "remove": "Error al remover usuario",
+          "changeRole": "Error al cambiar rol",
+          "load": "Error al cargar miembros"
+        }
       }
     },
     "users": {
       "title": "Usuarios",
+      "new": "Nuevo Usuario",
       "edit": "Editar Usuario Admin",
+      "created": "Usuario creado exitosamente",
       "updated": "Usuario actualizado exitosamente",
       "empty": "No hay usuarios registrados",
+      "badge": {
+        "system": "Sistema"
+      },
       "field": {
         "id": "#",
         "name": "Nombre",
+        "firstName": "Nombre",
+        "lastName": "Apellido",
+        "userName": "Usuario",
         "email": "Correo",
+        "password": "Contraseña",
         "role": "Rol",
         "isActive": "Activo",
-        "orgCount": "Organizaciones"
+        "orgCount": "Organizaciones",
+        "orgsList": "Organizaciones",
+        "organization": "Organización",
+        "orgRole": "Rol en la org."
       },
       "error": {
         "save": "Error al guardar usuario",
@@ -803,6 +848,39 @@
         "save": "Error al guardar invitación",
         "load": "Error al cargar invitaciones",
         "delete": "Error al eliminar invitación"
+      }
+    },
+    "approvals": {
+      "title": "Aprobaciones Pendientes",
+      "field": {
+        "action": "Acción",
+        "description": "Descripción",
+        "performedBy": "Realizada por",
+        "date": "Fecha",
+        "status": "Estado"
+      },
+      "approve": "Aprobar",
+      "reject": "Rechazar",
+      "approved": "Aprobada exitosamente",
+      "rejected": "Rechazada exitosamente",
+      "rejectTitle": "Rechazar Acción",
+      "rejectDescription": "¿Estás seguro de rechazar esta acción?",
+      "rejectionReason": "Motivo (opcional)",
+      "rejectionReasonPlaceholder": "¿Por qué se rechaza?",
+      "status": {
+        "pending": "Pendiente",
+        "approved": "Aprobada",
+        "rejected": "Rechazada"
+      },
+      "filter": {
+        "pending": "Pendientes",
+        "approved": "Aprobadas",
+        "rejected": "Rechazadas",
+        "all": "Todas"
+      },
+      "empty": "Sin acciones pendientes",
+      "error": {
+        "review": "Error al revisar aprobación"
       }
     }
   },

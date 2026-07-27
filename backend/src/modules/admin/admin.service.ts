@@ -10,11 +10,13 @@ import * as crypto from 'crypto';
 import { CreateOrgDto } from './dto/create-org.dto';
 import { UpdateOrgDto } from './dto/update-org.dto';
 import { AssignUserOrgDto } from './dto/assign-user-org.dto';
+import { CreateAdminUserDto } from './dto/create-admin-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CreatePlanDto } from './dto/create-plan.dto';
 import { UpdatePlanDto } from './dto/update-plan.dto';
 import { CreateInviteDto } from './dto/create-invite.dto';
 import { assertCanAssignRole } from '../../common/auth/role-hierarchy';
+import * as bcrypt from 'bcrypt';
 
 export interface UserWithRelations {
   id: string;
@@ -84,18 +86,22 @@ export class AdminService {
 
   // ─── Organizations ───────────────────────────
 
-  async findAllOrgs(page = 1, limit = 20) {
+  async findAllOrgs(page = 1, limit = 20, isActive?: string) {
     const skip = (page - 1) * limit;
+    const where: Record<string, unknown> = {};
+    if (isActive === 'true' || isActive === undefined) where.isActive = true;
+    else if (isActive === 'false') where.isActive = false;
     const [data, total] = await Promise.all([
       this.prisma.organization.findMany({
         skip,
         take: limit,
+        where,
         include: {
           plan: true,
           _count: { select: { userMemberships: true } },
         },
       }),
-      this.prisma.organization.count(),
+      this.prisma.organization.count({ where }),
     ]);
     return { data, total, page, limit };
   }
@@ -168,7 +174,7 @@ export class AdminService {
     const org = await this.findOneOrg(id);
     await this.prisma.organization.update({
       where: { id },
-      data: { isActive: false },
+      data: { isActive: false, deletedAt: new Date() },
     });
     return { data: org, message: 'ADMIN.ORG_DELETED' };
   }
@@ -178,6 +184,8 @@ export class AdminService {
       where: { id: orgId },
     });
     if (!org) throw new NotFoundException('ADMIN.ORG_NOT_FOUND');
+
+    await this.checkMaxUsers(orgId);
 
     const user = await this.prisma.user.findUnique({
       where: { id: dto.userId },
@@ -214,9 +222,20 @@ export class AdminService {
     });
     if (!membership) throw new NotFoundException('ADMIN.MEMBERSHIP_NOT_FOUND');
 
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    const clearCurrent = user?.currentOrganizationId === orgId;
+
     await this.prisma.userOrganization.delete({
       where: { userId_organizationId: { userId, organizationId: orgId } },
     });
+
+    if (clearCurrent) {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { currentOrganizationId: null },
+      });
+    }
+
     return { data: null, message: 'ADMIN.USER_REMOVED' };
   }
 
@@ -242,12 +261,16 @@ export class AdminService {
 
   // ─── Users ───────────────────────────────────
 
-  async findAllUsers(page = 1, limit = 20) {
+  async findAllUsers(page = 1, limit = 20, isActive?: string) {
     const skip = (page - 1) * limit;
+    const where: Record<string, unknown> = {};
+    if (isActive === 'true' || isActive === undefined) where.isActive = true;
+    else if (isActive === 'false') where.isActive = false;
     const [users, total] = await Promise.all([
       this.prisma.user.findMany({
         skip,
         take: limit,
+        where,
         include: {
           role: true,
           organizations: {
@@ -255,7 +278,7 @@ export class AdminService {
           },
         },
       }),
-      this.prisma.user.count(),
+      this.prisma.user.count({ where }),
     ]);
     return {
       data: users.map((u: UserWithRelations) => stripPassword(u)),
@@ -277,6 +300,53 @@ export class AdminService {
     });
     if (!user) throw new NotFoundException('ADMIN.USER_NOT_FOUND');
     return stripPassword(user);
+  }
+
+  async createUser(dto: CreateAdminUserDto) {
+    const existing = await this.prisma.user.findUnique({
+      where: { userName: dto.userName },
+    });
+    if (existing) throw new ConflictException('USER.ALREADY_EXISTS');
+
+    const role = await this.prisma.role.findUnique({
+      where: { id: dto.idRole },
+    });
+    if (!role) throw new NotFoundException('ADMIN.ROLE_NOT_FOUND');
+
+    if (dto.organizationId) {
+      const org = await this.prisma.organization.findUnique({
+        where: { id: dto.organizationId },
+      });
+      if (!org) throw new NotFoundException('ADMIN.ORG_NOT_FOUND');
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(dto.password, salt);
+
+    const user = await this.prisma.user.create({
+      data: {
+        firstName: dto.firstName,
+        lastName: dto.lastName,
+        userName: dto.userName,
+        password: hashedPassword,
+        email: dto.email,
+        idRole: dto.idRole,
+        isActive: dto.isActive ?? true,
+      },
+      include: { role: true },
+    });
+
+    if (dto.organizationId) {
+      await this.prisma.userOrganization.create({
+        data: {
+          userId: user.id,
+          organizationId: dto.organizationId,
+          roleId: dto.orgRoleId ?? dto.idRole,
+        },
+      });
+    }
+
+    return { data: stripPassword(user), message: 'ADMIN.USER_CREATED' };
   }
 
   async updateUser(id: string, dto: UpdateUserDto) {

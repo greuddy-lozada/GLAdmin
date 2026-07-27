@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { extractApiError } from '@/lib/api/extract-api-error';
 
 export default function LoginForm() {
   const [email, setEmail] = useState('');
@@ -29,8 +30,8 @@ export default function LoginForm() {
       } else {
         router.push('/dashboard');
       }
-    } catch {
-      setError(t('auth.error'));
+    } catch (err) {
+      setError(extractApiError(err) ?? t('auth.error'));
     } finally {
       setLoading(false);
     }

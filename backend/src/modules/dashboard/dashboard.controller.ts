@@ -1,7 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { DashboardService } from './dashboard.service';
 import {
-  MinLevel,
+  MinOrgLevel,
   ROLE_LEVEL,
 } from '../../common/decorators/min-level.decorator';
 import { PlanLevel } from '../../common/decorators/plan-level.decorator';
@@ -12,19 +12,19 @@ export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
   @Get('stats')
-  @MinLevel(ROLE_LEVEL.employee)
+  @MinOrgLevel(ROLE_LEVEL.employee)
   getStats() {
     return this.dashboardService.getStats();
   }
 
   @Get('analytics')
-  @MinLevel(ROLE_LEVEL.employee)
+  @MinOrgLevel(ROLE_LEVEL.employee)
   getAnalytics() {
     return this.dashboardService.getAnalytics();
   }
 
   @Get('sales-analytics')
-  @MinLevel(ROLE_LEVEL.employee)
+  @MinOrgLevel(ROLE_LEVEL.employee)
   getSalesAnalytics() {
     return this.dashboardService.getSalesAnalytics();
   }

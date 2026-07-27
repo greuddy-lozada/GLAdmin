@@ -50,11 +50,22 @@ export class BootstrapService {
     }
 
     return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      let role = await tx.role.findFirst({ where: { slug: 'master' } });
-      if (!role) {
-        role = await tx.role.create({
-          data: { name: 'Master', slug: 'master' },
+      const rolesData = [
+        { name: 'Master', slug: 'master', type: 'system', level: 100 },
+        { name: 'Admin', slug: 'admin', type: 'system', level: 70 },
+        { name: 'Executive', slug: 'executive', type: 'org', level: 80 },
+        { name: 'Manager', slug: 'manager', type: 'org', level: 60 },
+        { name: 'Employee', slug: 'employee', type: 'org', level: 40 },
+      ];
+
+      let masterRole: { id: string; slug: string } | null = null;
+      for (const r of rolesData) {
+        const role = await tx.role.upsert({
+          where: { slug: r.slug },
+          create: r,
+          update: {},
         });
+        if (r.slug === 'master') masterRole = role;
       }
 
       let plan = await tx.plan.findFirst({ where: { name: 'Free' } });
@@ -90,7 +101,7 @@ export class BootstrapService {
           userName: dto.adminEmail,
           email: dto.adminEmail,
           password: hashedPassword,
-          idRole: role.id,
+          idRole: masterRole!.id,
         },
         include: { role: true },
       });
@@ -99,7 +110,7 @@ export class BootstrapService {
         data: {
           userId: user.id,
           organizationId: organization.id,
-          roleId: role.id,
+          roleId: masterRole!.id,
         },
       });
 
@@ -126,7 +137,7 @@ export class BootstrapService {
           email: user.email,
           role: user.role.slug,
           orgId: organization.id,
-          orgRole: role.slug,
+          orgRole: masterRole!.slug,
           type: 'access',
         },
         { expiresIn: '15m' },

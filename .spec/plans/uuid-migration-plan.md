@@ -1,9 +1,9 @@
 # UUID Migration Plan — Plan Detallado
 
-> **Estado:** Planificado  
+> **Estado:** ✅ Completado  
 > **Fecha plan:** Julio 2026  
+> **Fecha fin:** Julio 2026  
 > **Reemplaza:** `database-migration-plan.md` (obsoleto — asumía SQLite)  
-> **Precondición:** PostgreSQL ya está en uso (`provider = "postgresql"`)  
 
 ---
 

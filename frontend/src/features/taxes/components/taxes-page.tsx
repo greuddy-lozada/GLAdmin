@@ -16,6 +16,7 @@ import { sileo } from 'sileo';
 import { RoleGuard } from '@/components/ui/role-guard';
 import { useAuth } from '@/providers/auth-provider';
 import { hasMinLevel } from '@/lib/auth/roles';
+import { extractApiError } from '@/lib/api/extract-api-error';
 
 export default function TaxesPage() {
   const { items: taxes, isLoading: loading, create, update, remove } = useTaxes();
@@ -65,13 +66,13 @@ export default function TaxesPage() {
         { id: selectedTax!.id, data },
         {
           onSuccess: () => sileo.success({ description: t('taxes.updated') }),
-          onError: () => { setError(t('taxes.error.save')); setFormOpen(true); },
+          onError: (err) => { setError(extractApiError(err) ?? t('taxes.error.save')); setFormOpen(true); },
         },
       );
     } else {
       create.mutate(formData, {
         onSuccess: () => sileo.success({ description: t('taxes.created') }),
-        onError: () => { setError(t('taxes.error.save')); setFormOpen(true); },
+        onError: (err) => { setError(extractApiError(err) ?? t('taxes.error.save')); setFormOpen(true); },
       });
     }
   };
@@ -83,7 +84,7 @@ export default function TaxesPage() {
     setDeleteTarget(null);
     remove.mutate(targetId, {
       onSuccess: () => sileo.success({ description: t('taxes.deleted') }),
-      onError: () => { setError(t('taxes.error.delete')); setDeleteOpen(true); },
+      onError: (err) => { setError(extractApiError(err) ?? t('taxes.error.delete')); setDeleteOpen(true); },
     });
   };
 

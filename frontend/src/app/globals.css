@@ -203,6 +203,31 @@ a {
 }
 
 
+/* ── Sileo toast overrides ── */
+:root {
+  --sileo-state-success: #47cc33;
+  --sileo-state-error: #dc2626;
+  --sileo-state-warning: #f59e0b;
+  --sileo-state-info: #3e93c1;
+  --sileo-state-loading: #666666;
+  --sileo-state-action: #3e93c1;
+}
+
+.dark {
+  --sileo-state-success: #47cc33;
+  --sileo-state-error: #ef4444;
+  --sileo-state-warning: #f59e0b;
+  --sileo-state-info: #65a9cd;
+}
+
+[data-sileo-description] {
+  color: #1a1a1a !important;
+}
+
+.dark [data-sileo-description] {
+  color: #ecf2f9 !important;
+}
+
 @media print {
   @page {
     margin: 2cm 1.8cm 2.5cm 1.8cm;

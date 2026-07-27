@@ -15,6 +15,7 @@ import { useI18n } from '@/i18n';
 import { sileo } from 'sileo';
 import { RoleGuard } from '@/components/ui/role-guard';
 import { useAuth } from '@/providers/auth-provider';
+import { extractApiError } from '@/lib/api/extract-api-error';
 import { hasMinLevel } from '@/lib/auth/roles';
 
 export default function BatchesPage() {
@@ -64,13 +65,13 @@ export default function BatchesPage() {
         { id: selectedBatch!.id, data: { code: formData.code, description: formData.description || null } },
         {
           onSuccess: () => sileo.success({ description: t('batches.updated') }),
-          onError: () => { setError(t('batches.error.save')); setFormOpen(true); },
+          onError: (err) => { setError(extractApiError(err) ?? t('batches.error.save')); setFormOpen(true); },
         },
       );
     } else {
       create.mutate(formData, {
         onSuccess: () => sileo.success({ description: t('batches.created') }),
-        onError: () => { setError(t('batches.error.save')); setFormOpen(true); },
+        onError: (err) => { setError(extractApiError(err) ?? t('batches.error.save')); setFormOpen(true); },
       });
     }
   };
@@ -82,7 +83,7 @@ export default function BatchesPage() {
     setDeleteTarget(null);
     remove.mutate(targetId, {
       onSuccess: () => sileo.success({ description: t('batches.deleted') }),
-      onError: () => { setError(t('batches.error.delete')); setDeleteOpen(true); },
+      onError: (err) => { setError(extractApiError(err) ?? t('batches.error.delete')); setDeleteOpen(true); },
     });
   };
 

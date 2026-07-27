@@ -16,6 +16,7 @@ import { useAuth } from '@/providers/auth-provider';
 import { hasMinLevel } from '@/lib/auth/roles';
 import { sileo } from 'sileo';
 import apiClient from '@/lib/api/api-client';
+import { extractApiError } from '@/lib/api/extract-api-error';
 
 export interface DetailForm {
   idProduct: string;
@@ -142,8 +143,8 @@ export default function PurchaseOrdersPage() {
       }));
       setSelectedItem(full);
       setInlineReceiveQty({});
-    } catch {
-      setError(t('purchaseOrders.error.load'));
+    } catch (err) {
+      setError(extractApiError(err) ?? t('purchaseOrders.error.load'));
     }
   };
 
@@ -153,12 +154,12 @@ export default function PurchaseOrdersPage() {
     if (selectedItem?.id) {
       update.mutate({ id: selectedItem.id, data: { ...data, idSupplier: undefined } }, {
         onSuccess: () => { sileo.success({ description: t('purchaseOrders.updated') }); refetchSelected(selectedItem.id); },
-        onError: () => setError(t('purchaseOrders.error.save')),
+        onError: (err) => setError(extractApiError(err) ?? t('purchaseOrders.error.save')),
       });
     } else {
       create.mutate(data, {
         onSuccess: () => { sileo.success({ description: t('purchaseOrders.created') }); setSelectedItem(null); },
-        onError: () => setError(t('purchaseOrders.error.save')),
+        onError: (err) => setError(extractApiError(err) ?? t('purchaseOrders.error.save')),
       });
     }
   };
@@ -168,7 +169,7 @@ export default function PurchaseOrdersPage() {
     setError('');
     update.mutate({ id: selectedItem.id, data: { status: newStatus } }, {
       onSuccess: () => { sileo.success({ description: t('purchaseOrders.updated') }); refetchSelected(selectedItem.id); },
-      onError: () => setError(t('purchaseOrders.error.save')),
+      onError: (err) => setError(extractApiError(err) ?? t('purchaseOrders.error.save')),
     });
   };
 
@@ -180,7 +181,7 @@ export default function PurchaseOrdersPage() {
       const form = new FormData(); form.append('file', file);
       const res = await apiClient.post('/uploads/proof', form, { headers: { 'Content-Type': 'multipart/form-data' } });
       setFormData({ ...formData, withholdingProof: res.data.data.filename });
-    } catch { setError(t('common.uploadError')); }
+    } catch (err) { setError(extractApiError(err) ?? t('common.uploadError')); }
     finally { setUploading(false); }
   };
 
@@ -189,7 +190,7 @@ export default function PurchaseOrdersPage() {
       const full = await purchaseOrderService.getById(id);
       setSelectedItem(full);
       queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
-    } catch { /* ignore */ }
+    } catch (err) { sileo.error({ description: extractApiError(err) ?? t('common.error') }); }
   };
 
   const handleDelete = () => {
@@ -198,7 +199,7 @@ export default function PurchaseOrdersPage() {
     setDeleteOpen(false); setDeleteTarget(null);
     remove.mutate(id, {
       onSuccess: () => { sileo.success({ description: t('purchaseOrders.deleted') }); if (selectedItem?.id === id) setSelectedItem(null); },
-      onError: () => setError(t('purchaseOrders.error.delete')),
+      onError: (err) => setError(extractApiError(err) ?? t('purchaseOrders.error.delete')),
     });
   };
 
@@ -221,7 +222,7 @@ export default function PurchaseOrdersPage() {
       queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
       setReceiveOpen(false); setReceiveTarget(null);
       if (selectedItem?.id === receiveTarget.id) refetchSelected(receiveTarget.id);
-    } catch { setError(t('purchaseOrders.error.save')); }
+    } catch (err) { setError(extractApiError(err) ?? t('purchaseOrders.error.save')); }
     finally { setReceiveSubmitting(false); }
   };
 
@@ -235,7 +236,7 @@ export default function PurchaseOrdersPage() {
       queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
       setInlineReceiveQty((prev) => ({ ...prev, [detailId]: 0 }));
       refetchSelected(selectedItem.id);
-    } catch { setError(t('purchaseOrders.error.save')); }
+    } catch (err) { setError(extractApiError(err) ?? t('purchaseOrders.error.save')); }
     finally { setReceiveSubmittingInline(false); }
   };
 

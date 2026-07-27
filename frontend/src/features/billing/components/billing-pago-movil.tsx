@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Upload, X, Eye, Banknote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { extractApiError } from '@/lib/api/extract-api-error';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -49,8 +50,8 @@ export function BillingPagoMovil({ plan, open, onOpenChange }: BillingPagoMovilP
     try {
       const path = await uploadFile(file);
       setProofImage(path);
-    } catch {
-      setError(t('subscription.payment.error.upload'));
+    } catch (err) {
+      setError(extractApiError(err) ?? t('subscription.payment.error.upload'));
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';

@@ -14,6 +14,7 @@ import { localDb } from '@/lib/sync/db';
 import { syncQueue } from '@/lib/sync/sync-queue';
 import { sileo } from 'sileo';
 import apiClient from '@/lib/api/api-client';
+import { extractApiError } from '@/lib/api/extract-api-error';
 
 interface QuickAddCustomerProps {
   onCreated: (customer: { id: string; name: string; taxId: string; isWithholdingAgent: boolean; withholdingPercentage?: number | null; withholdingProof?: string }) => void;
@@ -58,8 +59,8 @@ export function QuickAddCustomer({ onCreated, open: externalOpen, onOpenChange }
       form.append('file', file);
       const res = await apiClient.post('/uploads/proof', form, { headers: { 'Content-Type': 'multipart/form-data' } });
       setWithholdingProof(res.data.data.filename);
-    } catch {
-      setError('Se necesita conexión para subir el comprobante');
+    } catch (err) {
+      setError(extractApiError(err) ?? 'Se necesita conexión para subir el comprobante');
     } finally {
       setUploading(false);
     }
@@ -103,8 +104,8 @@ export function QuickAddCustomer({ onCreated, open: externalOpen, onOpenChange }
       });
       reset();
       setOpen(false);
-    } catch {
-      setError(t('pos.customer.error.save'));
+    } catch (err) {
+      setError(extractApiError(err) ?? t('pos.customer.error.save'));
     } finally {
       setSaving(false);
     }

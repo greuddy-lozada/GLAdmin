@@ -18,6 +18,7 @@ import { sileo } from 'sileo';
 import { RoleGuard } from '@/components/ui/role-guard';
 import { useAuth } from '@/providers/auth-provider';
 import { hasMinLevel } from '@/lib/auth/roles';
+import { extractApiError } from '@/lib/api/extract-api-error';
 import apiClient from '@/lib/api/api-client';
 
 export default function StocksPage() {
@@ -99,13 +100,13 @@ export default function StocksPage() {
         },
         {
           onSuccess: () => sileo.success({ description: t('stocks.updated') }),
-          onError: () => { setError(t('stocks.error.save')); setFormOpen(true); },
+          onError: (err) => { setError(extractApiError(err) ?? t('stocks.error.save')); setFormOpen(true); },
         },
       );
     } else {
       create.mutate(formData, {
         onSuccess: () => sileo.success({ description: t('stocks.created') }),
-        onError: () => { setError(t('stocks.error.save')); setFormOpen(true); },
+        onError: (err) => { setError(extractApiError(err) ?? t('stocks.error.save')); setFormOpen(true); },
       });
     }
   };
@@ -117,7 +118,7 @@ export default function StocksPage() {
     setDeleteTarget(null);
     remove.mutate(targetId, {
       onSuccess: () => sileo.success({ description: t('stocks.deleted') }),
-      onError: () => { setError(t('stocks.error.delete')); setDeleteOpen(true); },
+      onError: (err) => { setError(extractApiError(err) ?? t('stocks.error.delete')); setDeleteOpen(true); },
     });
   };
 

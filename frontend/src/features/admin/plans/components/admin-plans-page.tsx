@@ -22,6 +22,7 @@ import { useAdminPlans } from '@/features/admin/plans/hooks/use-admin-plans';
 import { AdminPlan, CreateAdminPlanRequest } from '@/features/admin/plans/models/admin-plan.model';
 import { useI18n } from '@/i18n';
 import { sileo } from 'sileo';
+import { extractApiError } from '@/lib/api/extract-api-error';
 
 export default function AdminPlansPage() {
   const { items: plansData, isLoading: loading, create, update, remove } = useAdminPlans();
@@ -87,13 +88,13 @@ export default function AdminPlansPage() {
         { id: selectedPlan.id, data: formData },
         {
           onSuccess: () => sileo.success({ description: t('admin.plans.updated') }),
-          onError: () => { setError(t('admin.plans.error.save')); setFormOpen(true); },
+          onError: (err) => { setError(extractApiError(err) ?? t('admin.plans.error.save')); setFormOpen(true); },
         },
       );
     } else {
       create.mutate(formData as CreateAdminPlanRequest, {
         onSuccess: () => sileo.success({ description: t('admin.plans.created') }),
-        onError: () => { setError(t('admin.plans.error.save')); setFormOpen(true); },
+        onError: (err) => { setError(extractApiError(err) ?? t('admin.plans.error.save')); setFormOpen(true); },
       });
     }
   };
@@ -105,7 +106,7 @@ export default function AdminPlansPage() {
     setDeleteTarget(null);
     remove.mutate(targetId, {
       onSuccess: () => sileo.success({ description: t('admin.plans.deleted') }),
-      onError: () => { setError(t('admin.plans.error.delete')); setDeleteOpen(true); },
+      onError: (err) => { setError(extractApiError(err) ?? t('admin.plans.error.delete')); setDeleteOpen(true); },
     });
   };
 

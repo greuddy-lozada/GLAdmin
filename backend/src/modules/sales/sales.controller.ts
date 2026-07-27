@@ -14,14 +14,14 @@ import { SalesService } from './sales.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
 import { UpdateSaleDto } from './dto/update-sale.dto';
 import {
-  MinLevel,
+  MinOrgLevel,
   ROLE_LEVEL,
 } from '../../common/decorators/min-level.decorator';
 import { PlanLevel } from '../../common/decorators/plan-level.decorator';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 @Controller('sales')
-@MinLevel(ROLE_LEVEL.employee)
+@MinOrgLevel(ROLE_LEVEL.employee)
 @PlanLevel('professional')
 export class SalesController {
   constructor(private readonly salesService: SalesService) {}

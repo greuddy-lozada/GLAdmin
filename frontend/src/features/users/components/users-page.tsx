@@ -17,6 +17,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DataTable, Column } from '@/components/ui/data-table';
 import { SlideForm } from '@/components/ui/slide-form';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { extractApiError } from '@/lib/api/extract-api-error';
 import { useUsers } from '@/features/users/hooks/use-users';
 import { User, CreateUserRequest } from '@/features/users/models/user.model';
 import { useI18n } from '@/i18n';
@@ -112,13 +113,13 @@ export default function UsersPage() {
         },
         {
           onSuccess: () => sileo.success({ description: t('users.updated') }),
-          onError: () => { setError(t('users.error.save')); setFormOpen(true); },
+          onError: (err) => { setError(extractApiError(err) ?? t('users.error.save')); setFormOpen(true); },
         },
       );
     } else {
       create.mutate(formData, {
         onSuccess: () => sileo.success({ description: t('users.created') }),
-        onError: () => { setError(t('users.error.save')); setFormOpen(true); },
+        onError: (err) => { setError(extractApiError(err) ?? t('users.error.save')); setFormOpen(true); },
       });
     }
   };
@@ -130,7 +131,7 @@ export default function UsersPage() {
     setDeleteTarget(null);
     remove.mutate(targetId, {
       onSuccess: () => sileo.success({ description: t('users.deleted') }),
-      onError: () => { setError(t('users.error.delete')); setDeleteOpen(true); },
+      onError: (err) => { setError(extractApiError(err) ?? t('users.error.delete')); setDeleteOpen(true); },
     });
   };
 

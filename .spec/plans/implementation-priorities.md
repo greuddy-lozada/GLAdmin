@@ -1,6 +1,6 @@
 # Implementation Plan — Prioridades Prácticas
 
-> **Estado:** Planificado  
+> **Estado:** ✅ Completado (Decimal, soft delete implementados; tests parciales)  
 > **Fecha:** Julio 2026  
 > **Origen:** Gap analysis specs vs implementación
 
@@ -8,12 +8,12 @@
 
 ## Resumen Ejecutivo
 
-| # | Item | Esfuerzo | Impacto | Riesgo |
-|---|---|---|---|---|
-| 5 | Decimal(18,4) para montos financieros | Alto (~50 archivos) | Crítico | Alto (migración de datos) |
-| 14 | Soft delete consistente | Medio (~15 archivos) | Alto | Bajo |
-| 8 | Frontend unit tests | Alto (~20 archivos nuevos) | Alto | Bajo |
-| 9 | Backend unit tests | Medio-Alto (~15 archivos nuevos) | Alto | Bajo |
+| # | Item | Esfuerzo | Impacto | Riesgo | Estado |
+|---|---|---|---|---|---|---|
+| 5 | Decimal(18,4) para montos financieros | Alto (~50 archivos) | Crítico | Alto (migración de datos) | ✅ Completado |
+| 14 | Soft delete consistente | Medio (~15 archivos) | Alto | Bajo | ✅ Completado |
+| 8 | Frontend unit tests | Alto (~20 archivos nuevos) | Alto | Bajo | 🟡 Parcial (5/20 archivos) |
+| 9 | Backend unit tests | Medio-Alto (~15 archivos nuevos) | Alto | Bajo | 🟡 Parcial (8/25 módulos) |
 
 ---
 

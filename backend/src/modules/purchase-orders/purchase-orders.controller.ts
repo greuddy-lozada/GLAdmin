@@ -14,7 +14,7 @@ import { CreatePurchaseOrderDto } from './dto/create-purchase-order.dto';
 import { UpdatePurchaseOrderDto } from './dto/update-purchase-order.dto';
 import { ReceivePurchaseOrderDto } from './dto/receive-purchase-order.dto';
 import {
-  MinLevel,
+  MinOrgLevel,
   ROLE_LEVEL,
 } from '../../common/decorators/min-level.decorator';
 import { PlanLevel } from '../../common/decorators/plan-level.decorator';
@@ -26,13 +26,13 @@ export class PurchaseOrdersController {
   constructor(private readonly purchaseOrdersService: PurchaseOrdersService) {}
 
   @Post()
-  @MinLevel(ROLE_LEVEL.manager)
+  @MinOrgLevel(ROLE_LEVEL.manager)
   create(@Body() dto: CreatePurchaseOrderDto) {
     return this.purchaseOrdersService.create(dto);
   }
 
   @Get()
-  @MinLevel(ROLE_LEVEL.employee)
+  @MinOrgLevel(ROLE_LEVEL.employee)
   async findAll(@Query() pagination: PaginationQueryDto) {
     return this.purchaseOrdersService.findAll(
       pagination.page,
@@ -41,13 +41,13 @@ export class PurchaseOrdersController {
   }
 
   @Get(':id')
-  @MinLevel(ROLE_LEVEL.employee)
+  @MinOrgLevel(ROLE_LEVEL.employee)
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.purchaseOrdersService.findOne(id);
   }
 
   @Patch(':id')
-  @MinLevel(ROLE_LEVEL.manager)
+  @MinOrgLevel(ROLE_LEVEL.manager)
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdatePurchaseOrderDto,
@@ -56,7 +56,7 @@ export class PurchaseOrdersController {
   }
 
   @Post(':id/receive')
-  @MinLevel(ROLE_LEVEL.manager)
+  @MinOrgLevel(ROLE_LEVEL.manager)
   receive(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: ReceivePurchaseOrderDto,
@@ -65,7 +65,7 @@ export class PurchaseOrdersController {
   }
 
   @Delete(':id')
-  @MinLevel(ROLE_LEVEL.master)
+  @MinOrgLevel(ROLE_LEVEL.master)
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.purchaseOrdersService.remove(id);
   }

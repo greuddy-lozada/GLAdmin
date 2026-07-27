@@ -15,8 +15,11 @@ export function useRoles() {
     try {
       const data = await roleService.getAll();
       setItems(data);
-    } catch {
-      setError('Error al cargar roles');
+    } catch (err) {
+      const msg = (err && typeof err === 'object' && 'response' in err)
+        ? ((err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message ?? 'Error al cargar roles')
+        : 'Error al cargar roles';
+      setError(msg);
     } finally {
       setLoading(false);
     }

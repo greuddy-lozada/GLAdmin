@@ -20,7 +20,9 @@ export class AuthController {
 
   @Public()
   @UseGuards(ThrottlerGuard)
-  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Throttle({
+    default: { limit: process.env.NODE_ENV === 'test' ? 100 : 5, ttl: 60000 },
+  })
   @Post('login')
   async login(@Body() dto: LoginDto) {
     return this.authService.login(dto);

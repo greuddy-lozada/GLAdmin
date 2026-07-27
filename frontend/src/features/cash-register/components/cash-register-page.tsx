@@ -13,6 +13,7 @@ import { useCashRegisters } from '@/features/cash-register/hooks/use-cash-regist
 import { CashRegister, CreateCashRegisterRequest } from '@/features/cash-register/models/cash-register.model';
 import { useI18n } from '@/i18n';
 import { sileo } from 'sileo';
+import { extractApiError } from '@/lib/api/extract-api-error';
 import { RoleGuard } from '@/components/ui/role-guard';
 
 export default function CashRegisterPage() {
@@ -57,13 +58,13 @@ export default function CashRegisterPage() {
         { id: selected.id, data: formData },
         {
           onSuccess: () => sileo.success({ description: t('cashRegisters.updated') }),
-          onError: () => { setError(t('cashRegisters.error.save')); setFormOpen(true); },
+          onError: (err) => { setError(extractApiError(err) ?? t('cashRegisters.error.save')); setFormOpen(true); },
         },
       );
     } else {
       create.mutate(formData, {
         onSuccess: () => sileo.success({ description: t('cashRegisters.created') }),
-        onError: () => { setError(t('cashRegisters.error.save')); setFormOpen(true); },
+        onError: (err) => { setError(extractApiError(err) ?? t('cashRegisters.error.save')); setFormOpen(true); },
       });
     }
   };
@@ -75,7 +76,7 @@ export default function CashRegisterPage() {
     setDeleteTarget(null);
     remove.mutate(targetId, {
       onSuccess: () => sileo.success({ description: t('cashRegisters.deleted') }),
-      onError: () => { setError(t('cashRegisters.error.delete')); setDeleteOpen(true); },
+      onError: (err) => { setError(extractApiError(err) ?? t('cashRegisters.error.delete')); setDeleteOpen(true); },
     });
   };
 

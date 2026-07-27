@@ -36,6 +36,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   adminUsers: Users,
   adminPlans: CreditCard,
   adminInvites: Mail,
+  adminApprovals: AlertCircle,
   settings: Settings,
   payments: Wallet,
   transactions: ArrowLeftRight,
@@ -69,6 +70,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     }
   }, [isLoading, isAuthenticated, router]);
 
+  const storeTabs = useTabsStore((s) => s.tabs);
   const setLastVisitedPath = useUiStore(s => s.setLastVisitedPath);
   useEffect(() => {
     if (isAuthenticated && pathname) {
@@ -101,11 +103,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   const userRole = effectiveRoleSlug;
   const userFeatures = parsePlanFeatures(currentOrg?.plan?.features);
+  const isSystemRole = userRole === 'master' || userRole === 'admin';
 
   const visibleGroups = navigationGroups
     .map((group) => ({
       ...group,
-      items: userRole === 'master'
+      items: isSystemRole
         ? group.items
         : group.items.filter(
             (item) =>
@@ -118,6 +121,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const currentPage = navigationConfig.find((item) => pathname.startsWith(item.path));
   const pageTitle = currentPage ? t(`nav.${currentPage.key}`) : '';
   const showWelcome = pathname === '/dashboard';
+
+  const accessiblePaths = new Set<string>();
+  accessiblePaths.add('/dashboard');
+  visibleGroups.forEach((g) => g.items.forEach((item) => accessiblePaths.add(item.path)));
+  const tabs = storeTabs.filter((tab) => accessiblePaths.has(tab.path));
 
   const toggleGroup = (gi: number) => {
     setExpandedGroups((prev) => {
@@ -263,7 +271,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
         </div>
         <div className="px-6 md:px-8 pt-4 pb-4 shrink-0 print:hidden">
-          <VisitedTabs iconMap={iconMap} />
+          <VisitedTabs iconMap={iconMap} tabs={tabs} />
         </div>
         <div className="flex-1 overflow-hidden px-6 md:px-8 pb-6 md:pb-8 print:h-auto print:overflow-visible print:block print:px-4 print:pb-4">
           <div className="w-full h-full print:h-auto">

@@ -3,6 +3,7 @@
 import { useI18n } from '@/i18n';
 import { useAuth } from '@/providers/auth-provider';
 import { Button } from '@/components/ui/button';
+import { extractApiError } from '@/lib/api/extract-api-error';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Printer, AlertCircle, Calendar, User, Hash, Download, RefreshCw } from 'lucide-react';
@@ -460,8 +461,8 @@ export function ReportViewer({ reportId }: ReportViewerProps) {
         parameters: report.parameters as Record<string, unknown>,
       });
       sileo.success({ description: t('reports.created') });
-    } catch {
-      sileo.error({ description: t('reports.error.generate') });
+    } catch (err) {
+      sileo.error({ description: extractApiError(err) ?? t('reports.error.generate') });
     }
   };
 

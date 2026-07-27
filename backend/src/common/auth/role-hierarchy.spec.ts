@@ -2,9 +2,19 @@ import {
   canAssignRole,
   assignableRoleSlugs,
   assertCanAssignRole,
+  setRoleLevels,
 } from './role-hierarchy';
 
 describe('role-hierarchy', () => {
+  beforeAll(() => {
+    setRoleLevels({
+      master: 100,
+      admin: 70,
+      executive: 80,
+      manager: 60,
+      employee: 40,
+    });
+  });
   describe('canAssignRole', () => {
     it('master can assign any role including master', () => {
       expect(canAssignRole('master', 'master')).toBe(true);
@@ -54,7 +64,7 @@ describe('role-hierarchy', () => {
   describe('assignableRoleSlugs', () => {
     it('returns expected slugs for executive', () => {
       expect(assignableRoleSlugs('executive').sort()).toEqual(
-        ['employee', 'manager'].sort(),
+        ['admin', 'employee', 'manager'].sort(),
       );
     });
   });

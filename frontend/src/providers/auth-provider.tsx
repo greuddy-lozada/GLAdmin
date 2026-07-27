@@ -133,6 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [scheduleRefresh]);
 
   const login = useCallback(async (email: string, password: string) => {
+    useTabsStore.getState().clearTabs();
     const response = await authService.login({ email, password });
     setToken(response.accessToken);
     setUser(response.user);

@@ -14,7 +14,7 @@ import {
   ReviewPagoMovilTransactionDto,
 } from './pago-movil-transaction.dto';
 import {
-  MinLevel,
+  MinOrgLevel,
   ROLE_LEVEL,
 } from '../../common/decorators/min-level.decorator';
 import { PlanLevel } from '../../common/decorators/plan-level.decorator';
@@ -26,13 +26,13 @@ export class PagoMovilTransactionController {
   constructor(private readonly pagoMovilService: PagoMovilService) {}
 
   @Get()
-  @MinLevel(ROLE_LEVEL.employee)
+  @MinOrgLevel(ROLE_LEVEL.employee)
   findAll(@Query('status') status?: string) {
     return this.pagoMovilService.getTransactions(status);
   }
 
   @Post()
-  @MinLevel(ROLE_LEVEL.employee)
+  @MinOrgLevel(ROLE_LEVEL.employee)
   create(
     @Body() dto: CreatePagoMovilTransactionDto,
     @CurrentUser('id') userId: string,
@@ -41,13 +41,13 @@ export class PagoMovilTransactionController {
   }
 
   @Get(':id')
-  @MinLevel(ROLE_LEVEL.employee)
+  @MinOrgLevel(ROLE_LEVEL.employee)
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.pagoMovilService.getTransaction(id);
   }
 
   @Patch(':id/review')
-  @MinLevel(ROLE_LEVEL.manager)
+  @MinOrgLevel(ROLE_LEVEL.manager)
   review(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: ReviewPagoMovilTransactionDto,

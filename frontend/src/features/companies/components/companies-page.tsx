@@ -15,6 +15,7 @@ import { useCompanies } from '@/features/companies/hooks/use-companies';
 import { Company, CreateCompanyRequest } from '@/features/companies/models/company.model';
 import { useI18n } from '@/i18n';
 import { sileo } from 'sileo';
+import { extractApiError } from '@/lib/api/extract-api-error';
 import { RoleGuard } from '@/components/ui/role-guard';
 import { useAuth } from '@/providers/auth-provider';
 import { hasMinLevel } from '@/lib/auth/roles';
@@ -91,13 +92,13 @@ export default function CompaniesPage() {
         },
         {
           onSuccess: () => sileo.success({ description: t('companies.updated') }),
-          onError: () => { setError(t('companies.error.save')); setFormOpen(true); },
+          onError: (err) => { setError(extractApiError(err) ?? t('companies.error.save')); setFormOpen(true); },
         },
       );
     } else {
       create.mutate(formData, {
         onSuccess: () => sileo.success({ description: t('companies.created') }),
-        onError: () => { setError(t('companies.error.save')); setFormOpen(true); },
+        onError: (err) => { setError(extractApiError(err) ?? t('companies.error.save')); setFormOpen(true); },
       });
     }
   };
@@ -109,7 +110,7 @@ export default function CompaniesPage() {
     setDeleteTarget(null);
     remove.mutate(targetId, {
       onSuccess: () => sileo.success({ description: t('companies.deleted') }),
-      onError: () => { setError(t('companies.error.delete')); setDeleteOpen(true); },
+      onError: (err) => { setError(extractApiError(err) ?? t('companies.error.delete')); setDeleteOpen(true); },
     });
   };
 

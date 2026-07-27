@@ -15,6 +15,7 @@ import { useI18n } from '@/i18n';
 import { RoleGuard } from '@/components/ui/role-guard';
 import { useAuth } from '@/providers/auth-provider';
 import { hasMinLevel } from '@/lib/auth/roles';
+import { extractApiError } from '@/lib/api/extract-api-error';
 import { sileo } from 'sileo';
 
 export default function BrandsPage() {
@@ -59,13 +60,13 @@ export default function BrandsPage() {
         { id: selectedBrand!.id, data: formData },
         {
           onSuccess: () => sileo.success({ description: t('brands.updated') }),
-          onError: () => { setError(t('brands.error.save')); setFormOpen(true); },
+          onError: (err) => { setError(extractApiError(err) ?? t('brands.error.save')); setFormOpen(true); },
         },
       );
     } else {
       create.mutate(formData, {
         onSuccess: () => sileo.success({ description: t('brands.created') }),
-        onError: () => { setError(t('brands.error.save')); setFormOpen(true); },
+        onError: (err) => { setError(extractApiError(err) ?? t('brands.error.save')); setFormOpen(true); },
       });
     }
   };
@@ -77,7 +78,7 @@ export default function BrandsPage() {
     setDeleteTarget(null);
     remove.mutate(targetId, {
       onSuccess: () => sileo.success({ description: t('brands.deleted') }),
-      onError: () => { setError(t('brands.error.delete')); setDeleteOpen(true); },
+      onError: (err) => { setError(extractApiError(err) ?? t('brands.error.delete')); setDeleteOpen(true); },
     });
   };
 

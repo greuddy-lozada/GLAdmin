@@ -15,12 +15,12 @@ import { SyncService } from './sync.service';
 import { PushRequestDto } from './dto/push-mutation.dto';
 import { ResolveConflictDto } from './dto/resolve-conflict.dto';
 import {
-  MinLevel,
+  MinOrgLevel,
   ROLE_LEVEL,
 } from '../../common/decorators/min-level.decorator';
 
 @Controller('sync')
-@MinLevel(ROLE_LEVEL.employee)
+@MinOrgLevel(ROLE_LEVEL.employee)
 // Offline-first: pull/push can burst on reconnect; higher than default 100/min
 @Throttle({ default: { limit: 120, ttl: 60000 } })
 export class SyncController {

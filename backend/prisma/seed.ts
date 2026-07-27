@@ -16,22 +16,27 @@ async function main() {
   const masterRole = await prisma.role.upsert({
     where: { slug: 'master' },
     update: {},
-    create: { name: 'Master', slug: 'master' },
+    create: { name: 'Master', slug: 'master', type: 'system', level: 100 },
+  });
+  const adminRole = await prisma.role.upsert({
+    where: { slug: 'admin' },
+    update: {},
+    create: { name: 'Admin', slug: 'admin', type: 'system', level: 90 },
   });
   await prisma.role.upsert({
     where: { slug: 'executive' },
     update: {},
-    create: { name: 'Ejecutivo', slug: 'executive' },
+    create: { name: 'Ejecutivo', slug: 'executive', level: 80 },
   });
   await prisma.role.upsert({
     where: { slug: 'manager' },
     update: {},
-    create: { name: 'Gerente', slug: 'manager' },
+    create: { name: 'Gerente', slug: 'manager', level: 60 },
   });
   await prisma.role.upsert({
     where: { slug: 'employee' },
     update: {},
-    create: { name: 'Empleado', slug: 'employee' },
+    create: { name: 'Empleado', slug: 'employee', level: 40 },
   });
   logger.log('Roles created');
 
@@ -46,7 +51,7 @@ async function main() {
       firstName: 'Greuddy',
       lastName: 'Lozada',
       password,
-      idRole: masterRole.id,
+      idRole: adminRole.id,
       isActive: true,
     },
   });

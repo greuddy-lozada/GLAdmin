@@ -18,6 +18,8 @@ model Role {
   id        String   @id @default(uuid()) @db.Uuid @map("id")
   name      String   @map("name")
   slug      String   @unique @map("slug")
+  type      String   @default("org") @map("type")
+  level     Int      @default(0) @map("level")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -59,6 +61,8 @@ model User {
   generatedReports      GeneratedReport[]
   registerSessions      RegisterSession[]
   closedSettlements     RegisterSettlement[] @relation("SettlementClosedBy")
+  adminApprovalsPerformed AdminApproval[] @relation("AdminApprovalPerformedBy")
+  adminApprovalsApproved  AdminApproval[] @relation("AdminApprovalApprovedBy")
 
   @@map("users")
   @@index([idRole])
@@ -1165,4 +1169,30 @@ model RegisterSettlement {
   @@map("corte_cajas")
   @@index([sessionId])
   @@index([organizationId])
+}
+
+// ────────────────────────────────────────────
+// ADMIN APPROVAL
+// ────────────────────────────────────────────
+model AdminApproval {
+  id              String   @id @default(uuid()) @db.Uuid @map("id")
+  action          String   @map("action")
+  entity          String   @map("entity")
+  entityId        String   @map("entity_id") @db.Uuid
+  description     String   @map("description") @db.Text
+  performedById   String   @map("performed_by_id") @db.Uuid
+  performedAt     DateTime @default(now()) @map("performed_at") @db.Timestamptz()
+  approvedById    String?  @map("approved_by_id") @db.Uuid
+  approvedAt      DateTime? @map("approved_at") @db.Timestamptz()
+  status          String   @default("pending") @map("status")
+  metadata        Json     @default("{}") @db.JsonB
+  rejectionReason String?  @map("rejection_reason") @db.Text
+
+  performedBy User  @relation("AdminApprovalPerformedBy", fields: [performedById], references: [id])
+  approvedBy  User? @relation("AdminApprovalApprovedBy", fields: [approvedById], references: [id])
+
+  @@map("admin_approvals")
+  @@index([status])
+  @@index([performedById])
+  @@index([status, performedAt])
 }

@@ -23,7 +23,7 @@ import {
   unlinkSync,
 } from 'fs';
 import {
-  MinLevel,
+  MinOrgLevel,
   ROLE_LEVEL,
 } from '../../common/decorators/min-level.decorator';
 
@@ -58,7 +58,7 @@ function validateMagicBytes(filePath: string, mimeType: string): boolean {
 }
 
 @Controller('uploads')
-@MinLevel(ROLE_LEVEL.employee)
+@MinOrgLevel(ROLE_LEVEL.employee)
 export class UploadsController {
   @Post('proof')
   @UseInterceptors(

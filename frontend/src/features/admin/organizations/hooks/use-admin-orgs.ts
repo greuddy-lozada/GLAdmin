@@ -15,10 +15,10 @@ function buildOptimistic(data: CreateAdminOrgRequest, tempId: string): AdminOrg 
   };
 }
 
-export function useAdminOrgs() {
+export function useAdminOrgs(isActive?: string) {
   return useOptimisticCrud<AdminOrg, CreateAdminOrgRequest, UpdateAdminOrgRequest>({
-    queryKey: ['adminOrgs'],
-    queryFn: () => adminOrgsService.getAll(),
+    queryKey: ['adminOrgs', isActive ?? 'true'],
+    queryFn: () => adminOrgsService.getAll(isActive),
     createFn: (data) => adminOrgsService.create(data),
     updateFn: (id, data) => adminOrgsService.update(id, data),
     deleteFn: (id) => adminOrgsService.delete(id),

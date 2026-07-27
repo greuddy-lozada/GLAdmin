@@ -39,59 +39,165 @@ POST /api/auth/register       → { email, password, ... }     → (solo Admin p
 
 ## 2. Control de Acceso Basado en Roles (RBAC)
 
+### Arquitectura: dos tipos de rol
+
+Los roles se dividen en dos tipos que operan en capas separadas:
+
+| Tipo | Propósito | Asignado en | Check vía |
+|---|---|---|---|
+| `system` | Acceso al panel de administración global | `User.idRole` (sistema) | `@MinLevel()` |
+| `org` | Permisos dentro de una organización | `UserOrganization.roleId` | `@MinOrgLevel()` |
+
+Un usuario puede tener ambos simultáneamente: un role de sistema (master/admin) para el panel admin y un org-role (executive/manager/employee) dentro de cada organización.
+
 ### Roles definidos
 
-| Rol | Descripción | Permisos clave |
-|---|---|---|
-| `superadmin` | Dueño del sistema / Administrador principal | Acceso total. Crea empresas y asigna admins. |
-| `admin` | Administrador de la empresa | CRUD completo en su empresa. Gestiona usuarios, roles y secuenciales. |
-| `accountant` | Contador | Acceso de lectura a facturas, productos, clientes. Escritura limitada: registros contables, notas de crédito/débito, retenciones. |
-| `cashier` | Cajero / Vendedor | Solo acceso al módulo POS. Crea facturas de venta. No puede anular ni modificar facturas existentes. |
-| `viewer` | Auditor / Consulta | Solo lectura en reportes. Sin permisos de escritura en ningún módulo. |
+| Slug | Tipo | Nivel | Descripción |
+|---|---|---|---|
+| `master` | system | 100 | Super-admin. Acceso total al panel de administración. Crea admins, organizaciones y planes. |
+| `admin` | system | 90 | Operador del panel de administración. CRUD de organizaciones, usuarios e invitaciones (escrituras sujetas a aprobación de master). |
+| `executive` | org | 80 | Rol orgánico superior. Gestiona usuarios y configuraciones dentro de la organización. |
+| `manager` | org | 60 | Rol orgánico medio. Crea y edita miembros del equipo. |
+| `employee` | org | 40 | Rol orgánico base. Acceso de lectura/escritura limitado a operaciones del día a día. |
+
+**Relación entre niveles:** Un rol puede asignar cualquier rol cuyo nivel sea **estrictamente menor** al suyo, con excepción de `master` que puede asignar cualquier rol.
 
 ### Implementación en NestJS
 
 ```typescript
-// Decorador personalizado
+// Decoradores de nivel (min-level.decorator.ts)
 import { SetMetadata } from '@nestjs/common';
-export const ROLES_KEY = 'roles';
-export const Roles = (...roles: Role[]) => SetMetadata(ROLES_KEY, roles);
+export const MIN_LEVEL_KEY = 'minLevel';
+export const MinLevel = (level: number) => SetMetadata(MIN_LEVEL_KEY, level);
+export const MIN_ORG_LEVEL_KEY = 'minOrgLevel';
+export const MinOrgLevel = (level: number) => SetMetadata(MIN_ORG_LEVEL_KEY, level);
 
-// Guard
+// Guard (roles.guard.ts) — lógica simplificada
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
   
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-    if (!requiredRoles) return true; // Endpoint público
+    const minLevel = this.reflector.get(MIN_LEVEL_KEY, context.getHandler());
+    const minOrgLevel = this.reflector.get(MIN_ORG_LEVEL_KEY, context.getHandler());
     const { user } = context.switchToHttp().getRequest();
-    return requiredRoles.some((role) => user.roles?.includes(role));
+    
+    if (minLevel !== undefined) {
+      if (!user?.role) throw new ForbiddenException();
+      const level = ROLE_LEVEL[user.role as keyof typeof ROLE_LEVEL];
+      if (level < minLevel) throw new ForbiddenException();
+    }
+    
+    if (minOrgLevel !== undefined) {
+      if (!user?.orgRole) throw new ForbiddenException();
+      const level = ROLE_LEVEL[user.orgRole as keyof typeof ROLE_LEVEL];
+      if (level < minOrgLevel) throw new ForbiddenException();
+    }
+    
+    return true;
   }
 }
+```
 
-// Uso en controlador
-@Controller('invoices')
+### Uso en controladores
+
+**Endpoints de administración (system):**
+```typescript
+@Controller('admin/orgs')
 @UseGuards(JwtAuthGuard, RolesGuard)
-export class InvoicesController {
-  @Post()
-  @Roles(Role.ADMIN, Role.CASHIER)    // Solo Admin y Cajero pueden crear facturas
-  create(@Body() dto: CreateInvoiceDto) { ... }
+export class AdminOrgsController {
+  @Get()
+  @MinLevel(ROLE_LEVEL.admin)         // admin (90) + master (100)
+  findAll() { ... }
   
   @Delete(':id')
-  @Roles(Role.ADMIN, Role.ACCOUNTANT)  // Solo Admin y Contador pueden anular
-  annul(@Param('id') id: string) { ... }
+  @MinLevel(ROLE_LEVEL.master)        // solo master (100)
+  remove(@Param('id') id: string) { ... }
 }
 ```
+
+**Endpoints orgánicos (org):**
+```typescript
+@Controller('users')
+@UseGuards(JwtAuthGuard, RolesGuard)
+export class UsersController {
+  @Post()
+  @MinOrgLevel(ROLE_LEVEL.manager)    // manager (60) + executive (80)
+  create(@Body() dto: CreateUserDto) { ... }
+  
+  @Delete(':id')
+  @MinOrgLevel(ROLE_LEVEL.executive)  // solo executive (80)
+  remove(@Param('id') id: string) { ... }
+}
+```
+
+### Role hierarchy — asignación entre roles
+
+La jerarquía se almacena en la base de datos (columna `level` del `Role`) y se carga en un cache estático al iniciar la aplicación vía `RoleHierarchyInitService`:
+
+| Actor \ Target | master | admin | executive | manager | employee |
+|---|---|---|---|---|---|
+| **master** | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **admin** | ❌ | ❌ | ✅ | ✅ | ✅ |
+| **executive** | ❌ | ❌ | ❌ | ✅ | ✅ |
+| **manager** | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **employee** | ❌ | ❌ | ❌ | ❌ | ❌ |
+
+Las funciones `canAssignRole()` y `assertCanAssignRole()` se usan en servicios para validar asignaciones antes de persistir.
+
+### Seed automático (BootstrapService)
+
+`BootstrapService.setup()` crea los 5 roles al iniciar por primera vez usando upsert por slug:
+
+```typescript
+const seedRoles = [
+  { name: 'Master', slug: 'master', type: 'system', level: 100 },
+  { name: 'Admin', slug: 'admin', type: 'system', level: 90 },
+  { name: 'Executive', slug: 'executive', type: 'org', level: 80 },
+  { name: 'Manager', slug: 'manager', type: 'org', level: 60 },
+  { name: 'Employee', slug: 'employee', type: 'org', level: 40 },
+];
+```
+
+### Admin Approval Workflow
+
+Los módulos del panel de administración operan bajo un modelo **"execute then approve"**: cuando un usuario con rol `admin` realiza una operación de escritura, la acción se ejecuta inmediatamente y se registra en la tabla `admin_approvals` con estado `pending`. El usuario `master` revisa la acción y puede `approve` (confirmar) o `reject` (revertir mediante compensación).
+
+**Acciones que generan approval:**
+- Organizaciones: `CREATE_ORG`, `UPDATE_ORG`
+- Planes: `CREATE_PLAN`, `UPDATE_PLAN`
+- Usuarios admin: `CREATE_ADMIN_USER`, `UPDATE_ADMIN_USER`
+- Asignaciones: `ASSIGN_USER_ORG`, `REMOVE_USER_ORG`, `CHANGE_USER_ROLE`
+- Invitaciones: `CREATE_INVITE`
+
+**Acciones que siguen siendo master-only (sin approval):**
+- Todas las operaciones `DELETE`
+- Lecturas (GET)
+
+**Mecanismo de compensación al rechazar:**
+| Acción | Compensación |
+|---|---|
+| `CREATE_ORG` | Soft-delete (isActive=false, deletedAt) |
+| `UPDATE_ORG` | Restaura oldValues |
+| `CREATE_PLAN` | Desactiva el plan |
+| `UPDATE_PLAN` | Restaura oldValues |
+| `CREATE_ADMIN_USER` | Desactiva el usuario |
+| `UPDATE_ADMIN_USER` | Restaura oldValues |
+| `ASSIGN_USER_ORG` | Elimina la membresía |
+| `REMOVE_USER_ORG` | Recrea la membresía |
+| `CHANGE_USER_ROLE` | Restaura el role anterior |
+| `CREATE_INVITE` | Elimina la invitación |
+
+**Frontend:** El módulo `admin/approvals` muestra una tabla con filtros por estado (Pending/Approved/Rejected). Solo visible para `master` (`minLevel: 100`).
+
+---
 
 ### Principio de menor privilegio
 
 - Todo endpoint nuevo **por defecto requiere autenticación**.  
-- Los permisos se asignan explícitamente con `@Roles()`.  
-- Un endpoint sin `@Roles()` = endpoint público (ej. login, health check).  
+- Los permisos se asignan explícitamente con `@MinLevel()` o `@MinOrgLevel()`.  
+- Un endpoint sin decorador de nivel = endpoint público (ej. login, health check).
+- Los roles de sistema y org son independientes: tener `role: 'admin'` no otorga permisos orgánicos, y tener `orgRole: 'executive'` no otorga acceso al panel admin. 
 
 ---
 

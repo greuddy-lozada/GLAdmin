@@ -16,6 +16,7 @@ import { useI18n } from '@/i18n';
 import { sileo } from 'sileo';
 import { RoleGuard } from '@/components/ui/role-guard';
 import apiClient from '@/lib/api/api-client';
+import { extractApiError } from '@/lib/api/extract-api-error';
 
 function formatDate(dateStr: string) {
   const d = new Date(dateStr);
@@ -88,8 +89,8 @@ export default function ExchangeRatesPage() {
       await apiClient.post('/exchange-rates/sync');
       sileo.success({ description: t('exchangeRates.synced') });
       refreshLatest();
-    } catch {
-      sileo.error({ description: t('exchangeRates.error.sync') });
+    } catch (err) {
+      sileo.error({ description: extractApiError(err) ?? t('exchangeRates.error.sync') });
     } finally {
       setSyncing(false);
     }
@@ -106,7 +107,7 @@ export default function ExchangeRatesPage() {
             sileo.success({ description: t('exchangeRates.updated') });
             refreshLatest();
           },
-          onError: () => { setError(t('exchangeRates.error.save')); setFormOpen(true); },
+          onError: (err) => { setError(extractApiError(err) ?? t('exchangeRates.error.save')); setFormOpen(true); },
         },
       );
     } else {
@@ -115,7 +116,7 @@ export default function ExchangeRatesPage() {
           sileo.success({ description: t('exchangeRates.created') });
           refreshLatest();
         },
-        onError: () => { setError(t('exchangeRates.error.save')); setFormOpen(true); },
+        onError: (err) => { setError(extractApiError(err) ?? t('exchangeRates.error.save')); setFormOpen(true); },
       });
     }
     setSelectedItem(null);

@@ -18,6 +18,7 @@ import { sileo } from 'sileo';
 import { RoleGuard } from '@/components/ui/role-guard';
 import { useAuth } from '@/providers/auth-provider';
 import { hasMinLevel } from '@/lib/auth/roles';
+import { extractApiError } from '@/lib/api/extract-api-error';
 import apiClient from '@/lib/api/api-client';
 
 export default function CustomersPage() {
@@ -113,7 +114,7 @@ export default function CustomersPage() {
         },
         {
           onSuccess: () => sileo.success({ description: t('customers.updated') }),
-          onError: () => { setError(t('customers.error.save')); setFormOpen(true); },
+          onError: (err) => { setError(extractApiError(err) ?? t('customers.error.save')); setFormOpen(true); },
         },
       );
     } else {
@@ -124,7 +125,7 @@ export default function CustomersPage() {
         },
         {
           onSuccess: () => sileo.success({ description: t('customers.created') }),
-          onError: () => { setError(t('customers.error.save')); setFormOpen(true); },
+          onError: (err) => { setError(extractApiError(err) ?? t('customers.error.save')); setFormOpen(true); },
         },
       );
     }
@@ -137,7 +138,7 @@ export default function CustomersPage() {
     setDeleteTarget(null);
     remove.mutate(targetId, {
       onSuccess: () => sileo.success({ description: t('customers.deleted') }),
-      onError: () => { setError(t('customers.error.delete')); setDeleteOpen(true); },
+      onError: (err) => { setError(extractApiError(err) ?? t('customers.error.delete')); setDeleteOpen(true); },
     });
   };
 
@@ -150,8 +151,8 @@ export default function CustomersPage() {
       form.append('file', file);
       const res = await apiClient.post('/uploads/proof', form, { headers: { 'Content-Type': 'multipart/form-data' } });
       setFormData({ ...formData, withholdingProof: res.data.data.filename });
-    } catch {
-      setError('Error al subir el comprobante');
+    } catch (err) {
+      setError(extractApiError(err) ?? 'Error al subir el comprobante');
     } finally {
       setUploading(false);
     }

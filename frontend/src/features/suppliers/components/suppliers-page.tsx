@@ -17,6 +17,7 @@ import { sileo } from 'sileo';
 import { RoleGuard } from '@/components/ui/role-guard';
 import { useAuth } from '@/providers/auth-provider';
 import { hasMinLevel } from '@/lib/auth/roles';
+import { extractApiError } from '@/lib/api/extract-api-error';
 
 export default function SuppliersPage() {
   const { items: suppliersData, isLoading: loading, create, update, remove } = useSuppliers();
@@ -105,7 +106,7 @@ export default function SuppliersPage() {
         },
         {
           onSuccess: () => sileo.success({ description: t('suppliers.updated') }),
-          onError: () => { setError(t('suppliers.error.save')); setFormOpen(true); },
+          onError: (err) => { setError(extractApiError(err) ?? t('suppliers.error.save')); setFormOpen(true); },
         },
       );
     } else {
@@ -118,7 +119,7 @@ export default function SuppliersPage() {
         },
         {
           onSuccess: () => sileo.success({ description: t('suppliers.created') }),
-          onError: () => { setError(t('suppliers.error.save')); setFormOpen(true); },
+          onError: (err) => { setError(extractApiError(err) ?? t('suppliers.error.save')); setFormOpen(true); },
         },
       );
     }
@@ -131,7 +132,7 @@ export default function SuppliersPage() {
     setDeleteTarget(null);
     remove.mutate(targetId, {
       onSuccess: () => sileo.success({ description: t('suppliers.deleted') }),
-      onError: () => { setError(t('suppliers.error.delete')); setDeleteOpen(true); },
+      onError: (err) => { setError(extractApiError(err) ?? t('suppliers.error.delete')); setDeleteOpen(true); },
     });
   };
 

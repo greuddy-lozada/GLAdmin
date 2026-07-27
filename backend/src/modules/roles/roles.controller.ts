@@ -1,7 +1,7 @@
 import { Controller, Get, Param, ParseUUIDPipe, Query } from '@nestjs/common';
 import { RolesService } from './roles.service';
 import {
-  MinLevel,
+  MinOrgLevel,
   ROLE_LEVEL,
 } from '../../common/decorators/min-level.decorator';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
@@ -11,13 +11,13 @@ export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 
   @Get()
-  @MinLevel(ROLE_LEVEL.manager)
+  @MinOrgLevel(ROLE_LEVEL.manager)
   findAll(@Query() pagination: PaginationQueryDto) {
     return this.rolesService.findAll(pagination.page, pagination.limit);
   }
 
   @Get(':id')
-  @MinLevel(ROLE_LEVEL.manager)
+  @MinOrgLevel(ROLE_LEVEL.manager)
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.rolesService.findOne(id);
   }

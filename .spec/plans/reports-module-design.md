@@ -1,6 +1,6 @@
 # Reports Module — Design Spec
 
-> **Status:** Design approved  
+> **Status:** ✅ Implemented  
 > **Date:** 2026-07-19  
 > **Module:** `reports` (core — architecture.md §4)  
 > **Dependencies:** `sales`, `purchase-orders`, `stocks`, `customers`, `suppliers`, `withholding-records`, `accounts-payable`, `accounts-receivable`

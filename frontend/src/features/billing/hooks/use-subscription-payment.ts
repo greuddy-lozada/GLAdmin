@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { sileo } from 'sileo';
 import { useI18n } from '@/i18n';
+import { extractApiError } from '@/lib/api/extract-api-error';
 import { subscriptionPaymentService } from '../services/subscription-payment.service';
 import type {
   SystemPagoMovilConfig,
@@ -19,8 +20,8 @@ export function useSubscriptionPayment() {
     try {
       const data = await subscriptionPaymentService.getConfig();
       setConfig(data);
-    } catch {
-      console.warn('Failed to load PagoMovil config');
+    } catch (err) {
+      console.warn('Failed to load PagoMovil config', extractApiError(err));
     }
   }, []);
 
@@ -30,8 +31,8 @@ export function useSubscriptionPayment() {
       await subscriptionPaymentService.create(dto);
       sileo.success({ description: t('subscription.payment.submitted') });
       return true;
-    } catch {
-      sileo.error({ description: t('subscription.payment.error.create') });
+    } catch (err) {
+      sileo.error({ description: extractApiError(err) ?? t('subscription.payment.error.create') });
       return false;
     } finally {
       setSubmitting(false);
@@ -53,8 +54,8 @@ export function useAdminSubscriptionPayments() {
     try {
       const data = await subscriptionPaymentService.findAllAdmin(status);
       setPayments(data);
-    } catch {
-      setError(t('subscription.admin.error.load'));
+    } catch (err) {
+      setError(extractApiError(err) ?? t('subscription.admin.error.load'));
     } finally {
       setLoading(false);
     }
@@ -67,8 +68,8 @@ export function useAdminSubscriptionPayments() {
       sileo.success({ description: t(key) });
       await load();
       return true;
-    } catch {
-      sileo.error({ description: t('subscription.admin.error.review') });
+    } catch (err) {
+      sileo.error({ description: extractApiError(err) ?? t('subscription.admin.error.review') });
       return false;
     }
   }, [t, load]);

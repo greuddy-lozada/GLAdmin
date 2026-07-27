@@ -15,6 +15,8 @@ import {
 import { Loader2, BarChart3, Users, Package, ClipboardList, ArrowLeftRight } from 'lucide-react';
 import { useReportTypes, useGenerateReport } from '../hooks/use-reports';
 import type { ParamField } from '../models/report.model';
+import { sileo } from 'sileo';
+import { extractApiError } from '@/lib/api/extract-api-error';
 
 const TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   sales_summary: BarChart3,
@@ -91,8 +93,8 @@ export function ReportGenerator({ category, onGenerated }: ReportGeneratorProps)
       setParams({});
       setIsExpanded(false);
       onGenerated();
-    } catch {
-      // ponytail: error handled by the page via React Query
+    } catch (err) {
+      sileo.error({ description: extractApiError(err) ?? t('reports.error.generate') });
     }
   };
 

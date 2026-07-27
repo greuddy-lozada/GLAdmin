@@ -6,7 +6,11 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from '../decorators/roles.decorator';
-import { MIN_LEVEL_KEY, ROLE_LEVEL } from '../decorators/min-level.decorator';
+import {
+  MIN_LEVEL_KEY,
+  MIN_ORG_LEVEL_KEY,
+  ROLE_LEVEL,
+} from '../decorators/min-level.decorator';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -17,24 +21,29 @@ export class RolesGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
+    const minOrgLevel = this.reflector.getAllAndOverride<number>(
+      MIN_ORG_LEVEL_KEY,
+      [context.getHandler(), context.getClass()],
+    );
 
     const request: { user?: { orgRole?: string; role?: string } } = context
       .switchToHttp()
       .getRequest();
     const user = request.user;
 
-    const effectiveRole = user?.orgRole || user?.role;
-
     if (minLevel !== undefined) {
-      if (!user || !effectiveRole) {
+      if (!user?.role) throw new ForbiddenException();
+      const userLevel = ROLE_LEVEL[user.role as keyof typeof ROLE_LEVEL];
+      if (userLevel === undefined || userLevel < minLevel)
         throw new ForbiddenException();
-      }
+      return true;
+    }
 
-      const userLevel = ROLE_LEVEL[effectiveRole];
-      if (userLevel === undefined || userLevel < minLevel) {
+    if (minOrgLevel !== undefined) {
+      if (!user?.orgRole) throw new ForbiddenException();
+      const orgLevel = ROLE_LEVEL[user.orgRole as keyof typeof ROLE_LEVEL];
+      if (orgLevel === undefined || orgLevel < minOrgLevel)
         throw new ForbiddenException();
-      }
-
       return true;
     }
 
@@ -47,14 +56,11 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    if (!user || !effectiveRole) {
-      throw new ForbiddenException();
-    }
+    const effectiveRole = user?.orgRole || user?.role;
+    if (!effectiveRole) throw new ForbiddenException();
 
     const hasRole = requiredRoles.includes(effectiveRole);
-    if (!hasRole) {
-      throw new ForbiddenException();
-    }
+    if (!hasRole) throw new ForbiddenException();
 
     return true;
   }

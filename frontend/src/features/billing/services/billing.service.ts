@@ -1,21 +1,6 @@
 import apiClient from '@/lib/api/api-client';
 import { Plan, CreateCheckoutSessionResponse } from '../models/billing.model';
 
-interface ErrorWithResponse {
-  response?: { data?: { message?: string | string[] } };
-}
-
-function extractError(err: unknown): string | null {
-  if (err && typeof err === 'object' && 'response' in err) {
-    const resp = (err as ErrorWithResponse).response;
-    if (resp?.data?.message) {
-      const msg = resp.data.message;
-      return Array.isArray(msg) ? msg[0] : msg;
-    }
-  }
-  return null;
-}
-
 export const billingService = {
   async getPlans(): Promise<Plan[]> {
     const response = await apiClient.get('/admin/plans');
@@ -27,5 +12,3 @@ export const billingService = {
     return response.data.data;
   },
 };
-
-export { extractError };

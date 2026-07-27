@@ -121,6 +121,7 @@
     "adminUsers": "Users (Admin)",
     "adminPlans": "Plans",
     "adminInvites": "Invitations",
+    "adminApprovals": "Pending Approvals",
     "adminSubscriptionPayments": "Subscriptions",
     "settings": "Settings",
     "shortcuts": "Shortcuts",
@@ -727,20 +728,64 @@
         "save": "Error saving organization",
         "load": "Error loading organizations",
         "delete": "Error deleting organization"
+      },
+      "filter": {
+        "active": "Active",
+        "inactive": "Inactive",
+        "all": "All"
+      },
+      "members": {
+        "title": "Members",
+        "assign": "Assign User",
+        "noUsers": "No users found",
+        "noRoles": "No roles found",
+        "placeholder": {
+          "user": "Select user...",
+          "role": "Select role..."
+        },
+        "remove": "Remove",
+        "removeConfirm": "Remove {{name}} from this organization?",
+        "removed": "User removed successfully",
+        "assigned": "User assigned successfully",
+        "roleChanged": "Role changed successfully",
+        "empty": "No members",
+        "field": {
+          "user": "User",
+          "role": "Role",
+          "actions": "Actions"
+        },
+        "error": {
+          "assign": "Error assigning user",
+          "remove": "Error removing user",
+          "changeRole": "Error changing role",
+          "load": "Error loading members"
+        }
       }
     },
     "users": {
       "title": "Users",
+      "new": "New User",
       "edit": "Edit Admin User",
+      "created": "User created successfully",
       "updated": "User updated successfully",
       "empty": "No users registered",
+      "badge": {
+        "system": "System"
+      },
       "field": {
         "id": "#",
         "name": "Name",
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "userName": "Username",
         "email": "Email",
+        "password": "Password",
         "role": "Role",
         "isActive": "Active",
-        "orgCount": "Organizations"
+        "orgCount": "Organizations",
+        "orgsList": "Organizations",
+        "organization": "Organization",
+        "orgRole": "Org role"
       },
       "error": {
         "save": "Error saving user",
@@ -803,6 +848,39 @@
         "save": "Error saving invitation",
         "load": "Error loading invitations",
         "delete": "Error deleting invitation"
+      }
+    },
+    "approvals": {
+      "title": "Pending Approvals",
+      "field": {
+        "action": "Action",
+        "description": "Description",
+        "performedBy": "Performed By",
+        "date": "Date",
+        "status": "Status"
+      },
+      "approve": "Approve",
+      "reject": "Reject",
+      "approved": "Approved successfully",
+      "rejected": "Rejected successfully",
+      "rejectTitle": "Reject Action",
+      "rejectDescription": "Are you sure you want to reject this action?",
+      "rejectionReason": "Reason (optional)",
+      "rejectionReasonPlaceholder": "Why is this being rejected?",
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "filter": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "all": "All"
+      },
+      "empty": "No pending approvals",
+      "error": {
+        "review": "Error reviewing approval"
       }
     }
   },

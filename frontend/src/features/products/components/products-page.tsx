@@ -23,6 +23,7 @@ import { useI18n } from '@/i18n';
 import { RoleGuard } from '@/components/ui/role-guard';
 import { useAuth } from '@/providers/auth-provider';
 import { hasMinLevel } from '@/lib/auth/roles';
+import { extractApiError } from '@/lib/api/extract-api-error';
 import { sileo } from 'sileo';
 import apiClient from '@/lib/api/api-client';
 import { exchangeRateService } from '@/features/exchange-rates/services/exchange-rate.service';
@@ -214,7 +215,7 @@ export default function ProductsPage() {
         },
         {
           onSuccess: () => sileo.success({ description: t('products.updated') }),
-          onError: () => { setError(t('products.error.save')); setFormOpen(true); },
+          onError: (err) => { setError(extractApiError(err) ?? t('products.error.save')); setFormOpen(true); },
         },
       );
     } else {
@@ -222,7 +223,7 @@ export default function ProductsPage() {
         { ...formData, dollarPrice: displayPvpUsd, price: displayPvpVes } as CreateProductRequest,
         {
           onSuccess: () => sileo.success({ description: t('products.created') }),
-          onError: () => { setError(t('products.error.save')); setFormOpen(true); },
+          onError: (err) => { setError(extractApiError(err) ?? t('products.error.save')); setFormOpen(true); },
         },
       );
     }
@@ -235,7 +236,7 @@ export default function ProductsPage() {
     setDeleteTarget(null);
     remove.mutate(targetId, {
       onSuccess: () => sileo.success({ description: t('products.deleted') }),
-      onError: () => { setError(t('products.error.delete')); setDeleteOpen(true); },
+      onError: (err) => { setError(extractApiError(err) ?? t('products.error.delete')); setDeleteOpen(true); },
     });
   };
 

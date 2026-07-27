@@ -9,6 +9,7 @@ import { ReportGenerator } from './report-generator';
 import { ReportViewer } from './report-viewer';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { extractApiError } from '@/lib/api/extract-api-error';
 import { BarChart3, ClipboardList, FileText } from 'lucide-react';
 
 const CATEGORIES = [
@@ -46,8 +47,8 @@ export function ReportsPage() {
     try {
       await deleteMutation.mutateAsync(reportToDelete);
       sileo.success({ description: t('reports.deleted') });
-    } catch {
-      sileo.error({ description: t('reports.error.delete') });
+    } catch (err) {
+      sileo.error({ description: extractApiError(err) ?? t('reports.error.delete') });
     }
     setReportToDelete(null);
     if (selectedReportId === reportToDelete) setSelectedReportId(null);

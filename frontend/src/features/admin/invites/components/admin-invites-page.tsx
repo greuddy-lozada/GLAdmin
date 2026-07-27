@@ -21,6 +21,7 @@ import { AdminInvite, CreateAdminInviteRequest } from '@/features/admin/invites/
 import { useI18n } from '@/i18n';
 import { sileo } from 'sileo';
 import apiClient from '@/lib/api/api-client';
+import { extractApiError } from '@/lib/api/extract-api-error';
 
 function formatDate(dateStr: string) {
   const d = new Date(dateStr);
@@ -74,7 +75,7 @@ export default function AdminInvitesPage() {
     setFormOpen(false);
     create.mutate(formData, {
       onSuccess: () => sileo.success({ description: t('admin.invites.created') }),
-      onError: () => { setError(t('admin.invites.error.save')); setFormOpen(true); },
+      onError: (err) => { setError(extractApiError(err) ?? t('admin.invites.error.save')); setFormOpen(true); },
     });
   };
 
@@ -85,7 +86,7 @@ export default function AdminInvitesPage() {
     setDeleteTarget(null);
     remove.mutate(targetId, {
       onSuccess: () => sileo.success({ description: t('admin.invites.deleted') }),
-      onError: () => { setError(t('admin.invites.error.delete')); setDeleteOpen(true); },
+      onError: (err) => { setError(extractApiError(err) ?? t('admin.invites.error.delete')); setDeleteOpen(true); },
     });
   };
 

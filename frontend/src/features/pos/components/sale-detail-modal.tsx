@@ -8,6 +8,8 @@ import { useI18n } from '@/i18n';
 import { localDb, type LocalSale } from '@/lib/sync/db';
 import type { SaleItem, SalePayment, CreateSaleRequest } from '../models/pos.model';
 import { PaymentMethod } from '../models/pos.model';
+import { sileo } from 'sileo';
+import { extractApiError } from '@/lib/api/extract-api-error';
 
 interface SaleDetailModalProps {
   sale: LocalSale | null;
@@ -54,8 +56,9 @@ export function SaleDetailModal({ sale, open, onOpenChange }: SaleDetailModalPro
           const c = await localDb.customers.get(d.idCustomer);
           if (c) setCustomerLabel(`${c.firstName} ${c.lastName} · ${c.taxId}`);
         }
-      } catch {
+      } catch (err) {
         setData(null);
+        sileo.error({ description: extractApiError(err) ?? 'Error al cargar detalles' });
       } finally {
         setLoading(false);
       }

@@ -214,15 +214,19 @@ export class UsersService {
     const organizationId = this.getCurrentOrgId();
     const user = await this.findById(id);
 
-    await this.prisma.$transaction(async (tx) => {
-      await tx.userOrganization.delete({
-        where: {
-          userId_organizationId: { userId: id, organizationId },
-        },
-      });
-
-      await tx.user.delete({ where: { id } });
+    await this.prisma.userOrganization.delete({
+      where: {
+        userId_organizationId: { userId: id, organizationId },
+      },
     });
+
+    if (user.currentOrganizationId === organizationId) {
+      await this.prisma.user.update({
+        where: { id },
+        data: { currentOrganizationId: null },
+      });
+    }
+
     return { data: stripPassword(user), message: 'USER.DELETED' };
   }
 }

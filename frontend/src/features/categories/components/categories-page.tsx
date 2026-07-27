@@ -22,6 +22,7 @@ import { useI18n } from '@/i18n';
 import { RoleGuard } from '@/components/ui/role-guard';
 import { useAuth } from '@/providers/auth-provider';
 import { hasMinLevel } from '@/lib/auth/roles';
+import { extractApiError } from '@/lib/api/extract-api-error';
 import { sileo } from 'sileo';
 import apiClient from '@/lib/api/api-client';
 
@@ -75,13 +76,13 @@ export default function CategoriesPage() {
         { id: selectedCategory!.id, data: formData },
         {
           onSuccess: () => sileo.success({ description: t('categories.updated') }),
-          onError: () => { setError(t('categories.error.save')); setFormOpen(true); },
+          onError: (err) => { setError(extractApiError(err) ?? t('categories.error.save')); setFormOpen(true); },
         },
       );
     } else {
       create.mutate(formData, {
         onSuccess: () => sileo.success({ description: t('categories.created') }),
-        onError: () => { setError(t('categories.error.save')); setFormOpen(true); },
+        onError: (err) => { setError(extractApiError(err) ?? t('categories.error.save')); setFormOpen(true); },
       });
     }
   };
@@ -93,7 +94,7 @@ export default function CategoriesPage() {
     setDeleteTarget(null);
     remove.mutate(targetId, {
       onSuccess: () => sileo.success({ description: t('categories.deleted') }),
-      onError: () => { setError(t('categories.error.delete')); setDeleteOpen(true); },
+      onError: (err) => { setError(extractApiError(err) ?? t('categories.error.delete')); setDeleteOpen(true); },
     });
   };
 

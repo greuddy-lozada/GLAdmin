@@ -8,14 +8,16 @@ import { LayoutDashboard } from 'lucide-react';
 
 interface VisitedTabsProps {
   iconMap: Record<string, React.ComponentType<{ className?: string }>>;
+  tabs?: { path: string; key: string }[];
 }
 
-export function VisitedTabs({ iconMap }: VisitedTabsProps) {
+export function VisitedTabs({ iconMap, tabs: propTabs }: VisitedTabsProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { t } = useI18n();
-  const tabs = useTabsStore((s) => s.tabs);
+  const storeTabs = useTabsStore((s) => s.tabs);
   const removeTab = useTabsStore((s) => s.removeTab);
+  const tabs = propTabs ?? storeTabs;
 
   if (tabs.length === 0) return null;
 

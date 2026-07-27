@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { extractApiError } from '@/lib/api/extract-api-error';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useI18n } from '@/i18n';
 import { usePagoMovilConfig } from '../hooks/use-pago-movil-config';
@@ -41,7 +42,7 @@ export default function PagoMovilConfigPage() {
         { phoneNumber, bankId, idNumber, exchangeRate, isActive },
         {
           onSuccess: () => sileo.success({ description: t('pagoMovil.config.updated') }),
-          onError: () => setFormError(t('pagoMovil.config.error.save')),
+          onError: (err) => setFormError(extractApiError(err) ?? t('pagoMovil.config.error.save')),
         },
       );
     } else {
@@ -49,7 +50,7 @@ export default function PagoMovilConfigPage() {
         { phoneNumber, bankId, idNumber, exchangeRate },
         {
           onSuccess: () => sileo.success({ description: t('pagoMovil.config.created') }),
-          onError: () => setFormError(t('pagoMovil.config.error.save')),
+          onError: (err) => setFormError(extractApiError(err) ?? t('pagoMovil.config.error.save')),
         },
       );
     }
