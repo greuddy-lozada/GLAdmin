@@ -248,7 +248,9 @@ export class AdminApprovalsService {
           await this.prisma.invite.delete({ where: { id: record.entityId } });
           break;
         case 'DELETE_INVITE': {
-          const oldInvite = meta.oldInvite as Record<string, unknown> | undefined;
+          const oldInvite = meta.oldInvite as
+            | Record<string, unknown>
+            | undefined;
           if (!oldInvite) throw new Error('missing oldInvite');
           const {
             id: _id,
@@ -267,7 +269,9 @@ export class AdminApprovalsService {
         `Compensation failed for ${record.action} ${record.entityId}`,
         err instanceof Error ? err.stack : String(err),
       );
-      throw new InternalServerErrorException('ADMIN_APPROVAL_COMPENSATE_FAILED');
+      throw new InternalServerErrorException(
+        'ADMIN_APPROVAL_COMPENSATE_FAILED',
+      );
     }
   }
 }

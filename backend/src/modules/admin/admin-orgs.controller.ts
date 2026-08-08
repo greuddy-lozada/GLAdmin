@@ -112,11 +112,7 @@ export class AdminOrgsController {
     @CurrentUser('id') userId: string,
     @CurrentUser('role') actorRole: string,
   ) {
-    const result = await this.adminService.assignUserToOrg(
-      id,
-      dto,
-      actorRole,
-    );
+    const result = await this.adminService.assignUserToOrg(id, dto, actorRole);
     await this.approvalsService.log({
       action: 'ASSIGN_USER_ORG',
       entity: 'UserOrganization',
