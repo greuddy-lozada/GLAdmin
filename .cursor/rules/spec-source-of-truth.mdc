@@ -1,0 +1,18 @@
+---
+description: Cuadra .spec source-of-truth hierarchy and directed reading for agents
+alwaysApply: true
+---
+
+# Spec source of truth
+
+- Canonical docs live in `.spec/`. Index: `.spec/README.md`. Agent patterns: `AGENTS.md` (symlink → `.spec/AGENTS.md`).
+- **Conflict order:** feature spec (`.spec/features/`) > system > UI patterns/design-system > business > AGENTS patterns > plans.
+- **Do not** dump-read all of `.spec/`. Read README + AGENTS, then only the files needed for the task.
+- Exclude `.spec/audit/` and plans marked `obsolete` / `done` unless the user asks for history.
+- Same PR that changes domain behavior must update the matching `.spec/features/{module}.md` when it exists.
+- UI layout/state changes: follow `.spec/UI-UX/patterns.md`; new patterns documented in the same PR.
+- POS/sales/sync: `.spec/features/{pos,sales,sync}.md` — POS persists via sync push, not POST /sales.
+- Plan gating: `.spec/system/plan-gating.md`. Tenancy: `.spec/system/multi-tenancy.md`.
+- `docs/specs/` is historical unless no `.spec/` equivalent exists.
+- Backend modules path: `backend/src/modules/` (not `features/`). Sales domain is `sales` (not `invoices`).
+- Auth: access+refresh in JSON body and localStorage (not httpOnly cookies).

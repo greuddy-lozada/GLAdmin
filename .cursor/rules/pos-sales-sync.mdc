@@ -1,0 +1,23 @@
+---
+description: POS / sales / sync feature contracts — offline-first venta path
+globs: "**/{pos,sales,sync}/**"
+alwaysApply: false
+---
+
+# POS · Sales · Sync
+
+Read before editing:
+
+- `.spec/features/pos.md`
+- `.spec/features/sales.md`
+- `.spec/features/sync.md`
+- `.spec/system/plan-gating.md` (sales = professional; sync has no PlanLevel — known gap)
+- `.spec/system/multi-tenancy.md`
+
+Invariants:
+
+- POS cobro → Dexie + syncQueue → `POST /sync/push` → `SalesService.create` — **not** `POST /sales` as the POS path
+- Domain is `sales` / `SALE_*` — never `invoices` / `INVOICE_*`
+- Sale update blocked when status not mutable (`SALE_001`)
+- Sync push only meaningfully handles `sales` create; conflict resolve is metadata-only
+- Auth tokens: JSON body + localStorage (not httpOnly cookies)

@@ -1,0 +1,20 @@
+---
+description: Products catalog feature contract — read before changing products code
+globs: "**/products/**"
+alwaysApply: false
+---
+
+# Products module
+
+Before editing products code, read and follow:
+
+**`.spec/features/products.md`**
+
+Key invariants (do not reinvent):
+
+- Tenant: always `organizationId`; never cross-org.
+- Pricing: `PVP_USD = baseCost × (1 + margin/100)`; `PVP_VES = PVP_USD × BCV rate` (override allowed via explicit `dollarPrice`).
+- `DELETE` API sets `available: false` (deactivate), not hard delete.
+- Plan: `@PlanLevel('starter')`. RBAC: read ≥40, write ≥60, delete ≥100.
+- Frontend service file is `product.service.ts` (singular). Backend lives under `modules/products/`.
+- i18n keys under `products.*` in both `es.json` and `en.json`.

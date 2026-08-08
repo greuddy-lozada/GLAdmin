@@ -1,0 +1,17 @@
+---
+description: Reports module contract and Venezuelan accountant backlog
+globs: "**/reports/**"
+alwaysApply: false
+---
+
+# Reports
+
+Read **`.spec/features/reports.md`** before adding or changing report types.
+
+Rules:
+
+- New report = entry in `report-registry.ts` + i18n es/en + frontend renderer + update the shipped table in the feature spec (same PR).
+- Categories: `sales` | `inventory` | `fiscal` | `financial`.
+- Do not call management summaries “libro de ventas SENIAT” without fiscal document identity.
+- Prefer calendar-month presets; filter out DRAFT from fiscal totals unless explicitly opted in.
+- Engine stays registry-driven; no parallel query frameworks.

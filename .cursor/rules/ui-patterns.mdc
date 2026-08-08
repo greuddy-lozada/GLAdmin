@@ -1,0 +1,21 @@
+---
+description: UI patterns catalog — apply adopted layouts/states; no rejected patterns
+globs: "frontend/**/*.{tsx,ts,css}"
+alwaysApply: false
+---
+
+# UI patterns (Cuadra)
+
+Before changing UI, read:
+
+**`.spec/UI-UX/patterns.md`** (adopted / next / rejected)  
+and **`.spec/UI-UX/design-system.md`** for tokens, type, spacing.
+
+Must follow when applicable:
+
+- CRUD: Toolbar + `DataTable` + `SlideForm` + `ConfirmDialog`
+- Loading → skeletons; empty → `EmptyState`; form errors → destructive `Alert`; success → `sileo`
+- No feature-page `<h1>`; i18n for all copy; shadcn controls only
+- Prefer existing `components/ui/*`; new pattern → add to `patterns.md` same PR
+
+Do not: POS wizards, floating labels as default, nested sheets, error toasts for form validation, card nesting > 2.
