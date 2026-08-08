@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, forwardRef } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import { Search, X, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useI18n } from '@/i18n';
@@ -125,16 +126,35 @@ export const CustomerSearch = forwardRef<HTMLInputElement, CustomerSearchProps>(
               }}
             />
             {loading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />}
-            {open && results.length > 0 && (
-              <div ref={listRef} className="absolute z-50 top-full mt-1 w-full bg-card border border-border/50 rounded-md shadow-lg max-h-64 overflow-y-auto">
-                {results.map((c, idx) => (
-                  <button key={c.id} type="button" className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 ${highlightedIndex === idx ? 'bg-accent' : 'hover:bg-accent'}`} onMouseDown={() => handleSelect(c)}>
-                    {c.firstName} {c.lastName}
-                    {c.taxId && <span className="text-xs text-muted-foreground ml-auto">{c.taxId}</span>}
-                  </button>
-                ))}
-              </div>
-            )}
+            <AnimatePresence>
+              {open && results.length > 0 && (
+                <motion.div
+                  key="customer-results"
+                  initial={{ opacity: 0, scale: 0.96, y: -6 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.96, y: -4 }}
+                  transition={{ type: 'spring', damping: 22, stiffness: 320 }}
+                  className="absolute z-50 top-full mt-1 w-full origin-top"
+                >
+                  <div
+                    ref={listRef}
+                    className="max-h-64 overflow-y-auto rounded-md border border-border/50 bg-card shadow-lg"
+                  >
+                    {results.map((c, idx) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm ${highlightedIndex === idx ? 'bg-accent' : 'hover:bg-accent'}`}
+                        onMouseDown={() => handleSelect(c)}
+                      >
+                        {c.firstName} {c.lastName}
+                        {c.taxId && <span className="ml-auto text-xs text-muted-foreground">{c.taxId}</span>}
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         )}
       </div>

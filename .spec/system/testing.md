@@ -18,9 +18,9 @@
 
 1. Login → Dashboard → Logout
 2. CRUD Producto (crear, editar, eliminar)
-3. Factura completa (borrador → emitir → ver PDF → anular)
-4. POS: buscar producto → agregar → cobrar
-5. Registro de usuario (Admin crea Cajero → Cajero hace login → solo ve POS)
+3. Venta / inmutabilidad (`sales` — update bloqueado si no mutable)
+4. POS: buscar producto → agregar → cobrar (vía sync)
+5. Registro de usuario (Admin crea empleado → login con permisos correctos)
 
 ---
 
@@ -29,14 +29,14 @@
 ### Backend (Jest + NestJS testing tools)
 
 ```
-backend/src/features/{module}/
+backend/src/modules/{module}/
 ├── {module}.service.ts
 ├── {module}.controller.ts
 ├── __tests__/
-│   ├── {module}.service.spec.ts       // Unit tests del service
-│   ├── {module}.controller.spec.ts    // Unit tests del controller
+│   ├── {module}.service.spec.ts
+│   ├── {module}.controller.spec.ts
 │   └── fixtures/
-│       └── {module}.fixture.ts        // Factory functions para datos de prueba
+│       └── {module}.fixture.ts
 ```
 
 ### Frontend (Vitest + React Testing Library)
@@ -156,7 +156,7 @@ export const test = base.extend<AuthFixtures>({
 |---|---|---|---|
 | 1 | Login → Dashboard → Logout | `modules/auth/auth.spec.ts` | Implementado |
 | 2 | CRUD Producto | `modules/products/products.spec.ts` | Implementado |
-| 3 | Factura completa | `modules/invoices/invoices.spec.ts` | Pendiente |
+| 3 | Sales immutability / API | unit `sales.service.spec` + E2E pendiente anulación | Parcial |
 | 4 | POS: buscar → agregar → cobrar | `modules/pos/pos.spec.ts` | Implementado |
 | 5 | Registro con roles | `modules/auth/registration.spec.ts` | Pendiente |
 
@@ -176,17 +176,17 @@ pnpm --filter e2e test -- products  # Solo un módulo
 ### Naming
 
 ```typescript
-describe('InvoicesService', () => {
+describe('SalesService', () => {
   describe('create()', () => {
-    test('debe crear una factura en estado DRAFT con los items proporcionados', async () => { ... });
-    test('debe lanzar INVOICE_004 si la factura no tiene items', async () => { ... });
-    test('debe asignar el siguiente secuencial fiscal disponible', async () => { ... });
+    test('debe crear una venta en estado DRAFT con los items proporcionados', async () => { ... });
+    test('debe decrementar stock al crear', async () => { ... });
+  });
+  describe('update()', () => {
+    test('debe lanzar SALE_001 si la venta no es mutable', async () => { ... });
   });
 
-  describe('annul()', () => {
-    test('debe cambiar status a ANNULLED y registrar motivo de anulación', async () => { ... });
-    test('debe lanzar INVOICE_001 si la factura ya está anulada', async () => { ... });
-    test('debe lanzar FORBIDDEN si el usuario no tiene rol Admin o Contador', async () => { ... });
+  describe('remove()', () => {
+    test('debe soft-delete y restaurar stock', async () => { ... });
   });
 });
 ```
@@ -200,18 +200,14 @@ describe('InvoicesService', () => {
 ### AAA Pattern (Arrange, Act, Assert)
 
 ```typescript
-test('debe anular una factura emitida', async () => {
+test('debe rechazar update de venta ISSUED', async () => {
   // Arrange
-  const invoice = await createTestInvoice({ status: 'ISSUED' });
-  const dto = { reason: 'Error en monto' };
+  const sale = await createTestSale({ status: 'ISSUED' });
 
-  // Act
-  const result = await service.annul(invoice.id, dto, adminUser);
-
-  // Assert
-  expect(result.status).toBe('ANNULLED');
-  expect(result.annulmentReason).toBe('Error en monto');
-  expect(result.total).toBe(invoice.total);  // Montos inmutables
+  // Act + Assert
+  await expect(service.update(sale.id, { code: 'X' })).rejects.toMatchObject({
+    /* SALE_001 */
+  });
 });
 ```
 
@@ -222,39 +218,31 @@ test('debe anular una factura emitida', async () => {
 ### Backend: Factory Functions (NO mocks de BD en unit tests)
 
 ```typescript
-// backend/src/features/invoices/__tests__/fixtures/invoice.fixture.ts
+// backend/src/modules/sales/__tests__/fixtures/sale.fixture.ts
 import { PrismaClient } from '@prisma/client';
-import { CreateInvoiceDto } from '../../dto/create-invoice.dto';
 
-export async function createTestInvoice(
+export async function createTestSale(
   prisma: PrismaClient,
-  overrides?: Partial<CreateInvoiceDto>,
+  overrides?: Record<string, unknown>,
 ) {
-  const company = await prisma.company.findFirst();
-  const customer = await prisma.customer.findFirst();
+  const org = await prisma.organization.findFirst();
   const product = await prisma.product.findFirst();
 
-  return prisma.invoice.create({
+  return prisma.sale.create({
     data: {
-      companyId: company!.id,
-      customerId: customer!.id,
-      invoiceNumber: '00000001',
-      controlNumber: '00-00000001',
-      subtotal: 100,
-      taxAmount: 16,
-      total: 116,
+      organizationId: org!.id,
       status: 'DRAFT',
-      items: {
+      amount: 100,
+      details: {
         create: {
-          productId: product!.id,
+          idProduct: product!.id,
           quantity: 1,
-          unitPrice: 100,
-          taxRate: 16,
+          // ...campos requeridos del detalle
         },
       },
       ...overrides,
     },
-    include: { items: true },
+    include: { details: true },
   });
 }
 ```
@@ -314,51 +302,26 @@ export const productHandlers = [
 
 ---
 
-## 5. Tests de Inmutabilidad Contable
+## 5. Tests de Inmutabilidad (Sales)
 
-### Checklist específico para features financieras
-
-Toda feature que toca `invoices`, `credit_notes`, `debit_notes`, `tax_withholdings`, `accounting_entries` debe incluir tests que verifiquen:
+Toda feature que toca `sales` / montos cobrados debe verificar:
 
 ```typescript
-describe('Invoice Immutability', () => {
-  test('NO debe permitir modificar una factura con status ISSUED', async () => {
-    const invoice = await createTestInvoice({ status: 'ISSUED' });
+describe('Sale Immutability', () => {
+  test('NO debe permitir modificar una venta con status ISSUED', async () => {
+    const sale = await createTestSale({ status: 'ISSUED' });
     await expect(
-      service.update(invoice.id, { subtotal: 999 })
-    ).rejects.toThrow('INVOICE_001');
+      service.update(sale.id, { code: 'X' })
+    ).rejects.toMatchObject({ /* SALE_001 */ });
   });
 
-  test('NO debe permitir modificar una factura con status ANNULLED', async () => {
-    const invoice = await createTestInvoice({ status: 'ANNULLED' });
-    await expect(
-      service.update(invoice.id, { subtotal: 999 })
-    ).rejects.toThrow('INVOICE_001');
-  });
-
-  test('NO debe permitir DELETE físico de una factura (solo soft-delete)', async () => {
-    const invoice = await createTestInvoice({ status: 'DRAFT' });
-    await service.remove(invoice.id);
-    const found = await prisma.invoice.findUnique({
-      where: { id: invoice.id },
-    });
-    expect(found).not.toBeNull();
-    expect(found.deletedAt).not.toBeNull();
-  });
-
-  test('Al anular, los montos originales NO cambian', async () => {
-    const invoice = await createTestInvoice({
-      status: 'ISSUED',
-      subtotal: 500,
-    });
-    const annulled = await service.annul(invoice.id, {
-      reason: 'Error en precio',
-    });
-    expect(annulled.subtotal).toBe(500);  // El monto original sigue igual
-    expect(annulled.status).toBe('ANNULLED');
+  test('soft-delete restaura stock y setea deletedAt', async () => {
+    // ...
   });
 });
 ```
+
+No escribir suites `Invoice*` / `INVOICE_*`. Dominio = `sales`. Ver [features/sales.md](../features/sales.md).
 
 ---
 

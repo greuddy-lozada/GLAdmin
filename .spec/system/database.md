@@ -1,7 +1,8 @@
 # Database — Convenciones de Base de Datos
 
+> **status:** `current` · Última verificación: 2026-08-08  
 > **Motor:** PostgreSQL  
-> **ORM:** Prisma  
+> **ORM:** Prisma (`backend/prisma/schema.prisma`)  
 > **Principio rector:** La base de datos es la última línea de defensa de la integridad de los datos.  
 > Las constraints viven en la BD, no solo en la aplicación.
 
@@ -13,94 +14,69 @@
 
 | Elemento | Convención | Ejemplo |
 |---|---|---|
-| Tablas | `snake_case`, plural | `products`, `invoice_items` |
-| Columnas | `snake_case`, singular | `created_at`, `tax_amount` |
+| Tablas | `snake_case`, plural | `products`, `sales`, `sale_details` |
+| Columnas | `snake_case`, singular | `created_at`, `total_tax` |
 | Llaves primarias | `id` (UUID v4) | `id UUID PRIMARY KEY DEFAULT gen_random_uuid()` |
-| Llaves foráneas | `{tabla_singular}_id` | `company_id`, `customer_id` |
-| Tablas pivote (M:N) | `{tabla1_singular}_{tabla2_singular}` | `invoice_tax_withholdings` |
-| Índices | `idx_{tabla}_{columna}` | `idx_invoices_company_id` |
-| Constraints únicas | `uq_{tabla}_{columna}` | `uq_invoices_control_number` |
-| Timestamps | `created_at`, `updated_at`, `deleted_at` (soft delete) | `TIMESTAMPTZ NOT NULL DEFAULT NOW()` |
+| Tenant FK | `organization_id` | Multi-tenant obligatorio en entidades de negocio |
+| Llaves foráneas | `id_{tabla_singular}` o `{tabla_singular}_id` | `id_product`, `organization_id` — **seguir el patrón ya usado en el modelo** |
+| Tablas pivote (M:N) | `{tabla1}_{tabla2}` | `products_exchange_rates` |
+| Timestamps | `created_at`, `updated_at`, `deleted_at` (soft delete) | |
 
 ### Tipos de datos
 
 | Dato | Tipo PostgreSQL | Prisma |
 |---|---|---|
-| ID primario | `UUID` | `@id @default(uuid())` |
+| ID primario | `UUID` | `@id @default(uuid()) @db.Uuid` |
 | Texto corto (<255) | `VARCHAR(n)` | `String @db.VarChar(n)` |
-| Texto largo | `TEXT` | `String @db.Text` |
+| Texto largo | `TEXT` | `String` / `@db.Text` |
 | Montos financieros | `DECIMAL(18,4)` | `Decimal @db.Decimal(18,4)` |
-| Fechas/Hora | `TIMESTAMPTZ` | `DateTime @db.Timestamptz()` |
+| Fechas/Hora | `TIMESTAMP` / `TIMESTAMPTZ` | `DateTime` |
 | Booleanos | `BOOLEAN` | `Boolean` |
-| Enumeraciones | `ENUM` nativo de PostgreSQL | `enum` en Prisma schema |
-| JSON | `JSONB` | `Json @db.JsonB` |
+| JSON | `JSONB` | `Json` |
 
 ---
 
 ## 2. UUIDs como Primary Keys
 
-**Regla:** Todas las tablas usan `UUID v4` como primary key.  
+**Regla:** Todas las tablas de negocio usan `UUID` como primary key.  
 **No se usan** IDs numéricos autoincrementales como PKs.
 
 ### Justificación
 - Evita enumeración de recursos (seguridad).
-- Permite generación offline/descentralizada.
-- Facilita sincronización multi-dispositivo (plan futuro).
-- Compatible con arquitectura de microservicios.
+- Permite generación offline/descentralizada (sync / Dexie).
+- Facilita sincronización multi-dispositivo.
 
 ### Excepción
-- **Secuenciales fiscales** (`invoice_number`, `control_number`) **SÍ son numéricos secuenciales** pero **NO son PKs**. Son columnas de negocio con constraint `UNIQUE`.
+- Secuenciales de negocio (`code` de venta, etc.) pueden ser strings/números de negocio pero **no** son PKs.
 
 ---
 
-## 3. ⚖️ Esquema de Tablas Financieras (Inmutabilidad)
+## 3. Documentos financieros (Inmutabilidad)
 
-Toda tabla que almacena documentos con valor fiscal debe tener la siguiente estructura base:
+El dominio de venta en código es **`Sale`** (`sales`), no un módulo `invoices`.  
+Toda tabla con valor contable/fiscal debe respetar inmutabilidad tras emisión (ver [security.md](security.md)).
+
+Campos base típicos (patrón):
 
 ```prisma
-model Invoice {
-  id            String    @id @default(uuid()) @db.Uuid
-  companyId     String    @map("company_id") @db.Uuid
-  customerId    String    @map("customer_id") @db.Uuid
-  invoiceNumber String    @map("invoice_number") @db.VarChar(20)
-  controlNumber String    @map("control_number") @db.VarChar(20)
-  
-  subtotal      Decimal   @db.Decimal(18,4)
-  taxAmount     Decimal   @map("tax_amount") @db.Decimal(18,4)
-  total         Decimal   @db.Decimal(18,4)
-  
-  status        InvoiceStatus @default(DRAFT)
-  
-  issuedAt      DateTime? @map("issued_at") @db.Timestamptz()
-  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
-  deletedAt     DateTime? @map("deleted_at") @db.Timestamptz()    // Soft delete
-  
-  annulledAt    DateTime? @map("annulled_at") @db.Timestamptz()   // Fecha de anulación
-  annulmentReason String? @map("annulment_reason") @db.Text       // Motivo legal de anulación
-  
-  // Relaciones
-  company       Company   @relation(fields: [companyId], references: [id])
-  customer      Customer  @relation(fields: [customerId], references: [id])
-  items         InvoiceItem[]
-  annulment     InvoiceAnnulment?  // Relación 1:1 con el registro de anulación
-  creditNotes   CreditNote[]
-  debitNotes    DebitNote[]
-  taxWithholdings TaxWithholding[]
-  
-  @@map("invoices")
+model Sale {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  status         String?   @default("DRAFT")
+  amount         Decimal?  @db.Decimal(18,4)
+  amountUsd      Decimal?  @map("amount_usd") @db.Decimal(18,4)
+  totalTax       Decimal?  @map("total_tax") @db.Decimal(18,4)
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at")
+  annulledAt     DateTime? @map("annulled_at")
+  annulmentReason String?  @map("annulment_reason")
+  // ...
+  @@map("sales")
 }
 ```
 
-### Enum de estados de documento fiscal
-
-```prisma
-enum InvoiceStatus {
-  DRAFT       // Borrador — editable
-  ISSUED      // Emitida — INMUTABLE
-  ANNULLED    // Anulada — INMUTABLE (solo cambió status + annulled_at + annulment_reason)
-}
-```
+Estados relevantes: `DRAFT` (editable) → emitida/cobrada (inmutable) → anulada (solo status + motivo; montos intactos).
 
 ---
 
@@ -130,39 +106,20 @@ enum InvoiceStatus {
 
 ## 5. Seeds de Datos de Prueba
 
-### Estructura
-
-```
-prisma/
-├── schema.prisma
-├── migrations/
-└── seeds/
-    ├── seed.ts                 # Entry point — ejecuta en orden
-    ├── 01-companies.ts         # Empresas de prueba
-    ├── 02-users.ts             # Usuarios con todos los roles
-    ├── 03-products.ts          # Productos de ejemplo
-    ├── 04-customers.ts         # Clientes de prueba
-    └── 05-invoices.ts          # Facturas en distintos estados
-```
+Seeds viven bajo `backend/prisma/` (entry `seed` configurado en package). Incluyen orgs, users, products, customers, sales de ejemplo.
 
 ### Reglas del Seed
 
 1. **El seed debe ser idempotente.** Ejecutarlo 2 veces no debe duplicar datos. Usar `upsert` con claves únicas.
 2. **Todos los roles deben tener al menos un usuario de prueba.**
 3. **Las contraseñas en seed son siempre `Test123!`** (texto plano en seed, bcrypt en BD).
-4. **El seed incluye datos fiscales ficticios pero realistas** (RIFs con formato válido, secuenciales que empiezan en 1).
-5. **No incluir datos de producción ni referencias a empresas reales en seeds.**
+4. **No incluir datos de producción ni referencias a empresas reales en seeds.**
 
 ### Comandos
 
 ```bash
-# Aplicar seed
 npx prisma db seed
-
-# Reset completo (borra BD + migraciones + seed)
 npx prisma migrate reset
-
-# Reset y seed en un paso
 pnpm run db:reset
 ```
 
@@ -172,31 +129,19 @@ pnpm run db:reset
 
 ### Regla general
 
-**Ningún registro se elimina físicamente (`DELETE`).** Todo usa soft delete con columna `deleted_at`.
+**No eliminar físicamente** registros de negocio con historial. Preferir:
+
+1. `deletedAt` vía extension Prisma en `PrismaService` (modelos en la lista `softDeleteModels`), **o**
+2. Flags de dominio (ej. Productos: `DELETE /api/products/:id` setea `available: false` — ver [features/products.md](../features/products.md)).
+
+No todos los modelos tienen `deletedAt`. Consultar `schema.prisma` + lista en `prisma.service.ts` antes de asumir.
 
 ### Excepciones (DELETE físico permitido)
 
 - Tablas de sesiones/cache (Redis/TTL).
 - Tokens de refresh expirados.
-- Registros temporales (carritos de compra abandonados, borradores de más de 90 días).
-- Logs rotados (después de archivado en cold storage).
-
-### Implementación en Prisma
-
-```typescript
-// Middleware de Prisma para soft delete (aplica a modelos con deleted_at)
-prisma.$use(async (params, next) => {
-  if (params.action === 'delete') {
-    params.action = 'update';
-    params.args.data = { deletedAt: new Date() };
-  }
-  if (params.action === 'deleteMany') {
-    params.action = 'updateMany';
-    params.args.data = { deletedAt: new Date() };
-  }
-  return next(params);
-});
-```
+- Registros temporales (carritos abandonados, borradores viejos).
+- Logs rotados tras archivado.
 
 ---
 
@@ -204,17 +149,20 @@ prisma.$use(async (params, next) => {
 
 Regla: **Toda columna usada en `WHERE`, `JOIN` o `ORDER BY` debe tener índice.**
 
-| Tabla | Columnas indexadas | Tipo | Motivo |
-|---|---|---|---|
-| `invoices` | `company_id`, `status` | Compuesto | Filtro más común (facturas de mi empresa por estado) |
-| `invoices` | `control_number` | Único | Búsqueda por número de control fiscal |
-| `invoices` | `issued_at` | Simple | Ordenamiento cronológico |
-| `products` | `company_id`, `deleted_at` | Compuesto | Listado de productos activos por empresa |
-| `customers` | `company_id`, `rif` | Compuesto + Único | Búsqueda por RIF dentro de una empresa |
-| `invoice_items` | `invoice_id` | Simple | JOIN al cargar factura completa |
-| `users` | `email` | Único | Login |
-| `refresh_tokens` | `user_id`, `expires_at` | Compuesto | Rotación y limpieza de tokens expirados |
+Índices reales de productos (referencia):
+
+| Tabla | Columnas indexadas | Motivo |
+|---|---|---|
+| `products` | `organization_id` | Tenant |
+| `products` | `(organization_id, available)` | Listado activos |
+| `products` | `(organization_id, updated_at)` | Sync |
+| `products` | `code`, `id_tax`, `id_brand`, `id_category`, `deleted_at` | Lookups / soft-delete |
+| `sales` | `organization_id` (+ status según queries) | Listados por org |
+| `users` | email / login fields | Auth |
+| `refresh_tokens` | user + expiry | Rotación |
+
+Al agregar queries nuevas, verificar índices en el mismo PR.
 
 ---
 
-*Referencia cruzada: [architecture.md](architecture.md) — [security.md](security.md)*
+*Referencia cruzada: [architecture.md](architecture.md) — [security.md](security.md) — [features/products.md](../features/products.md)*

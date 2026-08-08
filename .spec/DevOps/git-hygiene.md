@@ -19,7 +19,7 @@
 | Prefijo | Propósito | Ejemplo | Se mergea a |
 |---|---|---|---|
 | `feat/` | Feature nueva | `feat/pos-shortcuts` | `develop` |
-| `fix/` | Bug fix no-crítico | `fix/invoice-pdf-font` | `develop` |
+| `fix/` | Bug fix no-crítico | `fix/sale-tax-rounding` | `develop` |
 | `hotfix/` | Fix crítico en producción | `hotfix/tax-calc-rounding` | `main` → luego `develop` |
 | `chore/` | Tareas de mantenimiento | `chore/update-prisma-v6` | `develop` |
 | `refactor/` | Refactor sin cambio funcional | `refactor/extract-tax-service` | `develop` |
@@ -65,26 +65,29 @@
 | Scope | Área |
 |---|---|
 | `auth` | Autenticación y autorización |
-| `products` | Módulo de productos |
-| `invoices` | Módulo de facturación |
-| `pos` | Punto de venta |
-| `customers` | Módulo de clientes |
-| `accounting` | Módulo de contabilidad |
-| `tax` | Retenciones e impuestos |
+| `products` | Catálogo |
+| `sales` | Ventas |
+| `pos` | Punto de venta (frontend) |
+| `sync` | Offline sync / Dexie |
+| `customers` | Clientes |
+| `stocks` | Inventario |
+| `tax` | Impuestos / retenciones |
 | `reports` | Reportes |
+| `billing` | Suscripciones / planes |
 | `ui` | Componentes de UI compartidos |
 | `i18n` | Traducciones |
 | `db` | Migraciones y schema de BD |
 | `config` | Configuración, env, CI/CD |
 | `deps` | Dependencias |
+| `spec` | Documentación `.spec/` |
 
 ### Ejemplos
 
 ```
 feat(pos): agregar atajo Ctrl+B para buscar producto
-fix(invoices): corregir redondeo de IVA en facturas con múltiples ítems
+fix(sales): corregir redondeo de IVA en ventas con múltiples ítems
 refactor(tax): extraer cálculo de retención a TaxCalculator service
-test(invoices): agregar tests de inmutabilidad contable
+test(sales): agregar tests de inmutabilidad
 chore(deps): actualizar Prisma a v6.0.0
 docs(spec): agregar api-conventions.md al índice de specs
 ```
@@ -294,8 +297,8 @@ export default {
       'feat', 'fix', 'docs', 'style', 'refactor', 'perf', 'test', 'chore', 'revert'
     ]],
     'scope-enum': [2, 'always', [
-      'auth', 'products', 'invoices', 'pos', 'customers', 'accounting',
-      'tax', 'reports', 'ui', 'i18n', 'db', 'config', 'deps'
+      'auth', 'products', 'sales', 'pos', 'sync', 'customers', 'stocks',
+      'tax', 'reports', 'billing', 'ui', 'i18n', 'db', 'config', 'deps', 'spec'
     ]],
     'subject-max-length': [2, 'always', 72],
   },

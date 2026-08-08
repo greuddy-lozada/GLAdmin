@@ -1,10 +1,12 @@
 # UUID Migration Plan — Plan Detallado
 
+> **status:** `obsolete` (migración aplicada)  
 > **Estado:** ✅ Completado  
 > **Fecha plan:** Julio 2026  
 > **Fecha fin:** Julio 2026  
 > **Reemplaza:** `database-migration-plan.md` (obsoleto — asumía SQLite)  
 
+> Agentes: no re-ejecutar. UUIDs ya están en schema.
 ---
 
 ## Resumen Ejecutivo

@@ -8,6 +8,12 @@ import { UpdateSaleDto } from './dto/update-sale.dto';
 import { AppException } from '../../common/errors';
 import { SaleStatus, SALE_STATUS_META } from '../../common/types/statuses';
 import { AuditLogService } from '../audit-log/audit-log.service';
+import { DashboardService } from '../dashboard/dashboard.service';
+import {
+  ArApStatus,
+  DEFAULT_DUE_DAYS,
+  PaymentMethod,
+} from '../../common/types/payment-method';
 
 @Injectable()
 export class SalesService {
@@ -15,7 +21,28 @@ export class SalesService {
     private readonly prisma: PrismaService,
     private readonly context: ContextService,
     private readonly auditLog: AuditLogService,
+    private readonly dashboard: DashboardService,
   ) {}
+
+  private unpaidAmount(dto: CreateSaleDto): number {
+    const total =
+      Number(dto.amount) +
+      Number(dto.totalTax ?? 0) -
+      Number(dto.withholdingAmount ?? 0);
+    const payments = dto.payments ?? [];
+    if (payments.length === 0) {
+      return dto.paymentMethod === PaymentMethod.Credit ? total : 0;
+    }
+    const paidNow = payments
+      .filter((p) => p.method !== PaymentMethod.Credit)
+      .reduce((sum, p) => {
+        if (p.currency === 'USD') {
+          return sum + p.amount * (dto.exchangeRate || 0);
+        }
+        return sum + p.amount;
+      }, 0);
+    return Math.max(0, Math.round((total - paidNow) * 10000) / 10000);
+  }
 
   private async recalcTotalExistence(
     productId: string,
@@ -105,6 +132,27 @@ export class SalesService {
         ),
       );
 
+      const unpaid = this.unpaidAmount(dto);
+      if (unpaid > 0.01) {
+        if (!dto.idCustomer) {
+          throw new AppException('SALE_004', HttpStatus.BAD_REQUEST);
+        }
+        const issueDate = new Date(dto.date);
+        const dueDate = new Date(issueDate);
+        dueDate.setDate(dueDate.getDate() + DEFAULT_DUE_DAYS);
+        await tx.accountsReceivable.create({
+          data: {
+            organizationId: orgId,
+            idSale: created.id,
+            amount: unpaid,
+            credit: 0,
+            issueDate,
+            dueDate,
+            status: ArApStatus.Open,
+          },
+        });
+      }
+
       return created;
     });
 
@@ -114,6 +162,9 @@ export class SalesService {
       entity: 'Sale',
       entityId: sale.id,
     });
+
+    void this.dashboard.notifySaleCreated(orgId, sale);
+
     return sale;
   }
 

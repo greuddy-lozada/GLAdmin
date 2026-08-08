@@ -12,9 +12,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, BarChart3, Users, Package, ClipboardList, ArrowLeftRight } from 'lucide-react';
+import { Loader2, BarChart3, Users, Package, ClipboardList, ArrowLeftRight, Receipt, Landmark, Wallet, HandCoins } from 'lucide-react';
 import { useReportTypes, useGenerateReport } from '../hooks/use-reports';
 import type { ParamField } from '../models/report.model';
+import { getReportTypeDescription, getReportTypeLabel, resolveReportLabel } from '../lib/report-labels';
 import { sileo } from 'sileo';
 import { extractApiError } from '@/lib/api/extract-api-error';
 
@@ -24,11 +25,15 @@ const TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = 
   sales_by_product: Package,
   inventory_status: ClipboardList,
   stock_movements: ArrowLeftRight,
+  fiscal_iva: Receipt,
+  fiscal_withholding: HandCoins,
+  financial_ar: Wallet,
+  financial_ap: Landmark,
 };
 
 interface ReportGeneratorProps {
   category: string;
-  onGenerated: () => void;
+  onGenerated: (reportId?: string) => void;
 }
 
 function today(): string {
@@ -88,11 +93,14 @@ export function ReportGenerator({ category, onGenerated }: ReportGeneratorProps)
     if (!selectedType) return;
     try {
       const typedParams = convertParams(selectedDefinition?.parameters ?? []);
-      await generateMutation.mutateAsync({ type: selectedType, parameters: typedParams });
+      const report = await generateMutation.mutateAsync({
+        type: selectedType,
+        parameters: typedParams,
+      });
       setSelectedType('');
       setParams({});
       setIsExpanded(false);
-      onGenerated();
+      onGenerated(report.id);
     } catch (err) {
       sileo.error({ description: extractApiError(err) ?? t('reports.error.generate') });
     }
@@ -147,8 +155,10 @@ export function ReportGenerator({ category, onGenerated }: ReportGeneratorProps)
                   <Icon className="h-4 w-4" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium">{t(rt.name)}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{t(rt.description)}</p>
+                  <p className="text-sm font-medium">{getReportTypeLabel(rt.type, t)}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {getReportTypeDescription(rt.type, t) || resolveReportLabel(rt.description, t)}
+                  </p>
                 </div>
               </button>
             );
@@ -164,7 +174,7 @@ export function ReportGenerator({ category, onGenerated }: ReportGeneratorProps)
             if (field.type === 'date') {
               return (
                 <div key={field.key} className="space-y-1.5">
-                  <Label className="text-xs font-semibold">{t(field.label)}</Label>
+                  <Label className="text-xs font-semibold">{resolveReportLabel(field.label, t)}</Label>
                   <Input
                     type="date"
                     value={params[field.key] || ''}
@@ -177,7 +187,7 @@ export function ReportGenerator({ category, onGenerated }: ReportGeneratorProps)
             if (field.type === 'number') {
               return (
                 <div key={field.key} className="space-y-1.5">
-                  <Label className="text-xs font-semibold">{t(field.label)}</Label>
+                  <Label className="text-xs font-semibold">{resolveReportLabel(field.label, t)}</Label>
                   <Input
                     type="number"
                     value={params[field.key] ?? (field.defaultValue !== undefined ? String(field.defaultValue) : '')}
@@ -190,7 +200,7 @@ export function ReportGenerator({ category, onGenerated }: ReportGeneratorProps)
             if (field.type === 'select' && field.options) {
               return (
                 <div key={field.key} className="space-y-1.5">
-                  <Label className="text-xs font-semibold">{t(field.label)}</Label>
+                  <Label className="text-xs font-semibold">{resolveReportLabel(field.label, t)}</Label>
                   <Select
                     value={params[field.key] || ''}
                     onValueChange={(v) => setParams({ ...params, [field.key]: v })}
@@ -201,7 +211,7 @@ export function ReportGenerator({ category, onGenerated }: ReportGeneratorProps)
                     <SelectContent>
                       {field.options.map((opt) => (
                         <SelectItem key={opt.value} value={opt.value}>
-                          {t(opt.label)}
+                          {resolveReportLabel(opt.label, t)}
                         </SelectItem>
                       ))}
                     </SelectContent>

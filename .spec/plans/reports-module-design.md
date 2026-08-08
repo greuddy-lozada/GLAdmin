@@ -1,9 +1,12 @@
 # Reports Module — Design Spec
 
-> **Status:** ✅ Implemented  
+> **status:** `done` (engine + Phase 1–2 shipped; backlog fiscal/financeiro en [.spec/features/reports.md](../features/reports.md))  
+> **Status:** ✅ Implemented (core)  
 > **Date:** 2026-07-19  
-> **Module:** `reports` (core — architecture.md §4)  
+> **Module:** `reports`  
 > **Dependencies:** `sales`, `purchase-orders`, `stocks`, `customers`, `suppliers`, `withholding-records`, `accounts-payable`, `accounts-receivable`
+
+> Agentes: para qué reportes faltan y prioridad contador VE, usar **features/reports.md**, no reabrir este plan como trabajo incompleto del engine.
 
 ---
 

@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Printer, AlertCircle, Calendar, User, Hash, Download, RefreshCw } from 'lucide-react';
 import { useReport } from '../hooks/use-reports';
 import { useGenerateReport } from '../hooks/use-reports';
+import { getReportTypeLabel, resolveReportLabel } from '../lib/report-labels';
 import { sileo } from 'sileo';
 import { BarChart } from './charts/bar-chart';
 
@@ -159,14 +160,14 @@ interface KpiCard {
 
 function KpiGrid({ cards }: { cards: KpiCard[] }) {
   return (
-    <div className={`kpi-grid grid gap-4 ${cards.length === 4 ? 'grid-cols-4' : 'grid-cols-3'} print:grid-cols-4`}>
+    <div className={`kpi-grid grid gap-3 sm:gap-4 grid-cols-2 ${cards.length === 4 ? 'md:grid-cols-4' : 'md:grid-cols-3'} print:grid-cols-4`}>
       {cards.map((card) => (
         <div
           key={card.label}
-          className="kpi-card rounded-lg border bg-card p-4 print:border-gray-300 print:shadow-none"
+          className="kpi-card rounded-lg border bg-card p-3 sm:p-4 print:border-gray-300 print:shadow-none"
         >
           <p className="kpi-label text-xs text-muted-foreground mb-1 print:text-gray-500">{card.label}</p>
-          <p className={`kpi-value text-lg font-bold ${
+          <p className={`kpi-value text-base sm:text-lg font-bold break-words ${
             card.variant === 'destructive' ? 'text-destructive' :
             card.variant === 'warning' ? 'text-amber-600' :
             'text-primary print:text-black'
@@ -386,18 +387,151 @@ function StockMovementsRenderer({ results }: { results: Record<string, unknown> 
   );
 }
 
-// ─── Render dispatcher ───────────────────────────────
+function FiscalIvaRenderer({ results }: { results: Record<string, unknown> }) {
+  const { t } = useI18n();
+  const rows = (results.rows as Record<string, unknown>[]) || [];
 
-function getReportTypeLabel(type: string, t: (key: string) => string): string {
-  switch (type) {
-    case 'sales_summary': return t('reports.types.salesSummary');
-    case 'sales_by_customer': return t('reports.types.salesByCustomer');
-    case 'sales_by_product': return t('reports.types.salesByProduct');
-    case 'inventory_status': return t('reports.types.inventoryStatus');
-    case 'stock_movements': return t('reports.types.stockMovements');
-    default: return type;
-  }
+  const totals = rows.reduce<{ sales: number; base: number; tax: number; total: number }>(
+    (acc, r) => ({
+      sales: acc.sales + (Number(r.sales_count) || 0),
+      base: acc.base + (Number(r.taxable_base) || 0),
+      tax: acc.tax + (Number(r.tax_amount) || 0),
+      total: acc.total + (Number(r.total_with_tax) || 0),
+    }),
+    { sales: 0, base: 0, tax: 0, total: 0 },
+  );
+
+  return (
+    <>
+      <KpiGrid
+        cards={[
+          { label: t('reports.fields.totalSales'), value: String(totals.sales) },
+          { label: t('reports.fields.taxableBase'), value: formatCurrency(totals.base) },
+          { label: t('reports.fields.totalTax'), value: formatCurrency(totals.tax) },
+          { label: t('reports.fields.totalWithTax'), value: formatCurrency(totals.total) },
+        ]}
+      />
+      <SectionTitle>{t('reports.fields.taxBreakdown')}</SectionTitle>
+      <ReportTable
+        rows={rows}
+        columns={[
+          { key: 'tax_name', label: t('reports.fields.taxName') },
+          { key: 'tax_percentage', label: t('reports.fields.taxRate'), align: 'right', format: (v) => `${Number(v)}%` },
+          { key: 'sales_count', label: t('reports.fields.salesCount'), align: 'right' },
+          { key: 'taxable_base', label: t('reports.fields.taxableBase'), align: 'right', format: (v) => formatCurrency(Number(v)) },
+          { key: 'tax_amount', label: t('reports.fields.totalTax'), align: 'right', format: (v) => formatCurrency(Number(v)) },
+          { key: 'total_with_tax', label: t('reports.fields.totalWithTax'), align: 'right', format: (v) => formatCurrency(Number(v)) },
+        ]}
+      />
+    </>
+  );
 }
+
+function FiscalWithholdingRenderer({ results }: { results: Record<string, unknown> }) {
+  const { t } = useI18n();
+  const rows = (results.rows as Record<string, unknown>[]) || [];
+  const totalWithheld = rows.reduce((sum, r) => sum + (Number(r.withheld_amount) || 0), 0);
+  const totalBase = rows.reduce((sum, r) => sum + (Number(r.base_amount) || 0), 0);
+
+  return (
+    <>
+      <KpiGrid
+        cards={[
+          { label: t('reports.fields.records'), value: String(rows.length) },
+          { label: t('reports.fields.taxableBase'), value: formatCurrency(totalBase) },
+          { label: t('reports.fields.withheldAmount'), value: formatCurrency(totalWithheld) },
+        ]}
+      />
+      <ReportTable
+        rows={rows}
+        columns={[
+          { key: 'date', label: t('reports.fields.date'), format: (v) => v ? String(v).substring(0, 10) : '—' },
+          { key: 'supplier_name', label: t('reports.fields.supplier') },
+          { key: 'supplier_rif', label: t('reports.fields.rif') },
+          { key: 'type', label: t('reports.fields.withholdingType') },
+          { key: 'percentage', label: t('reports.fields.taxRate'), align: 'right', format: (v) => `${Number(v)}%` },
+          { key: 'base_amount', label: t('reports.fields.taxableBase'), align: 'right', format: (v) => formatCurrency(Number(v)) },
+          { key: 'withheld_amount', label: t('reports.fields.withheldAmount'), align: 'right', format: (v) => formatCurrency(Number(v)) },
+          { key: 'document_number', label: t('reports.fields.documentNumber') },
+          { key: 'period', label: t('reports.fields.period') },
+        ]}
+      />
+    </>
+  );
+}
+
+function agingLabel(bucket: unknown, t: (k: string) => string): string {
+  if (bucket === 'overdue') return t('reports.fields.agingOverdue');
+  if (bucket === 'current') return t('reports.fields.agingCurrent');
+  return t('reports.fields.agingOpen');
+}
+
+function FinancialArRenderer({ results }: { results: Record<string, unknown> }) {
+  const { t } = useI18n();
+  const rows = (results.rows as Record<string, unknown>[]) || [];
+  const totalBalance = rows.reduce((sum, r) => sum + (Number(r.balance) || 0), 0);
+  const overdue = rows.filter((r) => r.aging_bucket === 'overdue').length;
+
+  return (
+    <>
+      <KpiGrid
+        cards={[
+          { label: t('reports.fields.records'), value: String(rows.length) },
+          { label: t('reports.fields.balance'), value: formatCurrency(totalBalance) },
+          { label: t('reports.fields.agingOverdue'), value: String(overdue), variant: overdue > 0 ? 'destructive' : 'default' },
+        ]}
+      />
+      <ReportTable
+        rows={rows}
+        columns={[
+          { key: 'customer_name', label: t('reports.fields.customer') },
+          { key: 'sale_code', label: t('reports.fields.saleCode') },
+          { key: 'issue_date', label: t('reports.fields.issueDate'), format: (v) => v ? String(v).substring(0, 10) : '—' },
+          { key: 'due_date', label: t('reports.fields.dueDate'), format: (v) => v ? String(v).substring(0, 10) : '—' },
+          { key: 'amount', label: t('reports.fields.totalAmount'), align: 'right', format: (v) => formatCurrency(Number(v)) },
+          { key: 'credit', label: t('reports.fields.credit'), align: 'right', format: (v) => formatCurrency(Number(v)) },
+          { key: 'balance', label: t('reports.fields.balance'), align: 'right', format: (v) => formatCurrency(Number(v)) },
+          { key: 'aging_bucket', label: t('reports.fields.aging'), format: (v) => agingLabel(v, t) },
+        ]}
+      />
+    </>
+  );
+}
+
+function FinancialApRenderer({ results }: { results: Record<string, unknown> }) {
+  const { t } = useI18n();
+  const rows = (results.rows as Record<string, unknown>[]) || [];
+  const totalBalance = rows.reduce((sum, r) => sum + (Number(r.balance) || 0), 0);
+  const overdue = rows.filter((r) => r.aging_bucket === 'overdue').length;
+
+  return (
+    <>
+      <KpiGrid
+        cards={[
+          { label: t('reports.fields.records'), value: String(rows.length) },
+          { label: t('reports.fields.balance'), value: formatCurrency(totalBalance) },
+          { label: t('reports.fields.agingOverdue'), value: String(overdue), variant: overdue > 0 ? 'destructive' : 'default' },
+        ]}
+      />
+      <ReportTable
+        rows={rows}
+        columns={[
+          { key: 'supplier_name', label: t('reports.fields.supplier') },
+          { key: 'supplier_rif', label: t('reports.fields.rif') },
+          { key: 'po_code', label: t('reports.fields.poCode') },
+          { key: 'issue_date', label: t('reports.fields.issueDate'), format: (v) => v ? String(v).substring(0, 10) : '—' },
+          { key: 'due_date', label: t('reports.fields.dueDate'), format: (v) => v ? String(v).substring(0, 10) : '—' },
+          { key: 'amount', label: t('reports.fields.totalAmount'), align: 'right', format: (v) => formatCurrency(Number(v)) },
+          { key: 'credit', label: t('reports.fields.credit'), align: 'right', format: (v) => formatCurrency(Number(v)) },
+          { key: 'balance', label: t('reports.fields.balance'), align: 'right', format: (v) => formatCurrency(Number(v)) },
+          { key: 'aging_bucket', label: t('reports.fields.aging'), format: (v) => agingLabel(v, t) },
+        ]}
+      />
+    </>
+  );
+}
+
+// ─── Render dispatcher ───────────────────────────────
 
 function renderReport(type: string, results: Record<string, unknown>) {
   switch (type) {
@@ -411,6 +545,14 @@ function renderReport(type: string, results: Record<string, unknown>) {
       return <InventoryStatusRenderer results={results} />;
     case 'stock_movements':
       return <StockMovementsRenderer results={results} />;
+    case 'fiscal_iva':
+      return <FiscalIvaRenderer results={results} />;
+    case 'fiscal_withholding':
+      return <FiscalWithholdingRenderer results={results} />;
+    case 'financial_ar':
+      return <FinancialArRenderer results={results} />;
+    case 'financial_ap':
+      return <FinancialApRenderer results={results} />;
     default:
       return (
         <div className="rounded-lg border p-4 overflow-auto">
@@ -531,15 +673,12 @@ export function ReportViewer({ reportId }: ReportViewerProps) {
   meta.push({ icon: <Hash className="h-3.5 w-3.5" />, label: t('reports.fields.id'), value: report.id.substring(0, 8) });
 
   const reportTypeLabel = getReportTypeLabel(report.type, t);
-  const displayName = report.name.includes('_')
-    ? report.name.replace(/^[a-z_]+ - /, '')
-    : report.name;
+  const displayName = resolveReportLabel(report.name, t);
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6 print:hidden">
-        <div />
-        <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-end gap-2 mb-6 print:hidden">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="outline"
             size="sm"

@@ -4,6 +4,7 @@ import { useI18n } from '@/i18n';
 import { Button } from '@/components/ui/button';
 import { Loader2, FileText, Trash2 } from 'lucide-react';
 import type { GeneratedReport } from '../models/report.model';
+import { getReportTypeLabel } from '../lib/report-labels';
 
 interface ReportCardProps {
   report: GeneratedReport;
@@ -15,18 +16,6 @@ interface ReportCardProps {
 function formatDate(dateStr: string | null) {
   if (!dateStr) return '\u2014';
   return new Date(dateStr).toLocaleDateString();
-}
-
-function typeLabel(type: string, t: (key: string) => string): string {
-  const map: Record<string, string> = {
-    sales_summary: 'reports.types.salesSummary',
-    sales_by_customer: 'reports.types.salesByCustomer',
-    sales_by_product: 'reports.types.salesByProduct',
-    inventory_status: 'reports.types.inventoryStatus',
-    stock_movements: 'reports.types.stockMovements',
-  };
-  const key = map[type];
-  return key ? t(key) : type;
 }
 
 export function ReportCard({ report, selected, onView, onDelete }: ReportCardProps) {
@@ -47,7 +36,7 @@ export function ReportCard({ report, selected, onView, onDelete }: ReportCardPro
       <div className="flex items-center gap-3 min-w-0">
         <FileText className={`h-4 w-4 shrink-0 ${selected ? 'text-primary' : 'text-muted-foreground'}`} />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold truncate">{typeLabel(report.type, t)}</p>
+          <p className="text-sm font-semibold truncate">{getReportTypeLabel(report.type, t)}</p>
           <p className="text-xs text-muted-foreground">
             {formatDate(report.generatedAt)}
             {report.userName && ` \u00b7 ${report.userName}`}

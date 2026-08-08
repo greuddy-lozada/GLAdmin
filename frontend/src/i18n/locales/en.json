@@ -23,6 +23,8 @@
     "searching": "Searching...",
     "typeToSearch": "Type to search",
     "close": "Close",
+    "more": "More",
+    "back": "Back",
     "refresh": "Refresh",
     "rowsPerPage": "Rows per page:",
     "previous": "Previous",
@@ -81,6 +83,33 @@
     "productsDesc": "Active products",
     "customersDesc": "Active customers",
     "suppliersDesc": "Active suppliers",
+    "kpi": {
+      "salesToday": "Sales today",
+      "revenueToday": "Revenue today",
+      "avgTicket": "Avg ticket",
+      "lowStock": "Low stock",
+      "products": "products",
+      "vsYesterday": "vs yesterday"
+    },
+    "live": {
+      "connected": "Live",
+      "reconnecting": "Reconnecting...",
+      "idle": "Disconnected",
+      "timezone": "Zone: {{tz}}",
+      "salesFeed": "Live sales",
+      "emptySales": "No recent sales",
+      "goPos": "Go to POS",
+      "justNow": "now",
+      "minutesAgo": "{{n}}m ago",
+      "hoursAgo": "{{n}}h ago"
+    },
+    "arap": {
+      "title": "AR / AP",
+      "receivable": "Receivable",
+      "receivableOverdue": "AR overdue",
+      "payable": "Payable",
+      "payableDue7d": "AP due 7d"
+    },
     "analytics": {
       "recentOrders": "Recent Orders",
       "topProducts": "Top Products",
@@ -131,6 +160,8 @@
     "billing": "Billing",
     "syncConflicts": "Sync Conflicts",
     "reports": "Reports",
+    "accountsReceivable": "AR",
+    "accountsPayable": "AP",
     "org": "Organization",
     "logout": "Log Out",
     "profile": "Profile",
@@ -200,6 +231,76 @@
       "save": "Error saving customer",
       "load": "Error loading customers",
       "delete": "Error deleting customer"
+    }
+  },
+  "accountsReceivable": {
+    "title": "Accounts receivable",
+    "empty": "No accounts receivable",
+    "abono": "Collect",
+    "abonoTitle": "Register payment",
+    "paymentRegistered": "Payment registered",
+    "notePlaceholder": "Optional note",
+    "filter": {
+      "open": "Open",
+      "overdue": "Overdue",
+      "paid": "Paid",
+      "all": "All"
+    },
+    "status": {
+      "open": "Open",
+      "paid": "Paid"
+    },
+    "field": {
+      "customer": "Customer",
+      "sale": "Sale",
+      "amount": "Amount",
+      "credit": "Paid",
+      "balance": "Balance",
+      "dueDate": "Due",
+      "status": "Status",
+      "abonoAmount": "Payment amount",
+      "note": "Note"
+    },
+    "error": {
+      "load": "Error loading AR",
+      "payment": "Error registering payment",
+      "invalidAmount": "Invalid amount",
+      "exceedsBalance": "Payment exceeds balance"
+    }
+  },
+  "accountsPayable": {
+    "title": "Accounts payable",
+    "empty": "No accounts payable",
+    "abono": "Pay",
+    "abonoTitle": "Register payment",
+    "paymentRegistered": "Payment registered",
+    "notePlaceholder": "Optional note",
+    "filter": {
+      "open": "Open",
+      "overdue": "Overdue",
+      "paid": "Paid",
+      "all": "All"
+    },
+    "status": {
+      "open": "Open",
+      "paid": "Paid"
+    },
+    "field": {
+      "supplier": "Supplier",
+      "purchaseOrder": "Purchase order",
+      "amount": "Amount",
+      "credit": "Paid",
+      "balance": "Balance",
+      "dueDate": "Due",
+      "status": "Status",
+      "abonoAmount": "Payment amount",
+      "note": "Note"
+    },
+    "error": {
+      "load": "Error loading AP",
+      "payment": "Error registering payment",
+      "invalidAmount": "Invalid amount",
+      "exceedsBalance": "Payment exceeds balance"
     }
   },
   "suppliers": {
@@ -569,6 +670,7 @@
     "completed": "Sale completed successfully",
     "loading": "Loading POS...",
     "searchProducts": "Search products...",
+    "allCategories": "All",
     "cart": {
       "title": "Cart",
       "empty": "Cart is empty",
@@ -589,6 +691,7 @@
       "pagoMovil": "Pago Móvil",
       "transfer": "Transfer",
       "card": "Card",
+      "credit": "Credit",
       "customer": "Customer",
       "searchCustomer": "Search customer...",
       "noCustomer": "No customer",
@@ -610,7 +713,10 @@
       "add": "Add",
       "quickCashVes": "All cash",
       "quickCashUsd": "All cash USD",
-      "quickSplit": "50/50 split"
+      "quickSplit": "50/50 split",
+      "quickCredit": "All on credit",
+      "creditNeedsCustomer": "Select a customer to sell on credit",
+      "amountMismatch": "Paid total does not match amount due"
     },
     "receipt": {
       "title": "Sale completed",
@@ -1103,7 +1209,9 @@
     "noTypesForCategory": "No reports available in this category",
     "categories": {
       "sales": "Sales",
-      "inventory": "Inventory"
+      "inventory": "Inventory",
+      "fiscal": "Fiscal",
+      "financial": "Financial"
     },
     "presets": {
       "today": "Today",
@@ -1138,7 +1246,15 @@
       "inventoryStatus": "Inventory Status",
       "inventoryStatusDesc": "Stock levels, value at price, and low-stock products",
       "stockMovements": "Stock Movements",
-      "stockMovementsDesc": "Detail of inventory entries and exits by product and batch"
+      "stockMovementsDesc": "Detail of inventory entries and exits by product and batch",
+      "fiscalIva": "Period VAT (IVA)",
+      "fiscalIvaDesc": "Taxable base and tax by rate (management; not a SENIAT sales book)",
+      "fiscalWithholding": "Withholdings",
+      "fiscalWithholdingDesc": "Withholding records by supplier and period",
+      "financialAr": "Accounts receivable",
+      "financialArDesc": "Receivable balances with due dates and aging",
+      "financialAp": "Accounts payable",
+      "financialApDesc": "Payable balances to suppliers with due dates"
     },
     "params": {
       "dateFrom": "Date From",
@@ -1180,7 +1296,28 @@
       "totalMovements": "Total Movements",
       "period": "Period",
       "generatedAt": "Generated",
-      "id": "Report ID"
+      "id": "Report ID",
+      "taxableBase": "Taxable base",
+      "totalWithTax": "Total w/ tax",
+      "taxBreakdown": "Breakdown by rate",
+      "taxName": "Tax",
+      "taxRate": "Rate",
+      "supplier": "Supplier",
+      "rif": "Tax ID",
+      "withholdingType": "Withholding type",
+      "withheldAmount": "Amount withheld",
+      "documentNumber": "Document no.",
+      "records": "Records",
+      "saleCode": "Sale code",
+      "poCode": "PO code",
+      "issueDate": "Issue date",
+      "dueDate": "Due date",
+      "credit": "Credited",
+      "balance": "Balance",
+      "aging": "Aging",
+      "agingOpen": "Open",
+      "agingCurrent": "Current",
+      "agingOverdue": "Overdue"
     },
     "charts": {
       "monthlySales": "Monthly Sales"

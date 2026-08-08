@@ -1,7 +1,8 @@
 # Security — Reglas de Seguridad y Control de Acceso
 
-> **Principio rector:** Cuadra maneja datos financieros y fiscales de PyMEs venezolanas.  
-> Un error de seguridad aquí no es un bug — es un delito fiscal para el cliente.
+> **status:** `current` · last-verified: 2026-08-08  
+> **Principio rector:** Cuadra maneja datos financieros de PyMEs venezolanas.  
+> Multi-tenancy: [multi-tenancy.md](multi-tenancy.md) · Plan gating: [plan-gating.md](plan-gating.md) · Ventas: [features/sales.md](../features/sales.md)
 
 ---
 
@@ -9,21 +10,24 @@
 
 ### Estrategia: JWT + Refresh Tokens
 
-| Concepto | Implementación |
+| Concepto | Implementación (**código actual**) |
 |---|---|
-| Access Token | JWT firmado con `JWT_SECRET`, expira en **15 minutos**. |
-| Refresh Token | UUID v4 almacenado en BD (`refresh_tokens` table), expira en **7 días**. |
-| Almacenamiento frontend | Access token en memoria (variable JS). Refresh token en **httpOnly cookie** (no accesible desde JS). |
-| Rotación de refresh tokens | Al usar un refresh token, se invalida el viejo y se emite uno nuevo (refresh token rotation). |
-| Blacklisting | Tokens revocados (logout, cambio de contraseña) se almacenan en Redis/BD con TTL igual a su expiración restante. |
+| Access Token | JWT firmado con `JWT_SECRET`, expira en **15 minutos** (`expiresIn: '15m'`, response `900`). |
+| Refresh Token | Token opaco (`tokenId.rawSecret`) hasheado en BD (`refresh_tokens`), expira en **7 días**. |
+| Almacenamiento frontend | **Ambos en `localStorage`** (access + refresh). Authorization: `Bearer`. Refresh proactivo en timer. |
+| Emisión | JSON body: `{ accessToken, refreshToken, ... }` — **no** httpOnly cookie. |
+| Refresh | `POST /api/auth/refresh` body `{ refreshToken }` → nuevos tokens; rotación (invalida el viejo). |
+| Logout | Invalida refresh en BD. |
+
+> Spec antigua (cookie httpOnly + access solo en memoria) está **obsoleta**. No reintroducir cookies sin decisión de producto + migración.
 
 ### Endpoints de Auth
 
 ```
-POST /api/auth/login          → { email, password }          → { accessToken }
-POST /api/auth/refresh        → (cookie: refreshToken)       → { accessToken, newRefreshToken }
-POST /api/auth/logout         → (cookie: refreshToken)       → invalida refresh token
-POST /api/auth/register       → { email, password, ... }     → (solo Admin puede crear usuarios)
+POST /api/auth/login          → { email, password }              → { accessToken, refreshToken, ... }
+POST /api/auth/refresh        → { refreshToken }                 → { accessToken, refreshToken, ... }
+POST /api/auth/logout         → invalida refresh token
+POST /api/auth/register       → según flujo de invites/admin
 ```
 
 ### Rate Limiting específico para Auth
@@ -201,55 +205,37 @@ Los módulos del panel de administración operan bajo un modelo **"execute then 
 
 ---
 
-## 3. ⚖️ Inmutabilidad Contable (REGLA DE ORO)
+## 3. Inmutabilidad de documentos financieros (REGLA DE ORO)
 
-> **NINGÚN registro financiero, factura, nota de crédito/débito, retención fiscal, asiento contable o documento con valor legal-fiscal en Venezuela puede ser EDITADO con una operación `UPDATE` sobre el registro original.**
+> **Dominio canónico: `Sale` (`sales`), no `invoices`.**  
+> Ningún documento financiero emitido puede mutarse con un `UPDATE` libre sobre montos/líneas. Ver [features/sales.md](../features/sales.md).
 
 ### ¿Por qué?
 
-Las leyes fiscales venezolanas (Providencia SENIAT, Código de Comercio) exigen:
-- Trazabilidad ininterrumpida de cada documento fiscal.
-- Prohibición expresa de alterar documentos ya emitidos.
-- En caso de error: **anular** el documento original y **emitir uno nuevo** que lo compense.
+Cuadra aún no es facturación fiscal SENIAT (Later). Aun así, ventas cobradas/emitidas deben ser auditables: no reescribir historia; anular o compensar con nuevos registros cuando exista ese flujo.
 
-### Implementación técnica
+### Implementación actual (`SalesService`)
 
-| Operación | Permitido | Cómo se implementa |
+| Operación | Permitido | Cómo |
 |---|---|---|
-| Crear factura | ✅ | `INSERT INTO invoices` |
-| Modificar factura emitida | ❌ | **Prohibido.** No existe endpoint `PATCH /api/invoices/:id` para facturas con `status = 'issued'`. |
-| Anular factura | ✅ | `INSERT INTO invoice_annulments` con referencia al invoice original + motivo legal. El invoice original cambia `status` a `'annulled'` pero sus campos de monto, IVA, total **no se modifican**. |
-| Nota de crédito | ✅ | `INSERT INTO credit_notes` (nuevo registro que compensa total o parcialmente la factura original). |
-| Nota de débito | ✅ | `INSERT INTO debit_notes` (nuevo registro que incrementa el monto adeudado). |
-| Retención de IVA/ISLR | ✅ | `INSERT INTO tax_withholdings` vinculado a la factura original. **Nunca** se modifica la factura para reflejar la retención. |
-| Asiento contable | ❌ | Una vez registrado en el libro diario, no se modifica. Si hay error → asiento de ajuste (nuevo INSERT). |
-
-### Reglas de validación obligatorias
+| Crear venta | ✅ | `POST /sales` o `POST /sync/push` → siempre `DRAFT` + decrement stock |
+| Modificar venta no mutable (`ISSUED` / `ANNULLED`) | ❌ | `SALE_001` — update bloqueado vía `SALE_STATUS_META.isMutable` |
+| Update en `DRAFT` | ✅ limitado | Solo campos no financieros del `UpdateSaleDto` |
+| Soft-delete | ✅ | Restore stock + `deletedAt` |
+| Anular (`ANNULLED` + motivo) | ⏳ | Schema/status listos; **endpoint no implementado** |
 
 ```typescript
-// En el service de facturación — esto DEBE existir
-async updateInvoice(id: string, dto: UpdateInvoiceDto): Promise<Invoice> {
-  const invoice = await this.prisma.invoice.findUnique({ where: { id } });
-  
-  if (invoice.status === 'issued' || invoice.status === 'annulled') {
-    throw new ForbiddenException(
-      'Las facturas emitidas o anuladas no pueden modificarse. Use una nota de crédito/débito.'
-    );
-  }
-  
-  // Solo se permite modificar facturas en estado 'draft'
-  return this.prisma.invoice.update({ where: { id }, data: dto });
+// Patrón obligatorio en SalesService.update
+if (!SALE_STATUS_META[sale.status]?.isMutable) {
+  throw new AppException(/* SALE_001 */);
 }
 ```
 
-### Columnas protegidas contra UPDATE
+### Columnas protegidas en Update DTO
 
-En el schema de Prisma, las siguientes columnas de tablas financieras **nunca deben aparecer en un DTO de Update**:
+No exponer en update: totales, líneas, payments, tax/withholding amounts, `status` arbitrario.
 
-- `total`, `subtotal`, `tax_amount`, `discount_amount`
-- `invoice_number`, `control_number` (secuencial fiscal)
-- `issued_at`, `created_at`
-- `company_id`, `customer_id` (la entidad emisora y receptora son inmutables)
+Notas de crédito/débito / asientos contables: **fuera de scope** hasta roadmap fiscal — no inventar módulos `invoices` / `accounting`.
 
 ---
 
@@ -320,7 +306,7 @@ export class CreateCustomerDto {
 |---|---|---|---|
 | `/api/auth/*` | 5 req/min | 1 min | Prevenir brute force de login |
 | `/api/products`, `/api/customers` (GET) | 100 req/min | 1 min | Listados de alta frecuencia |
-| `/api/invoices`, `/api/pos` (POST, PATCH) | 30 req/min | 1 min | Operaciones de escritura más pesadas |
+| `/api/sales`, `/api/sync/push` (POST, PATCH) | 30–120 req/min | 1 min | Escrituras de venta / sync (ver controllers) |
 | `/api/reports/*` (GET) | 10 req/min | 1 min | Generación de reportes costosa |
 | `/api/*` (resto) | 60 req/min | 1 min | Default |
 

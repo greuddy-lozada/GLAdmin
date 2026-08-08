@@ -22,9 +22,12 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Pencil, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Pencil, Trash2, ArrowUpDown, ArrowUp, ArrowDown, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
+
+/** How a column appears in MobileCardList. Defaults inferred from column order. */
+export type MobileColumnRole = 'title' | 'primary' | 'secondary' | 'hidden' | 'action';
 
 export interface Column<T> {
   field: keyof T | string;
@@ -33,8 +36,10 @@ export interface Column<T> {
   sortable?: boolean;
   width?: number;
   isNumeric?: boolean;
-  /** @deprecated Prefer mobile cards — all columns render on mobile as label/value */
+  /** @deprecated Prefer `mobile` — desktop-only table columns still show on mobile cards unless mobile:'hidden' */
   responsive?: 'always' | 'desktop';
+  /** Mobile card role. Omit to auto: first=title, next 3=primary, rest=secondary. */
+  mobile?: MobileColumnRole;
 }
 
 interface DataTableProps<T> {
@@ -71,14 +76,14 @@ function PaginationBar({
 }) {
   if (!onPageChange) return null;
   return (
-    <div className="flex items-center justify-between border-t border-border/50 px-3 py-3">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <span>{t('common.rowsPerPage')}</span>
+    <div className="border-t border-border/50 px-3 py-2.5">
+      {/* Mobile: compact single row */}
+      <div className="flex items-center justify-between gap-2 md:hidden">
         <Select
           value={String(pageSize)}
           onValueChange={(v) => onPageSizeChange?.(parseInt(v, 10))}
         >
-          <SelectTrigger className="h-9 w-[72px]">
+          <SelectTrigger className="h-8 w-[4.25rem] text-xs" aria-label={t('common.rowsPerPage')}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -87,30 +92,95 @@ function PaginationBar({
             ))}
           </SelectContent>
         </Select>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            disabled={page === 0}
+            onClick={() => onPageChange(page - 1)}
+            aria-label={t('common.previous')}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="min-w-[3.5rem] text-center text-xs tabular-nums text-muted-foreground">
+            {page + 1} / {Math.max(totalPages, 1)}
+          </span>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            disabled={page >= totalPages - 1}
+            onClick={() => onPageChange(page + 1)}
+            aria-label={t('common.next')}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
-      <div className="flex items-center gap-1">
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={page === 0}
-          onClick={() => onPageChange(page - 1)}
-        >
-          {t('common.previous')}
-        </Button>
-        <span className="px-2 text-sm text-muted-foreground">
-          {tp('common.pageOf', { current: String(page + 1), total: String(totalPages) })}
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={page >= totalPages - 1}
-          onClick={() => onPageChange(page + 1)}
-        >
-          {t('common.next')}
-        </Button>
+
+      {/* Desktop */}
+      <div className="hidden md:flex md:items-center md:justify-between">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <span>{t('common.rowsPerPage')}</span>
+          <Select
+            value={String(pageSize)}
+            onValueChange={(v) => onPageSizeChange?.(parseInt(v, 10))}
+          >
+            <SelectTrigger className="h-9 w-[72px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[5, 10, 20, 50].map((size) => (
+                <SelectItem key={size} value={String(size)}>{String(size)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page === 0}
+            onClick={() => onPageChange(page - 1)}
+          >
+            {t('common.previous')}
+          </Button>
+          <span className="px-2 text-sm text-muted-foreground tabular-nums">
+            {tp('common.pageOf', { current: String(page + 1), total: String(totalPages) })}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page >= totalPages - 1}
+            onClick={() => onPageChange(page + 1)}
+          >
+            {t('common.next')}
+          </Button>
+        </div>
       </div>
     </div>
   );
+}
+
+function resolveMobileRoles<T>(columns: Column<T>[]): Array<Column<T> & { mobile: MobileColumnRole }> {
+  const hasExplicit = columns.some((c) => c.mobile);
+  if (hasExplicit) {
+    return columns.map((c, i) => ({
+      ...c,
+      mobile: c.mobile ?? (i === 0 ? 'title' : 'secondary'),
+    }));
+  }
+  return columns.map((c, i) => {
+    if (i === 0) return { ...c, mobile: 'title' as const };
+    if (i <= 3) return { ...c, mobile: 'primary' as const };
+    return { ...c, mobile: 'secondary' as const };
+  });
+}
+
+function cellValue<T>(col: Column<T>, original: T): ReactNode {
+  if (col.render) return col.render(original);
+  return String(original[col.field as keyof T] ?? '');
 }
 
 function MobileCardList<T extends { id: string | number }>({
@@ -126,65 +196,104 @@ function MobileCardList<T extends { id: string | number }>({
   onDelete?: (row: T) => void;
   t: (key: string) => string;
 }) {
+  const resolved = resolveMobileRoles(columns);
+  const titleCol = resolved.find((c) => c.mobile === 'title') ?? resolved[0];
+  const primary = resolved.filter((c) => c.mobile === 'primary');
+  const secondary = resolved.filter((c) => c.mobile === 'secondary');
+  const actionCols = resolved.filter((c) => c.mobile === 'action');
+
   return (
-    <div className="md:hidden space-y-3">
+    <div className="md:hidden space-y-3 p-1">
       {rows.map((row) => {
         const original = row.original;
-        const titleCol = columns[0];
-        const rest = columns.slice(1);
-        const title = titleCol?.render
-          ? titleCol.render(original)
-          : String(original[titleCol?.field as keyof T] ?? '');
+        const title = titleCol ? cellValue(titleCol, original) : '';
 
         return (
           <div
             key={row.id}
-            className="rounded-lg border border-border/50 bg-card p-4 space-y-2"
+            className="rounded-xl border border-border/60 bg-card p-4 shadow-sm space-y-3"
           >
-            <div className="text-sm font-semibold leading-snug">{title}</div>
-            {rest.map((col) => {
-              const value = col.render
-                ? col.render(original)
-                : String(original[col.field as keyof T] ?? '');
-              return (
-                <div
-                  key={String(col.field)}
-                  className="flex items-baseline justify-between gap-3 text-sm"
-                >
-                  <span className="text-xs text-muted-foreground shrink-0">
-                    {col.headerName}
-                  </span>
-                  <span
-                    className={cn(
-                      'text-right min-w-0',
-                      col.isNumeric && 'tabular-nums font-medium',
-                    )}
+            <div className="text-base font-semibold leading-snug break-words">{title}</div>
+
+            {primary.length > 0 && (
+              <div className="space-y-1.5">
+                {primary.map((col) => (
+                  <div
+                    key={String(col.field)}
+                    className="flex items-start justify-between gap-3 text-sm"
                   >
-                    {value}
-                  </span>
+                    <span className="text-xs text-muted-foreground shrink-0 pt-0.5">
+                      {col.headerName}
+                    </span>
+                    <span
+                      className={cn(
+                        'text-right min-w-0 break-words',
+                        col.isNumeric && 'tabular-nums font-medium',
+                      )}
+                    >
+                      {cellValue(col, original)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {secondary.length > 0 && (
+              <details className="group">
+                <summary className="flex cursor-pointer list-none items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground">
+                  <ChevronDown className="h-3.5 w-3.5 transition-transform group-open:rotate-180" />
+                  {t('common.more')}
+                </summary>
+                <div className="mt-2 space-y-1.5 border-t border-border/40 pt-2">
+                  {secondary.map((col) => (
+                    <div
+                      key={String(col.field)}
+                      className="flex items-start justify-between gap-3 text-sm"
+                    >
+                      <span className="text-xs text-muted-foreground shrink-0 pt-0.5">
+                        {col.headerName}
+                      </span>
+                      <span
+                        className={cn(
+                          'text-right min-w-0 break-words',
+                          col.isNumeric && 'tabular-nums font-medium',
+                        )}
+                      >
+                        {cellValue(col, original)}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-              );
-            })}
-            {(onEdit || onDelete) && (
-              <div className="flex justify-end gap-1 pt-2 border-t border-border/50">
+              </details>
+            )}
+
+            {(onEdit || onDelete || actionCols.length > 0) && (
+              <div className="flex flex-wrap justify-end gap-2 pt-2 border-t border-border/50">
+                {actionCols.map((col) => (
+                  <div key={String(col.field)} className="contents">
+                    {cellValue(col, original)}
+                  </div>
+                ))}
                 {onEdit && (
                   <Button
-                    variant="ghost"
-                    size="icon"
+                    variant="outline"
+                    size="sm"
                     onClick={() => onEdit(original)}
                     aria-label={t('common.edit')}
                   >
-                    <Pencil className="h-4 w-4" />
+                    <Pencil className="h-4 w-4 mr-1.5" />
+                    {t('common.edit')}
                   </Button>
                 )}
                 {onDelete && (
                   <Button
-                    variant="ghost"
-                    size="icon"
+                    variant="outline"
+                    size="sm"
                     onClick={() => onDelete(original)}
                     aria-label={t('common.delete')}
                   >
-                    <Trash2 className="h-4 w-4 text-destructive" />
+                    <Trash2 className="h-4 w-4 mr-1.5 text-destructive" />
+                    {t('common.delete')}
                   </Button>
                 )}
               </div>
@@ -266,7 +375,7 @@ export function DataTable<T extends { id: string | number }>({
 
   if (loading) {
     return (
-      <div className="rounded-md bg-white dark:bg-card">
+      <div className="rounded-md bg-card">
         <div className="hidden md:block overflow-x-auto">
           <Table>
             <TableHeader>
@@ -297,9 +406,9 @@ export function DataTable<T extends { id: string | number }>({
             </TableBody>
           </Table>
         </div>
-        <div className="md:hidden space-y-3 p-3">
+        <div className="md:hidden space-y-3 p-1">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-lg border border-border/50 p-4 space-y-2">
+            <div key={i} className="rounded-xl border border-border/60 p-4 space-y-2">
               <Skeleton className="h-5 w-2/3" />
               <Skeleton className="h-4 w-full" />
               <Skeleton className="h-4 w-4/5" />
@@ -315,7 +424,7 @@ export function DataTable<T extends { id: string | number }>({
   }
 
   return (
-    <div className="rounded-md bg-white dark:bg-card flex flex-col overflow-hidden" style={{ height: 'calc(100dvh - 14rem)' }}>
+    <div className="rounded-md bg-card flex flex-col overflow-hidden md:h-[calc(100dvh-14rem)]">
       <div className="flex-1 min-h-0 overflow-auto">
         <div className="hidden md:block">
         <Table>

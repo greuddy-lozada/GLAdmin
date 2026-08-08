@@ -1,5 +1,6 @@
 # Architecture — Reglas de Arquitectura
 
+> **status:** `current` · Última verificación: 2026-08-08  
 > **Principio rector:** Cuadra usa **Vertical Slicing**. Cada feature es un módulo autocontenido que abarca desde la UI hasta la base de datos.  
 > No existen capas horizontales compartidas que acoplen features entre sí.
 
@@ -9,44 +10,31 @@
 
 ### Backend (NestJS)
 
+El código vive en `backend/src/modules/` (no `features/`). Utilidades transversales: `common/` y `shared/`.
+
 ```
 backend/src/
-├── features/
-│   ├── auth/                  # Módulo de autenticación
+├── modules/
+│   ├── auth/
 │   │   ├── auth.module.ts
 │   │   ├── auth.controller.ts
 │   │   ├── auth.service.ts
 │   │   └── dto/
-│   │       ├── login.dto.ts
-│   │       └── register.dto.ts
-│   ├── products/              # Módulo de productos
+│   ├── products/
 │   │   ├── products.module.ts
 │   │   ├── products.controller.ts
 │   │   ├── products.service.ts
 │   │   └── dto/
 │   │       ├── create-product.dto.ts
 │   │       └── update-product.dto.ts
-│   ├── invoices/              # Módulo de facturación
-│   │   ├── invoices.module.ts
-│   │   ├── invoices.controller.ts
-│   │   ├── invoices.service.ts
-│   │   └── dto/
-│   │       ├── create-invoice.dto.ts
-│   │       └── invoice-query.dto.ts
+│   ├── sales/                 # Ventas (no "invoices")
+│   ├── purchase-orders/
+│   ├── stocks/
+│   ├── sync/
 │   └── ...
-├── common/                    # Utilidades transversales (solo si son genéricas)
-│   ├── guards/
-│   │   ├── jwt-auth.guard.ts
-│   │   └── roles.guard.ts
-│   ├── decorators/
-│   │   └── roles.decorator.ts
-│   ├── filters/
-│   │   └── http-exception.filter.ts
-│   └── pipes/
-│       └── validation.pipe.ts
-└── prisma/
-    ├── schema.prisma
-    └── migrations/
+├── common/                    # Guards, decorators, filters, pipes, DTOs transversales
+├── shared/                    # PrismaService, CacheService, etc.
+└── prisma/                    # (en backend/prisma/) schema + migrations
 ```
 
 ### Frontend (Next.js App Router)
@@ -56,13 +44,9 @@ frontend/src/
 ├── features/
 │   ├── auth/
 │   │   ├── components/
-│   │   │   └── login-form.tsx
 │   │   ├── hooks/
-│   │   │   └── use-auth.ts
 │   │   ├── models/
-│   │   │   └── auth.model.ts
 │   │   └── services/
-│   │       └── auth.service.ts
 │   ├── products/
 │   │   ├── components/
 │   │   │   └── products-page.tsx
@@ -71,13 +55,13 @@ frontend/src/
 │   │   ├── models/
 │   │   │   └── product.model.ts
 │   │   └── services/
-│   │       └── products.service.ts
+│   │       └── product.service.ts   # singular del entity
 │   └── ...
 ├── components/                # Componentes compartidos (ui/)
 │   └── ui/                    # shadcn/ui components
 ├── hooks/                     # Hooks genéricos (useHotkey, etc.)
 ├── i18n/                      # Traducciones
-└── config/                    # Configuración global
+└── config/                    # Configuración global (navigation, shortcuts)
 ```
 
 ### Reglas del Vertical Slicing
@@ -85,9 +69,10 @@ frontend/src/
 1. **Un módulo NO importa directamente el service de otro módulo.** Para comunicación cross-module, usar:
    - Eventos del bus interno de NestJS (`@nestjs/event-emitter`).
    - Endpoints REST (el módulo A llama a la API del módulo B).
-2. **Cada módulo tiene su propio `dto/`** — no existen DTOs "compartidos" entre features.
-3. **Prisma Client es el único punto de acceso a BD permitido.** No se usan raw queries fuera de `prisma/*.service.ts` internos de cada feature.
-4. **Cada feature es dueña de sus propias migraciones conceptuales** (aunque Prisma las unifica en un solo árbol de migraciones).
+2. **Cada módulo tiene su propio `dto/`** — no existen DTOs "compartidos" entre features de negocio.
+3. **Prisma Client es el único punto de acceso a BD permitido** (vía `PrismaService` en `shared/`).
+4. **Prisma unifica migraciones** en un solo árbol bajo `backend/prisma/migrations/`.
+5. **Contratos de dominio** viven en [.spec/features/](../features/) — leer la feature spec antes de cambiar reglas de negocio.
 
 ---
 
@@ -97,23 +82,21 @@ frontend/src/
 
 | Elemento | Convención | Ejemplo |
 |---|---|---|
-| Módulo | `{feature}.module.ts` | `invoices.module.ts` |
-| Controlador | `{feature}.controller.ts` | `invoices.controller.ts` |
-| Servicio | `{feature}.service.ts` | `invoices.service.ts` |
-| DTO | `{verbo}-{feature}.dto.ts` | `create-invoice.dto.ts`, `update-invoice.dto.ts` |
-| Guard | `{nombre}.guard.ts` | `roles.guard.ts` |
-| Decorator | `{nombre}.decorator.ts` | `roles.decorator.ts` |
-| Pipe | `{nombre}.pipe.ts` | `validation.pipe.ts` |
-| Filter | `{nombre}.filter.ts` | `http-exception.filter.ts` |
+| Módulo | `{feature}.module.ts` | `products.module.ts`, `sales.module.ts` |
+| Controlador | `{feature}.controller.ts` | `products.controller.ts` |
+| Servicio | `{feature}.service.ts` | `products.service.ts` |
+| DTO | `{verbo}-{feature}.dto.ts` | `create-product.dto.ts`, `update-product.dto.ts` |
+| Guard | `{nombre}.guard.ts` | `plan-level.guard.ts` |
+| Decorator | `{nombre}.decorator.ts` | `min-level.decorator.ts` |
 
 #### Nombres de endpoints REST
 
 ```
 GET    /api/{feature}           → findAll(query?: QueryDto)
-GET    /api/{feature}/:id       → findOne(id: string)
+GET    /api/{feature}/:id       → findOne(id: string)          # UUID
 POST   /api/{feature}           → create(dto: CreateDto)
-PATCH  /api/{feature}/:id       → update(id: string, dto: UpdateDto)   ← NUNCA PUT para actualizaciones parciales
-DELETE /api/{feature}/:id       → remove(id: string)                   ← Soft-delete o anulación contable, NUNCA DELETE físico
+PATCH  /api/{feature}/:id       → update(id: string, dto: UpdateDto)   ← NUNCA PUT
+DELETE /api/{feature}/:id       → remove(id: string)                   ← Soft-delete / desactivación, NUNCA DELETE físico de filas con historial
 ```
 
 ### Next.js (Frontend)
@@ -122,8 +105,8 @@ DELETE /api/{feature}/:id       → remove(id: string)                   ← Sof
 |---|---|---|
 | Feature page | `{feature}-page.tsx` | `products-page.tsx` |
 | Hook | `use-{feature}.ts` | `use-products.ts` |
-| Model | `{feature}.model.ts` | `product.model.ts` |
-| Service | `{feature}.service.ts` | `products.service.ts` |
+| Model | `{entity}.model.ts` | `product.model.ts` |
+| Service | `{entity}.service.ts` | `product.service.ts` |
 | Componente UI | `{nombre}.tsx` (kebab-case) | `confirm-dialog.tsx`, `slide-form.tsx` |
 
 ---
@@ -140,40 +123,49 @@ DELETE /api/{feature}/:id       → remove(id: string)                   ← Sof
    ```typescript
    // ❌ MAL: servicio acoplado a HTTP
    @Injectable()
-   export class InvoicesService {
-     create(@Req() req: Request, dto: CreateInvoiceDto) { ... }
+   export class SalesService {
+     create(@Req() req: Request, dto: CreateSaleDto) { ... }
    }
    
    // ✅ BIEN: servicio puro, solo lógica de negocio
    @Injectable()
-   export class InvoicesService {
-     create(userId: string, dto: CreateInvoiceDto) { ... }
+   export class SalesService {
+     create(userId: string, dto: CreateSaleDto) { ... }
    }
    ```
 
 3. **En el frontend, los `service.ts` son la única capa que llama a `fetch`/`axios`.**  
-   Los hooks y componentes nunca hacen llamadas HTTP directamente.
+   Los hooks y componentes no deben hacer llamadas HTTP del CRUD principal.  
+   *(Deuda conocida: algunos forms aún cargan catálogos auxiliares vía `apiClient` — migrar a services del feature dueño.)*
 
 4. **Validación de reglas de negocio vive en el backend (NestJS + class-validator).**  
-   El frontend puede tener validación duplicada para UX inmediata, pero la fuente de verdad es el backend.
+   El frontend puede tener validación duplicada (Zod) para UX inmediata, pero la fuente de verdad es el backend.
 
 ---
 
 ## 4. Módulos Core del Sistema
 
-| Módulo | Descripción | Dependencias |
+| Módulo (backend `modules/`) | Descripción | Dependencias típicas |
 |---|---|---|
-| `auth` | Login, registro, JWT, refresh tokens | Ninguna (módulo fundacional) |
-| `users` | CRUD de usuarios, asignación de roles | `auth` |
-| `companies` | Datos fiscales de la empresa (RIF, razón social) | `users` |
-| `products` | Inventario de productos y servicios | `companies` |
-| `customers` | Clientes (naturales y jurídicos) | `companies` |
-| `invoices` | Facturación, notas de crédito/débito, retenciones | `companies`, `customers`, `products` |
-| `pos` | Punto de venta (caja rápida) | `products`, `customers`, `invoices` |
-| `accounting` | Libro diario, mayor, balance | `invoices` |
-| `reports` | Reportes fiscales (IVA, ISLR, Libros IVSS) | `accounting`, `invoices` |
-| `settings` | Configuración general, secuenciales, tasas | `companies` |
+| `auth` | Login, registro, JWT, refresh tokens | — |
+| `users` / `roles` | Usuarios y roles org/system | `auth` |
+| `companies` | Datos fiscales de la empresa (RIF, razón social) | tenant |
+| `products` | Catálogo (precios, tax/brand/category) | `taxes`, `brands`, `categories` |
+| `categories` / `brands` / `taxes` | Taxonomía del catálogo | `products` |
+| `customers` | Clientes | tenant |
+| `suppliers` / `purchase-orders` | Compras | `products`, `suppliers` |
+| `stocks` / `batches` | Inventario y lotes | `products` |
+| `sales` | Ventas / documentos de cobro (no módulo `invoices`) | `products`, `customers` |
+| POS (frontend `features/pos`) | Caja rápida offline-first | `products`, `customers`, `sales`, `sync` |
+| `cash-register` | Apertura/cierre de caja | `sales` |
+| `exchange-rates` / `currencies` | Multi-moneda VES/USD | tenant |
+| `pago-movil` / `payments` / `subscriptions` | Cobros y planes | billing |
+| `reports` / `dashboard` | Reportes y KPIs | `sales`, `products` |
+| `sync` | Sync offline ↔ servidor | catálogo + ventas |
+| `admin` | Panel system (orgs, plans, invites) | `auth` system roles |
+
+Contratos detallados: [.spec/features/](../features/).
 
 ---
 
-*Referencia cruzada: [database.md](database.md) — [security.md](security.md)*
+*Referencia cruzada: [database.md](database.md) — [security.md](security.md) — [features/products.md](../features/products.md)*

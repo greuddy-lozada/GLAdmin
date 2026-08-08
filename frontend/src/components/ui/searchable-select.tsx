@@ -15,6 +15,7 @@ interface SearchableSelectProps<T> {
   getKey: (item: T) => string;
   allowClear?: boolean;
   selectedLabel?: string;
+  disabled?: boolean;
 }
 
 export function SearchableSelect<T>({
@@ -27,6 +28,7 @@ export function SearchableSelect<T>({
   getKey,
   allowClear = true,
   selectedLabel,
+  disabled = false,
 }: SearchableSelectProps<T>) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -50,10 +52,6 @@ export function SearchableSelect<T>({
   }, [value, results, open, getKey]);
 
   const doSearch = useCallback(async (term: string) => {
-    if (!term.trim()) {
-      setResults([]);
-      return;
-    }
     setLoading(true);
     try {
       const data = await searchFn(term.trim());
@@ -67,16 +65,14 @@ export function SearchableSelect<T>({
   }, [searchFn]);
 
   useEffect(() => {
+    if (!open) return;
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (!search.trim()) {
-      setResults([]);
-      return;
-    }
-    debounceRef.current = setTimeout(() => doSearch(search), 300);
+    const delay = search.trim() ? 300 : 0;
+    debounceRef.current = setTimeout(() => doSearch(search), delay);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [search, doSearch]);
+  }, [search, doSearch, open]);
 
   useEffect(() => {
     if (open && inputRef.current) {
@@ -135,15 +131,17 @@ export function SearchableSelect<T>({
     <div ref={rootRef} className="relative">
       <button
         type="button"
-        onClick={() => setOpen(!open)}
+        disabled={disabled}
+        onClick={() => !disabled && setOpen(!open)}
         className={cn(
           'flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none hover:bg-accent hover:text-accent-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-input/30 dark:hover:bg-input/50',
           !selectedItem && 'text-muted-foreground',
+          disabled && 'pointer-events-none opacity-50',
         )}
       >
         <span className="flex-1 truncate text-left">{triggerText}</span>
         <span className="flex items-center gap-1 shrink-0">
-          {allowClear && selectedItem && (
+          {allowClear && selectedItem && !disabled && (
             <span
               role="button"
               tabIndex={-1}
@@ -157,7 +155,7 @@ export function SearchableSelect<T>({
         </span>
       </button>
 
-      {open && (
+      {open && !disabled && (
         <div className="absolute z-50 mt-1 w-full min-w-[200px] rounded-md border bg-popover text-popover-foreground shadow-md">
           <div className="flex items-center border-b px-3">
             <Search className="size-4 shrink-0 text-muted-foreground mr-2" />
@@ -175,12 +173,7 @@ export function SearchableSelect<T>({
             {loading && (
               <div className="px-2 py-4 text-center text-sm text-muted-foreground">{t('common.searching')}</div>
             )}
-            {!loading && !search.trim() && (
-              <div className="px-2 py-4 text-center text-sm text-muted-foreground">
-                {t('common.typeToSearch')}
-              </div>
-            )}
-            {!loading && search.trim() && results.length === 0 && (
+            {!loading && results.length === 0 && (
               <div className="px-2 py-4 text-center text-sm text-muted-foreground">{emptyText}</div>
             )}
             {!loading && results.map((item, i) => (

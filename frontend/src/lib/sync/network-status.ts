@@ -11,6 +11,7 @@ export class NetworkStatus {
   private listeners: Set<NetworkListener> = new Set();
   private pingInterval?: ReturnType<typeof setInterval>;
   private _online: boolean = typeof navigator !== 'undefined' ? navigator.onLine : true;
+  private started = false;
 
   get isOnline() {
     return this._online;
@@ -30,7 +31,8 @@ export class NetworkStatus {
   }
 
   start() {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || this.started) return;
+    this.started = true;
 
     window.addEventListener('online', () => this.setOnline(true));
     window.addEventListener('offline', () => this.setOnline(false));
@@ -56,6 +58,7 @@ export class NetworkStatus {
       clearInterval(this.pingInterval);
       this.pingInterval = undefined;
     }
+    this.started = false;
   }
 }
 

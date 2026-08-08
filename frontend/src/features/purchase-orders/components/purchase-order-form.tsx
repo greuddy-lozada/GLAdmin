@@ -1,7 +1,7 @@
 'use client';
 
 import { type ChangeEvent } from 'react';
-import { Plus, Trash2, Upload, X, ChevronDown, ChevronRight, Package } from 'lucide-react';
+import { Plus, Trash2, Upload, X, ChevronDown, ChevronRight, Package, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,6 +33,7 @@ interface PurchaseOrderFormProps {
   onStatusChange: (status: PurchaseOrderStatus) => void;
   onFileUpload: (e: ChangeEvent<HTMLInputElement>) => void;
   onInlineReceive: (detailId: string) => void;
+  onBack?: () => void;
 }
 
 const STATUS_LABEL_KEY: Record<string, string> = {
@@ -46,7 +47,7 @@ export function PurchaseOrderForm({
   selectedItem, formData, setFormData, error, suppliers, products, exchangeRateDays,
   companies, canEdit, uploading, isPending, inlineReceiveQty, setInlineReceiveQty,
   receiveSubmittingInline, expandedProducts, setExpandedProducts,
-  onSave, onStatusChange, onFileUpload, onInlineReceive,
+  onSave, onStatusChange, onFileUpload, onInlineReceive, onBack,
 }: PurchaseOrderFormProps) {
   const { t, tp } = useI18n();
 
@@ -72,6 +73,23 @@ export function PurchaseOrderForm({
     setFormData({ ...formData, details, ...totals });
   };
 
+  const usdFromVes = (ves: number, rate: number) =>
+    rate > 0 ? ves / rate : 0;
+
+  const applyExchangeRate = (rate: number, patch: Partial<PurchaseOrderFormData> = {}) => {
+    const details = formData.details.map((d) => {
+      if (rate <= 0 || !(d.unitPrice > 0)) return d;
+      const unitPriceUsd = usdFromVes(d.unitPrice, rate);
+      return {
+        ...d,
+        unitPriceUsd,
+        subtotalUsd: d.quantity * unitPriceUsd,
+      };
+    });
+    const totals = recalc(details);
+    setFormData({ ...formData, ...patch, exchangeRate: rate, details, ...totals });
+  };
+
   const updateDetail = (index: number, field: string, value: unknown) => {
     const details = [...formData.details];
     const d = { ...details[index] };
@@ -80,14 +98,33 @@ export function PurchaseOrderForm({
       const product = products.find((p) => p.id === value);
       if (product) {
         d.unitPrice = product.price ?? 0;
-        d.unitPriceUsd = product.priceUsd ?? 0;
-        d.subtotal = (d.quantity || 1) * (product.price ?? 0);
-        d.subtotalUsd = (d.quantity || 1) * (product.priceUsd ?? 0);
+        d.unitPriceUsd =
+          product.priceUsd ?? usdFromVes(product.price ?? 0, formData.exchangeRate);
+        d.subtotal = (d.quantity || 1) * d.unitPrice;
+        d.subtotalUsd = (d.quantity || 1) * d.unitPriceUsd;
       }
     }
-    if (field === 'quantity') { d.quantity = Number(value); d.subtotal = d.quantity * d.unitPrice; d.subtotalUsd = d.quantity * d.unitPriceUsd; }
-    if (field === 'unitPrice') { d.unitPrice = Number(value); d.subtotal = d.quantity * d.unitPrice; if (formData.exchangeRate > 0) { d.unitPriceUsd = d.unitPrice / formData.exchangeRate; d.subtotalUsd = d.subtotal / formData.exchangeRate; } }
-    if (field === 'unitPriceUsd') { d.unitPriceUsd = Number(value); d.subtotalUsd = d.quantity * d.unitPriceUsd; if (formData.exchangeRate > 0) { d.unitPrice = d.unitPriceUsd * formData.exchangeRate; d.subtotal = d.quantity * d.unitPrice; } }
+    if (field === 'quantity') {
+      d.quantity = Number(value);
+      d.subtotal = d.quantity * d.unitPrice;
+      d.subtotalUsd = d.quantity * d.unitPriceUsd;
+    }
+    if (field === 'unitPrice') {
+      d.unitPrice = Number(value);
+      d.subtotal = d.quantity * d.unitPrice;
+      if (formData.exchangeRate > 0) {
+        d.unitPriceUsd = usdFromVes(d.unitPrice, formData.exchangeRate);
+        d.subtotalUsd = d.quantity * d.unitPriceUsd;
+      }
+    }
+    if (field === 'unitPriceUsd') {
+      d.unitPriceUsd = Number(value);
+      d.subtotalUsd = d.quantity * d.unitPriceUsd;
+      if (formData.exchangeRate > 0) {
+        d.unitPrice = d.unitPriceUsd * formData.exchangeRate;
+        d.subtotal = d.quantity * d.unitPrice;
+      }
+    }
     if (field === 'observation') d.observation = value as string;
     details[index] = d;
     const totals = recalc(details);
@@ -110,7 +147,9 @@ export function PurchaseOrderForm({
 
   const { baseAmount, baseAmountUsd, ivaAmount, ivaAmountUsd, amount, amountUsd } = recalc(formData.details);
   const withholdingAmount = formData.applyWithholding ? ivaAmount * (formData.withholdingPercentage / 100) : 0;
+  const withholdingAmountUsd = formData.applyWithholding ? ivaAmountUsd * (formData.withholdingPercentage / 100) : 0;
   const totalToPay = amount - withholdingAmount;
+  const totalToPayUsd = amountUsd - withholdingAmountUsd;
   const hasWithholding = formData.applyWithholding && isWithholdingAgent;
 
   const handleSave = () => {
@@ -128,14 +167,26 @@ export function PurchaseOrderForm({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="px-6 py-4 border-b border-border/50 flex items-center justify-between shrink-0">
-        <div>
-          <h3 className="font-semibold">
+      <div className="px-4 py-3 md:px-6 md:py-4 border-b border-border/50 flex flex-wrap items-center justify-between gap-2 shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          {onBack && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="md:hidden shrink-0"
+              onClick={onBack}
+              aria-label={t('common.back')}
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          )}
+          <h3 className="font-semibold truncate">
             {isEditing ? tp('purchaseOrders.editCode', { code: selectedItem.code || `#${selectedItem.id.slice(0, 8)}` }) : t('purchaseOrders.new')}
           </h3>
         </div>
         {isEditing && !isReadonly && currentTransitions.length > 0 && (
-          <div className="flex gap-1.5">
+          <div className="flex flex-wrap gap-1.5">
             {currentTransitions.map((st) => (
               <Button key={st} size="sm" variant="outline" onClick={() => onStatusChange(st)} disabled={isPending}>
                 {t(STATUS_LABEL_KEY[st] ?? '')}
@@ -145,7 +196,7 @@ export function PurchaseOrderForm({
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-5">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-5">
         {error && (
           <div className="rounded-lg bg-destructive/10 text-destructive text-sm p-3">{error}</div>
         )}
@@ -159,12 +210,14 @@ export function PurchaseOrderForm({
             emptyText={t('common.noResults')}
             searchFn={async (term) => {
               const q = term.toLowerCase();
+              if (!q) return suppliers;
               return suppliers.filter((s) => s.companyName.toLowerCase().includes(q));
             }}
             renderItem={(s) => s.companyName}
             getKey={(s) => s.id}
             allowClear={false}
             selectedLabel={suppliers.find((s) => s.id === formData.idSupplier)?.companyName}
+            disabled={disabled}
           />
         </div>
 
@@ -193,11 +246,14 @@ export function PurchaseOrderForm({
           </div>
           {formData.manualRate ? (
             <Input type="number" step="0.01" value={formData.exchangeRate || ''}
-              onChange={(e) => setFormData({ ...formData, exchangeRate: Number(e.target.value) })} disabled={disabled} />
+              onChange={(e) => applyExchangeRate(Number(e.target.value), { manualRate: true })} disabled={disabled} />
           ) : (
             <Select value={formData.exchangeRateDayId ?? ''} onValueChange={(v) => {
               const er = exchangeRateDays.find((r) => r.id === v);
-              setFormData({ ...formData, exchangeRateDayId: v, exchangeRate: (er?.rateBcvUsd ?? er?.rateParalelo ?? 0) });
+              applyExchangeRate(er?.rateBcvUsd ?? er?.rateParalelo ?? 0, {
+                exchangeRateDayId: v,
+                manualRate: false,
+              });
             }} disabled={disabled}>
               <SelectTrigger><SelectValue placeholder={t('exchangeRates.selectRate')} /></SelectTrigger>
               <SelectContent>
@@ -289,6 +345,7 @@ export function PurchaseOrderForm({
                         emptyText={t('common.noResults')}
                         searchFn={async (term) => {
                           const q = term.toLowerCase();
+                          if (!q) return products;
                           return products.filter((p) => p.name.toLowerCase().includes(q));
                         }}
                         renderItem={(p) => p.name}
@@ -318,19 +375,28 @@ export function PurchaseOrderForm({
         {formData.details.length > 0 && (
           <div className="border border-border/50 rounded-lg p-3 space-y-1.5 bg-muted/20">
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>{t('purchaseOrders.baseAmount')}</span><span className="tabular-nums">Bs. {baseAmount.toFixed(2)}</span>
+              <span>{t('purchaseOrders.baseAmount')}</span>
+              <span className="tabular-nums">Bs. {baseAmount.toFixed(2)} <span className="opacity-70">|</span> $ {baseAmountUsd.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>{t('purchaseOrders.ivaAmount')}</span><span className="tabular-nums">Bs. {ivaAmount.toFixed(2)}</span>
+              <span>{t('purchaseOrders.ivaAmount')}</span>
+              <span className="tabular-nums">Bs. {ivaAmount.toFixed(2)} <span className="opacity-70">|</span> $ {ivaAmountUsd.toFixed(2)}</span>
             </div>
             {hasWithholding && (
               <div className="flex justify-between text-xs text-destructive">
-                <span>{t('purchaseOrders.withholdingAmount')}</span><span className="tabular-nums">-Bs. {withholdingAmount.toFixed(2)}</span>
+                <span>{t('purchaseOrders.withholdingAmount')}</span>
+                <span className="tabular-nums">-Bs. {withholdingAmount.toFixed(2)} <span className="opacity-70">|</span> -$ {withholdingAmountUsd.toFixed(2)}</span>
               </div>
             )}
             <div className="flex justify-between text-sm font-semibold border-t border-border/50 pt-1.5 mt-1">
               <span>{hasWithholding ? t('purchaseOrders.totalToPay') : t('purchaseOrders.field.amount')}</span>
-              <span className="tabular-nums">Bs. {(hasWithholding ? totalToPay : amount).toFixed(2)}</span>
+              <span className="tabular-nums">
+                Bs. {(hasWithholding ? totalToPay : amount).toFixed(2)}
+                {' '}
+                <span className="font-normal text-muted-foreground opacity-70">|</span>
+                {' '}
+                $ {(hasWithholding ? totalToPayUsd : amountUsd).toFixed(2)}
+              </span>
             </div>
           </div>
         )}

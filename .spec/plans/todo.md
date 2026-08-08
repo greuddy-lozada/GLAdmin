@@ -1,8 +1,11 @@
 # Infrastructure & UX Plan — Backlog Técnico ✅ COMPLETADO
 
+> **status:** `done`  
 > **Estado:** ✅ Todos los items implementados (1 abortado por decisión técnica)
 > **Fecha:** Julio 2026
 > **Última actualización:** 18 Julio 2026
+
+> Agentes: no reimplementar. Referencia histórica / operacional si se necesita contexto de Redis/cache.
 
 ---
 

@@ -28,6 +28,7 @@ const METHOD_LABELS: Record<number, string> = {
   [PaymentMethod.Transfer]: 'transferencia',
   [PaymentMethod.Card]: 'tarjeta',
   [PaymentMethod.Mixed]: 'mixto',
+  [PaymentMethod.Credit]: 'credito',
 };
 
 export function ReceiptDialog({ open, onClose, code, items, total, totalUsd, customerName, customerTaxId, payments, exchangeRate }: ReceiptDialogProps) {

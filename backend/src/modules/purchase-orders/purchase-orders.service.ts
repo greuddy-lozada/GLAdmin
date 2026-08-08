@@ -11,6 +11,7 @@ import {
   PurchaseOrderStatus,
   PURCHASE_ORDER_STATUS_META,
 } from '../../common/types/statuses';
+import { ArApStatus, DEFAULT_DUE_DAYS } from '../../common/types/payment-method';
 import { AuditLogService } from '../../modules/audit-log/audit-log.service';
 
 @Injectable()
@@ -403,6 +404,29 @@ export class PurchaseOrdersService {
           where: { id },
           data: { status: PurchaseOrderStatus.RECEIVED },
         });
+        const existingAp = await tx.accountsPayable.findFirst({
+          where: { idPurchaseOrder: id, organizationId: orgId, deletedAt: null },
+        });
+        if (!existingAp) {
+          const po = await tx.purchaseOrder.findFirst({
+            where: { id, organizationId: orgId },
+            select: { amount: true },
+          });
+          const issueDate = new Date();
+          const dueDate = new Date(issueDate);
+          dueDate.setDate(dueDate.getDate() + DEFAULT_DUE_DAYS);
+          await tx.accountsPayable.create({
+            data: {
+              organizationId: orgId,
+              idPurchaseOrder: id,
+              amount: po?.amount ?? 0,
+              credit: 0,
+              issueDate,
+              dueDate,
+              status: ArApStatus.Open,
+            },
+          });
+        }
       }
     });
 

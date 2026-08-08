@@ -1,0 +1,155 @@
+# UI Patterns — Catálogo Adoptado de Cuadra
+
+> **status:** `current` · Última actualización: 2026-08-08  
+> **Propósito:** Qué patrones de UI **usamos**, cuáles **adoptamos después**, y cuáles **rechazamos**.  
+> Tokens, tipografía y grids detallados viven en [design-system.md](design-system.md). Este archivo es la lista operativa para agentes y PRs.
+
+**Regla:** Si inventas un layout/flujo UI nuevo y no está aquí → **añádelo en el mismo PR** (Adopted) o no lo merges.
+
+---
+
+## Cómo aplicar (DoD UI)
+
+Antes de mergear un cambio de pantalla:
+
+1. Elegir plantilla de layout (§ Adopted → Layout).
+2. Cubrir **loading / empty / error** antes de polish visual.
+3. Reutilizar `frontend/src/components/ui/*` — no crear one-offs equivalentes.
+4. i18n (`t`/`tp`) + sin `<h1>` de página (layout dashboard).
+5. Si el patrón es nuevo → actualizar este archivo.
+
+---
+
+## Adopted — Debe usarse
+
+### Layout & CRUD
+
+| Patrón | Cuándo | Canónico | Anti-patrón |
+|---|---|---|---|
+| **Toolbar + DataTable** | Listados admin (productos, clientes, etc.) | `DataTable` + botón crear con `RoleGuard` | Tabla HTML cruda; cards-only en desktop sin motivo |
+| **SlideForm (Sheet)** | Create / edit | `SlideForm` | Modal centrado para formularios largos de CRUD |
+| **ConfirmDialog** | Delete / acciones destructivas | `ConfirmDialog` | `window.confirm`; delete sin confirmación |
+| **Sin H1 de feature** | Toda página dashboard | Título desde `navigationConfig` / layout | Segundo `<h1>` en la feature page |
+| **Contenedor con `max-w-*`** | Formularios y contenido estrecho | `max-w-6xl mx-auto` (listas) / `max-w-4xl` forms densos | `mx-auto` sin `max-w-*` |
+
+### Mobile (< `md` ~768px)
+
+| Patrón | Cuándo | Canónico | Anti-patrón |
+|---|---|---|---|
+| **SlideForm full-bleed** | Create/edit en teléfono | `SlideForm` full viewport; `--panel-offset: 0` bajo `md` | Panel fijo 420–720px + `paddingRight` que aplasta el main |
+| **DataTable → cards** | Listados CRUD | `Column.mobile`: `title` \| `primary` \| `secondary` \| `hidden` \| `action`; auto = 1ª título, 3 primary, resto en “Más” | Volcar todas las columnas; botones de acción como fila label/value |
+| **List → detail** | Splits (pedidos) | Un pane a la vez + botón atrás | `w-[440px]` + form lado a lado sin breakpoint |
+| **POS cart sticky** | Caja en teléfono | Productos scrolleables + carrito sticky / cards (no tabla) | Carrito bajo el fold; tabla de carrito aplastada |
+| **KPI 2-col** | Report viewer / dashboards | `grid-cols-2 md:grid-cols-3\|4` | `grid-cols-3/4` fijos en móvil |
+
+### Feedback & estados
+
+| Patrón | Cuándo | Canónico | Anti-patrón |
+|---|---|---|---|
+| **Skeleton loading** | Fetch inicial de listas/páginas | `Skeleton` / skeleton del DataTable | Spinner a pantalla completa; blanco vacío |
+| **Empty state** | Lista con 0 ítems | `EmptyState` (`components/ui/empty-state.tsx`) + i18n | Texto suelto "No data"; icono solo |
+| **Error inline en form** | Fallo de save/validación | `<Alert variant="destructive">` | Toast de error para fallos de form |
+| **Success via Sileo** | Tras create/update/delete OK | `sileo.success({ description: t('…') })` | Toast de error; éxito solo con Alert |
+| **Optimistic CRUD** | Catálogos estándar | `useOptimisticCrud` | Refetch manual sin feedback |
+
+### Forms
+
+| Patrón | Cuándo | Canónico | Anti-patrón |
+|---|---|---|---|
+| **Stack vertical** | ~90% de formularios | `space-y-4` + campo `space-y-2` (Label + Input) | Multi-columna por defecto |
+| **Pares relacionados inline** | Moneda+monto, costo+margen | `flex items-end gap-3` | Separar campos que se leen juntos |
+| **shadcn controls only** | Todo input | `Input`, `Select`, `Switch`, `Label`, `Button` | `<select>` / `<input>` nativos |
+| **Card muted para cálculo** | Bloques de pricing / totales | `rounded-lg border bg-muted/30 p-4` | Cards anidadas > 2 niveles |
+
+### Navigation & input
+
+| Patrón | Cuándo | Canónico | Anti-patrón |
+|---|---|---|---|
+| **Keyboard-first** | Login, PIN, POS search | `autoFocus` + refocus post-async | Obligar mouse para empezar a escribir |
+| **Hotkeys documentados** | Atajos globales/POS | `useHotkey` + badge/tooltip | Atajos ocultos; interferir con typing en inputs (excepto Escape) |
+| **Escape cierra** | Modales / sheets / dialogs | Cierra el overlay más cercano | Escape sin efecto |
+
+### Visual system (puntero)
+
+Seguir [design-system.md](design-system.md): tokens, tipografía financiera (`tabular-nums`), jerarquía de cards, motion corta, `prefers-reduced-motion`, a11y básica.
+
+---
+
+## Adopt next — Planeado (no inventar one-offs mientras tanto)
+
+Implementar como **componentes compartidos** + actualizar esta sección a Adopted.
+
+| Prioridad | Patrón | Objetivo | Nota de implementación |
+|---|---|---|---|
+| 1 | **EmptyState variants** | `first-run` \| `no-results` \| `error` | Extender `EmptyState` con `variant` + copy/CTA distintos (filtros → “limpiar filtros”) |
+| 2 | **FormField wrapper** | Label + control + hint + error | Un componente para no repetir `space-y-2` / a11y `aria-describedby` |
+| 3 | **DataTable toolbar** | Search + filter chips | Toolbar compartida; chips removibles para filtros activos |
+| 4 | **URL-synced filters** | Vistas compartibles | Query params (`nuqs` o equivalente) en 1–2 módulos piloto |
+| 5 | **POS combobox a11y** | ProductSearch / CustomerSearch | listbox/option, flechas, Enter, Escape; contrato en feature POS |
+| 6 | **Progressive disclosure** | Forms densos (pricing avanzado) | Max 2 niveles; “Más opciones” / override ya existe parcialmente en products |
+
+**Orden de trabajo sugerido:** 1 → 2 → 3 en admin CRUD; 5 en POS; 4 y 6 cuando duela de verdad.
+
+---
+
+## Rejected — No usar en Cuadra
+
+| Patrón | Por qué |
+|---|---|
+| **Wizard / stepper para POS diario** | Fricción en caja; POS es flujo continuo |
+| **Floating labels como default** | Labels fijos arriba son más claros (Baymard) |
+| **Drawers anidados / sheets sobre sheets** | Pierde orientación; max 1 sheet de edición |
+| **Cards > 2 niveles de nesting** | design-system §8.4 |
+| **Dashboard widget soup** | Una sección = un propósito |
+| **Error toasts para validación de form** | Errores van inline |
+| **Hard-coded copy** | Todo user-facing vía i18n |
+| **Módulos UI inventados** (`invoices` page, etc.) | Dominio real: `sales`, `products`, … |
+
+---
+
+## Plantillas de pantalla (elige una)
+
+### A — CRUD admin
+```
+[ Toolbar: Create (RoleGuard) ]
+[ Alert error? ]
+[ DataTable | Skeleton | EmptyState ]
+[ SlideForm panel ]
+[ ConfirmDialog ]
+```
+
+### B — POS / caja (design A — caja rápida)
+```
+[ Search autofocus · ↑↓ Enter · Esc clear ]
+[ Category chips: Todos | … ]
+[ Dense product rows · Cart sticky / right rail ]
+[ Payment / park — keyboard complete ]
+```
+
+### C — Dashboard / KPIs
+```
+[ Grid 12-col o bento ]
+[ Card primaria KPI ]
+[ Opcional: tabla secundaria full-width ]
+```
+
+### D — Settings
+```
+[ Secciones / fieldsets ]
+[ Stack vertical; save explícito ]
+```
+
+---
+
+## Referencias externas (inspiración, no fuente de verdad)
+
+- NN/g progressive disclosure  
+- Baymard form/checkout field minimalism  
+- uxpatterns.dev (checkout, forms)  
+- shadcn Data Table (filter/sort/visibility)
+
+La fuente de verdad de Cuadra es **este archivo + design-system + componentes en `components/ui`**.
+
+---
+
+*Índice: [../README.md](../README.md) · Tokens: [design-system.md](design-system.md) · Código UI: AGENTS.md Component Patterns*

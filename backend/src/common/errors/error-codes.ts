@@ -11,6 +11,7 @@ export const ErrorCodes = {
   SALE_001: 'sales.error.issuedImmutable',
   SALE_002: 'sales.error.notFound',
   SALE_003: 'sales.error.noItems',
+  SALE_004: 'sales.error.creditNeedsCustomer',
   PO_001: 'purchaseOrders.error.receivedImmutable',
   PO_002: 'purchaseOrders.error.notFound',
   PO_003: 'purchaseOrders.error.alreadyReceived',

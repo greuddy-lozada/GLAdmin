@@ -352,7 +352,18 @@ export class SyncService {
             exchangeRate: mutation.data.exchangeRate as number,
             paymentMethod: mutation.data.paymentMethod as number,
             status: mutation.data.status as number,
-            idCustomer: mutation.data.idCustomer as string,
+            idCustomer: mutation.data.idCustomer as string | undefined,
+            totalTax: mutation.data.totalTax as number | undefined,
+            totalTaxUsd: mutation.data.totalTaxUsd as number | undefined,
+            withholdingPercentage: mutation.data.withholdingPercentage as
+              | number
+              | undefined,
+            withholdingAmount: mutation.data.withholdingAmount as
+              | number
+              | undefined,
+            withholdingAmountUsd: mutation.data.withholdingAmountUsd as
+              | number
+              | undefined,
             registerSessionId: mutation.data.registerSessionId as
               | string
               | undefined,
@@ -364,6 +375,10 @@ export class SyncService {
                 unitPriceUsd: number;
                 subtotal: number;
                 subtotalUsd: number;
+                taxName?: string;
+                taxPercentage?: number;
+                taxAmount?: number;
+                taxAmountUsd?: number;
               }>
             ).map((item) => ({
               productId: item.productId,
@@ -372,7 +387,24 @@ export class SyncService {
               unitPriceUsd: item.unitPriceUsd,
               subtotal: item.subtotal,
               subtotalUsd: item.subtotalUsd,
+              taxName: item.taxName,
+              taxPercentage: item.taxPercentage,
+              taxAmount: item.taxAmount,
+              taxAmountUsd: item.taxAmountUsd,
             })),
+            payments: Array.isArray(mutation.data.payments)
+              ? (
+                  mutation.data.payments as Array<{
+                    method: number;
+                    amount: number;
+                    currency: string;
+                  }>
+                ).map((p) => ({
+                  method: p.method,
+                  amount: p.amount,
+                  currency: p.currency,
+                }))
+              : undefined,
           };
 
           const sale = await this.salesService.create(createSaleDto);

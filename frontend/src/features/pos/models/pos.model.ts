@@ -4,6 +4,7 @@ export enum PaymentMethod {
   Transfer = 3,
   Card = 4,
   Mixed = 5,
+  Credit = 6,
 }
 
 export interface CartItem {

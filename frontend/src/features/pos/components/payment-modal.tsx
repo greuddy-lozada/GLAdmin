@@ -21,7 +21,7 @@ import {
 import { useI18n } from '@/i18n';
 import { PaymentMethod, type SalePayment } from '../models/pos.model';
 import { usePosStore } from '@/stores/pos-store';
-import { Banknote, Smartphone, ArrowRightLeft, CreditCard, Plus, X } from 'lucide-react';
+import { Banknote, Smartphone, ArrowRightLeft, CreditCard, HandCoins, Plus, X } from 'lucide-react';
 
 interface PaymentModalProps {
   open: boolean;
@@ -35,6 +35,7 @@ interface PaymentModalProps {
   withholdingAmountUsd?: number;
   netToCollect?: number;
   netToCollectUsd?: number;
+  customerId?: string | null;
   onPayment: (payments: SalePayment[]) => void;
 }
 
@@ -43,6 +44,7 @@ const METHODS = [
   { value: PaymentMethod.PagoMovil, labelKey: 'pos.payment.pagoMovil', Icon: Smartphone },
   { value: PaymentMethod.Transfer, labelKey: 'pos.payment.transfer', Icon: ArrowRightLeft },
   { value: PaymentMethod.Card, labelKey: 'pos.payment.card', Icon: CreditCard },
+  { value: PaymentMethod.Credit, labelKey: 'pos.payment.credit', Icon: HandCoins },
 ] as const;
 
 const CURRENCIES = [
@@ -59,7 +61,7 @@ function methodIcon(method: PaymentMethod) {
 
 export function PaymentModal({
   open, onOpenChange, total, totalUsd, totalTax, totalTaxUsd,
-  exchangeRate, withholdingAmount, netToCollect, netToCollectUsd, onPayment,
+  exchangeRate, withholdingAmount, netToCollect, netToCollectUsd, customerId, onPayment,
 }: PaymentModalProps) {
   const { t } = useI18n();
   const lines = usePosStore((s) => s.paymentLines);
@@ -134,14 +136,25 @@ export function PaymentModal({
     }
   };
 
+  const handleQuickAllCredit = () => {
+    if (collectTotal > 0) {
+      setLines([{ method: PaymentMethod.Credit, amount: collectTotal, currency: 'VES' }]);
+    }
+  };
+
   const handleConfirm = () => {
+    const hasCredit = lines.some((l) => l.method === PaymentMethod.Credit && l.amount > 0);
+    if (hasCredit && !customerId) {
+      setError(t('pos.payment.creditNeedsCustomer'));
+      return;
+    }
     const totalPaid = lines.reduce((sum, l) => {
       if (l.currency === 'VES') return sum + l.amount;
       return sum + l.amount * exchangeRate;
     }, 0);
     const diff = Math.abs(totalPaid - collectTotal);
     if (diff > 0.01) {
-      setError('El total pagado no coincide con el total a cobrar');
+      setError(t('pos.payment.amountMismatch'));
       return;
     }
     setError('');
@@ -203,6 +216,16 @@ export function PaymentModal({
             )}
             <Button variant="outline" size="sm" onClick={handleQuickSplit} disabled={collectTotal <= 0}>
               {t('pos.payment.quickSplit')}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleQuickAllCredit}
+              disabled={collectTotal <= 0 || !customerId}
+              title={!customerId ? t('pos.payment.creditNeedsCustomer') : undefined}
+            >
+              <HandCoins className="h-3.5 w-3.5 mr-1" />
+              {t('pos.payment.quickCredit')}
             </Button>
           </div>
 

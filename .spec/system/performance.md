@@ -19,17 +19,17 @@
 ### Regla anti-N+1
 
 ```typescript
-// ❌ N+1 — una query por cada item
-const invoices = await prisma.invoice.findMany();
-for (const invoice of invoices) {
-  invoice.items = await prisma.invoiceItem.findMany({
-    where: { invoiceId: invoice.id },
+// ❌ N+1 — una query por cada venta
+const sales = await prisma.sale.findMany();
+for (const sale of sales) {
+  sale.details = await prisma.salesDet.findMany({
+    where: { idSale: sale.id },
   });
 }
 
-// ✅ Carga ansiosa con include
-const invoices = await prisma.invoice.findMany({
-  include: { items: true },
+// ✅ include
+const sales = await prisma.sale.findMany({
+  include: { details: true },
 });
 ```
 
@@ -98,7 +98,7 @@ const invoices = await prisma.invoice.findMany({
 
 | Patrón | Ejemplo |
 |---|---|
-| `WHERE company_id = X AND status = Y` | `idx_invoices_company_status` |
+| `WHERE organization_id = X AND status = Y` | índice compuesto en `sales` |
 | `WHERE rif = X` | `uq_customers_company_rif` |
 | `WHERE email = X` (login) | `uq_users_email` |
 | `ORDER BY created_at DESC` | `idx_{tabla}_created_at` |

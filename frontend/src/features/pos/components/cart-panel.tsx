@@ -58,7 +58,47 @@ export function CartPanel({
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        <table className="w-full">
+        <div className="md:hidden divide-y divide-border/50">
+          {items.map((item) => (
+            <div key={item.productId} className="p-3 space-y-2">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium leading-tight">{item.name}</p>
+                  {item.taxName && (
+                    <p className="text-[10px] text-muted-foreground">{item.taxName} ({item.taxPercentage}%)</p>
+                  )}
+                </div>
+                <Button size="sm" variant="ghost" className="h-7 w-7 p-0 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => onRemove(item.productId)}>
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-0.5">
+                  <Button size="sm" variant="outline" className="h-8 w-8 p-0" onClick={() => onUpdateQuantity(item.productId, item.quantity - 1)}>
+                    <Minus className="h-3 w-3" />
+                  </Button>
+                  <Input
+                    type="number"
+                    className="h-8 w-14 text-center text-xs [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    value={item.quantity}
+                    min={1}
+                    onChange={(e) => { const v = parseInt(e.target.value, 10); if (v > 0) onUpdateQuantity(item.productId, v); }}
+                  />
+                  <Button size="sm" variant="outline" className="h-8 w-8 p-0" onClick={() => onUpdateQuantity(item.productId, item.quantity + 1)}>
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold tabular-nums">Bs. {item.subtotal.toFixed(2)}</p>
+                  {item.subtotalUsd > 0 && (
+                    <p className="text-[10px] text-muted-foreground tabular-nums">$ {item.subtotalUsd.toFixed(2)}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <table className="hidden md:table w-full">
           <tbody>
             {items.map((item, idx) => (
               <tr key={item.productId} className="border-b border-border/50 last:border-0 hover:bg-muted/30">

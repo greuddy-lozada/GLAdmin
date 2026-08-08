@@ -181,6 +181,167 @@ function stockMovementsQuery(
   `;
 }
 
+/** IVA del período — excluye anuladas. Incluye DRAFT mientras ISSUED no sea el default del POS. */
+function fiscalIvaQuery(
+  orgId: string,
+  params: Record<string, unknown>,
+  prisma: PrismaService,
+) {
+  const dateFrom = params.dateFrom as string | undefined;
+  const dateTo = params.dateTo as string | undefined;
+  const dateFilter =
+    dateFrom && dateTo
+      ? Prisma.sql`AND s.date >= ${dateFrom}::timestamptz AND s.date < (${dateTo}::date + interval '1 day')`
+      : Prisma.sql``;
+
+  return prisma.$queryRaw`
+    SELECT
+      COALESCE(sd.tax_name, 'Sin impuesto') AS tax_name,
+      COALESCE(sd.tax_percentage, 0) AS tax_percentage,
+      COUNT(DISTINCT s.id)::int AS sales_count,
+      COALESCE(SUM(sd.subtotal), 0) AS taxable_base,
+      COALESCE(SUM(sd.tax_amount), 0) AS tax_amount,
+      COALESCE(SUM(sd.subtotal), 0) + COALESCE(SUM(sd.tax_amount), 0) AS total_with_tax
+    FROM sale_details sd
+    JOIN sales s ON s.id = sd.id_sale
+    WHERE s.organization_id = ${orgId}::uuid
+      AND s.deleted_at IS NULL
+      AND (s.status IS NULL OR s.status <> 'ANNULLED')
+      ${dateFilter}
+    GROUP BY sd.tax_name, sd.tax_percentage
+    ORDER BY tax_percentage DESC, tax_name
+  `;
+}
+
+function fiscalWithholdingQuery(
+  orgId: string,
+  params: Record<string, unknown>,
+  prisma: PrismaService,
+) {
+  const dateFrom = params.dateFrom as string | undefined;
+  const dateTo = params.dateTo as string | undefined;
+  const dateFilter =
+    dateFrom && dateTo
+      ? Prisma.sql`AND w.created_at >= ${dateFrom}::timestamptz AND w.created_at < (${dateTo}::date + interval '1 day')`
+      : Prisma.sql``;
+
+  return prisma.$queryRaw`
+    SELECT
+      w.id,
+      COALESCE(sup.company_name, '') AS supplier_name,
+      COALESCE(sup.tax_id, '') AS supplier_rif,
+      w.type,
+      w.percentage,
+      w.base_amount,
+      w.withheld_amount,
+      COALESCE(w.document_number, '') AS document_number,
+      COALESCE(w.period, '') AS period,
+      w.created_at::date AS date
+    FROM withholding_records w
+    JOIN suppliers sup ON sup.id = w.id_supplier
+    WHERE w.organization_id = ${orgId}::uuid
+      AND w.deleted_at IS NULL
+      AND (sup.deleted_at IS NULL)
+      ${dateFilter}
+    ORDER BY w.created_at DESC
+    LIMIT 200
+  `;
+}
+
+function financialArQuery(
+  orgId: string,
+  params: Record<string, unknown>,
+  prisma: PrismaService,
+) {
+  const dateFrom = params.dateFrom as string | undefined;
+  const dateTo = params.dateTo as string | undefined;
+  const dateFilter =
+    dateFrom && dateTo
+      ? Prisma.sql`AND COALESCE(ar.issue_date, ar.created_at) >= ${dateFrom}::timestamptz AND COALESCE(ar.issue_date, ar.created_at) < (${dateTo}::date + interval '1 day')`
+      : Prisma.sql``;
+
+  return prisma.$queryRaw`
+    SELECT
+      ar.id,
+      COALESCE(c.first_name || ' ' || c.last_name, '—') AS customer_name,
+      COALESCE(s.code, '') AS sale_code,
+      ar.issue_date::date AS issue_date,
+      ar.due_date::date AS due_date,
+      COALESCE(ar.amount, 0) AS amount,
+      COALESCE(ar.credit, 0) AS credit,
+      COALESCE(ar.amount, 0) - COALESCE(ar.credit, 0) AS balance,
+      ar.status,
+      CASE
+        WHEN ar.due_date IS NULL THEN 'open'
+        WHEN ar.due_date::date < CURRENT_DATE AND (COALESCE(ar.amount, 0) - COALESCE(ar.credit, 0)) > 0 THEN 'overdue'
+        ELSE 'current'
+      END AS aging_bucket
+    FROM accounts_receivable ar
+    LEFT JOIN sales s ON s.id = ar.id_sale
+    LEFT JOIN customers c ON c.id = s.id_customer
+    WHERE ar.organization_id = ${orgId}::uuid
+      AND ar.deleted_at IS NULL
+      ${dateFilter}
+    ORDER BY ar.due_date ASC NULLS LAST, ar.created_at DESC
+    LIMIT 200
+  `;
+}
+
+function financialApQuery(
+  orgId: string,
+  params: Record<string, unknown>,
+  prisma: PrismaService,
+) {
+  const dateFrom = params.dateFrom as string | undefined;
+  const dateTo = params.dateTo as string | undefined;
+  const dateFilter =
+    dateFrom && dateTo
+      ? Prisma.sql`AND COALESCE(ap.issue_date, ap.created_at) >= ${dateFrom}::timestamptz AND COALESCE(ap.issue_date, ap.created_at) < (${dateTo}::date + interval '1 day')`
+      : Prisma.sql``;
+
+  return prisma.$queryRaw`
+    SELECT
+      ap.id,
+      COALESCE(sup.company_name, '') AS supplier_name,
+      COALESCE(sup.tax_id, '') AS supplier_rif,
+      COALESCE(po.code, '') AS po_code,
+      ap.issue_date::date AS issue_date,
+      ap.due_date::date AS due_date,
+      COALESCE(ap.amount, 0) AS amount,
+      COALESCE(ap.credit, 0) AS credit,
+      COALESCE(ap.amount, 0) - COALESCE(ap.credit, 0) AS balance,
+      ap.status,
+      CASE
+        WHEN ap.due_date IS NULL THEN 'open'
+        WHEN ap.due_date::date < CURRENT_DATE AND (COALESCE(ap.amount, 0) - COALESCE(ap.credit, 0)) > 0 THEN 'overdue'
+        ELSE 'current'
+      END AS aging_bucket
+    FROM accounts_payable ap
+    JOIN purchase_orders po ON po.id = ap.id_purchase_order
+    JOIN suppliers sup ON sup.id = po.id_supplier
+    WHERE ap.organization_id = ${orgId}::uuid
+      AND ap.deleted_at IS NULL
+      ${dateFilter}
+    ORDER BY ap.due_date ASC NULLS LAST, ap.created_at DESC
+    LIMIT 200
+  `;
+}
+
+const DATE_PARAMS: ParamField[] = [
+  {
+    key: 'dateFrom',
+    label: 'reports.params.dateFrom',
+    type: 'date',
+    required: false,
+  },
+  {
+    key: 'dateTo',
+    label: 'reports.params.dateTo',
+    type: 'date',
+    required: false,
+  },
+];
+
 export const reportRegistry: ReportDefinition[] = [
   {
     type: 'sales_summary',
@@ -291,5 +452,37 @@ export const reportRegistry: ReportDefinition[] = [
       },
     ],
     query: stockMovementsQuery,
+  },
+  {
+    type: 'fiscal_iva',
+    category: 'fiscal',
+    name: 'reports.types.fiscalIva',
+    description: 'reports.types.fiscalIvaDesc',
+    parameters: DATE_PARAMS,
+    query: fiscalIvaQuery,
+  },
+  {
+    type: 'fiscal_withholding',
+    category: 'fiscal',
+    name: 'reports.types.fiscalWithholding',
+    description: 'reports.types.fiscalWithholdingDesc',
+    parameters: DATE_PARAMS,
+    query: fiscalWithholdingQuery,
+  },
+  {
+    type: 'financial_ar',
+    category: 'financial',
+    name: 'reports.types.financialAr',
+    description: 'reports.types.financialArDesc',
+    parameters: DATE_PARAMS,
+    query: financialArQuery,
+  },
+  {
+    type: 'financial_ap',
+    category: 'financial',
+    name: 'reports.types.financialAp',
+    description: 'reports.types.financialApDesc',
+    parameters: DATE_PARAMS,
+    query: financialApQuery,
   },
 ];

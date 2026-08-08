@@ -8,11 +8,21 @@
 
 ## Project Rules (`.spec/`)
 
-El directorio `.spec/` es la fuente de verdad del proyecto. Contiene especificaciones de sistema, negocio, UI/UX y DevOps.
+El directorio `.spec/` es la fuente de verdad del proyecto. Contiene especificaciones de sistema, negocio, features, UI/UX y DevOps.
 
-**Cuando el usuario diga "lee las reglas del proyecto" / "read the project rules", lee TODOS los archivos bajo `.spec/` recursivamente al inicio de la sesión (excluyendo `.spec/audit/`).**
+### Qué leer (lectura dirigida — obligatorio)
 
-Mapa completo de documentos en [.spec/README.md](.spec/README.md).
+1. [.spec/README.md](.spec/README.md) — índice + jerarquía de verdad.  
+2. Este archivo (`AGENTS.md`) — patrones de código.  
+3. Si tocas un módulo con feature spec → [.spec/features/{módulo}.md](features/) (`products`, `pos`, `sales`, `sync`, `reports`).
+4. Según la tarea: `system/architecture.md`, `system/database.md`, `system/security.md`, `system/multi-tenancy.md`, `system/plan-gating.md`, `system/api-conventions.md`.  
+5. **UI / pantallas:** [UI-UX/patterns.md](UI-UX/patterns.md) (qué layout/estado usar) + [UI-UX/design-system.md](UI-UX/design-system.md) (tokens).
+
+**Cuando el usuario diga "lee las reglas del proyecto" / "read the project rules":** lee documentos marcados `current` bajo `.spec/` **excluyendo** `.spec/audit/` y planes `obsolete`. No leas planes `done`/`obsolete` salvo que la tarea sea histórica.
+
+**Conflictos:** feature spec > system > UI patterns/design-system > business roadmap > plans. Actualiza feature spec y/o `UI-UX/patterns.md` en el mismo PR que cambia dominio o inventa un patrón UI.
+
+Mapa completo: [.spec/README.md](.spec/README.md).
 
 ---
 
@@ -82,14 +92,20 @@ Errors are displayed via inline `<Alert variant="destructive">` in the form, NOT
 
 ## Component Patterns
 
+Catálogo canónico de layouts/estados: [.spec/UI-UX/patterns.md](UI-UX/patterns.md).  
+No inventar pantallas fuera de Adopted; si hace falta un patrón nuevo, documentarlo ahí en el mismo PR.
+
 ### Feature page structure
 ```
 frontend/src/features/{module}/
   components/{module}-page.tsx   → Main page component
   hooks/use-{module}.ts          → Data fetching hook
-  models/{module}.model.ts       → TypeScript interfaces
-  services/{module}.service.ts   → API calls
+  models/{entity}.model.ts       → Zod/TS models (ej. product.model.ts)
+  services/{entity}.service.ts   → API calls (ej. product.service.ts)
+
+backend/src/modules/{module}/    → NestJS vertical slice (NO backend/src/features/)
 ```
+Dominio de ventas = módulo `sales` (no inventar `invoices`). Contratos: `.spec/features/`.
 
 ### DataTable columns
 ```tsx
@@ -164,7 +180,7 @@ const columns: Column<Entity>[] = [
 
 - **Edge case thinking.** Before merging, ask: "What if the user clicks twice? What if the network drops mid-upload? What if the input is empty, negative, or absurdly large?"
 - **Production thinking.** Code for failure. Assume the database will go down, the third-party API will timeout, and the user's connection will drop. Handle those paths explicitly.
-- **Technical debt is tracked.** Shortcuts taken to ship faster must be written down in ORCHESTRATOR.md. Untracked debt breaks systems silently.
+- **Technical debt is tracked.** Shortcuts taken to ship faster must be written down (prefer `.spec/` notes or project debt log under `docs/`). Untracked debt breaks systems silently.
 - **Right-sized prompting.** Break work into the smallest meaningful units. Ask for one function, one component, one endpoint — not an entire module.
 - **Blast radius.** Before changing a function, ask: "How many other features will break if this fails?" Prefer isolated, narrow-impact code.
 - **Documentation as you go.** Record architectural decisions, API structures, and environment setups while the context is fresh.

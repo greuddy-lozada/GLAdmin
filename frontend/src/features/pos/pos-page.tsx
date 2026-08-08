@@ -61,7 +61,6 @@ export default function PosPage() {
   const [receipt, setReceipt] = useState<ReceiptData>({ open: false, code: '', items: [], total: 0, totalUsd: 0, payments: [], exchangeRate: 0 });
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
-  const [quickAddKey, setQuickAddKey] = useState(0);
   const [gridRefresh, setGridRefresh] = useState(0);
   const [detailSale, setDetailSale] = useState<LocalSale | null>(null);
   const [parkedSheetOpen, setParkedSheetOpen] = useState(false);
@@ -85,7 +84,6 @@ export default function PosPage() {
   const customerSearchRef = useRef<HTMLInputElement>(null);
 
   const openQuickAdd = () => {
-    setQuickAddKey(k => k + 1);
     setQuickAddOpen(true);
   };
 
@@ -174,7 +172,7 @@ export default function PosPage() {
 
   return (
     <>
-      <div className="flex flex-col h-[calc(100vh-8rem)] pb-6">
+      <div className="flex flex-col h-[calc(100dvh-8rem)] pb-6 md:h-[calc(100vh-8rem)]">
       <PosToolbar exchangeRate={exchangeRate} onPark={handlePark} onUndo={undoLastItem} canUndo={canUndo} hasItems={cart.length > 0} onOpenParked={() => setParkedSheetOpen(true)} onOpenHistory={() => setHistorySheetOpen(true)} parkedCount={parkedCount} onCloseRegister={() => setCloseRegisterOpen(true)} activeSession={!!activeSession} />
 
       <CustomerBar
@@ -189,13 +187,13 @@ export default function PosPage() {
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4 flex-1 min-h-0">
-        <div className="lg:col-span-2 h-full min-h-0 flex flex-col">
-          <div className="flex-1 overflow-y-auto pr-1 min-h-0">
+        <div className="lg:col-span-2 h-full min-h-0 flex flex-col order-1">
+          <div className="flex-1 min-h-0 max-h-[45vh] lg:max-h-none">
             <ProductGrid ref={productGridRef} onAddToCart={addToCart} refreshTrigger={gridRefresh} />
           </div>
         </div>
 
-        <div className="lg:col-span-1 flex flex-col min-h-0">
+        <div className="lg:col-span-1 flex flex-col min-h-0 order-2 sticky bottom-0 lg:static bg-background z-10 border-t lg:border-t-0 border-border/50 pt-2 lg:pt-0 -mx-1 px-1">
           <div className="flex-1 min-h-0">
             <CartPanel
               items={cart}
@@ -249,6 +247,7 @@ export default function PosPage() {
         withholdingAmountUsd={withholdingAmountUsd}
         netToCollect={netToCollect}
         netToCollectUsd={netToCollectUsd}
+        customerId={customerId}
         onPayment={handlePayment}
       />
 
@@ -266,7 +265,7 @@ export default function PosPage() {
       />
     </div>
 
-    <QuickAddCustomer key={quickAddKey} open={quickAddOpen} onOpenChange={setQuickAddOpen} onCreated={handleQuickAddCustomer} />
+    <QuickAddCustomer open={quickAddOpen} onOpenChange={setQuickAddOpen} onCreated={handleQuickAddCustomer} />
     <SaleDetailModal sale={detailSale} open={detailSale !== null} onOpenChange={(o) => !o && setDetailSale(null)} />
     <RegisterSelector open={selectRegisterOpen} onSuccess={() => setSelectRegisterOpen(false)} />
     <CloseRegisterDialog open={closeRegisterOpen} onClose={() => setCloseRegisterOpen(false)} onSuccess={() => setCloseRegisterOpen(false)} />

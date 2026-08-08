@@ -23,6 +23,7 @@ const METHOD_LABELS: Record<number, string> = {
   [PaymentMethod.Transfer]: 'Transferencia',
   [PaymentMethod.Card]: 'Tarjeta',
   [PaymentMethod.Mixed]: 'Mixto',
+  [PaymentMethod.Credit]: 'Crédito',
 };
 
 export function SaleDetailModal({ sale, open, onOpenChange }: SaleDetailModalProps) {

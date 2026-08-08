@@ -1,6 +1,7 @@
 import es from './locales/es.json';
 import en from './locales/en.json';
 
+/** Nested locale dictionaries (es default). */
 type LocaleMap = { [key: string]: string | Record<string, unknown> };
 type Locale = 'es' | 'en';
 

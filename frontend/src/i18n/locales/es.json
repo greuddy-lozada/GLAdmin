@@ -23,6 +23,8 @@
     "searching": "Buscando...",
     "typeToSearch": "Escribe para buscar",
     "close": "Cerrar",
+    "more": "Más",
+    "back": "Atrás",
     "refresh": "Actualizar",
     "rowsPerPage": "Filas por página:",
     "previous": "Anterior",
@@ -81,6 +83,33 @@
     "productsDesc": "Productos activos",
     "customersDesc": "Clientes activos",
     "suppliersDesc": "Proveedores activos",
+    "kpi": {
+      "salesToday": "Ventas hoy",
+      "revenueToday": "Ingresos hoy",
+      "avgTicket": "Ticket promedio",
+      "lowStock": "Stock bajo",
+      "products": "productos",
+      "vsYesterday": "vs ayer"
+    },
+    "live": {
+      "connected": "En vivo",
+      "reconnecting": "Reconectando...",
+      "idle": "Desconectado",
+      "timezone": "Zona: {{tz}}",
+      "salesFeed": "Ventas en vivo",
+      "emptySales": "Sin ventas recientes",
+      "goPos": "Ir al POS",
+      "justNow": "ahora",
+      "minutesAgo": "hace {{n}}m",
+      "hoursAgo": "hace {{n}}h"
+    },
+    "arap": {
+      "title": "CXC / CXP",
+      "receivable": "Por cobrar",
+      "receivableOverdue": "CXC vencido",
+      "payable": "Por pagar",
+      "payableDue7d": "CXP vence 7d"
+    },
     "analytics": {
       "recentOrders": "Órdenes Recientes",
       "topProducts": "Top Productos",
@@ -131,6 +160,8 @@
     "billing": "Facturación",
     "syncConflicts": "Conflictos de sincronización",
     "reports": "Reportes",
+    "accountsReceivable": "CXC",
+    "accountsPayable": "CXP",
     "org": "Organización",
     "logout": "Cerrar Sesión",
     "profile": "Perfil",
@@ -200,6 +231,76 @@
       "save": "Error al guardar cliente",
       "load": "Error al cargar clientes",
       "delete": "Error al eliminar cliente"
+    }
+  },
+  "accountsReceivable": {
+    "title": "Cuentas por cobrar",
+    "empty": "No hay cuentas por cobrar",
+    "abono": "Abonar",
+    "abonoTitle": "Registrar abono",
+    "paymentRegistered": "Abono registrado",
+    "notePlaceholder": "Nota opcional",
+    "filter": {
+      "open": "Abiertas",
+      "overdue": "Vencidas",
+      "paid": "Pagadas",
+      "all": "Todas"
+    },
+    "status": {
+      "open": "Abierta",
+      "paid": "Pagada"
+    },
+    "field": {
+      "customer": "Cliente",
+      "sale": "Venta",
+      "amount": "Monto",
+      "credit": "Abonado",
+      "balance": "Saldo",
+      "dueDate": "Vence",
+      "status": "Estado",
+      "abonoAmount": "Monto del abono",
+      "note": "Nota"
+    },
+    "error": {
+      "load": "Error al cargar CXC",
+      "payment": "Error al registrar abono",
+      "invalidAmount": "Monto inválido",
+      "exceedsBalance": "El abono supera el saldo"
+    }
+  },
+  "accountsPayable": {
+    "title": "Cuentas por pagar",
+    "empty": "No hay cuentas por pagar",
+    "abono": "Pagar",
+    "abonoTitle": "Registrar pago",
+    "paymentRegistered": "Pago registrado",
+    "notePlaceholder": "Nota opcional",
+    "filter": {
+      "open": "Abiertas",
+      "overdue": "Vencidas",
+      "paid": "Pagadas",
+      "all": "Todas"
+    },
+    "status": {
+      "open": "Abierta",
+      "paid": "Pagada"
+    },
+    "field": {
+      "supplier": "Proveedor",
+      "purchaseOrder": "Pedido",
+      "amount": "Monto",
+      "credit": "Pagado",
+      "balance": "Saldo",
+      "dueDate": "Vence",
+      "status": "Estado",
+      "abonoAmount": "Monto del pago",
+      "note": "Nota"
+    },
+    "error": {
+      "load": "Error al cargar CXP",
+      "payment": "Error al registrar pago",
+      "invalidAmount": "Monto inválido",
+      "exceedsBalance": "El pago supera el saldo"
     }
   },
   "suppliers": {
@@ -569,6 +670,7 @@
     "completed": "Venta completada exitosamente",
     "loading": "Cargando POS...",
     "searchProducts": "Buscar productos...",
+    "allCategories": "Todos",
     "cart": {
       "title": "Carrito",
       "empty": "El carrito está vacío",
@@ -589,6 +691,7 @@
       "pagoMovil": "Pago Móvil",
       "transfer": "Transferencia",
       "card": "Tarjeta",
+      "credit": "Crédito",
       "customer": "Cliente",
       "searchCustomer": "Buscar cliente...",
       "noCustomer": "Sin cliente",
@@ -610,7 +713,10 @@
       "add": "Agregar",
       "quickCashVes": "Todo efectivo",
       "quickCashUsd": "Todo efectivo USD",
-      "quickSplit": "Mitad y mitad"
+      "quickSplit": "Mitad y mitad",
+      "quickCredit": "Todo a crédito",
+      "creditNeedsCustomer": "Selecciona un cliente para vender a crédito",
+      "amountMismatch": "El total pagado no coincide con el total a cobrar"
     },
     "receipt": {
       "title": "Venta completada",
@@ -1103,7 +1209,9 @@
     "noTypesForCategory": "No hay reportes disponibles en esta categoría",
     "categories": {
       "sales": "Ventas",
-      "inventory": "Inventario"
+      "inventory": "Inventario",
+      "fiscal": "Fiscal",
+      "financial": "Financiero"
     },
     "presets": {
       "today": "Hoy",
@@ -1138,7 +1246,15 @@
       "inventoryStatus": "Estado de Inventario",
       "inventoryStatusDesc": "Niveles de stock, valor en precio y productos con stock bajo",
       "stockMovements": "Movimientos de Inventario",
-      "stockMovementsDesc": "Detalle de entradas y salidas de inventario por producto y lote"
+      "stockMovementsDesc": "Detalle de entradas y salidas de inventario por producto y lote",
+      "fiscalIva": "IVA del período",
+      "fiscalIvaDesc": "Base imponible e impuesto por alícuota (gestión; no es libro SENIAT)",
+      "fiscalWithholding": "Retenciones",
+      "fiscalWithholdingDesc": "Retenciones registradas por proveedor y período",
+      "financialAr": "Cuentas por cobrar",
+      "financialArDesc": "Saldos por cobrar con vencimiento y antigüedad",
+      "financialAp": "Cuentas por pagar",
+      "financialApDesc": "Saldos por pagar a proveedores con vencimiento"
     },
     "params": {
       "dateFrom": "Fecha Desde",
@@ -1180,7 +1296,28 @@
       "totalMovements": "Total Movimientos",
       "period": "Período",
       "generatedAt": "Generado",
-      "id": "ID Reporte"
+      "id": "ID Reporte",
+      "taxableBase": "Base imponible",
+      "totalWithTax": "Total c/IVA",
+      "taxBreakdown": "Desglose por alícuota",
+      "taxName": "Impuesto",
+      "taxRate": "Alícuota",
+      "supplier": "Proveedor",
+      "rif": "RIF",
+      "withholdingType": "Tipo retención",
+      "withheldAmount": "Monto retenido",
+      "documentNumber": "Nº documento",
+      "records": "Registros",
+      "saleCode": "Cód. venta",
+      "poCode": "Cód. pedido",
+      "issueDate": "Emisión",
+      "dueDate": "Vencimiento",
+      "credit": "Abonado",
+      "balance": "Saldo",
+      "aging": "Antigüedad",
+      "agingOpen": "Abierto",
+      "agingCurrent": "Al día",
+      "agingOverdue": "Vencido"
     },
     "charts": {
       "monthlySales": "Ventas por Mes"

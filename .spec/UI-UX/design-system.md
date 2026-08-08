@@ -1,7 +1,9 @@
 # Design System — Sistema de Diseño de Cuadra
 
+> **status:** `current`  
 > **Stack de UI:** Tailwind CSS v4 + shadcn/ui v4 + motion + lucide-react  
-> **Principio rector:** Consistencia visual absoluta. Cada pantalla debe sentirse parte del mismo producto.
+> **Principio rector:** Consistencia visual absoluta. Cada pantalla debe sentirse parte del mismo producto.  
+> **Patrones de pantalla (CRUD, empty, POS, rejected):** ver [patterns.md](patterns.md) antes de diseñar una vista nueva.
 
 ---
 
@@ -433,7 +435,7 @@ Para optimizar la comprensión lectora, limitar el ancho de bloques de texto:
 const columns: Column<Invoice>[] = [
   {
     field: 'total',
-    headerName: t('invoices.field.total'),
+    headerName: t('sales.field.total'),
     render: (row) => (
       <span className="font-mono tabular-nums">
         Bs. {row.total.toFixed(2)}

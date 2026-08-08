@@ -17,7 +17,7 @@ import { SyncIndicator } from '@/components/sync-indicator';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { OrgSwitcher } from '@/components/ui/org-switcher';
 import { VisitedTabs } from '@/features/visited-tabs/visited-tabs';
-import { LayoutDashboard, Users, UserCog, Truck, Building2, Package, Receipt, Tags, Store, ShoppingCart, DollarSign, ShieldCheck, Settings, CreditCard, Mail, ArrowLeftRight, Wallet, BarChart3, Banknote, ChevronDown, ChevronRight, AlertCircle } from 'lucide-react';
+import { LayoutDashboard, Users, UserCog, Truck, Building2, Package, Receipt, Tags, Store, ShoppingCart, DollarSign, ShieldCheck, Settings, CreditCard, Mail, ArrowLeftRight, Wallet, BarChart3, Banknote, HandCoins, ChevronDown, ChevronRight, AlertCircle } from 'lucide-react';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   dashboard: LayoutDashboard,
@@ -30,6 +30,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   batches: Tags,
   stocks: Store,
   purchaseOrders: ShoppingCart,
+  accountsPayable: Wallet,
   exchangeRates: DollarSign,
   roles: ShieldCheck,
   adminOrganizations: Building2,
@@ -44,8 +45,8 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   syncConflicts: AlertCircle,
   reports: BarChart3,
   cashRegisters: Banknote,
+  accountsReceivable: HandCoins,
 };
-
 const groupIconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   compras: ShoppingCart,
   ventas: UserCog,
@@ -119,7 +120,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     .filter((group) => group.items.length > 0);
 
   const currentPage = navigationConfig.find((item) => pathname.startsWith(item.path));
-  const pageTitle = currentPage ? t(`nav.${currentPage.key}`) : '';
+  const pageTitle = currentPage ? t(currentPage.label) : '';
   const showWelcome = pathname === '/dashboard';
 
   const accessiblePaths = new Set<string>();
@@ -205,7 +206,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                               }`}
                             >
                               {(() => { const Icon = iconMap[item.key] || LayoutDashboard; return <Icon className="h-5 w-5 shrink-0 text-muted-foreground" />; })()}
-                              <span className="group-hover/sidebar:translate-x-1 transition duration-150">{t(`nav.${item.key}`)}</span>
+                              <span className="group-hover/sidebar:translate-x-1 transition duration-150">{t(item.label)}</span>
                             </Link>
                           );
                         })}
@@ -221,7 +222,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                           <SidebarLink
                             key={item.path}
                             link={{
-                              label: t(`nav.${item.key}`),
+                              label: t(item.label),
                               href: item.path,
                               icon: <Icon className="h-5 w-5 shrink-0 text-muted-foreground" />,
                             }}

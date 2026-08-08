@@ -30,6 +30,51 @@ const TOKEN_KEY = 'accessToken';
 const REFRESH_KEY = 'refreshToken';
 const USER_KEY = 'user';
 const ORG_ID_KEY = 'currentOrgId';
+const ORG_DETAIL_KEY = 'currentOrg';
+
+function readStoredOrg(): OrganizationDetail | null {
+  try {
+    const raw = localStorage.getItem(ORG_DETAIL_KEY);
+    return raw ? (JSON.parse(raw) as OrganizationDetail) : null;
+  } catch {
+    return null;
+  }
+}
+
+function persistOrg(org: OrganizationDetail) {
+  localStorage.setItem(ORG_ID_KEY, String(org.id));
+  localStorage.setItem(ORG_DETAIL_KEY, JSON.stringify(org));
+}
+
+function clearSessionStorage() {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(REFRESH_KEY);
+  localStorage.removeItem(USER_KEY);
+  localStorage.removeItem(ORG_ID_KEY);
+  localStorage.removeItem(ORG_DETAIL_KEY);
+}
+
+/** True when the server rejected credentials (do not keep a soft offline session). */
+function isAuthRejected(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const status = (error as { response?: { status?: number } }).response?.status;
+  return status === 401 || status === 403;
+}
+
+/** Network / unreachable — keep local session for POS. */
+function isLikelyOfflineFailure(error: unknown): boolean {
+  if (!networkStatus.isOnline) return true;
+  if (!error || typeof error !== 'object') return true;
+  const e = error as { code?: string; response?: unknown };
+  if (e.response) return false;
+  return (
+    e.code === 'ERR_NETWORK' ||
+    e.code === 'ECONNABORTED' ||
+    e.code === 'ECONNREFUSED' ||
+    e.code === 'ETIMEDOUT' ||
+    !e.code
+  );
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -43,6 +88,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshTimer = useRef<((rt: string, ei: number) => void) | null>(null);
 
+  const resumeOfflineSession = useCallback(async (markOffline = true): Promise<boolean> => {
+    const savedUser = localStorage.getItem(USER_KEY);
+    if (!savedUser) return false;
+    try {
+      const parsed = JSON.parse(savedUser) as User;
+      const org = readStoredOrg();
+      setUser(parsed);
+      if (org) setCurrentOrg(org);
+      if (markOffline) {
+        networkStatus.setOnline(false);
+      }
+
+      const pinStored = await localDb.syncMetadata.get(`pin_${parsed.id}`);
+      if (pinStored) {
+        setShowPinUnlock(true);
+      }
+
+      const orgId = localStorage.getItem(ORG_ID_KEY);
+      if (orgId) {
+        syncEngine.start();
+      }
+      return true;
+    } catch {
+      console.warn('Failed to parse saved user for offline resume');
+      return false;
+    }
+  }, []);
+
   const scheduleRefresh = useCallback((refreshToken: string, expiresIn: number) => {
     if (refreshTimeoutRef.current) clearTimeout(refreshTimeoutRef.current);
     const refreshMs = (expiresIn - 60) * 1000;
@@ -54,25 +127,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem(TOKEN_KEY, res.accessToken);
         localStorage.setItem(REFRESH_KEY, res.refreshToken);
         refreshTimer.current?.(res.refreshToken, res.expiresIn);
-      } catch {
-        const savedUser = localStorage.getItem(USER_KEY);
-        const parsed = savedUser ? JSON.parse(savedUser) as User : null;
-        if (parsed && !networkStatus.isOnline) {
-          const pinStored = await localDb.syncMetadata.get(`pin_${parsed.id}`);
-          if (pinStored) {
-            setShowPinUnlock(true);
-            return;
-          }
+      } catch (error) {
+        if (!isAuthRejected(error)) {
+          const resumed = await resumeOfflineSession(isLikelyOfflineFailure(error));
+          if (resumed) return;
         }
         setToken(null);
         setUser(null);
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(REFRESH_KEY);
-        localStorage.removeItem(USER_KEY);
-        localStorage.removeItem(ORG_ID_KEY);
+        setCurrentOrg(null);
+        clearSessionStorage();
       }
     }, refreshMs);
-  }, []);
+  }, [resumeOfflineSession]);
 
   useEffect(() => {
     refreshTimer.current = scheduleRefresh;
@@ -87,41 +153,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setToken(savedToken);
     networkStatus.start();
+    const savedOrg = readStoredOrg();
+    if (savedOrg) setCurrentOrg(savedOrg);
     const savedOrgId = localStorage.getItem(ORG_ID_KEY);
+
     const initAuth = async () => {
       try {
-        const user = await authService.getMe();
-        setUser(user);
+        const me = await authService.getMe();
+        setUser(me);
+        localStorage.setItem(USER_KEY, JSON.stringify(me));
         if (savedRefresh) {
           scheduleRefresh(savedRefresh, 900);
         }
         if (savedOrgId) {
           syncEngine.start();
         }
-      } catch {
-        const savedUser = localStorage.getItem(USER_KEY);
-        if (savedUser) {
-          try {
-            const parsed = JSON.parse(savedUser) as User;
-            if (!networkStatus.isOnline) {
-              const pinStored = await localDb.syncMetadata.get(`pin_${parsed.id}`);
-              if (pinStored) {
-                setUser(parsed);
-                setShowPinUnlock(true);
-                setIsLoading(false);
-                return;
-              }
-            }
-          } catch {
-            console.warn('Failed to parse saved user for PIN fallback');
+      } catch (error) {
+        if (!isAuthRejected(error)) {
+          const resumed = await resumeOfflineSession(isLikelyOfflineFailure(error));
+          if (resumed) {
+            setIsLoading(false);
+            return;
           }
         }
         setToken(null);
         setUser(null);
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(REFRESH_KEY);
-        localStorage.removeItem(USER_KEY);
-        localStorage.removeItem(ORG_ID_KEY);
+        setCurrentOrg(null);
+        clearSessionStorage();
       } finally {
         setIsLoading(false);
       }
@@ -130,7 +188,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       if (refreshTimeoutRef.current) clearTimeout(refreshTimeoutRef.current);
     };
-  }, [scheduleRefresh]);
+  }, [scheduleRefresh, resumeOfflineSession]);
 
   const login = useCallback(async (email: string, password: string) => {
     useTabsStore.getState().clearTabs();
@@ -143,7 +201,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(USER_KEY, JSON.stringify(response.user));
     if (response.organization) {
       setCurrentOrg(response.organization);
-      localStorage.setItem(ORG_ID_KEY, String(response.organization.id));
+      persistOrg(response.organization);
     }
     scheduleRefresh(response.refreshToken, response.expiresIn);
     networkStatus.start();
@@ -163,7 +221,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(TOKEN_KEY, response.accessToken);
     localStorage.setItem(REFRESH_KEY, response.refreshToken);
     localStorage.setItem(USER_KEY, JSON.stringify(response.user));
-    localStorage.setItem(ORG_ID_KEY, String(response.organization.id));
+    persistOrg(response.organization);
     scheduleRefresh(response.refreshToken, response.expiresIn);
     syncEngine.onOrgSwitch();
   }, [scheduleRefresh]);
@@ -181,11 +239,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setOrganizations([]);
     setCurrentOrg(null);
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(REFRESH_KEY);
-    localStorage.removeItem(USER_KEY);
-    localStorage.removeItem(ORG_ID_KEY);
+    clearSessionStorage();
     useTabsStore.getState().clearTabs();
+  }, []);
+
+  const handlePinUnlock = useCallback(() => {
+    setShowPinUnlock(false);
+    const orgId = localStorage.getItem(ORG_ID_KEY);
+    if (orgId) {
+      syncEngine.start();
+      if (networkStatus.isOnline) {
+        void syncEngine.forceSync();
+      }
+    }
   }, []);
 
   return (
@@ -193,7 +259,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         token,
-        isAuthenticated: !!token,
+        isAuthenticated: !!token && !!user,
         isLoading,
         organizations,
         currentOrg,
@@ -213,7 +279,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {showPinUnlock && user && (
         <PinUnlock
           userId={user.id}
-          onUnlock={() => setShowPinUnlock(false)}
+          onUnlock={handlePinUnlock}
         />
       )}
     </AuthContext.Provider>

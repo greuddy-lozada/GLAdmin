@@ -1,7 +1,7 @@
 # Go-to-Market — Estrategia de Lanzamiento
 
-> Complemento BMAD: plan para pasar de "producto en desarrollo" a "producto generando ingresos recurrentes".
-> Última actualización: Julio 2026.
+> Complemento BMAD: plan para pasar de "producto en desarrollo" a "producto generando ingresos recurrentes".  
+> **status:** `current` · Última actualización: 2026-08-08.
 
 ---
 
@@ -44,14 +44,17 @@
 
 ## Pricing & Plans
 
-> Definición detallada en `specs/2026-06-20-plan-gating.md`. Resumen de referencia:
+> Slugs canónicos en código: [plan-gating.md](../system/plan-gating.md).  
+> Marketing puede usar nombres display; **código y specs de sistema usan** `free` / `starter` / `professional` / `enterprise`.
 
-| Plan | Precio (USD/mes) | Usuarios | Features clave |
+| Plan (slug) | Display | Precio (USD/mes) | Features clave (resumen) |
 |---|---|---|---|
-| **Free** | $0 | 1 | POS básico, hasta 50 productos, ventas ilimitadas |
-| **Pro** | Por definir | 5 | Catálogo ilimitado, Pago Móvil, multi-moneda, analytics básicos |
-| **Business** | Por definir | 20 | + Analytics avanzados, dashboard KPIs, multi-caja, exportación de datos |
-| **Enterprise** | Custom | Ilimitado | + API, multi-sucursal, soporte prioritario, SLAs |
+| `free` | Free | $0 | Operación básica (customers, dashboard, reports básicos, tasas) |
+| `starter` | Starter | Por definir | Catálogo (products/brands/categories/taxes), suppliers, cash-register |
+| `professional` | Professional | Por definir | Sales/POS persistencia, inventory (stocks/batches), Pago Móvil tx, POs |
+| `enterprise` | Enterprise | Custom | Tier máximo + flags enterprise (API, multi-org, SLAs según producto) |
+
+Detalle de `@PlanLevel` por controller: [plan-gating.md](../system/plan-gating.md).
 
 ---
 

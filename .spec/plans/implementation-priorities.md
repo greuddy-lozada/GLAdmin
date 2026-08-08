@@ -1,5 +1,6 @@
 # Implementation Plan — Prioridades Prácticas
 
+> **status:** `done` (Decimal + soft delete; tests parciales)  
 > **Estado:** ✅ Completado (Decimal, soft delete implementados; tests parciales)  
 > **Fecha:** Julio 2026  
 > **Origen:** Gap analysis specs vs implementación

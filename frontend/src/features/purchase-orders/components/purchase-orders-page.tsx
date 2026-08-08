@@ -104,6 +104,8 @@ export default function PurchaseOrdersPage() {
     apiClient.get('/exchange-rates').then((r) => setExchangeRateDays(r.data.data || [])).catch(() => {});
   }, []);
 
+  const [mobilePane, setMobilePane] = useState<'list' | 'detail'>('list');
+
   const handleCreateNew = () => {
     const empty: PurchaseOrder = {
       id: '', idSupplier: '', code: '', date: '', amount: 0, amountUsd: 0, createdAt: '', updatedAt: '', version: 0, status: PurchaseOrderStatus.DRAFT,
@@ -112,11 +114,15 @@ export default function PurchaseOrdersPage() {
     setFormData(emptyFormData({ applyWithholding: companies[0]?.isWithholdingAgent ?? false, withholdingPercentage: companies[0]?.withholdingPercentage ?? 75 }));
     setError('');
     setInlineReceiveQty({});
+    setMobilePane('detail');
   };
 
   const handleSelect = async (order: PurchaseOrder) => {
     setError('');
-    if (order.id === selectedItem?.id) return;
+    if (order.id === selectedItem?.id) {
+      setMobilePane('detail');
+      return;
+    }
     try {
       const full = await purchaseOrderService.getById(order.id);
       const er = exchangeRateDays.find((r) => r.id === (full.exchangeRateDayId ?? full.exchangeRateId));
@@ -143,6 +149,7 @@ export default function PurchaseOrdersPage() {
       }));
       setSelectedItem(full);
       setInlineReceiveQty({});
+      setMobilePane('detail');
     } catch (err) {
       setError(extractApiError(err) ?? t('purchaseOrders.error.load'));
     }
@@ -158,7 +165,7 @@ export default function PurchaseOrdersPage() {
       });
     } else {
       create.mutate(data, {
-        onSuccess: () => { sileo.success({ description: t('purchaseOrders.created') }); setSelectedItem(null); },
+        onSuccess: () => { sileo.success({ description: t('purchaseOrders.created') }); setSelectedItem(null); setMobilePane('list'); },
         onError: (err) => setError(extractApiError(err) ?? t('purchaseOrders.error.save')),
       });
     }
@@ -241,8 +248,8 @@ export default function PurchaseOrdersPage() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-6rem)]">
-      <div className="w-[440px] shrink-0">
+    <div className="flex h-[calc(100dvh-6rem)] md:h-[calc(100vh-6rem)]">
+      <div className={`w-full md:w-[440px] shrink-0 ${mobilePane === 'detail' ? 'hidden md:block' : 'block'}`}>
         <PurchaseOrderList
           orders={purchaseOrdersData}
           loading={loading}
@@ -253,7 +260,7 @@ export default function PurchaseOrdersPage() {
           canReceive={canEdit}
         />
       </div>
-      <div className="flex-1 min-w-0">
+      <div className={`flex-1 min-w-0 ${mobilePane === 'list' ? 'hidden md:block' : 'block'}`}>
         <PurchaseOrderForm
           selectedItem={selectedItem}
           formData={formData}
@@ -275,6 +282,7 @@ export default function PurchaseOrdersPage() {
           onStatusChange={handleStatusChange}
           onFileUpload={handleFileUpload}
           onInlineReceive={handleInlineReceive}
+          onBack={() => setMobilePane('list')}
         />
       </div>
 

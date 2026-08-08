@@ -41,7 +41,7 @@
 {
   "data": null,
   "meta": {
-    "message": "Factura anulada exitosamente"
+    "message": "Venta eliminada (soft-delete)"
   }
 }
 ```
@@ -51,10 +51,10 @@
 ```json
 {
   "error": {
-    "code": "INVOICE_001",
-    "message": "La factura ya fue emitida y no puede modificarse",
+    "code": "SALE_001",
+    "message": "La venta no puede modificarse en su estado actual",
     "details": [
-      { "field": "status", "reason": "El estado actual es 'issued', solo se permite 'draft'" }
+      { "field": "status", "reason": "El estado actual no es mutable" }
     ]
   }
 }
@@ -145,19 +145,15 @@ Cada feature define sus propios error codes. Se registran en un enum o constant 
 | `AUTH_001` | Auth | Credenciales inválidas |
 | `AUTH_002` | Auth | Token expirado |
 | `AUTH_003` | Auth | Cuenta bloqueada por múltiples intentos fallidos |
-| `USER_001` | Users | Email ya registrado |
-| `USER_002` | Users | El usuario no pertenece a tu empresa |
-| `PRODUCT_001` | Products | Código de producto duplicado |
-| `PRODUCT_002` | Products | No se puede eliminar: tiene ventas asociadas |
-| `CUSTOMER_001` | Customers | RIF ya registrado en esta empresa |
-| `INVOICE_001` | Invoices | Factura ya emitida, no se puede modificar |
-| `INVOICE_002` | Invoices | Secuencial fiscal ya utilizado |
-| `INVOICE_003` | Invoices | No hay inventario suficiente para este producto |
-| `INVOICE_004` | Invoices | La factura no tiene ítems |
-| `TAX_001` | Tax | Retención de IVA ya aplicada a esta factura |
-| `TAX_002` | Tax | El porcentaje de retención excede el límite legal |
-| `ACCT_001` | Accounting | El asiento no está balanceado (débito ≠ crédito) |
-| `ACCT_002` | Accounting | Período contable cerrado |
+| `SALE_001` | Sales | Venta inmutable (ISSUED/ANNULLED) — no update |
+| `SALE_002` | Sales | Venta no encontrada |
+| `SALE_003` | Sales | Sin ítems (definido; uso parcial) |
+| `PO_001`–`PO_008` | Purchase orders | Inmutabilidad / recepción / withholding — ver `error-codes.ts` |
+| `PRODUCT_001` | Products | Código duplicado (si aplica) |
+| `CUSTOMER_001` | Customers | RIF duplicado en org |
+
+Fuente de verdad de códigos: `backend/src/common/errors/error-codes.ts`. **No usar `INVOICE_*`.**
+
 
 ---
 
@@ -215,19 +211,21 @@ export class PaginationQueryDto {
 
 ## 5. Versionado de API
 
-### Estrategia: URL prefix
+### Estrategia actual
 
 ```
-/api/v1/products
-/api/v2/products    ← Solo si hay breaking change
+/api/products
+/api/sales
+/api/sync/pull
 ```
 
-### Reglas de versionado
+El prefijo global es **`api`** (`main.ts`). No hay `/api/v1` en producción hoy.
 
-1. **La versión actual es `v1`** — implícita en `/api/` (sin prefijo).
-2. **Breaking change** = eliminar un campo del response, cambiar tipo de dato, renombrar endpoint, cambiar comportamiento de un parámetro.
-3. **No-breaking change** = agregar nuevo campo opcional, nuevo endpoint, nuevo query param. No requiere nueva versión.
-4. **Máximo 2 versiones activas simultáneamente** (`v1` y `v2`). `v1` se depreca cuando `v2` lleva 3 meses estable.
+### Reglas de versionado (futuro)
+
+1. Breaking changes mayores pueden introducir `/api/v2` — no inventar `v1` en paths actuales.
+2. No-breaking = campos opcionales nuevos, endpoints nuevos.
+3. Documentar breaking changes en el PR + api-conventions.
 
 ---
 
@@ -236,38 +234,30 @@ export class PaginationQueryDto {
 ### Filtros por campo
 
 ```
-GET /api/invoices?status=issued&customerId=uuid&fromDate=2026-01-01&toDate=2026-12-31
+GET /api/sales?status=DRAFT&idCustomer=uuid&page=1&limit=20
 ```
 
 ### Reglas
 
-1. Filtros de rango de fecha usan `from{Field}` y `to{Field}`.
-2. Filtros de enum usan el valor del enum como string.
-3. Filtros de relación usan el ID de la entidad relacionada.
-4. No se permiten queries arbitrarias (`filter[field][operator]=value`). Cada endpoint define explícitamente sus filtros en un DTO.
+1. Filtros de rango de fecha usan `from{Field}` y `to{Field}` cuando el endpoint los exponga.
+2. Filtros de enum usan el valor del enum como string (`DRAFT`, `ISSUED`, …).
+3. Filtros de relación usan el ID UUID de la entidad relacionada.
+4. No se permiten queries arbitrarias. Cada endpoint define filtros en su DTO.
 
 ```typescript
-export class InvoiceQueryDto extends PaginationQueryDto {
+export class SaleQueryDto extends PaginationQueryDto {
   @IsOptional()
-  @IsEnum(InvoiceStatus)
-  status?: InvoiceStatus;
+  @IsIn(['DRAFT', 'ISSUED', 'ANNULLED'])
+  status?: string;
 
   @IsOptional()
   @IsUUID()
-  customerId?: string;
-
-  @IsOptional()
-  @Type(() => Date)
-  @IsDate()
-  fromDate?: Date;
-
-  @IsOptional()
-  @Type(() => Date)
-  @IsDate()
-  toDate?: Date;
+  idCustomer?: string;
 }
 ```
 
+> Nota: el `findAll` actual de sales puede no exponer todos estos filtros aún — añadir filtros = actualizar DTO + esta spec.
+
 ---
 
-*Referencia cruzada: [architecture.md](architecture.md) — [security.md](security.md) — [database.md](database.md)*
+*Referencia cruzada: [architecture.md](architecture.md) — [security.md](security.md) — [database.md](database.md) — [features/sales.md](../features/sales.md)*

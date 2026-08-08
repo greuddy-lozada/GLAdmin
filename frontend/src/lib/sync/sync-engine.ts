@@ -29,6 +29,9 @@ export class SyncEngine {
   private electionTimer?: ReturnType<typeof setTimeout>;
   private cleanupTimer?: ReturnType<typeof setInterval>;
   private tabId = 0;
+  private unsubNetwork?: () => void;
+  private beforeUnloadHandler?: (event: BeforeUnloadEvent) => void;
+  private visibilityHandler?: () => void;
 
   get lastSyncAt() {
     return this._lastSyncAt;
@@ -334,6 +337,13 @@ export class SyncEngine {
 
     this.broadcastChannel.postMessage({ type: 'election-probe', tabId: this.tabId });
 
+    this.visibilityHandler = () => {
+      if (document.visibilityState === 'visible' && this.isLeader) {
+        void this.pull();
+        void this.push();
+      }
+    };
+
     this.electionTimer = setTimeout(() => {
       this.isLeader = true;
 
@@ -343,24 +353,28 @@ export class SyncEngine {
         }
       }, LEADER_HEARTBEAT_MS);
 
-      document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible' && this.isLeader) {
-          this.pull();
-        }
-      });
+      document.addEventListener('visibilitychange', this.visibilityHandler!);
 
-      this.pull();
+      void this.pull();
+      void this.push();
 
       // Periodic cleanup of old IndexedDB data (every 24h)
       this.cleanupTimer = setInterval(() => this.cleanupLocalDb(), 24 * 60 * 60 * 1000);
     }, ELECTION_TIMEOUT_MS);
 
-    window.addEventListener('beforeunload', (event) => {
+    this.unsubNetwork = networkStatus.onStatusChange((online) => {
+      if (online && this.isLeader) {
+        void this.forceSync();
+      }
+    });
+
+    this.beforeUnloadHandler = (event: BeforeUnloadEvent) => {
       if (syncQueue.hasPendingSync) {
         event.preventDefault();
         event.returnValue = 'You have pending changes that have not been synced. Are you sure you want to leave?';
       }
-    });
+    };
+    window.addEventListener('beforeunload', this.beforeUnloadHandler);
   }
 
   private async cleanupLocalDb(): Promise<void> {
@@ -396,6 +410,10 @@ export class SyncEngine {
       clearInterval(this.heartbeatInterval);
       this.heartbeatInterval = undefined;
     }
+    if (this.electionTimer) {
+      clearTimeout(this.electionTimer);
+      this.electionTimer = undefined;
+    }
     if (this.broadcastChannel) {
       this.broadcastChannel.close();
       this.broadcastChannel = undefined;
@@ -403,6 +421,18 @@ export class SyncEngine {
     if (this.cleanupTimer) {
       clearInterval(this.cleanupTimer);
       this.cleanupTimer = undefined;
+    }
+    if (this.unsubNetwork) {
+      this.unsubNetwork();
+      this.unsubNetwork = undefined;
+    }
+    if (this.visibilityHandler) {
+      document.removeEventListener('visibilitychange', this.visibilityHandler);
+      this.visibilityHandler = undefined;
+    }
+    if (this.beforeUnloadHandler) {
+      window.removeEventListener('beforeunload', this.beforeUnloadHandler);
+      this.beforeUnloadHandler = undefined;
     }
     this.isLeader = false;
   }

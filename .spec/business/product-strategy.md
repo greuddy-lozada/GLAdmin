@@ -1,7 +1,7 @@
 # Product Strategy — Estrategia de Producto
 
 > Complemento BMAD: define el norte del producto, a quién sirve y qué construimos ahora vs. después.
-> Última actualización: Julio 2026.
+> **status:** `current` · Última actualización: 2026-08-08.
 
 ---
 
@@ -66,23 +66,30 @@ Ser el punto de venta y sistema de gestión de inventario de referencia para PyM
 
 ## Roadmap
 
-### Now — En progreso
+### Now — Completado / estabilización
 
 | Iniciativa | Valor | Estado |
 |---|---|---|
 | POS Redesign ("Compra con Detalles") | Velocidad de caja, UX mejorada | ✅ Complete |
 | Subscription Payments (Pago Móvil + Cash USD) | Monetización funcional en Venezuela | ✅ Complete |
-| Categorías y Marcas | Catálogo organizado para negocios con inventario variado | 🔄 En progreso |
+| Categorías y Marcas | Catálogo organizado; categorías en nav; marcas vía form/API | ✅ Complete |
 | Plan Gating | Features por plan, control de acceso | ✅ Complete |
+| Módulo Reportes (base) | Reportes en nav + API; ampliar cobertura de KPIs | ✅ Shipped (iterar) |
+| Catálogo Products (contrato) | Spec canónica en [.spec/features/products.md](../features/products.md) | ✅ Documentado |
+| UI patterns catalog | Adopted/next/rejected en [.spec/UI-UX/patterns.md](../UI-UX/patterns.md) | ✅ Documentado |
+| POS + Sales + Sync (contratos) | [.spec/features/pos.md](../features/pos.md), [sales.md](../features/sales.md), [sync.md](../features/sync.md) | ✅ Documentado |
+| Plan gating + multi-tenancy | [.spec/system/plan-gating.md](../system/plan-gating.md), [multi-tenancy.md](../system/multi-tenancy.md) | ✅ Documentado |
 
 ### Next — Próximo trimestre
 
 | Iniciativa | Valor |
 |---|---|
-| Analytics de ventas y Dashboard KPIs | Visibilidad del negocio: qué se vende, cuándo, margen, ticket promedio. |
-| Historial de ventas y reporting | Búsqueda, filtros, exportación. El dueño necesita responder "¿cuánto vendí este mes?" |
 | Soft Launch Alpha (5-10 empresas amigas) | Primera validación en producción real. |
 | Refinamiento de UX en POS | Basado en feedback de Alpha: velocidad, atajos, flujo de cobro. |
+| Profundizar analytics / KPIs de ventas | Completar reportes de margen, ticket promedio, top productos. |
+| Reports P0 contador (fiscal + AR/AP) | ✅ Shipped — ver [.spec/features/reports.md](../features/reports.md) |
+| Reports P1 ops | payment method, cash register, purchases, FX |
+| Feature specs restantes (cash-register, pago-movil, customers, stocks) | Contratos P1 para agentes |
 
 ### Later — Más allá del trimestre
 
@@ -92,3 +99,4 @@ Ser el punto de venta y sistema de gestión de inventario de referencia para PyM
 | Facturación fiscal SENIAT | Solo si cambia la viabilidad. Mientras tanto, Cuadra es POS + gestión — no fiscal. |
 | API pública para integraciones | Ecosistema de partners, conectores con e-commerce. |
 | E-commerce bridge (integración con tiendas online) | Omnicanal para negocios que venden en línea y físico. |
+| Página nav dedicada de Marcas | Hoy marcas se gestionan inline en el form de productos. |

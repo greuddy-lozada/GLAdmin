@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useI18n } from '@/i18n';
 import { sileo } from 'sileo';
 import { useReports, useDeleteReport } from '../hooks/use-reports';
@@ -9,13 +9,19 @@ import { ReportGenerator } from './report-generator';
 import { ReportViewer } from './report-viewer';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { SlideForm } from '@/components/ui/slide-form';
 import { extractApiError } from '@/lib/api/extract-api-error';
-import { BarChart3, ClipboardList, FileText } from 'lucide-react';
+import { BarChart3, ClipboardList, FileText, Landmark, Scale } from 'lucide-react';
+import { getReportTypeLabel } from '../lib/report-labels';
 
 const CATEGORIES = [
   { key: 'sales', label: 'reports.categories.sales', icon: BarChart3 },
   { key: 'inventory', label: 'reports.categories.inventory', icon: ClipboardList },
+  { key: 'fiscal', label: 'reports.categories.fiscal', icon: Scale },
+  { key: 'financial', label: 'reports.categories.financial', icon: Landmark },
 ] as const;
+
+const PANEL_WIDTH = 720;
 
 export function ReportsPage() {
   const { t } = useI18n();
@@ -37,9 +43,29 @@ export function ReportsPage() {
     return counts;
   }, [allReports]);
 
-  const handleGenerated = () => {
+  const selectedReport = useMemo(
+    () => allReports.find((r) => r.id === selectedReportId) ?? null,
+    [allReports, selectedReportId],
+  );
+
+  const panelOpen = !!selectedReportId;
+
+  useEffect(() => {
+    if (!panelOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setSelectedReportId(null);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [panelOpen]);
+
+  const handleGenerated = (reportId?: string) => {
     refetch();
     sileo.success({ description: t('reports.created') });
+    if (reportId) setSelectedReportId(reportId);
   };
 
   const handleDelete = async () => {
@@ -54,12 +80,27 @@ export function ReportsPage() {
     if (selectedReportId === reportToDelete) setSelectedReportId(null);
   };
 
+  const panelTitle = selectedReport
+    ? getReportTypeLabel(selectedReport.type, t)
+    : t('reports.title');
+
   return (
-    <div className="flex h-full -mx-6 md:-mx-8 -mb-6 md:-mb-8">
-      {/* Left Panel */}
-      <div className="w-[420px] shrink-0 border-r border-border flex flex-col bg-card/30 overflow-hidden">
+    <SlideForm
+      open={panelOpen}
+      title={panelTitle}
+      onClose={() => setSelectedReportId(null)}
+      panelWidth={PANEL_WIDTH}
+      panel={
+        selectedReportId ? (
+          <div className="-m-1">
+            <ReportViewer reportId={selectedReportId} />
+          </div>
+        ) : null
+      }
+    >
+      <div className="max-w-4xl mx-auto pb-8">
         {/* Category Tabs */}
-        <div className="flex border-b border-border shrink-0">
+        <div className="flex flex-wrap gap-1 border-b border-border mb-4">
           {CATEGORIES.map((cat) => {
             const Icon = cat.icon;
             const count = reportCounts[cat.key] ?? 0;
@@ -68,8 +109,10 @@ export function ReportsPage() {
               <button
                 key={cat.key}
                 type="button"
-                onClick={() => { setActiveCategory(cat.key); setSelectedReportId(null); }}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors border-b-2 -mb-px ${
+                onClick={() => {
+                  setActiveCategory(cat.key);
+                }}
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors border-b-2 -mb-px ${
                   active
                     ? 'border-primary text-primary bg-primary/5'
                     : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/30'
@@ -78,9 +121,11 @@ export function ReportsPage() {
                 <Icon className="h-4 w-4" />
                 {t(cat.label)}
                 {count > 0 && (
-                  <span className={`ml-1 text-xs rounded-full px-1.5 py-0.5 ${
-                    active ? 'bg-primary/15' : 'bg-muted'
-                  }`}>
+                  <span
+                    className={`ml-1 text-xs rounded-full px-1.5 py-0.5 ${
+                      active ? 'bg-primary/15' : 'bg-muted'
+                    }`}
+                  >
                     {count}
                   </span>
                 )}
@@ -89,13 +134,10 @@ export function ReportsPage() {
           })}
         </div>
 
-        {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto">
-          {/* Generator */}
+        <div className="rounded-xl border border-border bg-card/30 overflow-hidden">
           <ReportGenerator category={activeCategory} onGenerated={handleGenerated} />
 
-          {/* Report List */}
-          <div className="px-4 pb-4">
+          <div className="px-4 pb-4 pt-2">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
               {t('reports.generatedReports')}
             </h3>
@@ -122,26 +164,13 @@ export function ReportsPage() {
               <div className="flex flex-col items-center justify-center py-10 text-center">
                 <FileText className="h-10 w-10 text-muted-foreground mb-3" />
                 <p className="text-sm font-medium">{t('reports.empty.title')}</p>
-                <p className="text-xs text-muted-foreground mt-1">{t('reports.empty.description')}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t('reports.empty.description')}
+                </p>
               </div>
             )}
           </div>
         </div>
-      </div>
-
-      {/* Right Panel */}
-      <div className="flex-1 overflow-y-auto">
-        {selectedReportId ? (
-          <div className="p-6">
-            <ReportViewer reportId={selectedReportId} />
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center h-full text-center px-8">
-            <BarChart3 className="h-20 w-20 text-muted-foreground/30 mb-6" />
-            <h3 className="text-lg font-semibold text-muted-foreground">{t('reports.selectToView')}</h3>
-            <p className="text-sm text-muted-foreground mt-2 max-w-sm">{t('reports.selectToViewDesc')}</p>
-          </div>
-        )}
       </div>
 
       <ConfirmDialog
@@ -152,6 +181,6 @@ export function ReportsPage() {
         onCancel={() => setReportToDelete(null)}
         loading={deleteMutation.isPending}
       />
-    </div>
+    </SlideForm>
   );
 }

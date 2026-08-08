@@ -58,8 +58,8 @@ export function VisitedTabs({ iconMap, tabs: propTabs }: VisitedTabsProps) {
             <button
               type="button"
               onClick={(e) => handleClose(e, tab.path)}
-              className="ml-0.5 rounded-sm opacity-0 group-hover:opacity-100 hover:bg-muted-foreground/20 transition-opacity"
-              aria-label={`Cerrar ${t(`nav.${tab.key}`)}`}
+              className="ml-0.5 rounded-sm opacity-70 md:opacity-0 md:group-hover:opacity-100 hover:bg-muted-foreground/20 transition-opacity"
+              aria-label={`${t('common.close')} ${t(`nav.${tab.key}`)}`}
             >
               <X className="h-3 w-3" />
             </button>

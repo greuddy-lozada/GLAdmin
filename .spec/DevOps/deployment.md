@@ -194,6 +194,20 @@ Serwist genera el service worker durante el build estático. Configuración en `
 
 ## 4. Variables de Entorno Críticas
 
+### Matriz rápida (producción)
+
+| Variable | Dónde | Notas |
+|---|---|---|
+| `DATABASE_URL` / `POSTGRES_*` | backend / compose | Nunca en git |
+| `JWT_SECRET` | backend | Access JWT 15m en código |
+| `FRONTEND_URL` | backend | CORS / links; HTTPS en prod |
+| `NEXT_PUBLIC_API_URL` | frontend | URL pública API |
+| `REDIS_URL` | backend (opcional) | Cache; fallback in-memory |
+| Pago Móvil secrets | backend settings | No loguear |
+| `SENTRY_DSN` | staging/prod | Opcional |
+
+Archivos: `backend/.env.example`, `.env.production.example` (raíz). **No** asumir `.env.example` en la raíz del monorepo.
+
 ### `.env.example`
 
 ```bash

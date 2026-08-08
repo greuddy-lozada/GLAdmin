@@ -1,20 +1,16 @@
 # Subscription Lifecycle — Suscripción Mensual
 
-> Define expiración, grace period, downgrade y renovación para pasar de "pago único vitalicio" a suscripción mensual real.
-> Última actualización: Julio 2026.
->
-> Referencias: `specs/2026-06-17-subscription-payments.md`, `specs/2026-06-20-plan-gating.md`
+> **status:** `current` · last-verified: 2026-08-08  
+> Define expiración, grace period, downgrade y renovación.  
+> Plan gating: [plan-gating.md](../system/plan-gating.md) (slugs: `free` | `starter` | `professional` | `enterprise`).
 
 ---
 
 ## 1. Contexto
 
-El sistema actual tiene **pago único**: al aprobar un `SubscriptionPayment` se setea `organization.planId` y el plan nunca expira. No hay:
+El lifecycle de suscripción **está implementado** en código (`subscriptionStatus`, `subscriptionExpiresAt`, cron/services bajo `modules/subscriptions/`).
 
-- Fecha de vencimiento de suscripción
-- Período de gracia
-- Degradación automática al plan Free
-- Cobro recurrente
+Al aprobar un `SubscriptionPayment` se activa/extiende la suscripción. Post-vencimiento → `past_due` (grace) → degradación a plan Free. Datos de la org intactos.
 
 ---
 
@@ -22,28 +18,28 @@ El sistema actual tiene **pago único**: al aprobar un `SubscriptionPayment` se 
 
 | Decisión | Valor | Justificación |
 |---|---|---|
-| Estados de suscripción | `as const` string union, no Prisma enum | Mejor rendimiento, sin overhead de enum de BD. Validación en backend con `@IsIn()`. |
-| Cron | `@nestjs/schedule` | Corre dentro del mismo proceso NestJS. Ligero, sin infra extra. |
-| Grace period | 7 días | Suficiente para que el dueño reaccione. Coincide con estándar SaaS. |
-| Pago doble | Se acumulan: `subscriptionExpiresAt += 30d` | No se penaliza al que paga por adelantado. |
-| Degradación | Automática post grace period. `planId` → Free. Datos intactos. | Sin intervención manual. El usuario puede volver a pagar. |
+| Estados de suscripción | `as const` string union, no Prisma enum | Validación en backend con `@IsIn()`. |
+| Cron | `@nestjs/schedule` | Mismo proceso NestJS. |
+| Grace period | 7 días | Estándar SaaS. |
+| Pago doble | Se acumulan: `subscriptionExpiresAt += 30d` | No penaliza pago adelantado. |
+| Degradación | Automática post grace. `planId` → Free. Datos intactos. | Sin intervención manual. |
 
 ---
 
 ## 3. Schema
 
-### Prisma — Organization
-
-Se agregan 2 campos:
+### Prisma — Organization (actual)
 
 ```prisma
 model Organization {
-  // ... existente ...
-  planId                Int?       @map("plan_id")
-  subscriptionStatus    String     @default("inactive") @map("subscription_status")
-  subscriptionExpiresAt DateTime?  @map("subscription_expires_at")
+  // ...
+  planId                String?   @db.Uuid @map("plan_id")
+  subscriptionStatus    String    @default("inactive") @map("subscription_status")
+  subscriptionExpiresAt DateTime? @map("subscription_expires_at")
 }
 ```
+
+`planId` es **UUID**, no `Int`.
 
 ### Constantes de estado
 
