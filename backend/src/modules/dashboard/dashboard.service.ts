@@ -118,9 +118,7 @@ export class DashboardService {
     const avgTicket =
       todayAgg.count === 0 ? 0 : todayAgg.revenue / todayAgg.count;
     const yesterdayAvg =
-      yesterdayAgg.count === 0
-        ? 0
-        : yesterdayAgg.revenue / yesterdayAgg.count;
+      yesterdayAgg.count === 0 ? 0 : yesterdayAgg.revenue / yesterdayAgg.count;
 
     return {
       todaySalesCount: todayAgg.count,

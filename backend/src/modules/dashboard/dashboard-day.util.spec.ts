@@ -1,4 +1,9 @@
-import { pctChange, dayRange, addDaysYmd, localYmd } from './dashboard-day.util';
+import {
+  pctChange,
+  dayRange,
+  addDaysYmd,
+  localYmd,
+} from './dashboard-day.util';
 
 describe('dashboard-day.util', () => {
   it('dayRange is 24h exclusive end', () => {

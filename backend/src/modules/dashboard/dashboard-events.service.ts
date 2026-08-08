@@ -36,7 +36,9 @@ export class DashboardEventsService implements OnModuleInit, OnModuleDestroy {
   onModuleInit() {
     const url = process.env.REDIS_URL;
     if (!url) {
-      this.logger.log('REDIS_URL not set — dashboard events use in-process bus');
+      this.logger.log(
+        'REDIS_URL not set — dashboard events use in-process bus',
+      );
       return;
     }
     try {
@@ -187,7 +189,10 @@ export class DashboardEventsService implements OnModuleInit, OnModuleDestroy {
         // received local.emit. Cross-process: no local.emit happened here.
         // On publishing node, Redis echoes to subscriber → would duplicate.
         // Mark origin:
-        if ((event as DashboardEvent & { origin?: string }).origin === this.originId) {
+        if (
+          (event as DashboardEvent & { origin?: string }).origin ===
+          this.originId
+        ) {
           return;
         }
         this.local.emit(channel, event);
@@ -202,7 +207,11 @@ export class DashboardEventsService implements OnModuleInit, OnModuleDestroy {
   private readonly originId = `pid-${process.pid}-${Math.random().toString(36).slice(2, 8)}`;
 
   /** Override publish to stamp origin for Redis echo suppression. */
-  publishWithOrigin(orgId: string, type: DashboardEventType, payload: unknown): void {
+  publishWithOrigin(
+    orgId: string,
+    type: DashboardEventType,
+    payload: unknown,
+  ): void {
     if (type === 'stock.low') {
       const productId =
         payload && typeof payload === 'object' && 'id' in payload

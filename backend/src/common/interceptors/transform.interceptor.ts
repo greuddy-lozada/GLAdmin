@@ -38,10 +38,12 @@ export class TransformInterceptor<T> implements NestInterceptor<
     context: ExecutionContext,
     next: CallHandler,
   ): Observable<ApiResponse<T>> {
-    const request: { headers: Record<string, string | string[] | undefined>; url?: string } =
-      context.switchToHttp().getRequest();
+    const request: {
+      headers: Record<string, string | string[] | undefined>;
+      url?: string;
+    } = context.switchToHttp().getRequest();
     const accept = request.headers['accept'];
-    const acceptStr = Array.isArray(accept) ? accept.join(',') : accept ?? '';
+    const acceptStr = Array.isArray(accept) ? accept.join(',') : (accept ?? '');
     if (
       acceptStr.includes('text/event-stream') ||
       request.url?.includes('/dashboard/stream')
