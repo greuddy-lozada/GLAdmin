@@ -9,6 +9,7 @@ import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { SetupDto } from './dto/setup.dto';
+import { CANONICAL_ROLES } from '../../common/auth/role-hierarchy';
 
 @Injectable()
 export class BootstrapService {
@@ -50,20 +51,12 @@ export class BootstrapService {
     }
 
     return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      const rolesData = [
-        { name: 'Master', slug: 'master', type: 'system', level: 100 },
-        { name: 'Admin', slug: 'admin', type: 'system', level: 70 },
-        { name: 'Executive', slug: 'executive', type: 'org', level: 80 },
-        { name: 'Manager', slug: 'manager', type: 'org', level: 60 },
-        { name: 'Employee', slug: 'employee', type: 'org', level: 40 },
-      ];
-
       let masterRole: { id: string; slug: string } | null = null;
-      for (const r of rolesData) {
+      for (const r of CANONICAL_ROLES) {
         const role = await tx.role.upsert({
           where: { slug: r.slug },
           create: r,
-          update: {},
+          update: { name: r.name, type: r.type, level: r.level },
         });
         if (r.slug === 'master') masterRole = role;
       }

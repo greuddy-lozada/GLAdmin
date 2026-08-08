@@ -36,6 +36,8 @@ export interface OrganizationDetail {
   plan: { name: string; label: string; features: string } | null;
   subscriptionStatus: 'inactive' | 'active' | 'past_due';
   subscriptionExpiresAt: string | null;
+  /** Org membership role slug (executive/manager/employee). */
+  role?: string;
 }
 
 export interface LoginResponse {

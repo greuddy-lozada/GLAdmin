@@ -120,6 +120,10 @@ export class AdminOrgsController {
 }
 ```
 
+**Subscription payments (platform):**
+- `GET /subscription-payments/admin` y `PATCH /subscription-payments/:id/review` usan **`@MinLevel(admin)`** (rol de sistema).  
+- No usar `@MinOrgLevel` — un executive/manager de una org no puede listar ni aprobar pagos de otras orgs.
+
 **Endpoints orgánicos (org):**
 ```typescript
 @Controller('users')
@@ -147,7 +151,7 @@ La jerarquía se almacena en la base de datos (columna `level` del `Role`) y se 
 | **manager** | ❌ | ❌ | ❌ | ❌ | ✅ |
 | **employee** | ❌ | ❌ | ❌ | ❌ | ❌ |
 
-Las funciones `canAssignRole()` y `assertCanAssignRole()` se usan en servicios para validar asignaciones antes de persistir.
+Las funciones `canAssignRole()` y `assertCanAssignRole()` se usan en servicios para validar asignaciones antes de persistir — **incluyendo** `AdminService.createUser` / `updateUser` / `assignUserToOrg` / `changeUserRole` (el actor es el `role` de sistema del JWT/DB, no un hardcode a `master`). No se puede asignar un rol `type: system` como membresía org.
 
 ### Seed automático (BootstrapService)
 
@@ -179,20 +183,22 @@ Los módulos del panel de administración operan bajo un modelo **"execute then 
 - Lecturas (GET)
 
 **Mecanismo de compensación al rechazar:**
-| Acción | Compensación |
-|---|---|
-| `CREATE_ORG` | Soft-delete (isActive=false, deletedAt) |
-| `UPDATE_ORG` | Restaura oldValues |
-| `CREATE_PLAN` | Desactiva el plan |
-| `UPDATE_PLAN` | Restaura oldValues |
-| `CREATE_ADMIN_USER` | Desactiva el usuario |
-| `UPDATE_ADMIN_USER` | Restaura oldValues |
-| `ASSIGN_USER_ORG` | Elimina la membresía |
-| `REMOVE_USER_ORG` | Recrea la membresía |
-| `CHANGE_USER_ROLE` | Restaura el role anterior |
-| `CREATE_INVITE` | Elimina la invitación |
+| Acción | Compensación | Metadata requerida |
+|---|---|---|
+| `CREATE_ORG` | Soft-delete (isActive=false, deletedAt) | — |
+| `UPDATE_ORG` | Restaura oldValues | `oldValues` |
+| `CREATE_PLAN` | Desactiva el plan | — |
+| `UPDATE_PLAN` | Restaura oldValues | `oldValues` |
+| `CREATE_ADMIN_USER` | Desactiva el usuario | — |
+| `UPDATE_ADMIN_USER` | Restaura oldValues | `oldValues` |
+| `ASSIGN_USER_ORG` | Elimina la membresía | `userId`, `orgId` |
+| `REMOVE_USER_ORG` | Recrea la membresía | `oldMembership` |
+| `CHANGE_USER_ROLE` | Restaura el role anterior | `oldRoleId`, `userId`, `orgId` |
+| `CREATE_INVITE` | Elimina la invitación | — |
 
-**Frontend:** El módulo `admin/approvals` muestra una tabla con filtros por estado (Pending/Approved/Rejected). Solo visible para `master` (`minLevel: 100`).
+Si la compensación falla → `ADMIN_APPROVAL_COMPENSATE_FAILED` (fail-closed; no marcar rejected sin revertir).
+
+**Frontend:** Approvals solo `master` (`minLevel: 100`). Resto del panel admin `minLevel: 90`. Nav `/admin/*` usa `systemRoleSlug`. Gates de UI en módulos org (`RoleGuard`, `canEdit`/`canDelete`) usan `effectiveRoleSlug = max(system, org)` para que un `master` no pierda privilegios al entrar a una organización.
 
 ---
 
@@ -201,7 +207,10 @@ Los módulos del panel de administración operan bajo un modelo **"execute then 
 - Todo endpoint nuevo **por defecto requiere autenticación**.  
 - Los permisos se asignan explícitamente con `@MinLevel()` o `@MinOrgLevel()`.  
 - Un endpoint sin decorador de nivel = endpoint público (ej. login, health check).
-- Los roles de sistema y org son independientes: tener `role: 'admin'` no otorga permisos orgánicos, y tener `orgRole: 'executive'` no otorga acceso al panel admin. 
+- Los roles de sistema y org son independientes: tener `role: 'admin'` no otorga permisos orgánicos por defecto, y tener `orgRole: 'executive'` no otorga acceso al panel admin.  
+- **Excepción `master`:** el rol de sistema `master` satisface cualquier `@MinOrgLevel` (bypass en `RolesGuard`). En tenant context se marca `isSuperAdmin`; servicios que validan jerarquía org (`UsersService.getActorRoleSlug`) tratan al actor como `master`. Sigue haciendo falta membresía/tenant org para operar datos de esa org.  
+- `AuthGuard` revalida `role` (sistema) y `orgRole` (membresía) desde BD en cada request; no confiar solo en claims JWT stale.  
+- `GET /roles` (org) solo devuelve roles `type: org`. Catálogo completo: `GET /admin/roles` (`@MinLevel(admin)`). 
 
 ---
 

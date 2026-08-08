@@ -70,6 +70,8 @@ export class DashboardService {
   }
 
   private canSeeArAp(orgRole?: string): boolean {
+    const ctx = this.contextService?.getCurrent();
+    if (ctx?.isSuperAdmin || ctx?.systemRole === 'master') return true;
     const level = ROLE_LEVEL[orgRole as keyof typeof ROLE_LEVEL] ?? 0;
     return level >= ROLE_LEVEL.manager;
   }

@@ -14,6 +14,7 @@ import {
   ReviewSubscriptionPaymentDto,
 } from './subscription-payment.dto';
 import {
+  MinLevel,
   MinOrgLevel,
   ROLE_LEVEL,
 } from '../../common/decorators/min-level.decorator';
@@ -35,8 +36,9 @@ export class SubscriptionPaymentController {
     return this.service.findAll(status);
   }
 
+  /** Platform admin: cross-tenant payment queue. */
   @Get('admin')
-  @MinOrgLevel(ROLE_LEVEL.executive)
+  @MinLevel(ROLE_LEVEL.admin)
   findAllAdmin(@Query('status') status?: string) {
     return this.service.findAllAdmin(status);
   }
@@ -50,8 +52,9 @@ export class SubscriptionPaymentController {
     return this.service.create(dto, userId);
   }
 
+  /** Platform admin: approve/reject any org's subscription payment. */
   @Patch(':id/review')
-  @MinOrgLevel(ROLE_LEVEL.manager)
+  @MinLevel(ROLE_LEVEL.admin)
   review(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: ReviewSubscriptionPaymentDto,

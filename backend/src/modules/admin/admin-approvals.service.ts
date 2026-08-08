@@ -2,6 +2,8 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 
@@ -16,6 +18,8 @@ export interface LogApprovalParams {
 
 @Injectable()
 export class AdminApprovalsService {
+  private readonly logger = new Logger(AdminApprovalsService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   async log(params: LogApprovalParams) {
@@ -125,125 +129,145 @@ export class AdminApprovalsService {
     metadata: unknown;
   }) {
     const meta = (record.metadata ?? {}) as Record<string, unknown>;
-    switch (record.action) {
-      case 'CREATE_ORG':
-        await this.prisma.organization
-          .update({
+    try {
+      switch (record.action) {
+        case 'CREATE_ORG':
+          await this.prisma.organization.update({
             where: { id: record.entityId },
             data: { isActive: false, deletedAt: new Date() },
-          })
-          .catch(() => {});
-        break;
-      case 'UPDATE_ORG': {
-        const old = meta.oldValues as Record<string, unknown> | undefined;
-        if (old)
-          await this.prisma.organization
-            .update({ where: { id: record.entityId }, data: old as never })
-            .catch(() => {});
-        break;
-      }
-      case 'DELETE_ORG':
-        await this.prisma.organization
-          .update({
+          });
+          break;
+        case 'UPDATE_ORG': {
+          const old = meta.oldValues as Record<string, unknown> | undefined;
+          if (!old) throw new Error('missing oldValues');
+          await this.prisma.organization.update({
+            where: { id: record.entityId },
+            data: old as never,
+          });
+          break;
+        }
+        case 'DELETE_ORG':
+          await this.prisma.organization.update({
             where: { id: record.entityId },
             data: { isActive: true, deletedAt: null },
-          })
-          .catch(() => {});
-        break;
-      case 'CREATE_PLAN':
-        await this.prisma.plan
-          .update({ where: { id: record.entityId }, data: { isActive: false } })
-          .catch(() => {});
-        break;
-      case 'UPDATE_PLAN': {
-        const oldPlan = meta.oldValues as Record<string, unknown> | undefined;
-        if (oldPlan)
-          await this.prisma.plan
-            .update({ where: { id: record.entityId }, data: oldPlan as never })
-            .catch(() => {});
-        break;
-      }
-      case 'DELETE_PLAN':
-        await this.prisma.plan
-          .update({ where: { id: record.entityId }, data: { isActive: true } })
-          .catch(() => {});
-        break;
-      case 'CREATE_ADMIN_USER':
-        await this.prisma.user
-          .update({ where: { id: record.entityId }, data: { isActive: false } })
-          .catch(() => {});
-        break;
-      case 'UPDATE_ADMIN_USER': {
-        const oldUser = meta.oldValues as Record<string, unknown> | undefined;
-        if (oldUser)
-          await this.prisma.user
-            .update({ where: { id: record.entityId }, data: oldUser as never })
-            .catch(() => {});
-        break;
-      }
-      case 'DEACTIVATE_ADMIN_USER':
-        await this.prisma.user
-          .update({ where: { id: record.entityId }, data: { isActive: true } })
-          .catch(() => {});
-        break;
-      case 'ASSIGN_USER_ORG':
-        await this.prisma.userOrganization
-          .delete({
+          });
+          break;
+        case 'CREATE_PLAN':
+          await this.prisma.plan.update({
+            where: { id: record.entityId },
+            data: { isActive: false },
+          });
+          break;
+        case 'UPDATE_PLAN': {
+          const oldPlan = meta.oldValues as Record<string, unknown> | undefined;
+          if (!oldPlan) throw new Error('missing oldValues');
+          await this.prisma.plan.update({
+            where: { id: record.entityId },
+            data: oldPlan as never,
+          });
+          break;
+        }
+        case 'DELETE_PLAN':
+          await this.prisma.plan.update({
+            where: { id: record.entityId },
+            data: { isActive: true },
+          });
+          break;
+        case 'CREATE_ADMIN_USER':
+          await this.prisma.user.update({
+            where: { id: record.entityId },
+            data: { isActive: false },
+          });
+          break;
+        case 'UPDATE_ADMIN_USER': {
+          const oldUser = meta.oldValues as Record<string, unknown> | undefined;
+          if (!oldUser) throw new Error('missing oldValues');
+          await this.prisma.user.update({
+            where: { id: record.entityId },
+            data: oldUser as never,
+          });
+          break;
+        }
+        case 'DEACTIVATE_ADMIN_USER':
+          await this.prisma.user.update({
+            where: { id: record.entityId },
+            data: { isActive: true },
+          });
+          break;
+        case 'ASSIGN_USER_ORG': {
+          const userId = meta.userId as string | undefined;
+          const orgId = meta.orgId as string | undefined;
+          if (!userId || !orgId) throw new Error('missing membership keys');
+          await this.prisma.userOrganization.delete({
             where: {
               userId_organizationId: {
-                userId: (meta.userId as string) ?? '',
-                organizationId: (meta.orgId as string) ?? '',
+                userId,
+                organizationId: orgId,
               },
             },
-          })
-          .catch(() => {});
-        break;
-      case 'REMOVE_USER_ORG': {
-        const oldMembership = meta.oldMembership as
-          | Record<string, unknown>
-          | undefined;
-        if (oldMembership)
-          await this.prisma.userOrganization
-            .create({ data: oldMembership as never })
-            .catch(() => {});
-        break;
-      }
-      case 'CHANGE_USER_ROLE': {
-        const oldRoleId = meta.oldRoleId as string | undefined;
-        if (oldRoleId && meta.userId && meta.orgId)
-          await this.prisma.userOrganization
-            .update({
-              where: {
-                userId_organizationId: {
-                  userId: meta.userId as string,
-                  organizationId: meta.orgId as string,
-                },
+          });
+          break;
+        }
+        case 'REMOVE_USER_ORG': {
+          const oldMembership = meta.oldMembership as
+            | {
+                userId: string;
+                organizationId: string;
+                roleId: string;
+              }
+            | undefined;
+          if (!oldMembership) throw new Error('missing oldMembership');
+          await this.prisma.userOrganization.create({
+            data: {
+              userId: oldMembership.userId,
+              organizationId: oldMembership.organizationId,
+              roleId: oldMembership.roleId,
+            },
+          });
+          break;
+        }
+        case 'CHANGE_USER_ROLE': {
+          const oldRoleId = meta.oldRoleId as string | undefined;
+          const userId = meta.userId as string | undefined;
+          const orgId = meta.orgId as string | undefined;
+          if (!oldRoleId || !userId || !orgId) {
+            throw new Error('missing role revert keys');
+          }
+          await this.prisma.userOrganization.update({
+            where: {
+              userId_organizationId: {
+                userId,
+                organizationId: orgId,
               },
-              data: { roleId: oldRoleId },
-            })
-            .catch(() => {});
-        break;
-      }
-      case 'CREATE_INVITE':
-        await this.prisma.invite
-          .delete({ where: { id: record.entityId } })
-          .catch(() => {});
-        break;
-      case 'DELETE_INVITE': {
-        const oldInvite = meta.oldInvite as Record<string, unknown> | undefined;
-        if (oldInvite) {
+            },
+            data: { roleId: oldRoleId },
+          });
+          break;
+        }
+        case 'CREATE_INVITE':
+          await this.prisma.invite.delete({ where: { id: record.entityId } });
+          break;
+        case 'DELETE_INVITE': {
+          const oldInvite = meta.oldInvite as Record<string, unknown> | undefined;
+          if (!oldInvite) throw new Error('missing oldInvite');
           const {
             id: _id,
             createdAt: _ca,
             updatedAt: _ua,
             ...rest
           } = oldInvite;
-          await this.prisma.invite
-            .create({ data: rest as never })
-            .catch(() => {});
+          await this.prisma.invite.create({ data: rest as never });
+          break;
         }
-        break;
+        default:
+          break;
       }
+    } catch (err) {
+      this.logger.error(
+        `Compensation failed for ${record.action} ${record.entityId}`,
+        err instanceof Error ? err.stack : String(err),
+      );
+      throw new InternalServerErrorException('ADMIN_APPROVAL_COMPENSATE_FAILED');
     }
   }
 }

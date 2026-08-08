@@ -10,6 +10,16 @@ export function hasMinLevel(userRole: string, minLevel: number): boolean {
   return (ROLE_LEVEL[userRole] ?? 0) >= minLevel;
 }
 
+/** Pick the slug with the higher privilege level (UI gating). */
+export function higherRoleSlug(
+  a: string | null | undefined,
+  b: string | null | undefined,
+): string {
+  const left = a || 'employee';
+  const right = b || 'employee';
+  return (ROLE_LEVEL[left] ?? 0) >= (ROLE_LEVEL[right] ?? 0) ? left : right;
+}
+
 export function canAssignRole(actorSlug: string, targetSlug: string): boolean {
   if (targetSlug === 'admin' && actorSlug !== 'master') return false;
   const actorLevel = ROLE_LEVEL[actorSlug];

@@ -9,7 +9,7 @@ describe('role-hierarchy', () => {
   beforeAll(() => {
     setRoleLevels({
       master: 100,
-      admin: 70,
+      admin: 90,
       executive: 80,
       manager: 60,
       employee: 40,
@@ -64,7 +64,7 @@ describe('role-hierarchy', () => {
   describe('assignableRoleSlugs', () => {
     it('returns expected slugs for executive', () => {
       expect(assignableRoleSlugs('executive').sort()).toEqual(
-        ['admin', 'employee', 'manager'].sort(),
+        ['employee', 'manager'].sort(),
       );
     });
   });

@@ -32,8 +32,9 @@ export class AdminUsersController {
   async create(
     @Body() dto: CreateAdminUserDto,
     @CurrentUser('id') userId: string,
+    @CurrentUser('role') actorRole: string,
   ) {
-    const result = await this.adminService.createUser(dto);
+    const result = await this.adminService.createUser(dto, actorRole);
     await this.approvalsService.log({
       action: 'CREATE_ADMIN_USER',
       entity: 'User',
@@ -50,7 +51,7 @@ export class AdminUsersController {
   }
 
   @Get()
-  @MinLevel(ROLE_LEVEL.master)
+  @MinLevel(ROLE_LEVEL.admin)
   findAll(@Query() pagination: PaginationQueryDto) {
     return this.adminService.findAllUsers(
       pagination.page,
@@ -60,7 +61,7 @@ export class AdminUsersController {
   }
 
   @Get(':id')
-  @MinLevel(ROLE_LEVEL.master)
+  @MinLevel(ROLE_LEVEL.admin)
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.adminService.findOneUser(id);
   }
@@ -71,9 +72,10 @@ export class AdminUsersController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateUserDto,
     @CurrentUser('id') userId: string,
+    @CurrentUser('role') actorRole: string,
   ) {
     const before = await this.adminService.findOneUser(id);
-    const result = await this.adminService.updateUser(id, dto);
+    const result = await this.adminService.updateUser(id, dto, actorRole);
     await this.approvalsService.log({
       action: 'UPDATE_ADMIN_USER',
       entity: 'User',

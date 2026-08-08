@@ -4,7 +4,11 @@ import { AsyncLocalStorage } from 'async_hooks';
 export interface TenantContext {
   organizationId: string;
   organizationSlug?: string;
+  /** Org membership role (executive/manager/employee). */
   orgRole?: string;
+  /** System role from JWT (master/admin/…). */
+  systemRole?: string;
+  /** Platform master — full org capability within tenant context. */
   isSuperAdmin?: boolean;
   plan?: { name: string; features: string[] };
   planFeatures?: string[];

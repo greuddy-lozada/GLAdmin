@@ -57,7 +57,14 @@ const groupIconMap: Record<string, React.ComponentType<{ className?: string }>> 
 };
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const { user, isAuthenticated, isLoading, currentOrg, effectiveRoleSlug } = useAuth();
+  const {
+    user,
+    isAuthenticated,
+    isLoading,
+    currentOrg,
+    effectiveRoleSlug,
+    systemRoleSlug,
+  } = useAuth();
   const { t, tp } = useI18n();
   const router = useRouter();
   const pathname = usePathname();
@@ -102,20 +109,30 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   if (!isAuthenticated) return null;
 
-  const userRole = effectiveRoleSlug;
   const userFeatures = parsePlanFeatures(currentOrg?.plan?.features);
-  const isSystemRole = userRole === 'master' || userRole === 'admin';
+  const isSystemRole =
+    systemRoleSlug === 'master' || systemRoleSlug === 'admin';
+
+  const roleForNavItem = (path: string, minLevel: number) =>
+    path.startsWith('/admin') || minLevel >= 90
+      ? systemRoleSlug
+      : effectiveRoleSlug;
 
   const visibleGroups = navigationGroups
     .map((group) => ({
       ...group,
-      items: isSystemRole
-        ? group.items
-        : group.items.filter(
-            (item) =>
-              hasMinLevel(userRole, item.minLevel) &&
-              (!item.requiredFeature || userFeatures.includes(item.requiredFeature)),
-          ),
+      items: group.items.filter((item) => {
+        const role = roleForNavItem(item.path, item.minLevel);
+        if (isSystemRole && item.path.startsWith('/admin')) {
+          return hasMinLevel(systemRoleSlug, item.minLevel);
+        }
+        if (isSystemRole) return true;
+        return (
+          hasMinLevel(role, item.minLevel) &&
+          (!item.requiredFeature ||
+            userFeatures.includes(item.requiredFeature))
+        );
+      }),
     }))
     .filter((group) => group.items.length > 0);
 

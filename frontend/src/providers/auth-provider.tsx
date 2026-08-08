@@ -9,6 +9,7 @@ import { syncEngine } from '@/lib/sync/sync-engine';
 import { PinSetup } from '@/features/auth/components/pin-setup';
 import { PinUnlock } from '@/features/auth/components/pin-unlock';
 import { useTabsStore } from '@/stores/tabs-store';
+import { higherRoleSlug } from '@/lib/auth/roles';
 
 interface AuthContextType {
   user: User | null;
@@ -17,8 +18,10 @@ interface AuthContextType {
   isLoading: boolean;
   organizations: OrganizationInfo[];
   currentOrg: OrganizationDetail | null;
-  /** Org membership role slug (falls back to global user.role). */
+  /** Highest of system + org membership — used for UI permission gates. */
   effectiveRoleSlug: string;
+  /** System role slug (master/admin/…) — used for platform admin nav. */
+  systemRoleSlug: string;
   login: (email: string, password: string) => Promise<{ organizations?: OrganizationInfo[] }>;
   logout: () => Promise<void>;
   selectOrg: (organizationId: string) => Promise<void>;
@@ -263,7 +266,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         organizations,
         currentOrg,
-        effectiveRoleSlug: user?.role?.slug ?? 'employee',
+        systemRoleSlug: user?.role?.slug ?? 'employee',
+        // Platform operators keep system privileges inside an org (max of both).
+        effectiveRoleSlug: higherRoleSlug(
+          user?.role?.slug,
+          currentOrg?.role ??
+            organizations.find((o) => o.id === currentOrg?.id)?.role,
+        ),
         login,
         logout,
         selectOrg,

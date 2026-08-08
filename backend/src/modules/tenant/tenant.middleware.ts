@@ -65,10 +65,13 @@ export class TenantMiddleware implements NestMiddleware {
     }
 
     const tokenPayload = this.extractTokenPayload(req);
+    const systemRole = tokenPayload.role;
     const ctx: TenantContext = {
       organizationId: cached.organizationId,
       organizationSlug: cached.organizationSlug,
       orgRole: tokenPayload.orgRole,
+      systemRole,
+      isSuperAdmin: systemRole === 'master',
       plan: cached.planName
         ? { name: cached.planName, features: cached.features }
         : undefined,
@@ -84,6 +87,7 @@ export class TenantMiddleware implements NestMiddleware {
     sub?: string;
     orgId?: string;
     orgRole?: string;
+    role?: string;
   } {
     const authHeader = req.headers['authorization'];
     if (!authHeader || typeof authHeader !== 'string') return {};
@@ -94,6 +98,7 @@ export class TenantMiddleware implements NestMiddleware {
         sub?: string;
         orgId?: string;
         orgRole?: string;
+        role?: string;
       };
     } catch {
       return {};

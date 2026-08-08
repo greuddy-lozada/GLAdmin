@@ -52,7 +52,7 @@ export default function AdminUsersPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    apiClient.get('/roles').then((r) => setRoles(r.data.data || [])).catch(() => {});
+    apiClient.get('/admin/roles').then((r) => setRoles(r.data.data || [])).catch(() => {});
     apiClient.get('/admin/orgs?isActive=all').then((r) => setOrgs(r.data.data || [])).catch(() => {});
   }, []);
 

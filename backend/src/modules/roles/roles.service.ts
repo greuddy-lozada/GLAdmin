@@ -7,9 +7,11 @@ export class RolesService {
 
   async findAll(page = 1, limit = 20) {
     const skip = (page - 1) * limit;
+    // Org managers must not receive system roles (master/admin) for assignment UIs.
+    const where = { type: 'org' };
     const [data, total] = await Promise.all([
-      this.prisma.role.findMany({ skip, take: limit }),
-      this.prisma.role.count(),
+      this.prisma.role.findMany({ where, skip, take: limit }),
+      this.prisma.role.count({ where }),
     ]);
     return { data, total, page, limit };
   }

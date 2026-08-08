@@ -40,6 +40,8 @@ export class RolesGuard implements CanActivate {
     }
 
     if (minOrgLevel !== undefined) {
+      // Platform master has full capability in any org they operate in.
+      if (user?.role === 'master') return true;
       if (!user?.orgRole) throw new ForbiddenException();
       const orgLevel = ROLE_LEVEL[user.orgRole as keyof typeof ROLE_LEVEL];
       if (orgLevel === undefined || orgLevel < minOrgLevel)

@@ -5,6 +5,7 @@ import { AdminUsersController } from './admin-users.controller';
 import { AdminPlansController } from './admin-plans.controller';
 import { AdminInvitesController } from './admin-invites.controller';
 import { AdminApprovalsController } from './admin-approvals.controller';
+import { AdminRolesController } from './admin-roles.controller';
 import { AdminApprovalsService } from './admin-approvals.service';
 import { PrismaModule } from '../../shared/prisma/prisma.module';
 
@@ -16,6 +17,7 @@ import { PrismaModule } from '../../shared/prisma/prisma.module';
     AdminPlansController,
     AdminInvitesController,
     AdminApprovalsController,
+    AdminRolesController,
   ],
   providers: [AdminService, AdminApprovalsService],
 })

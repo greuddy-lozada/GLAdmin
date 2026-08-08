@@ -37,15 +37,36 @@ export function assignableRoleSlugs(actorSlug: string): string[] {
   return allSlugs.filter((slug) => canAssignRole(actorSlug, slug));
 }
 
+/** Canonical role levels — keep in sync with ROLE_LEVEL / security.md. */
+export const CANONICAL_ROLES: {
+  name: string;
+  slug: string;
+  type: string;
+  level: number;
+}[] = [
+  { name: 'Master', slug: 'master', type: 'system', level: 100 },
+  { name: 'Admin', slug: 'admin', type: 'system', level: 90 },
+  { name: 'Executive', slug: 'executive', type: 'org', level: 80 },
+  { name: 'Manager', slug: 'manager', type: 'org', level: 60 },
+  { name: 'Employee', slug: 'employee', type: 'org', level: 40 },
+];
+
 @Injectable()
 export class RoleHierarchyInitService implements OnModuleInit {
   constructor(private readonly prisma: PrismaService) {}
 
   async onModuleInit() {
+    for (const r of CANONICAL_ROLES) {
+      await this.prisma.role.upsert({
+        where: { slug: r.slug },
+        create: r,
+        update: { name: r.name, type: r.type, level: r.level },
+      });
+    }
     const roles = await this.prisma.role.findMany();
     const levels: Record<string, number> = {};
-    for (const r of roles) {
-      levels[r.slug] = r.level;
+    for (const role of roles) {
+      levels[role.slug] = role.level;
     }
     setRoleLevels(levels);
   }

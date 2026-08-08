@@ -5,6 +5,7 @@ import { PrismaService } from '../../../shared/prisma/prisma.service';
 import { ContextService } from '../../tenant/context.service';
 import { UserRepository } from '../repository/user.repository';
 import { UserFactory } from '../user.factory';
+import { setRoleLevels } from '../../../common/auth/role-hierarchy';
 
 describe('UsersService hierarchy', () => {
   let service: UsersService;
@@ -15,8 +16,15 @@ describe('UsersService hierarchy', () => {
   const executiveRoleId = '00000000-0000-0000-0000-000000000080';
 
   let orgRole = 'executive';
+  let systemRole: string | undefined;
+  let isSuperAdmin = false;
   const mockContext = {
-    getCurrent: () => ({ organizationId: mockOrgId, orgRole }),
+    getCurrent: () => ({
+      organizationId: mockOrgId,
+      orgRole,
+      systemRole,
+      isSuperAdmin,
+    }),
   };
 
   const mockPrisma = {
@@ -45,6 +53,15 @@ describe('UsersService hierarchy', () => {
 
   beforeEach(async () => {
     orgRole = 'executive';
+    systemRole = undefined;
+    isSuperAdmin = false;
+    setRoleLevels({
+      master: 100,
+      admin: 90,
+      executive: 80,
+      manager: 60,
+      employee: 40,
+    });
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
@@ -157,5 +174,33 @@ describe('UsersService hierarchy', () => {
     await expect(service.create(dto)).rejects.toBeInstanceOf(
       ForbiddenException,
     );
+  });
+
+  it('system master bypasses org membership role for hierarchy', async () => {
+    orgRole = 'employee';
+    systemRole = 'master';
+    isSuperAdmin = true;
+    mockPrisma.role.findUnique.mockResolvedValue({
+      id: executiveRoleId,
+      slug: 'executive',
+      name: 'Ejecutivo',
+    });
+    mockUserRepository.findByUserName.mockResolvedValue(null);
+    mockPrisma.organization.findUnique.mockResolvedValue({ plan: null });
+    mockUserFactory.createFromDto.mockResolvedValue({
+      ...dto,
+      idRole: executiveRoleId,
+    });
+    mockUserRepository.create.mockResolvedValue({
+      id: '1',
+      ...dto,
+      idRole: executiveRoleId,
+      password: 'hashed',
+    });
+    mockPrisma.userOrganization.create.mockResolvedValue({});
+
+    await expect(
+      service.create({ ...dto, idRole: executiveRoleId }),
+    ).resolves.toMatchObject({ message: 'USER.CREATED' });
   });
 });

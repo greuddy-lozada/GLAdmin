@@ -179,7 +179,11 @@ export class AdminService {
     return { data: org, message: 'ADMIN.ORG_DELETED' };
   }
 
-  async assignUserToOrg(orgId: string, dto: AssignUserOrgDto) {
+  async assignUserToOrg(
+    orgId: string,
+    dto: AssignUserOrgDto,
+    actorSlug: string,
+  ) {
     const org = await this.prisma.organization.findUnique({
       where: { id: orgId },
     });
@@ -196,7 +200,10 @@ export class AdminService {
       where: { id: dto.roleId },
     });
     if (!role) throw new NotFoundException('ADMIN.ROLE_NOT_FOUND');
-    assertCanAssignRole('master', role.slug);
+    if (role.type === 'system') {
+      throw new ForbiddenException('USER.ROLE_HIERARCHY');
+    }
+    assertCanAssignRole(actorSlug, role.slug);
 
     const existing = await this.prisma.userOrganization.findUnique({
       where: {
@@ -222,6 +229,12 @@ export class AdminService {
     });
     if (!membership) throw new NotFoundException('ADMIN.MEMBERSHIP_NOT_FOUND');
 
+    const oldMembership = {
+      userId: membership.userId,
+      organizationId: membership.organizationId,
+      roleId: membership.roleId,
+    };
+
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     const clearCurrent = user?.currentOrganizationId === orgId;
 
@@ -236,12 +249,22 @@ export class AdminService {
       });
     }
 
-    return { data: null, message: 'ADMIN.USER_REMOVED' };
+    return {
+      data: null,
+      message: 'ADMIN.USER_REMOVED',
+      oldMembership,
+    };
   }
 
-  async changeUserRole(orgId: string, userId: string, roleId: string) {
+  async changeUserRole(
+    orgId: string,
+    userId: string,
+    roleId: string,
+    actorSlug: string,
+  ) {
     const membership = await this.prisma.userOrganization.findUnique({
       where: { userId_organizationId: { userId, organizationId: orgId } },
+      include: { role: true },
     });
     if (!membership) throw new NotFoundException('ADMIN.MEMBERSHIP_NOT_FOUND');
 
@@ -249,14 +272,31 @@ export class AdminService {
       where: { id: roleId },
     });
     if (!role) throw new NotFoundException('ADMIN.ROLE_NOT_FOUND');
-    assertCanAssignRole('master', role.slug);
+    if (role.type === 'system') {
+      throw new ForbiddenException('USER.ROLE_HIERARCHY');
+    }
+    assertCanAssignRole(actorSlug, role.slug);
+    // Cannot demote/change someone with equal-or-higher role than actor
+    assertCanAssignRole(actorSlug, membership.role.slug);
 
+    const oldRoleId = membership.roleId;
     const updated = await this.prisma.userOrganization.update({
       where: { userId_organizationId: { userId, organizationId: orgId } },
       data: { roleId },
       include: { user: true, role: true, organization: true },
     });
-    return { data: updated, message: 'ADMIN.ROLE_CHANGED' };
+    return {
+      data: updated,
+      message: 'ADMIN.ROLE_CHANGED',
+      oldRoleId,
+    };
+  }
+
+  async findAllRoles() {
+    const data = await this.prisma.role.findMany({
+      orderBy: { level: 'desc' },
+    });
+    return { data, total: data.length };
   }
 
   // ─── Users ───────────────────────────────────
@@ -302,7 +342,7 @@ export class AdminService {
     return stripPassword(user);
   }
 
-  async createUser(dto: CreateAdminUserDto) {
+  async createUser(dto: CreateAdminUserDto, actorSlug: string) {
     const existing = await this.prisma.user.findUnique({
       where: { userName: dto.userName },
     });
@@ -312,12 +352,26 @@ export class AdminService {
       where: { id: dto.idRole },
     });
     if (!role) throw new NotFoundException('ADMIN.ROLE_NOT_FOUND');
+    assertCanAssignRole(actorSlug, role.slug);
 
     if (dto.organizationId) {
       const org = await this.prisma.organization.findUnique({
         where: { id: dto.organizationId },
       });
       if (!org) throw new NotFoundException('ADMIN.ORG_NOT_FOUND');
+    }
+
+    let orgRoleId = dto.orgRoleId ?? dto.idRole;
+    if (dto.organizationId) {
+      const orgRole = await this.prisma.role.findUnique({
+        where: { id: orgRoleId },
+      });
+      if (!orgRole) throw new NotFoundException('ADMIN.ROLE_NOT_FOUND');
+      if (orgRole.type === 'system') {
+        throw new ForbiddenException('USER.ROLE_HIERARCHY');
+      }
+      assertCanAssignRole(actorSlug, orgRole.slug);
+      orgRoleId = orgRole.id;
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -341,7 +395,7 @@ export class AdminService {
         data: {
           userId: user.id,
           organizationId: dto.organizationId,
-          roleId: dto.orgRoleId ?? dto.idRole,
+          roleId: orgRoleId,
         },
       });
     }
@@ -349,8 +403,20 @@ export class AdminService {
     return { data: stripPassword(user), message: 'ADMIN.USER_CREATED' };
   }
 
-  async updateUser(id: string, dto: UpdateUserDto) {
-    await this.findOneUser(id);
+  async updateUser(id: string, dto: UpdateUserDto, actorSlug: string) {
+    const before = await this.findOneUser(id);
+
+    if (dto.roleId !== undefined) {
+      const role = await this.prisma.role.findUnique({
+        where: { id: dto.roleId },
+      });
+      if (!role) throw new NotFoundException('ADMIN.ROLE_NOT_FOUND');
+      assertCanAssignRole(actorSlug, role.slug);
+      // Cannot change a user whose current system role is not assignable by actor
+      if (before.role?.slug) {
+        assertCanAssignRole(actorSlug, before.role.slug);
+      }
+    }
 
     const data: Record<string, unknown> = {};
     if (dto.isActive !== undefined) data.isActive = dto.isActive;

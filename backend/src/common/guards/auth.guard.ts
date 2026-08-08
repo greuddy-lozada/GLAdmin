@@ -44,21 +44,43 @@ export class AuthGuard implements CanActivate {
         throw new UnauthorizedException();
       }
 
+      const orgId =
+        typeof payload.orgId === 'string' ? payload.orgId : undefined;
+
       const user = await this.prisma.user.findUnique({
         where: { id: payload.sub },
-        select: { isActive: true },
+        select: {
+          isActive: true,
+          email: true,
+          role: { select: { slug: true } },
+        },
       });
 
       if (!user || !user.isActive) {
         throw new UnauthorizedException();
       }
 
+      let membershipOrgRole: string | undefined;
+      if (orgId) {
+        const membership = await this.prisma.userOrganization.findUnique({
+          where: {
+            userId_organizationId: {
+              userId: payload.sub as string,
+              organizationId: orgId,
+            },
+          },
+          select: { role: { select: { slug: true } } },
+        });
+        membershipOrgRole = membership?.role.slug;
+      }
+
       request.user = {
         id: payload.sub,
-        email: payload.email,
-        role: payload.role,
-        orgId: payload.orgId,
-        orgRole: payload.orgRole,
+        email: user.email ?? payload.email,
+        // Prefer live DB system role over JWT claim (stale after role change).
+        role: user.role?.slug ?? payload.role,
+        orgId,
+        orgRole: membershipOrgRole ?? payload.orgRole,
       };
       return true;
     } catch {

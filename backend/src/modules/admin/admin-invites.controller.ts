@@ -26,7 +26,7 @@ export class AdminInvitesController {
   ) {}
 
   @Get()
-  @MinLevel(ROLE_LEVEL.master)
+  @MinLevel(ROLE_LEVEL.admin)
   findAll(@Query() pagination: PaginationQueryDto) {
     return this.adminService.findAllInvites(pagination.page, pagination.limit);
   }

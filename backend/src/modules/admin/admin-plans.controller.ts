@@ -28,7 +28,7 @@ export class AdminPlansController {
   ) {}
 
   @Get()
-  @MinLevel(ROLE_LEVEL.employee)
+  @MinLevel(ROLE_LEVEL.admin)
   findAll(@Query() pagination: PaginationQueryDto) {
     return this.adminService.findAllPlans(pagination.page, pagination.limit);
   }

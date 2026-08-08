@@ -42,6 +42,9 @@ export class UsersService {
 
   private getActorRoleSlug(): string {
     const ctx = this.context.getCurrent();
+    if (ctx?.isSuperAdmin || ctx?.systemRole === 'master') {
+      return 'master';
+    }
     if (!ctx?.orgRole) {
       throw new ForbiddenException();
     }

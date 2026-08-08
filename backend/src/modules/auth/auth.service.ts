@@ -134,24 +134,12 @@ export class AuthService {
         org.id,
         org.role,
       );
-      const membershipRole = await this.prisma.role.findFirst({
-        where: { slug: org.role },
-      });
       return {
         data: {
           ...loginResponse,
           accessToken,
-          user: {
-            ...loginResponse.user,
-            idRole: membershipRole?.id ?? loginResponse.user.role?.id,
-            role: membershipRole
-              ? {
-                  id: membershipRole.id,
-                  name: membershipRole.name,
-                  slug: membershipRole.slug,
-                }
-              : loginResponse.user.role,
-          },
+          // System role stays on user; org membership role on organization.role
+          user: loginResponse.user,
           organizations,
           organization: {
             id: org.id,
@@ -166,6 +154,7 @@ export class AuthService {
               : null,
             subscriptionStatus: org.subscriptionStatus,
             subscriptionExpiresAt: org.subscriptionExpiresAt,
+            role: org.role,
           },
         },
         message: 'AUTH.LOGIN_SUCCESS',
@@ -245,15 +234,8 @@ export class AuthService {
         accessToken,
         refreshToken: raw,
         expiresIn: 900,
-        user: {
-          ...userWithoutPassword,
-          idRole: membership.role.id,
-          role: {
-            id: membership.role.id,
-            name: membership.role.name,
-            slug: membership.role.slug,
-          },
-        },
+        // Keep system role on user; org membership role lives on organization.role
+        user: userWithoutPassword,
         organization: {
           id: membership.organization.id,
           name: membership.organization.name,
@@ -267,6 +249,7 @@ export class AuthService {
             : null,
           subscriptionStatus: membership.organization.subscriptionStatus,
           subscriptionExpiresAt: membership.organization.subscriptionExpiresAt,
+          role: membership.role.slug,
         },
       },
       message: 'AUTH.ORG_SELECTED',
@@ -366,32 +349,7 @@ export class AuthService {
 
     const { password: _, ...userWithoutPassword } = user;
 
-    if (user.currentOrganizationId) {
-      const membership = await this.prisma.userOrganization.findUnique({
-        where: {
-          userId_organizationId: {
-            userId,
-            organizationId: user.currentOrganizationId,
-          },
-        },
-        include: { role: true },
-      });
-      if (membership) {
-        return {
-          data: {
-            ...userWithoutPassword,
-            idRole: membership.role.id,
-            role: {
-              id: membership.role.id,
-              name: membership.role.name,
-              slug: membership.role.slug,
-            },
-          },
-          message: 'AUTH.USER_FOUND',
-        };
-      }
-    }
-
+    // Always return system role on user — org role is in JWT orgRole / organization.role
     return { data: userWithoutPassword, message: 'AUTH.USER_FOUND' };
   }
 

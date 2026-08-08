@@ -29,7 +29,7 @@ export class AdminOrgsController {
   ) {}
 
   @Get()
-  @MinLevel(ROLE_LEVEL.master)
+  @MinLevel(ROLE_LEVEL.admin)
   findAll(@Query() pagination: PaginationQueryDto) {
     return this.adminService.findAllOrgs(
       pagination.page,
@@ -39,7 +39,7 @@ export class AdminOrgsController {
   }
 
   @Get(':id')
-  @MinLevel(ROLE_LEVEL.master)
+  @MinLevel(ROLE_LEVEL.admin)
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.adminService.findOneOrg(id);
   }
@@ -110,8 +110,13 @@ export class AdminOrgsController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: AssignUserOrgDto,
     @CurrentUser('id') userId: string,
+    @CurrentUser('role') actorRole: string,
   ) {
-    const result = await this.adminService.assignUserToOrg(id, dto);
+    const result = await this.adminService.assignUserToOrg(
+      id,
+      dto,
+      actorRole,
+    );
     await this.approvalsService.log({
       action: 'ASSIGN_USER_ORG',
       entity: 'UserOrganization',
@@ -137,7 +142,11 @@ export class AdminOrgsController {
       entityId: `${targetUserId}_${id}`,
       description: `Removed user ${targetUserId} from org ${id}`,
       performedById: userId,
-      metadata: { userId: targetUserId, orgId: id },
+      metadata: {
+        userId: targetUserId,
+        orgId: id,
+        oldMembership: result.oldMembership,
+      },
     });
     return result;
   }
@@ -149,11 +158,13 @@ export class AdminOrgsController {
     @Param('userId', ParseUUIDPipe) targetUserId: string,
     @Body('roleId') roleId: string,
     @CurrentUser('id') userId: string,
+    @CurrentUser('role') actorRole: string,
   ) {
     const result = await this.adminService.changeUserRole(
       id,
       targetUserId,
       roleId,
+      actorRole,
     );
     await this.approvalsService.log({
       action: 'CHANGE_USER_ROLE',
@@ -161,7 +172,12 @@ export class AdminOrgsController {
       entityId: `${targetUserId}_${id}`,
       description: `Changed role for user ${targetUserId} in org ${id}`,
       performedById: userId,
-      metadata: { userId: targetUserId, orgId: id, newRoleId: roleId },
+      metadata: {
+        userId: targetUserId,
+        orgId: id,
+        newRoleId: roleId,
+        oldRoleId: result.oldRoleId,
+      },
     });
     return result;
   }
