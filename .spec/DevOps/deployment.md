@@ -342,10 +342,10 @@ Repo → **Settings → Secrets and variables → Actions**:
 | `DEPLOY_SSH_KEY` | yes | Private key PEM (full contents) |
 | `DEPLOY_PATH` | no | `/opt/cuadra` (default if empty) |
 
-Workflow: [`.github/workflows/deploy.yml`](../../.github/workflows/deploy.yml)
+Workflows: [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) (automatic) · [`.github/workflows/deploy.yml`](../../.github/workflows/deploy.yml) (manual)
 
-- Runs after a **successful** [`CI`](../../.github/workflows/ci.yml) workflow on `dev` (`workflow_run`)
-- Also runnable manually: **Actions → Deploy → Run workflow**
+- After **CI quality** succeeds on a **push to `dev`**, the same workflow SSHs to the VPS (`deploy` job). This does **not** use `workflow_run` (that event only registers from the default branch).
+- Manual: **Actions → Deploy → Run workflow** (the `Deploy` workflow must exist on the branch you select; prefer `dev` or `main`).
 
 ### 6.3 Automated flow
 
@@ -354,7 +354,7 @@ Workflow: [`.github/workflows/deploy.yml`](../../.github/workflows/deploy.yml)
      ↓
 2. CI (lint + typecheck for backend & frontend)
      ↓
-3. Deploy workflow SSHs to the VPS and runs scripts/deploy.sh:
+3. Same workflow `deploy` job SSHs to the VPS and runs scripts/deploy.sh:
    - Ensure nginx/certs self-signed LAN TLS (IP SAN)
    - git fetch + reset --hard origin/dev
    - Build frontend/out via ephemeral node:22 container

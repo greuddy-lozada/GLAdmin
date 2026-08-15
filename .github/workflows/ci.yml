@@ -35,3 +35,30 @@ jobs:
 
       - name: Typecheck ${{ matrix.package }}
         run: pnpm --filter ${{ matrix.package }} typecheck
+
+  # Same workflow file as CI so this runs from `dev` without needing
+  # workflow_run on the default branch (master is stale and has no workflows).
+  deploy:
+    name: Deploy to VPS
+    needs: quality
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-vps
+      cancel-in-progress: false
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          command_timeout: 30m
+          script: |
+            set -euo pipefail
+            DEPLOY_PATH="${{ secrets.DEPLOY_PATH }}"
+            if [ -z "$DEPLOY_PATH" ]; then
+              DEPLOY_PATH="/opt/cuadra"
+            fi
+            cd "$DEPLOY_PATH"
+            bash scripts/deploy.sh

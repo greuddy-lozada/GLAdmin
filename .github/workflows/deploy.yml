@@ -1,25 +1,18 @@
 name: Deploy
 
+# Manual only. Automatic deploy is the `deploy` job in ci.yml (push to `dev`).
+# workflow_run cannot register unless this file lives on the default branch.
 on:
-  workflow_run:
-    workflows: ["CI"]
-    types: [completed]
-    branches: [dev]
   workflow_dispatch:
 
 concurrency:
-  group: deploy-production
+  group: deploy-vps
   cancel-in-progress: false
 
 jobs:
   deploy:
     name: Deploy to VPS
     runs-on: ubuntu-latest
-    if: >
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.event == 'push' &&
-       github.event.workflow_run.head_branch == 'dev')
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.2.2
@@ -27,7 +20,6 @@ jobs:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
-          # Frontend build + docker compose build can take several minutes
           command_timeout: 30m
           script: |
             set -euo pipefail
