@@ -1,8 +1,8 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react';
-import { User, OrganizationInfo, OrganizationDetail } from '@/features/auth/models/auth.model';
-import { authService } from '@/features/auth/services/auth.service';
+import { User, OrganizationInfo, OrganizationDetail, LoginResponse } from '@/features/auth/models/auth.model';
+import { authService, RegisterWithInviteRequest } from '@/features/auth/services/auth.service';
 import { localDb } from '@/lib/sync/db';
 import { networkStatus } from '@/lib/sync/network-status';
 import { syncEngine } from '@/lib/sync/sync-engine';
@@ -23,6 +23,7 @@ interface AuthContextType {
   /** System role slug (master/admin/…) — used for platform admin nav. */
   systemRoleSlug: string;
   login: (email: string, password: string) => Promise<{ organizations?: OrganizationInfo[] }>;
+  registerWithInvite: (data: RegisterWithInviteRequest) => Promise<{ organizations?: OrganizationInfo[] }>;
   logout: () => Promise<void>;
   selectOrg: (organizationId: string) => Promise<void>;
 }
@@ -193,9 +194,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [scheduleRefresh, resumeOfflineSession]);
 
-  const login = useCallback(async (email: string, password: string) => {
+  const applyLoginResponse = useCallback(async (response: LoginResponse) => {
     useTabsStore.getState().clearTabs();
-    const response = await authService.login({ email, password });
     setToken(response.accessToken);
     setUser(response.user);
     setOrganizations(response.organizations ?? []);
@@ -215,6 +215,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     return { organizations: response.organizations };
   }, [scheduleRefresh]);
+
+  const login = useCallback(async (email: string, password: string) => {
+    const response = await authService.login({ email, password });
+    return applyLoginResponse(response);
+  }, [applyLoginResponse]);
+
+  const registerWithInvite = useCallback(async (data: RegisterWithInviteRequest) => {
+    const response = await authService.registerWithInvite(data);
+    return applyLoginResponse(response);
+  }, [applyLoginResponse]);
 
   const selectOrg = useCallback(async (organizationId: string) => {
     const response = await authService.selectOrg(organizationId);
@@ -274,6 +284,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             organizations.find((o) => o.id === currentOrg?.id)?.role,
         ),
         login,
+        registerWithInvite,
         logout,
         selectOrg,
       }}

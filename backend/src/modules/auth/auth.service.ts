@@ -3,6 +3,8 @@ import {
   UnauthorizedException,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../shared/prisma/prisma.service';
@@ -11,6 +13,7 @@ import { AuthFactory } from './auth.factory';
 import { LoginDto } from './dto/login.dto';
 import { RefreshDto } from './dto/refresh.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { RegisterWithInviteDto } from './dto/register-with-invite.dto';
 import { AuditLogService } from '../audit-log/audit-log.service';
 import { SubscriptionLifecycleService } from '../subscriptions/subscription-lifecycle.service';
 
@@ -49,6 +52,122 @@ export class AuthService {
     private readonly auditLog: AuditLogService,
     private readonly subscriptionLifecycle: SubscriptionLifecycleService,
   ) {}
+
+  async getInvitePreview(code: string) {
+    const invite = await this.prisma.invite.findUnique({
+      where: { code },
+      include: {
+        organization: { select: { id: true, name: true, slug: true } },
+        role: { select: { id: true, name: true, slug: true, type: true } },
+      },
+    });
+
+    if (!invite || invite.used || invite.expiresAt <= new Date()) {
+      throw new NotFoundException('AUTH.INVITE_INVALID');
+    }
+
+    return {
+      data: {
+        email: invite.email,
+        organization: invite.organization,
+        role: {
+          id: invite.role.id,
+          name: invite.role.name,
+          slug: invite.role.slug,
+        },
+        expiresAt: invite.expiresAt,
+      },
+      message: 'AUTH.INVITE_VALID',
+    };
+  }
+
+  async registerWithInvite(dto: RegisterWithInviteDto) {
+    const invite = await this.prisma.invite.findUnique({
+      where: { code: dto.code },
+      include: {
+        role: true,
+        organization: { include: { plan: true } },
+      },
+    });
+
+    if (!invite || invite.used || invite.expiresAt <= new Date()) {
+      throw new NotFoundException('AUTH.INVITE_INVALID');
+    }
+
+    if (invite.role.type !== 'org') {
+      throw new BadRequestException('AUTH.INVITE_ROLE_INVALID');
+    }
+
+    const emailTaken = await this.userRepository.findByEmail(invite.email);
+    if (emailTaken) {
+      throw new ConflictException('AUTH.EMAIL_ALREADY_EXISTS');
+    }
+
+    const userNameTaken = await this.userRepository.findByUserName(
+      dto.userName,
+    );
+    if (userNameTaken) {
+      throw new ConflictException('AUTH.USERNAME_ALREADY_EXISTS');
+    }
+
+    if (invite.organization.plan) {
+      const count = await this.prisma.userOrganization.count({
+        where: { organizationId: invite.organizationId },
+      });
+      if (count >= invite.organization.plan.maxUsers) {
+        throw new ForbiddenException('ADMIN.MAX_USERS_REACHED');
+      }
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(dto.password, salt);
+
+    const userId = await this.prisma.$transaction(async (tx) => {
+      const claimed = await tx.invite.updateMany({
+        where: { id: invite.id, used: false },
+        data: { used: true },
+      });
+      if (claimed.count !== 1) {
+        throw new ConflictException('AUTH.INVITE_ALREADY_USED');
+      }
+
+      const user = await tx.user.create({
+        data: {
+          email: invite.email,
+          userName: dto.userName,
+          firstName: dto.firstName,
+          lastName: dto.lastName,
+          password: hashedPassword,
+          idRole: invite.roleId,
+          isActive: true,
+          currentOrganizationId: invite.organizationId,
+        },
+      });
+
+      await tx.userOrganization.create({
+        data: {
+          userId: user.id,
+          organizationId: invite.organizationId,
+          roleId: invite.roleId,
+        },
+      });
+
+      return user.id;
+    });
+
+    this.auditLog
+      .log({
+        organizationId: invite.organizationId,
+        userId,
+        action: 'REGISTER_WITH_INVITE',
+        entity: 'Invite',
+        entityId: invite.id,
+        metadata: { email: invite.email },
+      })
+      .catch(() => {});
+
+    return this.login({ email: invite.email, password: dto.password });
+  }
 
   async login(dto: LoginDto) {
     const user = await this.userRepository.findByEmail(dto.email);

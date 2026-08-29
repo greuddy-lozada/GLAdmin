@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ConflictException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { ContextService } from '../tenant/context.service';
@@ -16,6 +17,7 @@ import { CreatePlanDto } from './dto/create-plan.dto';
 import { UpdatePlanDto } from './dto/update-plan.dto';
 import { CreateInviteDto } from './dto/create-invite.dto';
 import { assertCanAssignRole } from '../../common/auth/role-hierarchy';
+import { MailService } from '../../shared/mail/mail.service';
 import * as bcrypt from 'bcrypt';
 
 export interface UserWithRelations {
@@ -82,6 +84,7 @@ export class AdminService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly context: ContextService,
+    private readonly mail: MailService,
   ) {}
 
   // ─── Organizations ───────────────────────────
@@ -546,6 +549,14 @@ export class AdminService {
   async createInvite(dto: CreateInviteDto, invitedById: string) {
     await this.checkMaxUsers(dto.organizationId);
 
+    const role = await this.prisma.role.findUnique({
+      where: { id: dto.roleId },
+    });
+    if (!role) throw new NotFoundException('ADMIN.ROLE_NOT_FOUND');
+    if (role.type !== 'org') {
+      throw new BadRequestException('ADMIN.INVITE_ORG_ROLE_REQUIRED');
+    }
+
     const code = crypto.randomUUID();
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
@@ -560,7 +571,26 @@ export class AdminService {
       },
       include: { organization: true, role: true },
     });
-    return { data: invite, message: 'ADMIN.INVITE_CREATED' };
+
+    const frontendUrl = (
+      process.env.FRONTEND_URL ?? 'http://localhost:3000'
+    ).replace(/\/$/, '');
+    const inviteUrl = `${frontendUrl}/invite/?code=${encodeURIComponent(invite.code)}`;
+
+    const emailSent = await this.mail.sendInviteEmail({
+      to: invite.email,
+      organizationName: invite.organization.name,
+      roleName: invite.role.name,
+      inviteUrl,
+      expiresAt: invite.expiresAt,
+    });
+
+    return {
+      data: { ...invite, emailSent, inviteUrl },
+      message: emailSent
+        ? 'ADMIN.INVITE_CREATED_EMAILED'
+        : 'ADMIN.INVITE_CREATED',
+    };
   }
 
   async removeInvite(id: string) {

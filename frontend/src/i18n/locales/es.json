@@ -37,7 +37,6 @@
     "errorTitle": "Algo salió mal",
     "errorRetry": "Reintentar",
     "goHome": "Ir al inicio",
-
     "error": {
       "save": "Error al guardar",
       "load": "Error al cargar",
@@ -52,6 +51,14 @@
     "email": "Correo Electrónico",
     "password": "Contraseña",
     "error": "Usuario o contraseña incorrecta",
+    "invite": {
+      "title": "Aceptar invitación",
+      "subtitle": "Te unirás a {{org}} como {{role}}.",
+      "submit": "Crear cuenta",
+      "submitting": "Creando cuenta...",
+      "invalid": "Esta invitación no es válida o ya expiró",
+      "error": "No se pudo completar el registro"
+    },
     "pin": {
       "unlockTitle": "Ingresar PIN",
       "unlockDescription": "Ingresa tu PIN para acceder a la aplicación sin conexión.",
@@ -940,20 +947,28 @@
       "delete": "Eliminar Invitación",
       "deleteConfirm": "¿Está seguro de eliminar la invitación a {{email}}?",
       "created": "Invitación creada exitosamente",
+      "createdWithLink": "Invitación creada. Link copiado (SMTP no configurado — el correo no se envió)",
+      "createdEmailed": "Invitación creada y enviada por correo. Link copiado",
       "deleted": "Invitación eliminada exitosamente",
       "empty": "No hay invitaciones registradas",
+      "copyCode": "Copiar código",
+      "copyLink": "Copiar link",
+      "codeCopied": "Código copiado",
+      "linkCopied": "Link de invitación copiado",
       "field": {
         "id": "#",
         "email": "Correo",
         "organization": "Organización",
         "role": "Rol",
+        "code": "Código",
         "expiresAt": "Expira",
         "used": "Usada"
       },
       "error": {
         "save": "Error al guardar invitación",
         "load": "Error al cargar invitaciones",
-        "delete": "Error al eliminar invitación"
+        "delete": "Error al eliminar invitación",
+        "copy": "No se pudo copiar al portapapeles"
       }
     },
     "approvals": {
@@ -1222,7 +1237,7 @@
     "backToList": "Volver a la lista",
     "print": "Imprimir",
     "deleteConfirm": "Eliminar Reporte",
-    "deleteConfirmDesc": "\u00bfEst\u00e1s seguro? Esta acci\u00f3n no se puede deshacer.",
+    "deleteConfirmDesc": "¿Estás seguro? Esta acción no se puede deshacer.",
     "noResults": "Sin resultados",
     "generatedBy": "Generado por",
     "created": "Reporte generado exitosamente",
@@ -1242,7 +1257,7 @@
       "salesByCustomer": "Ventas por Cliente",
       "salesByCustomerDesc": "Ventas agrupadas por cliente con totales",
       "salesByProduct": "Ventas por Producto",
-      "salesByProductDesc": "Productos m\u00e1s vendidos por cantidad e ingresos",
+      "salesByProductDesc": "Productos más vendidos por cantidad e ingresos",
       "inventoryStatus": "Estado de Inventario",
       "inventoryStatusDesc": "Niveles de stock, valor en precio y productos con stock bajo",
       "stockMovements": "Movimientos de Inventario",
@@ -1321,6 +1336,158 @@
     },
     "charts": {
       "monthlySales": "Ventas por Mes"
+    }
+  },
+  "landing": {
+    "nav": {
+      "aria": "Navegación principal",
+      "product": "Producto",
+      "pricing": "Precios",
+      "faq": "FAQ",
+      "login": "Entrar"
+    },
+    "hero": {
+      "title": "Vende offline. Cobra en VES y USD.",
+      "subtitle": "El POS que no se detiene cuando cae internet. Sync automático al reconectar.",
+      "ctaPrimary": "Empezar gratis",
+      "ctaSecondary": "Ver demo",
+      "syncOnline": "Sync · Online"
+    },
+    "pos": {
+      "navSale": "Venta",
+      "navProducts": "Productos",
+      "search": "Buscar producto…",
+      "stock": "Stock",
+      "cart": "Carrito",
+      "total": "Total",
+      "charge": "Cobrar 70,00 VES",
+      "product1": "Harina PAN",
+      "product2": "Aceite 1L",
+      "product3": "Arroz 1kg"
+    },
+    "benefits": {
+      "title": "Hecho para la caja venezolana",
+      "subtitle": "Offline, multi-moneda y pagos locales — sin fricción.",
+      "offline": {
+        "title": "Funciona offline",
+        "desc": "Sigue vendiendo sin internet. La caja no se detiene."
+      },
+      "currency": {
+        "title": "VES y USD",
+        "desc": "Precios, cobros y reportes en ambas monedas."
+      },
+      "pagoMovil": {
+        "title": "Pago Móvil",
+        "desc": "Registra el cobro en el mismo flujo de la venta."
+      },
+      "sync": {
+        "title": "Sync automático",
+        "desc": "Al volver la conexión, todo se sincroniza solo."
+      }
+    },
+    "how": {
+      "title": "Cómo funciona",
+      "subtitle": "De cero a cobrar en tres pasos.",
+      "step1": {
+        "title": "Crea tu cuenta",
+        "desc": "Entra, elige tu organización y configura lo básico."
+      },
+      "step2": {
+        "title": "Carga tu catálogo",
+        "desc": "Productos, precios y stock listos para la caja."
+      },
+      "step3": {
+        "title": "Vende",
+        "desc": "POS rápido, offline-first, con cobro en VES o USD."
+      }
+    },
+    "pricing": {
+      "title": "Planes simples",
+      "subtitle": "Empieza gratis. Escala cuando tu negocio lo pida.",
+      "perMonth": "/ mes",
+      "popular": "Recomendado",
+      "cta": "Empezar",
+      "enterpriseNote": "¿Necesitas Enterprise? Contáctanos para un plan a medida.",
+      "free": {
+        "name": "Free",
+        "price": "$0",
+        "desc": "Operación básica para empezar.",
+        "f1": "Clientes y dashboard",
+        "f2": "Reportes básicos",
+        "f3": "Tasas de cambio"
+      },
+      "starter": {
+        "name": "Starter",
+        "price": "Por definir",
+        "desc": "Catálogo y caja para crecer.",
+        "f1": "Productos, marcas y categorías",
+        "f2": "Proveedores",
+        "f3": "Caja registradora"
+      },
+      "professional": {
+        "name": "Professional",
+        "price": "Por definir",
+        "desc": "POS completo e inventario.",
+        "f1": "POS y ventas persistentes",
+        "f2": "Inventario y lotes",
+        "f3": "Pago Móvil",
+        "f4": "Órdenes de compra"
+      }
+    },
+    "testimonials": {
+      "title": "Dueños que ya operan con Cuadra",
+      "subtitle": "Historias de Alpha — placeholders hasta validación en campo.",
+      "q1": {
+        "quote": "Cuando se cae el internet, seguimos cobrando. Eso solo ya vale el cambio.",
+        "name": "María G.",
+        "role": "Abastos · Caracas"
+      },
+      "q2": {
+        "quote": "VES y USD en la misma venta. Mis cajeros no se confunden.",
+        "name": "Carlos R.",
+        "role": "Ferretería · Valencia"
+      },
+      "q3": {
+        "quote": "En un día ya teníamos el catálogo y estábamos vendiendo.",
+        "name": "Ana P.",
+        "role": "Boutique · Maracaibo"
+      }
+    },
+    "faq": {
+      "title": "Preguntas frecuentes",
+      "subtitle": "Lo esencial antes de empezar.",
+      "offline": {
+        "q": "¿Funciona sin internet?",
+        "a": "Sí. El POS es offline-first: vendes y cobras localmente; al reconectar, Cuadra sincroniza automáticamente."
+      },
+      "pricing": {
+        "q": "¿Cuánto cuesta?",
+        "a": "Hay un plan Free para empezar. Starter y Professional tendrán precios en USD publicados al cerrar el soft launch."
+      },
+      "pagoMovil": {
+        "q": "¿Incluye Pago Móvil?",
+        "a": "En Professional puedes registrar cobros con Pago Móvil en el flujo de la venta. La verificación de comprobantes evoluciona con el producto."
+      },
+      "devices": {
+        "q": "¿Necesito instalar una app?",
+        "a": "No. Cuadra es una PWA: funciona en el navegador del teléfono, tablet o PC sin app store."
+      },
+      "sync": {
+        "q": "¿Qué pasa si hay conflictos al sincronizar?",
+        "a": "El motor de sync detecta conflictos y los presenta para resolverlos. Tus datos locales no se pierden."
+      },
+      "support": {
+        "q": "¿Cómo pido soporte en Alpha?",
+        "a": "Las empresas Alpha tienen canal directo (WhatsApp) con el equipo. El acceso se coordina al dar de alta tu organización."
+      }
+    },
+    "finalCta": {
+      "title": "Listo para cobrar sin fricción",
+      "subtitle": "Entra y empieza a vender. Offline cuando hace falta, sync cuando vuelve la red.",
+      "cta": "Empezar gratis"
+    },
+    "footer": {
+      "rights": "Todos los derechos reservados."
     }
   }
 }

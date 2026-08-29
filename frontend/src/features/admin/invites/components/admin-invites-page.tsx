@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { Copy, Link2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,6 +28,11 @@ function formatDate(dateStr: string) {
   return d.toLocaleDateString();
 }
 
+function inviteUrl(code: string) {
+  if (typeof window === 'undefined') return `/invite/?code=${encodeURIComponent(code)}`;
+  return `${window.location.origin}/invite/?code=${encodeURIComponent(code)}`;
+}
+
 export default function AdminInvitesPage() {
   const { items: invitesData, isLoading: loading, create, remove } = useAdminInvites();
   const { t, tp } = useI18n();
@@ -35,7 +40,7 @@ export default function AdminInvitesPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<AdminInvite | null>(null);
   const [organizations, setOrganizations] = useState<{ id: string; name: string }[]>([]);
-  const [roles, setRoles] = useState<{ id: string; name: string }[]>([]);
+  const [roles, setRoles] = useState<{ id: string; name: string; type?: string }[]>([]);
   const [formData, setFormData] = useState<CreateAdminInviteRequest>({
     email: '',
     organizationId: '',
@@ -44,14 +49,70 @@ export default function AdminInvitesPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    apiClient.get('/admin/orgs').then((r) => setOrganizations(r.data.data || [])).catch(() => console.warn('Failed to load organizations'));
-    apiClient.get('/roles').then((r) => setRoles(r.data.data || [])).catch(() => console.warn('Failed to load roles'));
+    apiClient
+      .get('/admin/orgs')
+      .then((r) => setOrganizations(r.data.data || []))
+      .catch(() => console.warn('Failed to load organizations'));
+    apiClient
+      .get('/admin/roles')
+      .then((r) => {
+        const all = (r.data.data || []) as { id: string; name: string; type?: string }[];
+        setRoles(all.filter((role) => role.type === 'org'));
+      })
+      .catch(() => console.warn('Failed to load roles'));
   }, []);
+
+  const copyText = async (text: string, successKey: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      sileo.success({ description: t(successKey) });
+    } catch {
+      sileo.error({ description: t('admin.invites.error.copy') });
+    }
+  };
 
   const columns: Column<AdminInvite>[] = [
     { field: 'email', headerName: t('admin.invites.field.email') },
     { field: 'organization', render: (row) => row.organization?.name ?? '—', headerName: t('admin.invites.field.organization') },
     { field: 'role', render: (row) => row.role?.slug ?? '—', headerName: t('admin.invites.field.role') },
+    {
+      field: 'code',
+      headerName: t('admin.invites.field.code'),
+      render: (row) => (
+        <div className="flex items-center gap-1">
+          <span className="font-mono text-xs truncate max-w-[8rem]" title={row.code}>
+            {row.code.slice(0, 8)}…
+          </span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            aria-label={t('admin.invites.copyCode')}
+            onClick={(e) => {
+              e.stopPropagation();
+              void copyText(row.code, 'admin.invites.codeCopied');
+            }}
+          >
+            <Copy className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            aria-label={t('admin.invites.copyLink')}
+            disabled={row.used}
+            onClick={(e) => {
+              e.stopPropagation();
+              void copyText(inviteUrl(row.code), 'admin.invites.linkCopied');
+            }}
+          >
+            <Link2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      ),
+    },
     {
       field: 'expiresAt',
       render: (row) => formatDate(row.expiresAt),
@@ -74,7 +135,20 @@ export default function AdminInvitesPage() {
     setError('');
     setFormOpen(false);
     create.mutate(formData, {
-      onSuccess: () => sileo.success({ description: t('admin.invites.created') }),
+      onSuccess: async (invite) => {
+        if (invite?.code) {
+          try {
+            await navigator.clipboard.writeText(invite.inviteUrl ?? inviteUrl(invite.code));
+          } catch {
+            // clipboard optional; toast still shows status
+          }
+        }
+        if (invite?.emailSent) {
+          sileo.success({ description: t('admin.invites.createdEmailed') });
+        } else {
+          sileo.success({ description: t('admin.invites.createdWithLink') });
+        }
+      },
       onError: (err) => { setError(extractApiError(err) ?? t('admin.invites.error.save')); setFormOpen(true); },
     });
   };
@@ -99,7 +173,7 @@ export default function AdminInvitesPage() {
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>{t('admin.invites.field.email')}</Label>
-            <Input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required />
+            <Input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required autoFocus />
           </div>
           <div className="space-y-2">
             <Label>{t('admin.invites.field.organization')}</Label>

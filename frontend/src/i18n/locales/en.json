@@ -37,7 +37,6 @@
     "errorTitle": "Something went wrong",
     "errorRetry": "Retry",
     "goHome": "Go home",
-
     "error": {
       "save": "Error saving",
       "load": "Error loading",
@@ -52,6 +51,14 @@
     "email": "Email",
     "password": "Password",
     "error": "Invalid username or password",
+    "invite": {
+      "title": "Accept invitation",
+      "subtitle": "You'll join {{org}} as {{role}}.",
+      "submit": "Create account",
+      "submitting": "Creating account...",
+      "invalid": "This invitation is invalid or has expired",
+      "error": "Could not complete registration"
+    },
     "pin": {
       "unlockTitle": "Enter PIN",
       "unlockDescription": "Enter your PIN to access the app offline.",
@@ -940,20 +947,28 @@
       "delete": "Delete Invitation",
       "deleteConfirm": "Are you sure you want to delete invitation to {{email}}?",
       "created": "Invitation created successfully",
+      "createdWithLink": "Invitation created. Link copied (SMTP not configured — email was not sent)",
+      "createdEmailed": "Invitation created and emailed. Link copied",
       "deleted": "Invitation deleted successfully",
       "empty": "No invitations registered",
+      "copyCode": "Copy code",
+      "copyLink": "Copy link",
+      "codeCopied": "Code copied",
+      "linkCopied": "Invite link copied",
       "field": {
         "id": "#",
         "email": "Email",
         "organization": "Organization",
         "role": "Role",
+        "code": "Code",
         "expiresAt": "Expires",
         "used": "Used"
       },
       "error": {
         "save": "Error saving invitation",
         "load": "Error loading invitations",
-        "delete": "Error deleting invitation"
+        "delete": "Error deleting invitation",
+        "copy": "Could not copy to clipboard"
       }
     },
     "approvals": {
@@ -1321,6 +1336,158 @@
     },
     "charts": {
       "monthlySales": "Monthly Sales"
+    }
+  },
+  "landing": {
+    "nav": {
+      "aria": "Main navigation",
+      "product": "Product",
+      "pricing": "Pricing",
+      "faq": "FAQ",
+      "login": "Log in"
+    },
+    "hero": {
+      "title": "Sell offline. Charge in VES and USD.",
+      "subtitle": "The POS that keeps running when the internet drops. Auto-sync when you're back online.",
+      "ctaPrimary": "Start for free",
+      "ctaSecondary": "See demo",
+      "syncOnline": "Sync · Online"
+    },
+    "pos": {
+      "navSale": "Sale",
+      "navProducts": "Products",
+      "search": "Search product…",
+      "stock": "Stock",
+      "cart": "Cart",
+      "total": "Total",
+      "charge": "Charge 70.00 VES",
+      "product1": "PAN Flour",
+      "product2": "Oil 1L",
+      "product3": "Rice 1kg"
+    },
+    "benefits": {
+      "title": "Built for Venezuelan counters",
+      "subtitle": "Offline, multi-currency, and local payments — no friction.",
+      "offline": {
+        "title": "Works offline",
+        "desc": "Keep selling without internet. The register never stops."
+      },
+      "currency": {
+        "title": "VES & USD",
+        "desc": "Prices, charges, and reports in both currencies."
+      },
+      "pagoMovil": {
+        "title": "Pago Móvil",
+        "desc": "Record the payment in the same sale flow."
+      },
+      "sync": {
+        "title": "Auto sync",
+        "desc": "When connectivity returns, everything syncs on its own."
+      }
+    },
+    "how": {
+      "title": "How it works",
+      "subtitle": "From zero to charging in three steps.",
+      "step1": {
+        "title": "Create your account",
+        "desc": "Sign in, pick your organization, and set the basics."
+      },
+      "step2": {
+        "title": "Load your catalog",
+        "desc": "Products, prices, and stock ready for the register."
+      },
+      "step3": {
+        "title": "Sell",
+        "desc": "Fast offline-first POS with VES or USD checkout."
+      }
+    },
+    "pricing": {
+      "title": "Simple plans",
+      "subtitle": "Start free. Scale when your business needs it.",
+      "perMonth": "/ month",
+      "popular": "Recommended",
+      "cta": "Get started",
+      "enterpriseNote": "Need Enterprise? Contact us for a custom plan.",
+      "free": {
+        "name": "Free",
+        "price": "$0",
+        "desc": "Basic ops to get started.",
+        "f1": "Customers and dashboard",
+        "f2": "Basic reports",
+        "f3": "Exchange rates"
+      },
+      "starter": {
+        "name": "Starter",
+        "price": "TBD",
+        "desc": "Catalog and register to grow.",
+        "f1": "Products, brands, and categories",
+        "f2": "Suppliers",
+        "f3": "Cash register"
+      },
+      "professional": {
+        "name": "Professional",
+        "price": "TBD",
+        "desc": "Full POS and inventory.",
+        "f1": "POS and persistent sales",
+        "f2": "Inventory and batches",
+        "f3": "Pago Móvil",
+        "f4": "Purchase orders"
+      }
+    },
+    "testimonials": {
+      "title": "Owners already running on Cuadra",
+      "subtitle": "Alpha stories — placeholders until field validation.",
+      "q1": {
+        "quote": "When the internet drops, we keep charging. That alone is worth switching.",
+        "name": "María G.",
+        "role": "Grocery · Caracas"
+      },
+      "q2": {
+        "quote": "VES and USD in the same sale. My cashiers don't get confused.",
+        "name": "Carlos R.",
+        "role": "Hardware store · Valencia"
+      },
+      "q3": {
+        "quote": "In one day we had the catalog loaded and were selling.",
+        "name": "Ana P.",
+        "role": "Boutique · Maracaibo"
+      }
+    },
+    "faq": {
+      "title": "Frequently asked questions",
+      "subtitle": "The essentials before you start.",
+      "offline": {
+        "q": "Does it work without internet?",
+        "a": "Yes. The POS is offline-first: you sell and charge locally; when you reconnect, Cuadra syncs automatically."
+      },
+      "pricing": {
+        "q": "How much does it cost?",
+        "a": "There's a Free plan to start. Starter and Professional USD prices will be published as we close soft launch."
+      },
+      "pagoMovil": {
+        "q": "Does it include Pago Móvil?",
+        "a": "On Professional you can record Pago Móvil charges in the sale flow. Receipt verification evolves with the product."
+      },
+      "devices": {
+        "q": "Do I need to install an app?",
+        "a": "No. Cuadra is a PWA: it runs in the browser on phone, tablet, or PC — no app store."
+      },
+      "sync": {
+        "q": "What if sync conflicts happen?",
+        "a": "The sync engine detects conflicts and surfaces them for resolution. Your local data is not lost."
+      },
+      "support": {
+        "q": "How do I get support in Alpha?",
+        "a": "Alpha companies get a direct channel (WhatsApp) with the team. Access is coordinated when your organization is set up."
+      }
+    },
+    "finalCta": {
+      "title": "Ready to charge without friction",
+      "subtitle": "Sign in and start selling. Offline when you need it, synced when the network returns.",
+      "cta": "Start for free"
+    },
+    "footer": {
+      "rights": "All rights reserved."
     }
   }
 }

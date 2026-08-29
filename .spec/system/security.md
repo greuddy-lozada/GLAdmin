@@ -27,8 +27,11 @@
 POST /api/auth/login          → { email, password }              → { accessToken, refreshToken, ... }
 POST /api/auth/refresh        → { refreshToken }                 → { accessToken, refreshToken, ... }
 POST /api/auth/logout         → invalida refresh token
-POST /api/auth/register       → según flujo de invites/admin
+GET  /api/auth/invites/:code  → preview público (email, org, rol) si invite válido
+POST /api/auth/register       → { code, firstName, lastName, userName, password } → crea user + membership + sesión
 ```
+
+Invites admin: `POST /api/admin/invites` crea el invite y, si `SMTP_*` está configurado, envía el link por correo (`FRONTEND_URL/invite/?code={uuid}`). Sin SMTP el invite se crea igual (copy-link). Ruta query (no `/invite/[code]`) por `output: 'export'`.
 
 ### Rate Limiting específico para Auth
 
@@ -37,7 +40,8 @@ POST /api/auth/register       → según flujo de invites/admin
 | `/api/auth/login` | 5 intentos | 1 minuto por IP |
 | `/api/auth/login` | 10 intentos | 1 hora por email |
 | `/api/auth/refresh` | 30 intentos | 1 minuto |
-| `/api/auth/register` | 3 intentos | 1 hora (solo Admin) |
+| `/api/auth/invites/:code` | 10 intentos | 1 minuto |
+| `/api/auth/register` | 3 intentos | 1 hora por IP |
 
 ---
 

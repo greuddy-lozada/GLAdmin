@@ -1,6 +1,6 @@
 # UI Patterns — Catálogo Adoptado de Cuadra
 
-> **status:** `current` · Última actualización: 2026-08-08  
+> **status:** `current` · Última actualización: 2026-08-29  
 > **Propósito:** Qué patrones de UI **usamos**, cuáles **adoptamos después**, y cuáles **rechazamos**.  
 > Tokens, tipografía y grids detallados viven en [design-system.md](design-system.md). Este archivo es la lista operativa para agentes y PRs.
 
@@ -69,6 +69,17 @@ Antes de mergear un cambio de pantalla:
 | **Hotkeys documentados** | Atajos globales/POS | `useHotkey` + badge/tooltip | Atajos ocultos; interferir con typing en inputs (excepto Escape) |
 | **Escape cierra** | Modales / sheets / dialogs | Cierra el overlay más cercano | Escape sin efecto |
 
+### Marketing (público)
+
+| Patrón | Cuándo | Canónico | Anti-patrón |
+|---|---|---|---|
+| **Landing Soft Tech** | `/` marketing (no autenticado) | Route group `(marketing)` + `features/landing/*`; fondo `--neo-bg`; sombras duales `neo-raised` / `neo-inset` / `neo-cta` en `globals.css` | Mezclar glassmorphism; cards decorativas anidadas; redirect silencioso sin landing |
+| **Hero split + POS mock** | Above the fold | Copy/CTAs izq. + `PosPreview` estático der.; stack en mobile | Hero sin ancla de producto; badges flotantes sobre el mock |
+| **Motion cinemática (solo marketing)** | Landing | Timeline hero + `whileInView` + micro-motion POS; `useReducedMotion` | Timelines largas dentro del dashboard/app (ahí rige ≤200ms del design-system) |
+| **Auth gate en `/`** | Visitante autenticado | Redirect a dashboard / org-picker (misma lógica que login) | Mostrar marketing a sesión activa |
+
+---
+
 ### Visual system (puntero)
 
 Seguir [design-system.md](design-system.md): tokens, tipografía financiera (`tabular-nums`), jerarquía de cards, motion corta, `prefers-reduced-motion`, a11y básica.
@@ -133,10 +144,12 @@ Implementar como **componentes compartidos** + actualizar esta sección a Adopte
 [ Opcional: tabla secundaria full-width ]
 ```
 
-### D — Settings
+### E — Marketing landing (Soft Tech)
 ```
-[ Secciones / fieldsets ]
-[ Stack vertical; save explícito ]
+[ Nav neo-raised · anclas · Entrar → /login ]
+[ Hero split: copy+CTAs | PosPreview ]
+[ Beneficios · Cómo funciona · Precios · Testimonios · FAQ · CTA · Footer ]
+[ Motion cinemática + prefers-reduced-motion ]
 ```
 
 ---

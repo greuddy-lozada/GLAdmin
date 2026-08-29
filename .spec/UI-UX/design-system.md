@@ -9,6 +9,18 @@
 
 ## 1. Tokens de Color — Paleta Corporativa
 
+### Marketing Soft Tech (landing)
+
+Scoped under `.marketing` in `frontend/src/app/globals.css` (light-only v1):
+
+| Token / class | Uso |
+|---|---|
+| `--neo-bg` / `--neo-dark` / `--neo-light` | Fondo Soft Tech + sombras duales |
+| `.neo-raised` / `.neo-inset` / `.neo-press` | Superficies neumórficas |
+| `.neo-cta` | CTA primario (relleno primary + sombra suave) |
+
+No usar estas clases fuera de `(marketing)` / `features/landing`.
+
 ### Definición en Tailwind CSS v4
 
 ```css
@@ -494,13 +506,15 @@ const columns: Column<Invoice>[] = [
 
 **Stack:** `motion` (framer-motion)
 
-**Reglas:**
+**Reglas (app / dashboard):**
 1. **Animaciones solo para feedback, nunca solo decorativas.**
 2. **Duración máxima: 200ms.** Animaciones más largas hacen sentir lenta la app.
 3. **Respetar `prefers-reduced-motion`.**
 
+**Excepción — landing marketing (`(marketing)` / Soft Tech):** timelines de hero (~0.5–1.2s), scroll `whileInView` y micro-loops del mock POS están permitidos. Siempre gated con `useReducedMotion`. No aplicar esta excepción dentro del dashboard.
+
 ```tsx
-// Transiciones estándar
+// Transiciones estándar (app)
 const fadeIn = {
   initial: { opacity: 0, y: 8 },
   animate: { opacity: 1, y: 0 },

@@ -84,11 +84,11 @@ Ser el punto de venta y sistema de gestión de inventario de referencia para PyM
 
 | Iniciativa | Valor |
 |---|---|
-| Soft Launch Alpha (5-10 empresas amigas) | Primera validación en producción real. |
+| Soft Launch Alpha (5-10 empresas amigas) | Primera validación en producción real. Plan operativo 2 semanas: [plans/alpha-soft-launch-backlog.md](../plans/alpha-soft-launch-backlog.md). |
 | Refinamiento de UX en POS | Basado en feedback de Alpha: velocidad, atajos, flujo de cobro. |
 | Profundizar analytics / KPIs de ventas | Completar reportes de margen, ticket promedio, top productos. |
 | Reports P0 contador (fiscal + AR/AP) | ✅ Shipped — ver [.spec/features/reports.md](../features/reports.md) |
-| Reports P1 ops | payment method, cash register, purchases, FX |
+| Reports P1 ops | payment method, cash register, purchases, FX (priorizados en backlog Alpha) |
 | Feature specs restantes (cash-register, pago-movil, customers, stocks) | Contratos P1 para agentes |
 
 ### Later — Más allá del trimestre

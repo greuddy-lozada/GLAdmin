@@ -11,10 +11,20 @@
     "ORG_SELECTED": "Organización seleccionada",
     "NO_ORGANIZATIONS": "El usuario no pertenece a ninguna organización",
     "NOT_ORG_MEMBER": "No eres miembro de esta organización",
-    "EMAIL_EXISTS": "El correo ya está registrado"
+    "EMAIL_EXISTS": "El correo ya está registrado",
+    "INVITE_VALID": "Invitación válida",
+    "INVITE_INVALID": "Esta invitación no es válida o ya expiró",
+    "INVITE_ROLE_INVALID": "La invitación tiene un rol inválido",
+    "INVITE_ALREADY_USED": "Esta invitación ya fue utilizada",
+    "EMAIL_ALREADY_EXISTS": "El correo ya está registrado",
+    "USERNAME_ALREADY_EXISTS": "El nombre de usuario ya está en uso"
   },
   "ADMIN": {
-    "MAX_USERS_REACHED": "Límite de usuarios alcanzado. Actualiza tu plan para añadir más usuarios."
+    "MAX_USERS_REACHED": "Límite de usuarios alcanzado. Actualiza tu plan para añadir más usuarios.",
+    "ROLE_NOT_FOUND": "Rol no encontrado",
+    "INVITE_ORG_ROLE_REQUIRED": "Solo se pueden invitar con roles de organización",
+    "INVITE_CREATED": "Invitación creada. Copia el link para compartirla",
+    "INVITE_CREATED_EMAILED": "Invitación creada y enviada por correo"
   },
   "USER": {
     "CREATED": "Usuario creado exitosamente",

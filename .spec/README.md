@@ -78,6 +78,7 @@ Código y feature/UI spec deben ir alineados en el **mismo PR**.
 ### 📋 Planes de Implementación
 | Archivo | Propósito | Status |
 |---|---|---|
+| [plans/alpha-soft-launch-backlog.md](plans/alpha-soft-launch-backlog.md) | Soft Launch Alpha — backlog 2 semanas | `active` |
 | [plans/todo.md](plans/todo.md) | Infra/UX backlog (Redis, K6, etc.) | `done` |
 | [plans/implementation-priorities.md](plans/implementation-priorities.md) | Decimal, soft delete, tests | `done` / parcial |
 | [plans/reports-module-design.md](plans/reports-module-design.md) | Diseño módulo reportes | `done` (módulo shipped; iterar KPIs) |

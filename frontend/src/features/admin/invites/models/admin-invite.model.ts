@@ -8,6 +8,8 @@ export interface AdminInvite {
   used: boolean;
   expiresAt: string;
   createdAt: string;
+  emailSent?: boolean;
+  inviteUrl?: string;
   organization?: { id: string; name: string; slug: string };
   role?: { id: string; name: string; slug: string };
   invitedBy?: { id: string; firstName: string; lastName: string };

@@ -6,6 +6,7 @@ import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 
 import { PrismaModule } from './shared/prisma/prisma.module';
 import { CacheModule } from './shared/cache/cache.module';
+import { MailModule } from './shared/mail/mail.module';
 import { I18nModule } from './shared/i18n/i18n.module';
 import { TenantModule } from './modules/tenant/tenant.module';
 import { TenantMiddleware } from './modules/tenant/tenant.middleware';
@@ -75,6 +76,7 @@ if (!jwtSecret) {
     }),
     PrismaModule,
     CacheModule,
+    MailModule,
     I18nModule,
     TenantModule,
     UsersModule,

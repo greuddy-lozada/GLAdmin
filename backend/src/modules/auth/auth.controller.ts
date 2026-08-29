@@ -3,6 +3,7 @@ import {
   Post,
   Get,
   Body,
+  Param,
   HttpCode,
   UseGuards,
 } from '@nestjs/common';
@@ -11,6 +12,7 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshDto } from './dto/refresh.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { RegisterWithInviteDto } from './dto/register-with-invite.dto';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
@@ -26,6 +28,32 @@ export class AuthController {
   @Post('login')
   async login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
+  }
+
+  @Public()
+  @UseGuards(ThrottlerGuard)
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === 'test' ? 100 : 10,
+      ttl: 60000,
+    },
+  })
+  @Get('invites/:code')
+  async getInvite(@Param('code') code: string) {
+    return this.authService.getInvitePreview(code);
+  }
+
+  @Public()
+  @UseGuards(ThrottlerGuard)
+  @Throttle({
+    default: {
+      limit: process.env.NODE_ENV === 'test' ? 100 : 3,
+      ttl: 3600000,
+    },
+  })
+  @Post('register')
+  async register(@Body() dto: RegisterWithInviteDto) {
+    return this.authService.registerWithInvite(dto);
   }
 
   @Public()

@@ -452,3 +452,94 @@ a {
     display: none !important;
   }
 }
+
+/* ── Marketing Soft Tech (landing) ── */
+.marketing {
+  --neo-bg: #e4e9f2;
+  --neo-dark: #c5cedc;
+  --neo-light: #ffffff;
+  --neo-text: #1a2332;
+  --neo-muted: #5a6578;
+  --neo-primary: #3e93c1;
+  --neo-primary-dark: #32769a;
+  --neo-success: #12b886;
+  /* Isolate from root dark theme tokens */
+  --background: #e4e9f2;
+  --foreground: #1a2332;
+  --primary: #3e93c1;
+  --primary-foreground: #ffffff;
+  --muted: #d8dee9;
+  --muted-foreground: #5a6578;
+  --card: #e4e9f2;
+  --card-foreground: #1a2332;
+  --border: #c5cedc;
+  color-scheme: light;
+  background-color: #e4e9f2;
+  color: #1a2332;
+  font-family: var(--font-heading);
+  min-height: 100vh;
+}
+
+.marketing .neo-raised {
+  background-color: #e4e9f2;
+  box-shadow: 8px 8px 16px #c5cedc, -8px -8px 16px #ffffff;
+  transition: box-shadow 200ms ease, transform 200ms ease;
+}
+
+.marketing .neo-inset {
+  background-color: #e4e9f2;
+  box-shadow: inset 6px 6px 12px #c5cedc, inset -6px -6px 12px #ffffff;
+}
+
+.marketing .neo-press:hover {
+  box-shadow: 10px 10px 20px #c5cedc, -6px -6px 14px #ffffff;
+  transform: translateY(-1px);
+}
+
+.marketing .neo-press:active {
+  box-shadow: inset 4px 4px 8px #c5cedc, inset -4px -4px 8px #ffffff;
+  transform: translateY(0);
+}
+
+.marketing .neo-cta {
+  background-color: #3e93c1 !important;
+  color: #ffffff !important;
+  box-shadow: 6px 6px 14px #c5cedc, -3px -3px 10px #ffffff;
+  transition: box-shadow 200ms ease, background-color 200ms ease, transform 200ms ease;
+}
+
+.marketing .neo-cta:hover {
+  background-color: #32769a !important;
+  box-shadow: 8px 8px 18px #c5cedc, -2px -2px 8px #ffffff;
+  transform: translateY(-1px);
+}
+
+.marketing .neo-cta:active {
+  box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.25);
+  transform: translateY(0);
+}
+
+.marketing .neo-accent {
+  color: #3e93c1;
+}
+
+.marketing .neo-muted {
+  color: #5a6578;
+}
+
+.marketing .neo-ink {
+  color: #1a2332;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marketing .neo-raised,
+  .marketing .neo-press,
+  .marketing .neo-cta {
+    transition: none;
+  }
+
+  .marketing .neo-press:hover,
+  .marketing .neo-cta:hover {
+    transform: none;
+  }
+}

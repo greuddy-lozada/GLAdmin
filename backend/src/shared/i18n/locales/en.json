@@ -11,10 +11,20 @@
     "ORG_SELECTED": "Organization selected",
     "NO_ORGANIZATIONS": "User does not belong to any organization",
     "NOT_ORG_MEMBER": "You are not a member of this organization",
-    "EMAIL_EXISTS": "Email already registered"
+    "EMAIL_EXISTS": "Email already registered",
+    "INVITE_VALID": "Valid invitation",
+    "INVITE_INVALID": "This invitation is invalid or has expired",
+    "INVITE_ROLE_INVALID": "Invitation has an invalid role",
+    "INVITE_ALREADY_USED": "This invitation has already been used",
+    "EMAIL_ALREADY_EXISTS": "Email already registered",
+    "USERNAME_ALREADY_EXISTS": "Username already taken"
   },
   "ADMIN": {
-    "MAX_USERS_REACHED": "User limit reached. Upgrade your plan to add more users."
+    "MAX_USERS_REACHED": "User limit reached. Upgrade your plan to add more users.",
+    "ROLE_NOT_FOUND": "Role not found",
+    "INVITE_ORG_ROLE_REQUIRED": "Only organization roles can be used for invitations",
+    "INVITE_CREATED": "Invitation created. Copy the link to share it",
+    "INVITE_CREATED_EMAILED": "Invitation created and emailed"
   },
   "USER": {
     "CREATED": "User has been created",
