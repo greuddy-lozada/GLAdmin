@@ -70,7 +70,7 @@ export default function LoginForm() {
             className="h-11 px-4"
           />
         </div>
-        <Button type="submit" className="w-full h-11" disabled={loading}>
+        <Button type="submit" className="neo-cta h-11 w-full rounded-2xl" disabled={loading}>
           {loading ? t('auth.loggingIn') : t('auth.loginButton')}
         </Button>
       </form>

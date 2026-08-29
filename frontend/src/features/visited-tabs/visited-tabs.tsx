@@ -47,10 +47,10 @@ export function VisitedTabs({ iconMap, tabs: propTabs }: VisitedTabsProps) {
             tabIndex={0}
             onClick={() => router.push(tab.path)}
             onKeyDown={(e) => { if (e.key === 'Enter') router.push(tab.path); }}
-            className={`group flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md cursor-pointer shrink-0 transition-colors ${
+            className={`group flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-xl cursor-pointer shrink-0 transition-all ${
               active
-                ? 'bg-primary/10 text-primary font-medium'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                ? 'neo-raised text-[#3e93c1] font-medium'
+                : 'text-[#5a6578] hover:text-[#1a2332]'
             }`}
           >
             <Icon className="h-3.5 w-3.5 shrink-0" />

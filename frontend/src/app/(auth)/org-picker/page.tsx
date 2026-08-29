@@ -29,14 +29,14 @@ export default function OrgPickerPage() {
   if (isLoading) return null;
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-8">
+    <div className="flex min-h-screen items-center justify-center bg-background p-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="space-y-6 max-w-md w-full"
+        className="neo-raised w-full max-w-md space-y-6 rounded-2xl p-8"
       >
-        <div className="text-center space-y-2">
-          <h2 className="text-2xl font-bold">{t('orgPicker.title')}</h2>
+        <div className="space-y-2 text-center">
+          <h2 className="font-heading text-2xl font-bold text-primary">{t('orgPicker.title')}</h2>
           <p className="text-muted-foreground">{t('orgPicker.description')}</p>
         </div>
         <div className="space-y-3">
@@ -46,9 +46,9 @@ export default function OrgPickerPage() {
               variant="outline"
               disabled={selectedId === org.id}
               onClick={() => handleSelect(org.id)}
-              className="w-full h-auto p-4 flex items-center gap-3 justify-start"
+              className="neo-press flex h-auto w-full items-center justify-start gap-3 rounded-2xl p-4"
             >
-              <Building2 className="h-8 w-8 text-muted-foreground shrink-0" />
+              <Building2 className="h-8 w-8 shrink-0 text-primary" />
               <div className="text-left">
                 <div className="font-medium">{org.name}</div>
                 <div className="text-sm text-muted-foreground">{org.plan?.label || org.role}</div>

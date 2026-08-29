@@ -19,7 +19,20 @@ Scoped under `.marketing` in `frontend/src/app/globals.css` (light-only v1):
 | `.neo-raised` / `.neo-inset` / `.neo-press` | Superficies neumórficas |
 | `.neo-cta` | CTA primario (relleno primary + sombra suave) |
 
-No usar estas clases fuera de `(marketing)` / `features/landing`.
+### Soft Tech app skin (option A — light)
+
+Light mode (`:root` / `html:not(.dark)`) adopts the Soft Tech palette for **dashboard + auth**:
+
+| Área | Tratamiento |
+|---|---|
+| Tokens `:root` | `--background` / `--card` / `--sidebar` = `#e4e9f2`; primary sky |
+| Primitives | `Button` / `Input` / `Card` con sombras neo en light |
+| Shell | Sidebar + header dashboard Soft Tech; nav activo `.neo-raised` |
+| Auth | Login / invite / org-picker Soft Tech (sin striped hero) |
+| POS | Hereda tokens; **sin** restyle denso de caja (opción B/C) |
+| Dark mode | Tokens `.dark` legacy; neo polish **no** aplica |
+
+Default theme: `light` (`ThemeProvider` `enableSystem={false}`).
 
 ### Definición en Tailwind CSS v4
 

@@ -103,14 +103,14 @@ function KpiCell({
   warn?: boolean;
 }) {
   return (
-    <Card className="border-border bg-card min-w-0">
+    <Card className="neo-raised min-w-0 border-0 shadow-none">
       <CardContent className="p-4">
-        <p className="text-xs text-muted-foreground truncate">{label}</p>
-        <p className={`text-2xl font-bold mt-1 tracking-tight tabular-nums ${warn ? 'text-destructive' : ''}`}>
+        <p className="text-xs text-[#5a6578] truncate">{label}</p>
+        <p className={`text-2xl font-bold mt-1 tracking-tight tabular-nums ${warn ? 'text-destructive' : 'text-[#1a2332]'}`}>
           {value}
         </p>
         {hint !== undefined ? (
-          <p className="text-xs text-muted-foreground mt-1">{hint}</p>
+          <p className="text-xs text-[#5a6578] mt-1">{hint}</p>
         ) : (
           <div className="mt-1">
             <Delta pct={delta ?? null} />
@@ -253,32 +253,32 @@ function Row2Panels({
 
   return (
     <section className={`grid grid-cols-1 ${cols} gap-3 min-h-0`}>
-      <Card className="border-border bg-card min-h-0">
+      <Card className="neo-raised min-h-0 border-0 shadow-none">
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-3">
-            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-            <h3 className="text-sm font-semibold">{t('dashboard.live.salesFeed')}</h3>
+            <ShoppingCart className="h-4 w-4 text-[#3e93c1]" />
+            <h3 className="text-sm font-semibold text-[#1a2332]">{t('dashboard.live.salesFeed')}</h3>
           </div>
           <SalesFeed sales={sales} />
         </CardContent>
       </Card>
 
-      <Card className="border-border bg-card min-h-0">
+      <Card className="neo-raised min-h-0 border-0 shadow-none">
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-3">
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-            <h3 className="text-sm font-semibold">{t('dashboard.analytics.stockAlerts')}</h3>
+            <AlertTriangle className="h-4 w-4 text-[#3e93c1]" />
+            <h3 className="text-sm font-semibold text-[#1a2332]">{t('dashboard.analytics.stockAlerts')}</h3>
           </div>
           <StockPanel alerts={alerts} />
         </CardContent>
       </Card>
 
       {arAp && (
-        <Card className="border-border bg-card min-h-0">
+        <Card className="neo-raised min-h-0 border-0 shadow-none">
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-3">
-              <Wallet className="h-4 w-4 text-muted-foreground" />
-              <h3 className="text-sm font-semibold">{t('dashboard.arap.title')}</h3>
+              <Wallet className="h-4 w-4 text-[#3e93c1]" />
+              <h3 className="text-sm font-semibold text-[#1a2332]">{t('dashboard.arap.title')}</h3>
             </div>
             <ArApPanel arAp={arAp} />
           </CardContent>

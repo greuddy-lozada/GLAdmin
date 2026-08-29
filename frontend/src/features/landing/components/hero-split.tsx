@@ -43,7 +43,7 @@ export function HeroSplit() {
           className="font-heading text-4xl font-extrabold leading-[1.1] tracking-tight neo-ink text-[#1a2332] sm:text-5xl"
           {...fadeUp(0.28)}
         >
-          {t('landing.hero.title')}
+          {t('common.slogan')}
         </motion.h1>
         <motion.p
           className="mt-4 max-w-md text-base leading-relaxed neo-muted text-[#5a6578] sm:text-lg"

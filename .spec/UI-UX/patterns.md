@@ -74,6 +74,7 @@ Antes de mergear un cambio de pantalla:
 | Patrón | Cuándo | Canónico | Anti-patrón |
 |---|---|---|---|
 | **Landing Soft Tech** | `/` marketing (no autenticado) | Route group `(marketing)` + `features/landing/*`; fondo `--neo-bg`; sombras duales `neo-raised` / `neo-inset` / `neo-cta` en `globals.css` | Mezclar glassmorphism; cards decorativas anidadas; redirect silencioso sin landing |
+| **App Soft Tech light (A)** | Dashboard + auth en light | Tokens `:root` Soft Tech; primitives neo en `html:not(.dark)`; sidebar/header soft; login Soft Tech | Forzar neo denso en POS; dark neumórfico sin diseño; theme system por defecto |
 | **Hero split + POS mock** | Above the fold | Copy/CTAs izq. + `PosPreview` estático der.; stack en mobile | Hero sin ancla de producto; badges flotantes sobre el mock |
 | **Motion cinemática (solo marketing)** | Landing | Timeline hero + `whileInView` + micro-motion POS; `useReducedMotion` | Timelines largas dentro del dashboard/app (ahí rige ≤200ms del design-system) |
 | **Auth gate en `/`** | Visitante autenticado | Redirect a dashboard / org-picker (misma lógica que login) | Mostrar marketing a sesión activa |

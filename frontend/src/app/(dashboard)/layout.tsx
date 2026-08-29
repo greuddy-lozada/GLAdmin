@@ -155,20 +155,20 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="flex h-screen flex-col md:flex-row overflow-hidden print:h-auto print:block print:overflow-visible">
-      <div className="print:hidden">
+    <div className="soft-tech flex h-screen flex-col overflow-hidden bg-[#e4e9f2] text-[#1a2332] md:flex-row print:h-auto print:block print:overflow-visible">
+      <div className="print:hidden p-2 md:pr-0">
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen}>
         <SidebarBody className="justify-between gap-6">
           <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
             <div className="relative h-[44px] flex items-center">
               <div className={`transition-all duration-300 ${sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-                <h2 className="text-lg font-bold text-foreground">Cuadra</h2>
-                <p className="text-xs text-muted-foreground">
+                <h2 className="text-lg font-bold font-heading text-[#3e93c1]">Cuadra</h2>
+                <p className="text-xs text-[#5a6578]">
                   {user?.firstName} {user?.lastName}
                 </p>
               </div>
               <div className={`absolute inset-0 flex items-center transition-all duration-300 ${sidebarOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-                <div className="h-5 w-6 shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm bg-primary" />
+                <div className="h-5 w-6 shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm bg-[#3e93c1]" />
               </div>
             </div>
             <nav className="mt-6 flex flex-col gap-1 overflow-hidden">
@@ -218,7 +218,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                               href={item.path}
                               className={`flex items-center gap-2 pl-1 pr-3 py-2 text-sm transition-colors overflow-hidden group/sidebar ${
                                 active
-                                  ? 'bg-secondary text-secondary-foreground rounded-md font-medium'
+                                  ? 'neo-raised text-primary rounded-xl font-medium'
                                   : 'text-muted-foreground hover:text-foreground'
                               }`}
                             >
@@ -244,7 +244,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                               icon: <Icon className="h-5 w-5 shrink-0 text-muted-foreground" />,
                             }}
                             className={active
-                              ? 'bg-secondary text-secondary-foreground rounded-md font-medium'
+                              ? 'neo-raised text-primary rounded-xl font-medium'
                               : 'text-muted-foreground hover:text-foreground transition-colors'}
                           />
                         );
@@ -273,12 +273,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       </div>
 
       <main className="flex-1 flex flex-col overflow-hidden transition-[padding] duration-300 print:h-auto print:block print:overflow-visible" style={{ paddingRight: 'var(--panel-offset, 0px)' }}>
-        <div className="flex items-center justify-between px-6 md:px-8 py-3 border-b border-border bg-card shrink-0 relative print:hidden">
-          <div className="absolute bottom-[-0.75rem] left-[-0.75rem] w-3 h-3 bg-background rounded-tr-xl z-10 pointer-events-none" />
+        <div data-app-header className="neo-raised mx-2 mt-2 mb-0 flex items-center justify-between rounded-2xl px-6 py-3 md:mx-4 md:px-6 shrink-0 relative print:hidden z-10">
           <div className="flex items-center gap-3">
-            <h1 className="text-lg font-semibold">{pageTitle}</h1>
+            <h1 className="text-lg font-semibold font-heading text-[#3e93c1]">{pageTitle}</h1>
             {showWelcome && (
-              <p className="text-sm text-muted-foreground hidden sm:block">
+              <p className="text-sm text-[#5a6578] hidden sm:block">
                 {tp('dashboard.welcome', { name: `${user?.firstName} ${user?.lastName}` })}
               </p>
             )}
@@ -288,12 +287,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <UserNav />
           </div>
         </div>
-        <div className="px-6 md:px-8 pt-4 pb-4 shrink-0 print:hidden">
+        <div className="px-4 md:px-6 pt-4 pb-3 shrink-0 print:hidden">
           <VisitedTabs iconMap={iconMap} tabs={tabs} />
         </div>
-        <div className="flex-1 overflow-hidden px-6 md:px-8 pb-6 md:pb-8 print:h-auto print:overflow-visible print:block print:px-4 print:pb-4">
+        <div className="flex-1 overflow-hidden px-4 md:px-6 pb-4 md:pb-6 print:h-auto print:overflow-visible print:block print:px-4 print:pb-4">
           <div className="w-full h-full print:h-auto">
-            <Suspense fallback={<div className="flex items-center justify-center h-64"><p className="text-muted-foreground">{t('common.loading')}</p></div>}>
+            <Suspense fallback={<div className="flex items-center justify-center h-64"><p className="text-[#5a6578]">{t('common.loading')}</p></div>}>
               <ErrorBoundary>
                 {children}
               </ErrorBoundary>

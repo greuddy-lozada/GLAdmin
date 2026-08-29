@@ -37,6 +37,7 @@
     "errorTitle": "Algo salió mal",
     "errorRetry": "Reintentar",
     "goHome": "Ir al inicio",
+    "slogan": "Control total. Cero estrés. Todo Cuadra.",
     "error": {
       "save": "Error al guardar",
       "load": "Error al cargar",
@@ -46,11 +47,20 @@
   },
   "auth": {
     "title": "Cuadra",
+    "tagline": "Control total. Cero estrés. Todo Cuadra.",
+    "loginTitle": "Ingresar",
+    "loginSubtitle": "Usa tu correo y contraseña para continuar.",
     "loginButton": "INGRESAR",
     "loggingIn": "Ingresando...",
     "email": "Correo Electrónico",
     "password": "Contraseña",
     "error": "Usuario o contraseña incorrecta",
+    "feature": {
+      "multiCurrency": "Multi-moneda VES / USD",
+      "rates": "Tasas BCV en tiempo real",
+      "inventory": "Inventario y lotes",
+      "tax": "Retenciones IVA e ISLR"
+    },
     "invite": {
       "title": "Aceptar invitación",
       "subtitle": "Te unirás a {{org}} como {{role}}.",
@@ -1035,7 +1045,8 @@
     "description": "Configuración general del sistema.",
     "personalization": "Personalización",
     "theme": "Tema",
-    "themeDescription": "Cambia entre modo claro y oscuro"
+    "themeDescription": "Cambia entre modo claro y oscuro",
+    "themeSoftTech": "Soft Tech claro activo (opción A). El modo oscuro volverá en una iteración posterior."
   },
   "pagoMovil": {
     "config": {
@@ -1347,8 +1358,8 @@
       "login": "Entrar"
     },
     "hero": {
-      "title": "Vende offline. Cobra en VES y USD.",
-      "subtitle": "El POS que no se detiene cuando cae internet. Sync automático al reconectar.",
+      "title": "Control total. Cero estrés. Todo Cuadra.",
+      "subtitle": "Vende offline. Cobra en VES y USD. El POS que no se detiene cuando cae internet.",
       "ctaPrimary": "Empezar gratis",
       "ctaSecondary": "Ver demo",
       "syncOnline": "Sync · Online"

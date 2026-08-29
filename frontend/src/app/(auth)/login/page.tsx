@@ -1,26 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { motion, useReducedMotion } from 'motion/react';
+import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/providers/auth-provider';
 import { useUiStore } from '@/stores/ui-store';
-import { useRouter } from 'next/navigation';
-import { motion } from 'motion/react';
-import { Button } from '@/components/ui/button';
-import { StripedBackground } from '@/components/ui/striped-background';
+import { useI18n } from '@/i18n';
 import LoginForm from '@/features/auth/components/login-form';
-import { X, LogIn, TrendingUp, Globe, ShieldCheck, Warehouse } from 'lucide-react';
-
-const features = [
-  { icon: TrendingUp, text: 'Multi-moneda VED / USD' },
-  { icon: Globe, text: 'Tasas BCV en tiempo real' },
-  { icon: Warehouse, text: 'Inventario y lotes' },
-  { icon: ShieldCheck, text: 'Retenciones IVA e ISLR' },
-];
 
 export default function LoginPage() {
   const { isAuthenticated, isLoading, user, organizations } = useAuth();
   const router = useRouter();
-  const [panelOpen, setPanelOpen] = useState(false);
+  const { t } = useI18n();
+  const reduceMotion = useReducedMotion();
   const [checkingBootstrap, setCheckingBootstrap] = useState(true);
 
   useEffect(() => {
@@ -57,101 +51,77 @@ export default function LoginPage() {
     }
   }, [isLoading, isAuthenticated, checkingBootstrap, router, user, organizations]);
 
-  if (isLoading || checkingBootstrap) return null;
+  if (isLoading || checkingBootstrap) {
+    return <div className="min-h-screen bg-[#e4e9f2]" aria-busy="true" />;
+  }
+
+  const fadeUp = (delay: number) =>
+    reduceMotion
+      ? { initial: false as const, animate: { opacity: 1 }, transition: { duration: 0 } }
+      : {
+          initial: { opacity: 0.01, y: 20 },
+          animate: { opacity: 1, y: 0 },
+          transition: { duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] as const },
+        };
 
   return (
-    
-    <div className="relative h-full overflow-hidden">
-      <motion.div
-        className="relative h-full"
-        animate={{ x: panelOpen ? 500 : 0 }}
-        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-      >
-        <StripedBackground />
-
-        <div className="relative z-10 flex h-full">
-          <div className="flex flex-1 flex-col justify-center px-12 md:px-24 max-w-2xl">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: 'easeOut' }}
+    <div className="marketing light min-h-screen bg-[#e4e9f2] font-heading text-[#1a2332] antialiased">
+      <div className="mx-auto grid min-h-screen max-w-6xl items-center gap-10 px-4 py-12 sm:px-6 lg:grid-cols-2 lg:gap-14 lg:px-10">
+        <div>
+          <motion.div {...fadeUp(0.05)}>
+            <Link
+              href="/"
+              className="neo-raised neo-press mb-8 inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-[#5a6578]"
             >
-              <h1 className="text-5xl md:text-6xl font-heading font-extrabold text-white leading-[1.1] tracking-tight">
-                Cuadra
-              </h1>
-              <p className="mt-4 text-lg md:text-xl text-white/80 leading-relaxed max-w-lg font-light">
-                Control total de tu negocio con gestión multi-moneda, inventario,
-                órdenes de compra y retenciones fiscales en un solo lugar.
-              </p>
-            </motion.div>
+              <ArrowLeft className="size-4" aria-hidden />
+              {t('common.back')}
+            </Link>
+          </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2, ease: 'easeOut' }}
-              className="mt-10 grid gap-3"
-            >
-              {features.map((f, i) => (
-                <div key={i} className="flex items-center gap-3 text-white/90">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15">
-                    <f.icon className="h-4 w-4" />
-                  </div>
-                  <span className="text-sm font-medium">{f.text}</span>
-                </div>
-              ))}
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4, ease: 'easeOut' }}
-              className="mt-10"
-            >
-              <Button
-                size="icon"
-                onClick={() => setPanelOpen(true)}
-                className="h-14 w-14 rounded-full shadow-lg shadow-black/20 hover:shadow-xl hover:shadow-black/30 transition-shadow"
-                aria-label="Iniciar sesión"
-              >
-                <LogIn className="h-6 w-6" />
-              </Button>
-            </motion.div>
-          </div>
+          <motion.p
+            className="mb-3 font-heading text-sm font-bold tracking-wide text-[#3e93c1]"
+            {...fadeUp(0.12)}
+          >
+            Cuadra
+          </motion.p>
+          <motion.h1
+            className="font-heading text-4xl font-extrabold leading-[1.1] tracking-tight text-[#1a2332] sm:text-5xl"
+            {...fadeUp(0.22)}
+          >
+            {t('common.slogan')}
+          </motion.h1>
+          <motion.p
+            className="mt-4 max-w-md text-base leading-relaxed text-[#5a6578] sm:text-lg"
+            {...fadeUp(0.32)}
+          >
+            {t('landing.hero.subtitle')}
+          </motion.p>
+          <motion.div
+            className="neo-raised mt-8 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium text-[#5a6578]"
+            {...fadeUp(0.4)}
+          >
+            <span className="size-2 rounded-full bg-[#12b886]" aria-hidden />
+            {t('landing.hero.syncOnline')}
+          </motion.div>
         </div>
-      </motion.div>
 
-      {panelOpen && (
-        <div
-          role="button"
-          tabIndex={0}
-          className="fixed inset-0 z-50"
-          onClick={() => setPanelOpen(false)}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setPanelOpen(false); }}
-          style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}
-        />
-      )}
-
-      <motion.div
-        initial={false}
-        animate={{ x: panelOpen ? 0 : -500 }}
-        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-        className="fixed top-0 left-0 h-full z-50"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div style={{ width: 500 }} className="h-full bg-card text-foreground shadow-xl">
-          <div className="flex items-center justify-between px-6 py-5 border-b border-border">
-            <span className="text-lg font-heading font-bold text-foreground">Cuadra</span>
-            <Button variant="ghost" size="icon" onClick={() => setPanelOpen(false)} aria-label="Cerrar">
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="flex items-center justify-center p-4 h-[calc(100%-4.5rem)]">
-            <div className="w-full max-w-sm bg-background rounded-xl p-5 space-y-5">
-              <LoginForm />
-            </div>
-          </div>
-        </div>
-      </motion.div>
+        <motion.div
+          className="neo-raised w-full rounded-3xl p-6 sm:p-8"
+          initial={reduceMotion ? false : { opacity: 0.01, scale: 0.96, y: 16 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={
+            reduceMotion
+              ? { duration: 0 }
+              : { duration: 0.55, delay: 0.28, ease: [0.22, 1, 0.36, 1] }
+          }
+        >
+          <h2 className="mb-1 font-heading text-xl font-bold text-[#1a2332]">
+            {t('auth.loginTitle')}
+          </h2>
+          <p className="mb-6 text-sm text-[#5a6578]">{t('auth.loginSubtitle')}</p>
+          <LoginForm />
+        </motion.div>
+      </div>
     </div>
   );
 }

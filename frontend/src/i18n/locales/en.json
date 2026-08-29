@@ -37,6 +37,7 @@
     "errorTitle": "Something went wrong",
     "errorRetry": "Retry",
     "goHome": "Go home",
+    "slogan": "Full control. Zero stress. Everything Cuadra.",
     "error": {
       "save": "Error saving",
       "load": "Error loading",
@@ -46,11 +47,20 @@
   },
   "auth": {
     "title": "Cuadra",
+    "tagline": "Full control. Zero stress. Everything Cuadra.",
+    "loginTitle": "Sign in",
+    "loginSubtitle": "Use your email and password to continue.",
     "loginButton": "SIGN IN",
     "loggingIn": "Signing in...",
     "email": "Email",
     "password": "Password",
     "error": "Invalid username or password",
+    "feature": {
+      "multiCurrency": "Multi-currency VES / USD",
+      "rates": "Real-time BCV rates",
+      "inventory": "Inventory and batches",
+      "tax": "IVA and ISLR withholdings"
+    },
     "invite": {
       "title": "Accept invitation",
       "subtitle": "You'll join {{org}} as {{role}}.",
@@ -1035,7 +1045,8 @@
     "description": "General system settings.",
     "personalization": "Personalization",
     "theme": "Theme",
-    "themeDescription": "Switch between light and dark mode"
+    "themeDescription": "Switch between light and dark mode",
+    "themeSoftTech": "Soft Tech light is active (option A). Dark mode returns in a later iteration."
   },
   "pagoMovil": {
     "config": {
@@ -1347,8 +1358,8 @@
       "login": "Log in"
     },
     "hero": {
-      "title": "Sell offline. Charge in VES and USD.",
-      "subtitle": "The POS that keeps running when the internet drops. Auto-sync when you're back online.",
+      "title": "Full control. Zero stress. Everything Cuadra.",
+      "subtitle": "Sell offline. Charge in VES and USD. The POS that keeps running when the internet drops.",
       "ctaPrimary": "Start for free",
       "ctaSecondary": "See demo",
       "syncOnline": "Sync · Online"

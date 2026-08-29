@@ -88,9 +88,10 @@ export const DesktopSidebar = ({
     <>
       <motion.div
         className={cn(
-          "h-full px-4 py-4 hidden md:flex md:flex-col bg-card border-r border-border/50 w-[300px] shrink-0",
+          "h-full px-4 py-4 hidden md:flex md:flex-col bg-[#e4e9f2] w-[300px] shrink-0 rounded-2xl neo-raised",
           className,
         )}
+        data-sidebar="desktop"
         animate={{
           width: animate ? (open ? "300px" : "60px") : "300px",
         }}
@@ -119,8 +120,9 @@ export const MobileSidebar = ({
     <>
       <div
         className={cn(
-          "h-14 px-4 flex flex-row md:hidden items-center justify-between bg-card border-b border-border/50 w-full",
+          "h-14 px-4 flex flex-row md:hidden items-center justify-between bg-[#e4e9f2] w-full rounded-2xl neo-raised",
         )}
+        data-sidebar="mobile-bar"
         {...props}
       >
         <span className="font-semibold">Cuadra</span>
