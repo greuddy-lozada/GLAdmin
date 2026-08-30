@@ -6,7 +6,8 @@ WORKDIR /app
 
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY backend/package.json backend/
-RUN pnpm install --frozen-lockfile
+# postinstall runs `prisma generate`; schema is not in the image yet
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
 COPY backend/ backend/
 RUN pnpm --filter backend exec prisma generate
