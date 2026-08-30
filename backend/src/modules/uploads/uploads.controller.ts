@@ -17,6 +17,7 @@ import { extname, join } from 'path';
 import {
   createReadStream,
   existsSync,
+  mkdirSync,
   openSync,
   readSync,
   closeSync,
@@ -28,6 +29,7 @@ import {
 } from '../../common/decorators/min-level.decorator';
 
 const UPLOAD_DIR = join(process.cwd(), 'uploads');
+mkdirSync(UPLOAD_DIR, { recursive: true });
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_TYPES = [
   'image/jpeg',

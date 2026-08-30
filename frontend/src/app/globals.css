@@ -479,6 +479,21 @@ html:not(.dark) .neo-inset,
   box-shadow: inset 6px 6px 12px var(--neo-dark, #c5cedc), inset -6px -6px 12px var(--neo-light, #fff);
 }
 
+/* Nav/tab active — tint + primary rail (readable inside neo-raised shells) */
+html:not(.dark) .neo-nav-active,
+.soft-tech .neo-nav-active,
+.marketing .neo-nav-active {
+  background-color: color-mix(in srgb, var(--neo-primary, #3e93c1) 14%, var(--neo-bg, #e4e9f2));
+  color: var(--neo-primary, #3e93c1);
+  box-shadow: inset 3px 0 0 var(--neo-primary, #3e93c1);
+}
+
+html:not(.dark) .neo-nav-active svg,
+.soft-tech .neo-nav-active svg,
+.marketing .neo-nav-active svg {
+  color: var(--neo-primary, #3e93c1);
+}
+
 html:not(.dark) .neo-press:hover,
 .soft-tech .neo-press:hover,
 .marketing .neo-press:hover {
@@ -569,6 +584,132 @@ html:not(.dark) [data-slot='card'],
   border: none;
   background-color: #e4e9f2;
   box-shadow: 8px 8px 16px #c5cedc, -8px -8px 16px #ffffff;
+}
+
+/* Soft Tech overlays, lists, and secondary surfaces (light — includes portals) */
+html:not(.dark) [data-slot='dropdown-menu-content'],
+html:not(.dark) [data-slot='dropdown-menu-sub-content'],
+html:not(.dark) [data-slot='select-content'],
+html:not(.dark) [data-slot='searchable-select-content'],
+html:not(.dark) [data-slot='data-table'],
+html:not(.dark) [data-slot='data-table-mobile-card'],
+html:not(.dark) [data-slot='bento-item'],
+html:not(.dark) [data-slot='alert'],
+.soft-tech [data-slot='dropdown-menu-content'],
+.soft-tech [data-slot='dropdown-menu-sub-content'],
+.soft-tech [data-slot='select-content'],
+.soft-tech [data-slot='searchable-select-content'],
+.soft-tech [data-slot='data-table'],
+.soft-tech [data-slot='data-table-mobile-card'],
+.soft-tech [data-slot='bento-item'],
+.soft-tech [data-slot='alert'] {
+  border: none;
+  border-radius: 1rem;
+  background-color: var(--neo-bg, #e4e9f2);
+  color: var(--neo-text, #1a2332);
+  box-shadow: 8px 8px 16px var(--neo-dark, #c5cedc), -8px -8px 16px var(--neo-light, #fff);
+}
+
+/* Floating panels over dark overlay — elevation, not dual neo (neo needs matching page bg) */
+html:not(.dark) [data-slot='dialog-content'],
+html:not(.dark) [data-slot='sheet-content'],
+html:not(.dark) [data-slot='slide-form-panel'],
+.soft-tech [data-slot='dialog-content'],
+.soft-tech [data-slot='sheet-content'],
+.soft-tech [data-slot='slide-form-panel'] {
+  border: none;
+  border-radius: 1.25rem;
+  background-color: #f4f6fa;
+  color: var(--neo-text, #1a2332);
+  box-shadow:
+    0 4px 6px rgb(15 23 42 / 0.04),
+    0 16px 40px rgb(15 23 42 / 0.22);
+}
+
+html:not(.dark) [data-slot='select-trigger'],
+html:not(.dark) [data-slot='searchable-select-trigger'],
+.soft-tech [data-slot='select-trigger'],
+.soft-tech [data-slot='searchable-select-trigger'] {
+  border: none;
+  border-radius: 0.75rem;
+  background-color: var(--neo-bg, #e4e9f2);
+  box-shadow: inset 4px 4px 8px #c5cedc, inset -4px -4px 8px #ffffff;
+}
+
+html:not(.dark) [data-slot='select-trigger']:focus-visible,
+html:not(.dark) [data-slot='searchable-select-trigger']:focus-visible,
+.soft-tech [data-slot='select-trigger']:focus-visible,
+.soft-tech [data-slot='searchable-select-trigger']:focus-visible {
+  box-shadow:
+    inset 4px 4px 8px #c5cedc,
+    inset -4px -4px 8px #ffffff,
+    0 0 0 3px color-mix(in srgb, #3e93c1 35%, transparent);
+}
+
+html:not(.dark) [data-slot='dialog-overlay'],
+html:not(.dark) [data-slot='sheet-overlay'],
+.soft-tech [data-slot='dialog-overlay'],
+.soft-tech [data-slot='sheet-overlay'] {
+  background-color: rgb(26 35 50 / 0.28);
+  backdrop-filter: blur(4px);
+}
+
+html:not(.dark) [data-slot='dropdown-menu-item'],
+html:not(.dark) [data-slot='dropdown-menu-checkbox-item'],
+html:not(.dark) [data-slot='dropdown-menu-radio-item'],
+html:not(.dark) [data-slot='select-item'],
+.soft-tech [data-slot='dropdown-menu-item'],
+.soft-tech [data-slot='dropdown-menu-checkbox-item'],
+.soft-tech [data-slot='dropdown-menu-radio-item'],
+.soft-tech [data-slot='select-item'] {
+  border-radius: 0.75rem;
+}
+
+html:not(.dark) [data-slot='dropdown-menu-item']:focus,
+html:not(.dark) [data-slot='dropdown-menu-checkbox-item']:focus,
+html:not(.dark) [data-slot='dropdown-menu-radio-item']:focus,
+html:not(.dark) [data-slot='dropdown-menu-sub-trigger']:focus,
+html:not(.dark) [data-slot='dropdown-menu-sub-trigger'][data-state='open'],
+html:not(.dark) [data-slot='select-item']:focus,
+.soft-tech [data-slot='dropdown-menu-item']:focus,
+.soft-tech [data-slot='dropdown-menu-checkbox-item']:focus,
+.soft-tech [data-slot='dropdown-menu-radio-item']:focus,
+.soft-tech [data-slot='dropdown-menu-sub-trigger']:focus,
+.soft-tech [data-slot='dropdown-menu-sub-trigger'][data-state='open'],
+.soft-tech [data-slot='select-item']:focus {
+  background-color: color-mix(in srgb, var(--neo-primary, #3e93c1) 12%, var(--neo-bg, #e4e9f2));
+  color: var(--neo-text, #1a2332);
+}
+
+html:not(.dark) [data-slot='dropdown-menu-separator'],
+html:not(.dark) [data-slot='select-separator'],
+.soft-tech [data-slot='dropdown-menu-separator'],
+.soft-tech [data-slot='select-separator'] {
+  background-color: color-mix(in srgb, var(--neo-dark, #c5cedc) 65%, transparent);
+}
+
+html:not(.dark) [data-slot='table-header'],
+.soft-tech [data-slot='table-header'] {
+  background-color: color-mix(in srgb, var(--neo-primary, #3e93c1) 6%, var(--neo-bg, #e4e9f2));
+}
+
+html:not(.dark) [data-slot='table-row'],
+.soft-tech [data-slot='table-row'] {
+  border-color: color-mix(in srgb, var(--neo-dark, #c5cedc) 45%, transparent);
+}
+
+html:not(.dark) [data-slot='table-row']:hover,
+.soft-tech [data-slot='table-row']:hover {
+  background-color: color-mix(in srgb, var(--neo-primary, #3e93c1) 5%, var(--neo-bg, #e4e9f2));
+}
+
+html:not(.dark) [data-slot='tooltip-content'],
+.soft-tech [data-slot='tooltip-content'] {
+  border: none;
+  border-radius: 0.75rem;
+  background-color: var(--neo-primary, #3e93c1);
+  color: #ffffff;
+  box-shadow: 4px 4px 10px var(--neo-dark, #c5cedc), -2px -2px 6px var(--neo-light, #fff);
 }
 
 html:not(.dark) [data-sidebar='desktop'],

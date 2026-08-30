@@ -84,8 +84,24 @@ done
 log "Running Prisma migrations..."
 "${COMPOSE[@]}" exec -T backend npx prisma migrate deploy
 
-log "Seeding database (no-op if already seeded)..."
-"${COMPOSE[@]}" exec -T backend npx tsx prisma/seed.ts
+# Seed only on first bootstrap (empty orgs). Set FORCE_SEED=1 to re-run; SKIP_SEED=1 to never seed.
+if [[ "${SKIP_SEED:-0}" == "1" ]]; then
+  log "Skipping seed (SKIP_SEED=1)."
+elif [[ "${FORCE_SEED:-0}" == "1" ]]; then
+  log "Seeding database (FORCE_SEED=1)..."
+  "${COMPOSE[@]}" exec -T backend npx tsx prisma/seed.ts
+else
+  ORG_COUNT="$("${COMPOSE[@]}" exec -T backend \
+    node -e "const {PrismaClient}=require('@prisma/client'); const p=new PrismaClient(); p.organization.count().then(c=>{console.log(c); return p.\$disconnect();}).catch(()=>{console.log('err'); process.exit(1);})" \
+    2>/dev/null | tr -d '\r' | tail -n1)"
+  if [[ "$ORG_COUNT" == "0" ]]; then
+    log "Empty database — running initial seed..."
+    "${COMPOSE[@]}" exec -T backend npx tsx prisma/seed.ts
+    log "WARNING: Change the seeded admin password after first login."
+  else
+    log "Database already has data — skipping seed (set FORCE_SEED=1 to override)."
+  fi
+fi
 
 smoke() {
   if command -v curl >/dev/null 2>&1; then

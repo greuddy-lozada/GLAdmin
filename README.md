@@ -9,33 +9,49 @@ Monorepo with pnpm workspaces:
 
 ```
 Cuadra/
-  backend/       # NestJS 11 + Prisma 6 + SQLite
-  frontend/      # Next.js 16 (App Router) + shadcn/ui + Tailwind v4
-  specs/         # Migration plan and specs
+  backend/       # NestJS + Prisma + PostgreSQL
+  frontend/      # Next.js App Router (static export) + shadcn/ui + Tailwind v4
+  .spec/         # Source of truth (specs)
 ```
 
 ## Prerequisites
 
-- Node.js >= 18
+- Node.js >= 20
 - pnpm >= 9
+- PostgreSQL 16 (local or Docker)
+- Redis 7 (optional in dev)
 
 ## Quick Start
 
 ```bash
 pnpm install
-pnpm --filter backend exec prisma db push
+# Start Postgres (see .spec/DevOps/deployment.md)
+pnpm --filter backend exec prisma migrate deploy
 pnpm --filter backend exec tsx prisma/seed.ts
 pnpm dev
 ```
 
-- Backend: http://localhost:4000
+- Backend: http://localhost:4000/api
 - Frontend: http://localhost:3000
 
-## Default Credentials
+## Staging deploy (VPS)
+
+Automated on push to `dev` after CI. Docs: [`.spec/DevOps/deployment.md`](.spec/DevOps/deployment.md).
+
+```bash
+# On the VPS (one-time)
+cp .env.production.example .env.production   # edit secrets + FRONTEND_URL
+bash scripts/deploy.sh
+# App: https://YOUR_IP:8443
+```
+
+## Default Credentials (seed)
 
 | User | Password | Role |
 |------|----------|------|
-| glozada | 000000 | Master |
+| admin@cuadra.app / glozada | 000000 | Admin / Master |
+
+**Change after first login on any shared environment.**
 
 ## Scripts
 
@@ -50,14 +66,13 @@ pnpm dev
 ## Stack
 
 ### Backend
-- **Framework**: NestJS 11
-- **ORM**: Prisma 6 (SQLite dev, MySQL in production via env)
-- **Auth**: JWT + bcrypt
-- **i18n**: Custom I18nService with JSON locale files (es/en)
+- **Framework**: NestJS
+- **ORM**: Prisma (PostgreSQL)
+- **Auth**: JWT access (15m) + refresh tokens
+- **Cache**: Redis (optional; in-memory fallback)
 
 ### Frontend
-- **Framework**: Next.js 16 (App Router)
-- **UI**: shadcn/ui + Tailwind v4 (CSS-first config)
-- **State**: React hooks + Context, TanStack Query, TanStack Table
-- **i18n**: Client-side custom i18n with JSON locale files (es/en)
-- **Theme**: next-themes (light/dark)
+- **Framework**: Next.js App Router (`output: 'export'`)
+- **UI**: shadcn/ui + Tailwind v4
+- **State**: TanStack Query / Table, offline Dexie for POS
+- **i18n**: Client-side es/en

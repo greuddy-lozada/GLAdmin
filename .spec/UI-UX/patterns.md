@@ -26,7 +26,7 @@ Antes de mergear un cambio de pantalla:
 
 | Patrón | Cuándo | Canónico | Anti-patrón |
 |---|---|---|---|
-| **Toolbar + DataTable** | Listados admin (productos, clientes, etc.) | `DataTable` + botón crear con `RoleGuard` | Tabla HTML cruda; cards-only en desktop sin motivo |
+| **Toolbar + DataTable** | Listados admin (productos, clientes, etc.) | `DataTable` (search integrado) + botón crear con `RoleGuard` | Tabla HTML cruda; search one-off por página |
 | **SlideForm (Sheet)** | Create / edit | `SlideForm` | Modal centrado para formularios largos de CRUD |
 | **ConfirmDialog** | Delete / acciones destructivas | `ConfirmDialog` | `window.confirm`; delete sin confirmación |
 | **Sin H1 de feature** | Toda página dashboard | Título desde `navigationConfig` / layout | Segundo `<h1>` en la feature page |
@@ -37,7 +37,7 @@ Antes de mergear un cambio de pantalla:
 | Patrón | Cuándo | Canónico | Anti-patrón |
 |---|---|---|---|
 | **SlideForm full-bleed** | Create/edit en teléfono | `SlideForm` full viewport; `--panel-offset: 0` bajo `md` | Panel fijo 420–720px + `paddingRight` que aplasta el main |
-| **DataTable → cards** | Listados CRUD | `Column.mobile`: `title` \| `primary` \| `secondary` \| `hidden` \| `action`; auto = 1ª título, 3 primary, resto en “Más” | Volcar todas las columnas; botones de acción como fila label/value |
+| **DataTable search** | Listados CRUD | Toolbar de búsqueda en `DataTable` (`searchable` default true); filtra filas cargadas; empty `common.noResults` | Input de búsqueda solo en una feature; filtrar sin empty state |
 | **List → detail** | Splits (pedidos) | Un pane a la vez + botón atrás | `w-[440px]` + form lado a lado sin breakpoint |
 | **POS cart sticky** | Caja en teléfono | Productos scrolleables + carrito sticky / cards (no tabla) | Carrito bajo el fold; tabla de carrito aplastada |
 | **KPI 2-col** | Report viewer / dashboards | `grid-cols-2 md:grid-cols-3\|4` | `grid-cols-3/4` fijos en móvil |
@@ -93,14 +93,13 @@ Implementar como **componentes compartidos** + actualizar esta sección a Adopte
 
 | Prioridad | Patrón | Objetivo | Nota de implementación |
 |---|---|---|---|
-| 1 | **EmptyState variants** | `first-run` \| `no-results` \| `error` | Extender `EmptyState` con `variant` + copy/CTA distintos (filtros → “limpiar filtros”) |
+| 1 | **EmptyState variants** | `first-run` \| `no-results` \| `error` | Extender `EmptyState` con `variant` + copy/CTA distintos (filtros → “limpiar filtros”); search ya usa `common.noResults` |
 | 2 | **FormField wrapper** | Label + control + hint + error | Un componente para no repetir `space-y-2` / a11y `aria-describedby` |
-| 3 | **DataTable toolbar** | Search + filter chips | Toolbar compartida; chips removibles para filtros activos |
-| 4 | **URL-synced filters** | Vistas compartibles | Query params (`nuqs` o equivalente) en 1–2 módulos piloto |
-| 5 | **POS combobox a11y** | ProductSearch / CustomerSearch | listbox/option, flechas, Enter, Escape; contrato en feature POS |
-| 6 | **Progressive disclosure** | Forms densos (pricing avanzado) | Max 2 niveles; “Más opciones” / override ya existe parcialmente en products |
+| 3 | **URL-synced filters** | Vistas compartibles | Query params (`nuqs` o equivalente) en 1–2 módulos piloto |
+| 4 | **POS combobox a11y** | ProductSearch / CustomerSearch | listbox/option, flechas, Enter, Escape; contrato en feature POS |
+| 5 | **Progressive disclosure** | Forms densos (pricing avanzado) | Max 2 niveles; “Más opciones” / override ya existe parcialmente en products |
 
-**Orden de trabajo sugerido:** 1 → 2 → 3 en admin CRUD; 5 en POS; 4 y 6 cuando duela de verdad.
+**Orden de trabajo sugerido:** 1 → 2 en admin CRUD; 4 en POS; 3 y 5 cuando duela de verdad.
 
 ---
 

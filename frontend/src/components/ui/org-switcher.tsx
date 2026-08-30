@@ -29,7 +29,7 @@ export function OrgSwitcher() {
           value={String(currentOrg.id)}
           onValueChange={(v) => selectOrg(v)}
         >
-          <SelectTrigger className="h-8 text-sm font-medium border-border/50 focus:ring-0 [&>svg]:text-muted-foreground">
+          <SelectTrigger className="h-8 w-full text-sm font-medium border-0 shadow-none focus:ring-0 [&>svg]:text-muted-foreground">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

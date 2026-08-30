@@ -43,6 +43,7 @@ describe('SyncService', () => {
     tax: { findMany: jest.fn() },
     brand: { findMany: jest.fn() },
     category: { findMany: jest.fn() },
+    cashRegister: { findMany: jest.fn() },
     syncCursor: { upsert: jest.fn() },
     syncConflict: {
       findMany: jest.fn(),
@@ -95,6 +96,7 @@ describe('SyncService', () => {
       mockPrisma.tax.findMany.mockResolvedValue([tax]);
       mockPrisma.brand.findMany.mockResolvedValue([brand]);
       mockPrisma.category.findMany.mockResolvedValue([category]);
+      mockPrisma.cashRegister.findMany.mockResolvedValue([]);
     });
 
     test('debe retornar todas las entidades con stock agregado en productos', async () => {

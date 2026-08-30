@@ -4,6 +4,7 @@ import { SalesService } from '../sales.service';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 import { ContextService } from '../../tenant/context.service';
 import { AuditLogService } from '../../audit-log/audit-log.service';
+import { DashboardService } from '../../dashboard/dashboard.service';
 import { CreateSaleDto } from '../dto/create-sale.dto';
 import { UpdateSaleDto } from '../dto/update-sale.dto';
 
@@ -37,6 +38,10 @@ describe('SalesService', () => {
     log: jest.fn().mockResolvedValue(undefined),
   };
 
+  const mockDashboard = {
+    notifySaleCreated: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -44,6 +49,7 @@ describe('SalesService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: ContextService, useValue: mockContext },
         { provide: AuditLogService, useValue: mockAuditLog },
+        { provide: DashboardService, useValue: mockDashboard },
       ],
     }).compile();
 

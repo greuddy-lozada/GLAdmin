@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useState, useMemo } from 'react';
+import { ReactNode, useState, useMemo, useEffect } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -22,9 +22,10 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Pencil, Trash2, ArrowUpDown, ArrowUp, ArrowDown, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Pencil, Trash2, ArrowUpDown, ArrowUp, ArrowDown, ChevronDown, ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
 import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
 
 /** How a column appears in MobileCardList. Defaults inferred from column order. */
 export type MobileColumnRole = 'title' | 'primary' | 'secondary' | 'hidden' | 'action';
@@ -49,6 +50,36 @@ interface DataTableProps<T> {
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
   emptyMessage?: string;
+  /** Show search toolbar. Default true. */
+  searchable?: boolean;
+  searchPlaceholder?: string;
+}
+
+const SKIP_SEARCH_KEYS = new Set([
+  'id',
+  'organizationId',
+  'image',
+  'createdAt',
+  'updatedAt',
+  'deletedAt',
+]);
+
+function collectSearchableText(value: unknown, depth = 0): string {
+  if (value == null || depth > 2) return '';
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+  if (Array.isArray(value)) {
+    return value.map((v) => collectSearchableText(v, depth + 1)).filter(Boolean).join(' ');
+  }
+  if (typeof value === 'object') {
+    return Object.entries(value as Record<string, unknown>)
+      .filter(([k]) => !SKIP_SEARCH_KEYS.has(k))
+      .map(([, v]) => collectSearchableText(v, depth + 1))
+      .filter(Boolean)
+      .join(' ');
+  }
+  return '';
 }
 
 function SortIcon({ direction }: { direction: 'asc' | 'desc' | false }) {
@@ -211,7 +242,8 @@ function MobileCardList<T extends { id: string | number }>({
         return (
           <div
             key={row.id}
-            className="rounded-xl border border-border/60 bg-card p-4 shadow-sm space-y-3"
+            className="rounded-xl border-0 bg-card p-4 shadow-none space-y-3"
+            data-slot="data-table-mobile-card"
           >
             <div className="text-base font-semibold leading-snug break-words">{title}</div>
 
@@ -312,58 +344,70 @@ export function DataTable<T extends { id: string | number }>({
   onEdit,
   onDelete,
   emptyMessage,
+  searchable = true,
+  searchPlaceholder,
 }: DataTableProps<T>) {
   const { t, tp } = useI18n();
   const [sorting, setSorting] = useState<SortingState>([]);
-
-  const tableColumns = useMemo(
-    () =>
-      columns.map((col, i) => ({
-        id: String(col.field ?? i),
-        header: col.headerName,
-        accessorFn: (row: T) => {
-          const val = row[col.field as keyof T];
-          return val != null ? String(val) : '';
-        },
-        cell: (info: { getValue: () => unknown; row: { original: T } }) =>
-          col.render ? col.render(info.row.original) : String(info.getValue() ?? ''),
-        enableSorting: col.sortable !== false,
-        size: col.width,
-        meta: { isNumeric: col.isNumeric, responsive: col.responsive ?? 'always' },
-      })),
-    [columns],
-  );
-
-  if (onEdit || onDelete) {
-    tableColumns.push({
-      id: 'actions',
-      header: t('common.actions'),
-      accessorFn: () => '',
-      cell: (info: { row: { original: T } }) => (
-        <div className="flex justify-end gap-1">
-          {onEdit && (
-            <Button variant="ghost" size="icon" onClick={() => onEdit(info.row.original)} aria-label={t('common.edit')}>
-              <Pencil className="h-4 w-4" />
-            </Button>
-          )}
-          {onDelete && (
-            <Button variant="ghost" size="icon" onClick={() => onDelete(info.row.original)} aria-label={t('common.delete')}>
-              <Trash2 className="h-4 w-4 text-destructive" />
-            </Button>
-          )}
-        </div>
-      ),
-      enableSorting: false,
-      size: undefined,
-      meta: { isNumeric: undefined, responsive: 'always' as const },
-    });
-  }
-
+  const [search, setSearch] = useState('');
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+
+  const filteredRows = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return rows;
+    return rows.filter((row) => collectSearchableText(row).toLowerCase().includes(q));
+  }, [rows, search]);
+
+  useEffect(() => {
+    setPagination((p) => (p.pageIndex === 0 ? p : { ...p, pageIndex: 0 }));
+  }, [search]);
+
+  const tableColumns = useMemo(() => {
+    const cols = columns.map((col, i) => ({
+      id: String(col.field ?? i),
+      header: col.headerName,
+      accessorFn: (row: T) => {
+        const val = row[col.field as keyof T];
+        return val != null ? String(val) : '';
+      },
+      cell: (info: { getValue: () => unknown; row: { original: T } }) =>
+        col.render ? col.render(info.row.original) : String(info.getValue() ?? ''),
+      enableSorting: col.sortable !== false,
+      size: col.width,
+      meta: { isNumeric: col.isNumeric, responsive: col.responsive ?? 'always' },
+    }));
+
+    if (onEdit || onDelete) {
+      cols.push({
+        id: 'actions',
+        header: t('common.actions'),
+        accessorFn: () => '',
+        cell: (info: { row: { original: T } }) => (
+          <div className="flex justify-end gap-1">
+            {onEdit && (
+              <Button variant="ghost" size="icon" onClick={() => onEdit(info.row.original)} aria-label={t('common.edit')}>
+                <Pencil className="h-4 w-4" />
+              </Button>
+            )}
+            {onDelete && (
+              <Button variant="ghost" size="icon" onClick={() => onDelete(info.row.original)} aria-label={t('common.delete')}>
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            )}
+          </div>
+        ),
+        enableSorting: false,
+        size: undefined as unknown as number,
+        meta: { isNumeric: undefined, responsive: 'always' as const },
+      });
+    }
+
+    return cols;
+  }, [columns, onEdit, onDelete, t]);
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
-    data: rows,
+    data: filteredRows,
     columns: tableColumns,
     state: { sorting, pagination },
     onSortingChange: setSorting,
@@ -373,9 +417,36 @@ export function DataTable<T extends { id: string | number }>({
     getPaginationRowModel: getPaginationRowModel(),
   });
 
+  const searchToolbar = searchable ? (
+    <div className="flex items-center gap-2 px-3 pt-3 pb-2 shrink-0">
+      <div className="relative flex-1 max-w-sm">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder={searchPlaceholder || t('common.searchPlaceholder')}
+          aria-label={t('common.search')}
+          className="pl-9 pr-9"
+          autoComplete="off"
+        />
+        {search ? (
+          <button
+            type="button"
+            onClick={() => setSearch('')}
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:text-foreground"
+            aria-label={t('common.clearSearch')}
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        ) : null}
+      </div>
+    </div>
+  ) : null;
+
   if (loading) {
     return (
-      <div className="rounded-md bg-card">
+      <div data-slot="data-table" className="rounded-2xl bg-card shadow-none">
+        {searchToolbar}
         <div className="hidden md:block overflow-x-auto">
           <Table>
             <TableHeader>
@@ -408,7 +479,7 @@ export function DataTable<T extends { id: string | number }>({
         </div>
         <div className="md:hidden space-y-3 p-1">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-xl border border-border/60 p-4 space-y-2">
+            <div key={i} data-slot="data-table-mobile-card" className="rounded-xl border-0 bg-card p-4 shadow-none space-y-2">
               <Skeleton className="h-5 w-2/3" />
               <Skeleton className="h-4 w-full" />
               <Skeleton className="h-4 w-4/5" />
@@ -424,7 +495,20 @@ export function DataTable<T extends { id: string | number }>({
   }
 
   return (
-    <div className="rounded-md bg-card flex flex-col overflow-hidden md:h-[calc(100dvh-14rem)]">
+    <div data-slot="data-table" className="rounded-2xl bg-card flex flex-col overflow-hidden md:h-[calc(100dvh-14rem)] shadow-none">
+      {searchToolbar}
+      {!filteredRows.length ? (
+        <EmptyState
+          title={t('common.noResults')}
+          description={t('common.noResultsHint')}
+          action={
+            <Button variant="outline" size="sm" onClick={() => setSearch('')}>
+              {t('common.clearSearch')}
+            </Button>
+          }
+        />
+      ) : (
+        <>
       <div className="flex-1 min-h-0 overflow-auto">
         <div className="hidden md:block">
         <Table>
@@ -496,6 +580,8 @@ export function DataTable<T extends { id: string | number }>({
         t={t}
         tp={tp}
       />
+        </>
+      )}
     </div>
   );
 }

@@ -36,7 +36,8 @@ export function VisitedTabs({ iconMap, tabs: propTabs }: VisitedTabsProps) {
   };
 
   return (
-    <div className="flex items-center gap-0.5 overflow-x-auto">
+    <div className="overflow-x-auto py-2 px-1 -mx-1">
+      <div className="flex items-center gap-2 min-w-min">
       {tabs.map((tab) => {
         const active = pathname === tab.path || (tab.path !== '/dashboard' && pathname.startsWith(tab.path));
         const Icon = iconMap[tab.key] || LayoutDashboard;
@@ -49,7 +50,7 @@ export function VisitedTabs({ iconMap, tabs: propTabs }: VisitedTabsProps) {
             onKeyDown={(e) => { if (e.key === 'Enter') router.push(tab.path); }}
             className={`group flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-xl cursor-pointer shrink-0 transition-all ${
               active
-                ? 'neo-raised text-[#3e93c1] font-medium'
+                ? 'neo-nav-active text-[#3e93c1] font-medium'
                 : 'text-[#5a6578] hover:text-[#1a2332]'
             }`}
           >
@@ -66,6 +67,7 @@ export function VisitedTabs({ iconMap, tabs: propTabs }: VisitedTabsProps) {
           </div>
         );
       })}
+      </div>
     </div>
   );
 }

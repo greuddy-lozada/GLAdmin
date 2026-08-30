@@ -36,6 +36,9 @@ jobs:
       - name: Typecheck ${{ matrix.package }}
         run: pnpm --filter ${{ matrix.package }} typecheck
 
+      - name: Test ${{ matrix.package }}
+        run: pnpm --filter ${{ matrix.package }} test
+
   # Same workflow file as CI so this runs from `dev` without needing
   # workflow_run on the default branch (master is stale and has no workflows).
   deploy:

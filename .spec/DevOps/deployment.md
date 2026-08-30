@@ -300,8 +300,8 @@ Stack on the server ([`docker-compose.prod.yml`](../../docker-compose.prod.yml))
 |---|---|
 | `postgres` | Database (not published publicly) |
 | `redis` | Cache |
-| `backend` | NestJS API on internal port 4000 |
-| `nginx` | Static `frontend/out` + reverse proxy `/api` → backend; host ports **8081** (HTTP) and **8443** (HTTPS) |
+| `backend` | NestJS API on internal port 4000; volume `uploads_data` |
+| `nginx` | Static `frontend/out` + reverse proxy `/api` → backend; SSE for `/api/dashboard/stream`; host ports **8081** (HTTP) and **8443** (HTTPS) |
 
 Frontend is built as a static export with `NEXT_PUBLIC_API_URL=/api` (same origin via Nginx). No separate Node process for Next.js.
 
@@ -352,7 +352,7 @@ Workflows: [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) (automat
 ```
 1. Push / merge to dev
      ↓
-2. CI (lint + typecheck for backend & frontend)
+2. CI (lint + typecheck + unit tests for backend & frontend)
      ↓
 3. Same workflow `deploy` job SSHs to the VPS and runs scripts/deploy.sh:
    - Ensure nginx/certs self-signed LAN TLS (IP SAN)
@@ -360,12 +360,17 @@ Workflows: [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) (automat
    - Build frontend/out via ephemeral node:22 container
    - docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
    - prisma migrate deploy
-   - seed (no-op if already seeded)
-   - Smoke GET https://127.0.0.1:8443/api/health (-k)
+   - seed **only if org count is 0** (or FORCE_SEED=1; skip with SKIP_SEED=1)
+   - Smoke GET https://127.0.0.1:8443/api/health (-k) — expects HTTP 200 + DB connected
      ↓
 4. Testers use https://YOUR_IP:8443 (accept the certificate warning once)
 ```
 
+Volumes: `postgres_data`, `redis_data`, **`uploads_data`** (proofs / images survive container rebuilds).
+
+Nginx: `/api/dashboard/stream` has `proxy_buffering off` and 1h read timeout for SSE.
+
+Health: `GET /api/health` returns **503** when the database is unreachable (so Docker healthchecks fail correctly).
 ### 6.4 Tester access
 
 | Item | Value |
@@ -413,21 +418,21 @@ GET /api/health
 {
   "status": "ok",
   "timestamp": "2026-07-03T12:00:00.000Z",
-  "uptime": 123456,
-  "database": "connected",
-  "version": "1.0.0"
+  "database": "connected"
 }
 ```
+
+When the DB is down the handler responds with **HTTP 503** and `database: "disconnected"` (Docker/`curl -f` treat this as unhealthy).
 
 ### Docker Health Checks
 
 ```yaml
 healthcheck:
-  test: ["CMD", "wget", "--spider", "-q", "http://localhost:3001/api/health"]
+  test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
   interval: 30s
   timeout: 10s
   retries: 3
-  start_period: 15s
+  start_period: 40s
 ```
 
 ---

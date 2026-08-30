@@ -36,8 +36,9 @@ export const BentoGridItem = ({
 }) => {
   return (
     <div
+      data-slot="bento-item"
       className={cn(
-        'group/bento row-span-1 flex flex-col justify-between rounded-xl border border-border/50 bg-card p-5 shadow-none transition duration-200 overflow-hidden',
+        'group/bento row-span-1 flex flex-col justify-between rounded-2xl border-0 bg-card p-5 shadow-none transition duration-200 overflow-hidden',
         className,
       )}
     >

@@ -212,7 +212,7 @@ function Row1Kpis({ kpis, streamStatus }: { kpis: DashboardKpis; streamStatus: S
       <div className="flex items-center justify-end">
         <LiveDot status={streamStatus} />
       </div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCell
           label={t('dashboard.kpi.salesToday')}
           value={kpis.todaySalesCount.toLocaleString('es-VE')}
@@ -252,7 +252,7 @@ function Row2Panels({
   const cols = arAp ? 'lg:grid-cols-3' : 'lg:grid-cols-2';
 
   return (
-    <section className={`grid grid-cols-1 ${cols} gap-3 min-h-0`}>
+    <section className={`grid grid-cols-1 ${cols} gap-4 min-h-0`}>
       <Card className="neo-raised min-h-0 border-0 shadow-none">
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-3">
@@ -294,12 +294,12 @@ export function LiveDashboard() {
   if (isLoading || !data) {
     return (
       <div className="flex flex-col gap-4">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-24" />
           ))}
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <Skeleton className="h-64" />
           <Skeleton className="h-64" />
           <Skeleton className="h-64" />

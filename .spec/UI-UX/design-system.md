@@ -15,8 +15,10 @@ Scoped under `.marketing` in `frontend/src/app/globals.css` (light-only v1):
 
 | Token / class | Uso |
 |---|---|
-| `--neo-bg` / `--neo-dark` / `--neo-light` | Fondo Soft Tech + sombras duales |
+| `--neo-bg` `#e4e9f2` | Fondo = raised (clay mono) |
+| `--neo-dark` / `--neo-light` | Sombras duales `8px/16px` |
 | `.neo-raised` / `.neo-inset` / `.neo-press` | Superficies neumórficas |
+| `.neo-nav-active` | Ítem activo (tint primary + rail; no nested raised) |
 | `.neo-cta` | CTA primario (relleno primary + sombra suave) |
 
 ### Soft Tech app skin (option A — light)
@@ -26,13 +28,14 @@ Light mode (`:root` / `html:not(.dark)`) adopts the Soft Tech palette for **dash
 | Área | Tratamiento |
 |---|---|
 | Tokens `:root` | `--background` / `--card` / `--sidebar` = `#e4e9f2`; primary sky |
-| Primitives | `Button` / `Input` / `Card` con sombras neo en light |
-| Shell | Sidebar + header dashboard Soft Tech; nav activo `.neo-raised` |
+| Primitives | `Button` / `Input` / `Card`; neo en dropdown/select/table/alert/bento; **dialog / sheet / slide-form** = panel claro `#f4f6fa` + sombra de elevación (no dual neo) |
+| Shell | Sidebar + header Soft Tech; padding ≥ blur; contenido `overflow-y-auto` |
+| Nav / tabs | Activo = `.neo-nav-active` (tint + rail; icono primary) |
 | Auth | Login / invite / org-picker Soft Tech (sin striped hero) |
 | POS | Hereda tokens; **sin** restyle denso de caja (opción B/C) |
-| Dark mode | Tokens `.dark` legacy; neo polish **no** aplica |
+| Dark mode | Tokens `.dark` legacy; Soft Tech A fuerza light |
 
-Default theme: `light` (`ThemeProvider` `enableSystem={false}`).
+Default theme: `forcedTheme="light"`.
 
 ### Definición en Tailwind CSS v4
 

@@ -68,7 +68,8 @@ export function SlideForm({ open, title, onClose, children, panel, panelWidth = 
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 32, stiffness: 360, mass: 0.9 }}
-            className="fixed inset-y-0 right-0 z-50 flex h-full w-full flex-col bg-card text-foreground shadow-xl md:w-auto"
+            className="fixed inset-y-0 right-0 z-50 flex h-full w-full flex-col border-0 bg-card text-foreground shadow-none md:w-auto"
+            data-slot="slide-form-panel"
             style={{ ['--panel-w' as string]: `${panelWidth}px` }}
             onClick={(e) => e.stopPropagation()}
           >

@@ -156,7 +156,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="soft-tech flex h-screen flex-col overflow-hidden bg-[#e4e9f2] text-[#1a2332] md:flex-row print:h-auto print:block print:overflow-visible">
-      <div className="print:hidden p-2 md:pr-0">
+      <div className="print:hidden p-3 md:pr-1">
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen}>
         <SidebarBody className="justify-between gap-6">
           <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
@@ -171,7 +171,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 <div className="h-5 w-6 shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm bg-[#3e93c1]" />
               </div>
             </div>
-            <nav className="mt-6 flex flex-col gap-1 overflow-hidden">
+            <nav className="mt-6 flex flex-col gap-1">
               {visibleGroups.map((group, gi) => {
                 const GroupIcon = group.key ? groupIconMap[group.key] : undefined;
                 return (
@@ -218,11 +218,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                               href={item.path}
                               className={`flex items-center gap-2 pl-1 pr-3 py-2 text-sm transition-colors overflow-hidden group/sidebar ${
                                 active
-                                  ? 'neo-raised text-primary rounded-xl font-medium'
+                                  ? 'neo-nav-active rounded-xl font-medium'
                                   : 'text-muted-foreground hover:text-foreground'
                               }`}
                             >
-                              {(() => { const Icon = iconMap[item.key] || LayoutDashboard; return <Icon className="h-5 w-5 shrink-0 text-muted-foreground" />; })()}
+                              {(() => { const Icon = iconMap[item.key] || LayoutDashboard; return <Icon className={`h-5 w-5 shrink-0 ${active ? 'text-[#3e93c1]' : 'text-muted-foreground'}`} />; })()}
                               <span className="group-hover/sidebar:translate-x-1 transition duration-150">{t(item.label)}</span>
                             </Link>
                           );
@@ -241,10 +241,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                             link={{
                               label: t(item.label),
                               href: item.path,
-                              icon: <Icon className="h-5 w-5 shrink-0 text-muted-foreground" />,
+                              icon: <Icon className={`h-5 w-5 shrink-0 ${active ? 'text-[#3e93c1]' : 'text-muted-foreground'}`} />,
                             }}
                             className={active
-                              ? 'neo-raised text-primary rounded-xl font-medium'
+                              ? 'neo-nav-active rounded-xl font-medium'
                               : 'text-muted-foreground hover:text-foreground transition-colors'}
                           />
                         );
@@ -273,7 +273,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       </div>
 
       <main className="flex-1 flex flex-col overflow-hidden transition-[padding] duration-300 print:h-auto print:block print:overflow-visible" style={{ paddingRight: 'var(--panel-offset, 0px)' }}>
-        <div data-app-header className="neo-raised mx-2 mt-2 mb-0 flex items-center justify-between rounded-2xl px-6 py-3 md:mx-4 md:px-6 shrink-0 relative print:hidden z-10">
+        <div data-app-header className="neo-raised mx-3 mt-3 mb-0 flex items-center justify-between rounded-2xl px-6 py-3 md:mx-5 md:px-6 shrink-0 relative print:hidden z-10">
           <div className="flex items-center gap-3">
             <h1 className="text-lg font-semibold font-heading text-[#3e93c1]">{pageTitle}</h1>
             {showWelcome && (
@@ -287,10 +287,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <UserNav />
           </div>
         </div>
-        <div className="px-4 md:px-6 pt-4 pb-3 shrink-0 print:hidden">
+        <div className="px-4 md:px-6 pt-3 pb-1 shrink-0 print:hidden">
           <VisitedTabs iconMap={iconMap} tabs={tabs} />
         </div>
-        <div className="flex-1 overflow-hidden px-4 md:px-6 pb-4 md:pb-6 print:h-auto print:overflow-visible print:block print:px-4 print:pb-4">
+        {/* overflow-y-auto + pad so neo top/left highlight is not clipped */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 md:px-6 pb-6 pt-2 print:h-auto print:overflow-visible print:block print:px-4 print:pb-4">
           <div className="w-full h-full print:h-auto">
             <Suspense fallback={<div className="flex items-center justify-center h-64"><p className="text-[#5a6578]">{t('common.loading')}</p></div>}>
               <ErrorBoundary>

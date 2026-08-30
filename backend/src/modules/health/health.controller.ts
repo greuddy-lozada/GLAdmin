@@ -1,4 +1,11 @@
-import { Controller, Get, Head, HttpCode } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Head,
+  HttpCode,
+  HttpStatus,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { Public } from '../../common/decorators/public.decorator';
 
@@ -20,20 +27,24 @@ export class HealthController {
         message: null,
       };
     } catch {
-      return {
+      throw new ServiceUnavailableException({
         data: {
           status: 'error',
           database: 'disconnected',
           timestamp: new Date().toISOString(),
         },
         message: 'HEALTH.DB_ERROR',
-      };
+      });
     }
   }
 
   @Head()
-  @HttpCode(200)
+  @HttpCode(HttpStatus.OK)
   async head() {
-    return;
+    try {
+      await this.prisma.$queryRaw`SELECT 1`;
+    } catch {
+      throw new ServiceUnavailableException();
+    }
   }
 }

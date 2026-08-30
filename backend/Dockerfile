@@ -13,6 +13,7 @@ RUN pnpm --filter backend exec prisma generate
 RUN pnpm --filter backend build
 
 WORKDIR /app/backend
+RUN mkdir -p uploads
 ENV NODE_ENV=production
 ENV PORT=4000
 EXPOSE 4000

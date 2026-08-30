@@ -52,7 +52,8 @@ export function UserNav() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -4 }}
             transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-            className="absolute right-0 top-full z-50 mt-2 w-48 rounded-2xl neo-raised bg-[#e4e9f2] p-1 text-[#1a2332]"
+            className="absolute right-0 top-full z-50 mt-2 w-48 rounded-2xl border-0 neo-raised bg-[#e4e9f2] p-1 text-[#1a2332] shadow-none"
+            data-slot="dropdown-menu-content"
           >
             <div className="px-2 py-1.5">
               <p className="text-sm font-medium">

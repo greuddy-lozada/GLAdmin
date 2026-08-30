@@ -132,9 +132,10 @@ export function SearchableSelect<T>({
       <button
         type="button"
         disabled={disabled}
+        data-slot="searchable-select-trigger"
         onClick={() => !disabled && setOpen(!open)}
         className={cn(
-          'flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none hover:bg-accent hover:text-accent-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-input/30 dark:hover:bg-input/50',
+          'flex h-9 w-full items-center justify-between gap-2 rounded-xl border-0 bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-none transition-[color,box-shadow] outline-none hover:bg-accent hover:text-accent-foreground focus-visible:border-transparent focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-input/30 dark:hover:bg-input/50',
           !selectedItem && 'text-muted-foreground',
           disabled && 'pointer-events-none opacity-50',
         )}
@@ -156,7 +157,7 @@ export function SearchableSelect<T>({
       </button>
 
       {open && !disabled && (
-        <div className="absolute z-50 mt-1 w-full min-w-[200px] rounded-md border bg-popover text-popover-foreground shadow-md">
+        <div data-slot="searchable-select-content" className="absolute z-50 mt-1 w-full min-w-[200px] rounded-2xl border-0 bg-popover text-popover-foreground shadow-none">
           <div className="flex items-center border-b px-3">
             <Search className="size-4 shrink-0 text-muted-foreground mr-2" />
             <input

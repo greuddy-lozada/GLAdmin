@@ -104,8 +104,8 @@ describe('ProductsPage', () => {
     render(<ProductsPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Product 1')).toBeInTheDocument();
-      expect(screen.getByText('Product 2')).toBeInTheDocument();
+      expect(screen.getAllByText('Product 1').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Product 2').length).toBeGreaterThan(0);
     });
   });
 
