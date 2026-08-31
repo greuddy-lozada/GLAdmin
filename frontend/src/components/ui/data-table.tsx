@@ -107,7 +107,7 @@ function PaginationBar({
 }) {
   if (!onPageChange) return null;
   return (
-    <div className="border-t border-border/50 px-3 py-2.5">
+    <div className="border-t border-border/50 px-4 py-3">
       {/* Mobile: compact single row */}
       <div className="flex items-center justify-between gap-2 md:hidden">
         <Select
@@ -418,7 +418,7 @@ export function DataTable<T extends { id: string | number }>({
   });
 
   const searchToolbar = searchable ? (
-    <div className="flex items-center gap-2 px-3 pt-3 pb-2 shrink-0">
+    <div className="flex items-center gap-2 px-4 pt-4 pb-3 shrink-0">
       <div className="relative flex-1 max-w-sm">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
         <Input
