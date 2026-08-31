@@ -190,6 +190,8 @@ Para producción: `FRONTEND_URL=https://cuadra.app`.
 
 Serwist genera el service worker durante el build estático. Configuración en `sw.ts`. El archivo `manifest.ts` requiere `export const dynamic = 'force-static'` para compatibilidad con `output: 'export'`. Build verificado: 66 precache entries, ~2MB.
 
+`skipWaiting: true` y `clientsClaim: true`: al publicar un frontend nuevo, el SW **toma el control al instante** en pestañas abiertas. En caja puede mezclar HTML viejo con JS nuevo a mitad de un ticket. Política: [§7](#7-deploys-sin-interrumpir-usuarios).
+
 ---
 
 ## 4. Variables de Entorno Críticas
@@ -371,6 +373,7 @@ Volumes: `postgres_data`, `redis_data`, **`uploads_data`** (proofs / images surv
 Nginx: `/api/dashboard/stream` has `proxy_buffering off` and 1h read timeout for SSE.
 
 Health: `GET /api/health` returns **503** when the database is unreachable (so Docker healthchecks fail correctly).
+
 ### 6.4 Tester access
 
 | Item | Value |
@@ -404,9 +407,78 @@ git reset --hard <good-commit-sha>
 bash scripts/deploy.sh
 ```
 
+Rollback de **aplicación** no deshace migraciones ya aplicadas. Ver [release-policy.md](release-policy.md) §4 y [database.md](../system/database.md) (expand/contract).
+
 ---
 
-## 7. Salud del Servicio
+## 7. Deploys sin interrumpir usuarios
+
+> **Principio rector:** Con el stack actual (un VPS, un contenedor `backend`, `docker compose up -d --build`) un deploy **corta el API**. Cero downtime no existe hasta haber ≥2 réplicas detrás de nginx. El POS está diseñado para sobrevivir ese corte; admin / dashboard / reportes no.
+
+Esta sección es política de producción. Staging (IP, testers) puede desplegar en cualquier momento.
+
+### 7.1 Qué corta el script actual (`scripts/deploy.sh`)
+
+Orden real:
+
+```
+git reset --hard
+  → build frontend/out (nginx sigue sirviendo ese directorio)
+  → docker compose up -d --build   # recrea el único backend
+  → prisma migrate deploy          # schema después del código nuevo
+  → smoke GET /api/health
+```
+
+| Superficie | Durante el hueco |
+|---|---|
+| **POS (caja)** | Sigue cobrando. `createSale` → Dexie + `syncQueue`. Al volver el API, SyncEngine reintenta (backoff ~15–30s, máx. 5). Un deploy corto se siente como “un rato sin internet”, que el producto ya cubre. |
+| **Admin, catálogo, reportes, CXC/CXP online** | Requests fallan hasta que el backend nuevo responda 200 en `/api/health` (`start_period` ~40s + tiempo de build). |
+| **Dashboard SSE** (`/api/dashboard/stream`) | La conexión cae. El cliente reintenta solo. |
+| **Sesión** | No se cierra. Access + refresh JWT viven en `localStorage`; un restart del API no invalida tokens. |
+
+Hechos del compose actual (`docker-compose.prod.yml`):
+
+- Un solo servicio `backend`. No hay `replicas`, `update_config` ni rolling.
+- Nest **no** llama `enableShutdownHooks()`. Docker mata el proceso; requests in-flight se pierden.
+- Nginx `depends_on: backend: condition: service_healthy` — no proxya `/api` hasta health 200.
+- `prisma migrate deploy` corre **después** de levantar el contenedor nuevo. Si el código exige un schema que aún no está, hay una ventana rota.
+- El build escribe `frontend/out` mientras nginx lo sirve → riesgo de HTML/JS a medias.
+- Service worker: `skipWaiting` + `clientsClaim` (ver §3.1).
+
+### 7.2 Política operativa (obligatoria en producción)
+
+1. Desplegar **fuera de horario de caja** (después del cierre). Alpha / un local: esto es suficiente; no hace falta infra extra.
+2. Avisar al local: corte de sync de ~1–2 min; **la caja sigue**.
+3. Si hay migración que no sea solo additive **o** cambia `POST /api/sync/push` / el payload de sale encolada: no desplegar a mediodía. Tratar como breaking — [database.md](../system/database.md) expand/contract, [api-conventions.md](../system/api-conventions.md) §5.
+4. **No mezclar en el mismo release de día:** restart de API + migración peligrosa + cambio de contrato de sync.
+5. Smoke `GET /api/health` debe pasar. Si falla: rollback de **aplicación** (commit/tag anterior), no de BD — [release-policy.md](release-policy.md) §4.
+6. Tras el deploy, confirmar que la cola de sync se vacía. Conflictos `oversold` pendientes no son fallo de deploy: son stock ([sync.md](../features/sync.md)).
+
+### 7.3 Checklist pre-deploy
+
+- [ ] ¿Hay migración? Clasificar: additive / expand-contract / destructiva ([database.md](../system/database.md) §4).
+- [ ] ¿Cambia `/api/sync/*` o el modelo de sale encolada? Expand/contract; no el mismo instante que el frontend.
+- [ ] ¿Cambia la UI de POS de forma visible? El SW va a claimear clientes — mejor al cierre, o avisar “recarga cuando termines el ticket”.
+- [ ] Ventana: fuera de horario de caja, salvo hotfix ([release-policy.md](release-policy.md) §6).
+- [ ] Tag/commit anterior listo para rollback de app.
+
+### 7.4 Qué no hace falta todavía
+
+Réplicas, blue/green, Kubernetes. Cuando haya varios locales **y** deploys de día, entonces (en este orden):
+
+| Mejora | Para qué |
+|---|---|
+| `app.enableShutdownHooks()` + `stop_grace_period: 30s` en compose | Terminar requests in-flight |
+| Migración **additive** *antes* de recrear el contenedor | Evitar ventana código-nuevo / schema-viejo |
+| Publicar `frontend/out` de forma atómica (`out-new` → swap) | No servir HTML a medias |
+| Dos instancias backend + `upstream` nginx + rolling (un contenedor a la vez, healthcheck, luego el otro) | El API no desaparece |
+| Reload diferido del SW en POS (no `clientsClaim` a mitad de ticket) | No mezclar bundles en caja |
+
+Hasta que duela: no implementar esto. Un restart de 30s es recuperable; una migración o un contrato de sync incompatible en el mismo release **no**.
+
+---
+
+## 8. Salud del Servicio
 
 ### Health Check Endpoint
 
@@ -439,7 +511,7 @@ healthcheck:
 
 ---
 
-## 8. Dependency Policy — Gestión de Dependencias
+## 9. Dependency Policy — Gestión de Dependencias
 
 ### Licencias permitidas
 
@@ -503,7 +575,7 @@ pnpm audit
 
 ---
 
-## 9. Monitoring — Observabilidad en Producción
+## 10. Monitoring — Observabilidad en Producción
 
 ### Métricas expuestas
 
@@ -578,4 +650,4 @@ export const logger = pino({
 
 ---
 
-*Referencia cruzada: [release-policy.md](release-policy.md) | [database.md](../system/database.md)*
+*Referencia cruzada: [release-policy.md](release-policy.md) | [database.md](../system/database.md) | [sync.md](../features/sync.md) | [pos.md](../features/pos.md)*

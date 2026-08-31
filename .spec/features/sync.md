@@ -2,7 +2,7 @@
 
 > **status:** `current`  
 > **owner:** plataforma  
-> **last-verified:** 2026-08-08  
+> **last-verified:** 2026-08-30  
 > **code:** `backend/src/modules/sync/` · `frontend/src/lib/sync/` · `frontend/src/features/sync/`
 
 Contrato offline-first (Dexie + push/pull). Diferenciador de producto — no reinventar.
@@ -67,6 +67,8 @@ DB versioned in `frontend/src/lib/sync/db.ts` (v10+). Tables include:
 - On `networkStatus` back online → `forceSync()` (pull + push queued sales)
 - Visibility regain → pull + push if tab is leader
 
+Un deploy que tumba el API es el mismo camino que offline: la cola no se descarta; reintenta al volver. Confirmar post-deploy que la cola se vacía. Conflictos `oversold` pendientes son stock, no fallo de deploy. Ventana y SW: [deployment.md](../DevOps/deployment.md) §7.
+
 ### Offline session resume (refresh without network)
 
 If `GET /auth/me` fails with a **network-like** error (not 401/403) and `user` + `currentOrg` exist in localStorage:
@@ -85,6 +87,7 @@ Do **not** wipe the session on network failure alone — that strands cashiers o
 2. Conflictos oversold no deben crear stock negativo silencioso en server.
 3. Pull es por org (tenant context).
 4. Resolve no implica “aceptar datos locales” automáticamente — solo status.
+5. Cambio de contrato de `push` / `pull` / payload de sale = expand/contract. Backend dual-accept primero; frontend después; quitar el shape viejo al final. No el mismo release de día que una migración no-additive ([database.md](../system/database.md) §4, [api-conventions.md](../system/api-conventions.md) §5).
 
 ---
 
@@ -110,7 +113,8 @@ Do **not** wipe the session on network failure alone — that strands cashiers o
 - No tratar `resolve` como merge de datos sin implementar merge.
 - No encolar updates genéricos esperando que el server los aplique (hoy no-op).
 - No documentar sync como “todo el dominio bidireccional”.
+- No cambiar el shape de `push` y el schema de sales en el mismo deploy de día.
 
 ---
 
-*Refs: [pos.md](pos.md) · [sales.md](sales.md) · [multi-tenancy.md](../system/multi-tenancy.md)*
+*Refs: [pos.md](pos.md) · [sales.md](sales.md) · [multi-tenancy.md](../system/multi-tenancy.md) · [deployment.md](../DevOps/deployment.md)*

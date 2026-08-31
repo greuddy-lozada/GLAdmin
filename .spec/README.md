@@ -71,8 +71,8 @@ Código y feature/UI spec deben ir alineados en el **mismo PR**.
 ### 🚀 DevOps & Entrega
 | Archivo | Propósito | Status |
 |---|---|---|
-| [DevOps/deployment.md](DevOps/deployment.md) | Local, Docker, env, CI/CD | `current` |
-| [DevOps/release-policy.md](DevOps/release-policy.md) | Criterios de producción, smoke, rollback | `current` |
+| [DevOps/deployment.md](DevOps/deployment.md) | Local, Docker, env, CI/CD, deploys sin cortar caja | `current` |
+| [DevOps/release-policy.md](DevOps/release-policy.md) | Criterios de producción, ventana de deploy, smoke, rollback | `current` |
 | [DevOps/git-hygiene.md](DevOps/git-hygiene.md) | Ramas, conventional commits, PRs | `current` |
 
 ### 📋 Planes de Implementación
@@ -120,7 +120,7 @@ Código y feature/UI spec deben ir alineados en el **mismo PR**.
 4. **API nueva:** [system/api-conventions.md](system/api-conventions.md).  
 5. **UI:** [UI-UX/patterns.md](UI-UX/patterns.md) primero, luego [UI-UX/design-system.md](UI-UX/design-system.md) para tokens.  
 6. **Commit / PR:** [DevOps/git-hygiene.md](DevOps/git-hygiene.md).  
-7. **Deploy:** [DevOps/release-policy.md](DevOps/release-policy.md).  
+7. **Deploy:** [DevOps/release-policy.md](DevOps/release-policy.md) (criterios, ventana, rollback) + [DevOps/deployment.md](DevOps/deployment.md) §7 (deploys sin cortar caja).  
 8. **Roadmap / ¿debemos construir esto?:** [business/product-strategy.md](business/product-strategy.md).  
 9. **Solo si el usuario pide "lee todas las reglas del proyecto":** leer `current` bajo `.spec/` **excluyendo** `audit/` y planes `obsolete`.
 

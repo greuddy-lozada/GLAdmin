@@ -2,7 +2,7 @@
 
 > **status:** `current`  
 > **owner:** ventas / caja  
-> **last-verified:** 2026-08-08  
+> **last-verified:** 2026-08-30  
 > **code:** `frontend/src/features/pos/` · cart `frontend/src/stores/pos-store.ts`  
 > **Backend de persistencia:** vía [sync.md](sync.md) → [sales.md](sales.md) (no `POST /sales` directo).
 
@@ -54,6 +54,8 @@ Nav: `/pos`, `minLevel: 40`. Hoy **sin** `requiredFeature` en nav (gap vs plan `
 | Cobrar | `PaymentModal` → `useOfflineSale.createSale` |
 | Historial | Lee `localDb.sales` (no API list) |
 | Sync | Auth provider arranca SyncEngine; push cuando hay red |
+
+Un restart del API (deploy) es **el mismo caso que “sin internet”** para caja: el cobro no espera al servidor. Política de ventana y qué sí se corta: [deployment.md](../DevOps/deployment.md) §7.
 
 ### Persistencia de venta
 
@@ -131,7 +133,8 @@ Documentar atajos en UI (tooltip/badge). No capturar hotkeys modales mientras el
 - No asumir plan gating en nav (hoy ausente — no “arreglar” silenciosamente sin producto).
 - No sync de parked orders como si fueran ventas.
 - No inventar wizard/stepper para el flujo diario de caja.
+- No tratar un deploy como “hay que cerrar caja”. El corte es del API; el ticket local no.
 
 ---
 
-*Refs: [sync.md](sync.md) · [sales.md](sales.md) · [products.md](products.md) · [patterns.md](../UI-UX/patterns.md)*
+*Refs: [sync.md](sync.md) · [sales.md](sales.md) · [products.md](products.md) · [deployment.md](../DevOps/deployment.md) · [patterns.md](../UI-UX/patterns.md)*

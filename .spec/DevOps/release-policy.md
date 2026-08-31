@@ -14,7 +14,8 @@
 - [ ] **Tests unitarios:** todos pasan (`pnpm test`)
 - [ ] **Tests E2E** (flujos críticos): todos pasan (`pnpm test:e2e`)
 - [ ] **Build de producción:** exitoso sin errores (`pnpm build`)
-- [ ] **Nuevas migraciones de BD:** revisadas y testeadas en staging
+- [ ] **Nuevas migraciones de BD:** revisadas y testeadas en staging; clasificadas additive vs expand/contract vs destructiva ([database.md](../system/database.md) §4)
+- [ ] **Contrato de sync:** si cambia `/api/sync/push` o el payload de sale, el release es expand/contract — no el mismo instante que el frontend ([deployment.md](deployment.md) §7)
 - [ ] **Variables de entorno nuevas:** documentadas en `.env.example`
 - [ ] **i18n:** llaves nuevas existen en `es.json` y `en.json` con la misma estructura
 - [ ] **Code review:** aprobado por al menos 1 reviewer
@@ -43,6 +44,22 @@
 2. **Producción nunca comparte BD con staging.**
 3. **Los seeds solo existen en development.** Staging y producción no tienen seeds.
 4. **Staging se resetea semanalmente** (BD limpia + seed mínimo para smoke tests).
+
+### Ventana de deploy (producción)
+
+El stack actual es **un** contenedor backend. Un deploy corta el API unos segundos o minutos. Detalle: [deployment.md](deployment.md) §7.
+
+| Superficie | ¿El usuario nota el corte? |
+|---|---|
+| POS (caja) | No, si el hueco es corto. Cobra en Dexie; sync reintenta al volver. |
+| Admin / dashboard / reportes | Sí. Requests fallan hasta `/api/health` 200. |
+
+Reglas:
+
+1. Producción se despliega **fuera de horario de caja**, salvo hotfix (§6).
+2. Avisar al local: corte de sync ~1–2 min; la caja sigue.
+3. No mezclar en el mismo release de día: restart + migración no-additive + cambio de `/api/sync/*`.
+4. Staging (testers, IP) no tiene esta restricción de horario.
 
 ---
 
@@ -136,6 +153,8 @@ describe('Smoke Tests — Funcionalidad Crítica', () => {
 6. Restaurar tráfico
 ```
 
+Por eso las migraciones de producción deben ser **expand/contract** ([database.md](../system/database.md) §4): un drop o rename en el mismo deploy que el código nuevo no tiene rollback limpio. Rollback de app **nunca** deshace `prisma migrate deploy`.
+
 ### Tiempos objetivo
 
 | Evento | Tiempo máximo |
@@ -226,6 +245,8 @@ Un hotfix es un fix crítico que no puede esperar al ciclo normal de release.
 8. Post-mortem: documentar qué falló y cómo prevenirlo
 ```
 
+Un hotfix **sí corta el API** (un solo backend). Se despliega igual porque el bug es peor que el hueco. Avisar a caja: sync ~1–2 min; pueden seguir cobrando. No relajar expand/contract: un hotfix con drop de columna sigue siendo escenario crítico de BD.
+
 ---
 
-*Referencia cruzada: [deployment.md](deployment.md) | [security.md](../system/security.md)*
+*Referencia cruzada: [deployment.md](deployment.md) | [database.md](../system/database.md) | [security.md](../system/security.md)*

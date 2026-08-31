@@ -15,7 +15,7 @@ El directorio `.spec/` es la fuente de verdad del proyecto. Contiene especificac
 1. [.spec/README.md](.spec/README.md) — índice + jerarquía de verdad.  
 2. Este archivo (`AGENTS.md`) — patrones de código.  
 3. Si tocas un módulo con feature spec → [.spec/features/{módulo}.md](features/) (`products`, `pos`, `sales`, `sync`, `reports`).
-4. Según la tarea: `system/architecture.md`, `system/database.md`, `system/security.md`, `system/multi-tenancy.md`, `system/plan-gating.md`, `system/api-conventions.md`.  
+4. Según la tarea: `system/architecture.md`, `system/database.md`, `system/security.md`, `system/multi-tenancy.md`, `system/plan-gating.md`, `system/api-conventions.md`. **Deploy / prod:** `DevOps/release-policy.md` + `DevOps/deployment.md` §7 (un backend corta el API; el POS aguanta).  
 5. **UI / pantallas:** [UI-UX/patterns.md](UI-UX/patterns.md) (qué layout/estado usar) + [UI-UX/design-system.md](UI-UX/design-system.md) (tokens).
 
 **Cuando el usuario diga "lee las reglas del proyecto" / "read the project rules":** lee documentos marcados `current` bajo `.spec/` **excluyendo** `.spec/audit/` y planes `obsolete`. No leas planes `done`/`obsolete` salvo que la tarea sea histórica.

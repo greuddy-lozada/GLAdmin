@@ -226,6 +226,7 @@ El prefijo global es **`api`** (`main.ts`). No hay `/api/v1` en producción hoy.
 1. Breaking changes mayores pueden introducir `/api/v2` — no inventar `v1` en paths actuales.
 2. No-breaking = campos opcionales nuevos, endpoints nuevos.
 3. Documentar breaking changes en el PR + api-conventions.
+4. **Sync y POS no esperan `/api/v2`.** Un cambio de `POST /api/sync/push`, `GET /api/sync/pull` o del payload de sale encolada es breaking para caja (Dexie + cola). Usar expand/contract: el backend acepta shape viejo y nuevo → frontend nuevo → quitar el viejo. No desplegar backend-incompatible y frontend nuevo en el mismo instante. Ver [database.md](database.md) §4 y [deployment.md](../DevOps/deployment.md) §7.
 
 ---
 
@@ -260,4 +261,4 @@ export class SaleQueryDto extends PaginationQueryDto {
 
 ---
 
-*Referencia cruzada: [architecture.md](architecture.md) — [security.md](security.md) — [database.md](database.md) — [features/sales.md](../features/sales.md)*
+*Referencia cruzada: [architecture.md](architecture.md) — [security.md](security.md) — [database.md](database.md) — [deployment.md](../DevOps/deployment.md) — [features/sales.md](../features/sales.md) — [features/sync.md](../features/sync.md)*

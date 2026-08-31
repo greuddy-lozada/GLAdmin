@@ -102,6 +102,28 @@ Estados relevantes: `DRAFT` (editable) → emitida/cobrada (inmutable) → anula
 4. **No usar `prisma migrate dev` en producción.** Solo `prisma migrate deploy`.
 5. **Data migrations** (modificar datos existentes) van en un script separado, NO en la migración de schema.
 
+### Expand / contract (producción)
+
+Un restart de 30s es recuperable. Una migración incompatible con el código que aún corre (o con el rollback) **no**. Nunca en el mismo deploy: drop/rename de columna + código que ya no la lee.
+
+| Tipo | ¿Deploy “en caliente” / de día? | Notas |
+|---|---|---|
+| Agregar tabla o columna **nullable** / con default | Sí | Código viejo ignora lo nuevo. Rollback de app es seguro; no revertir la BD. |
+| Agregar columna **NOT NULL** sin default | **No** | Rompe writes del API viejo o del nuevo. Expand: nullable o default → backfill → NOT NULL en un release posterior. |
+| Renombrar o eliminar columna/tabla | **No** | Expand (columna nueva + dual-read/write) → migrate datos → contract (drop) en un **tercer** release, cuando nadie lea la vieja. |
+| Cambio de contrato `/api/sync/push` o payload de sale | **No** en el mismo instante que el frontend | Dual-accept en backend primero; luego frontend; luego quitar el shape viejo. Ver [api-conventions.md](api-conventions.md) §5. |
+
+Orden **expand → migrate → contract**:
+
+1. **Expand.** Deploy de backend que acepta el shape viejo **y** el nuevo (columna extra, endpoint dual, campo opcional).
+2. **Migrate.** `prisma migrate deploy` **additive** (nunca drop en este paso).
+3. **Switch.** Deploy de frontend / clientes que escriben el shape nuevo.
+4. **Contract.** Release posterior: quitar código viejo; si aplica, drop de columna/tabla.
+
+Hoy `scripts/deploy.sh` aplica `prisma migrate deploy` **después** de recrear el contenedor. Eso solo es seguro si la migración es additive y el código nuevo tolera schema viejo **o** el hueco de API es aceptable (fuera de horario de caja). Objetivo a futuro: migración additive **antes** de levantar el contenedor nuevo — [deployment.md](../DevOps/deployment.md) §7.
+
+Rollback: additive → no revertir BD. Destructiva ya aplicada → [release-policy.md](../DevOps/release-policy.md) §4 (mantenimiento, reverse o restore de backup).
+
 ---
 
 ## 5. Seeds de Datos de Prueba
@@ -165,4 +187,4 @@ Al agregar queries nuevas, verificar índices en el mismo PR.
 
 ---
 
-*Referencia cruzada: [architecture.md](architecture.md) — [security.md](security.md) — [features/products.md](../features/products.md)*
+*Referencia cruzada: [architecture.md](architecture.md) — [security.md](security.md) — [deployment.md](../DevOps/deployment.md) — [release-policy.md](../DevOps/release-policy.md) — [features/products.md](../features/products.md)*

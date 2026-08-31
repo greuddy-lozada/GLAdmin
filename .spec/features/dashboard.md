@@ -116,7 +116,7 @@ Fallback si Redis caído: bus in-process (single node). Overview siempre funcion
 
 - Sin `<h1>` propio (layout dashboard).
 - Skeletons en carga inicial; empty states con CTA (POS / productos).
-- Al **reconnect** SSE: refetch `overview` para cerrar huecos.
+- Al **reconnect** SSE: refetch `overview` para cerrar huecos. Un deploy tira el stream; el cliente reintenta solo ([deployment.md](../DevOps/deployment.md) §7). El dashboard **sí** se interrumpe; el POS no.
 - i18n: claves bajo `dashboard.*` (es/en sync).
 
 ### Role chrome
@@ -174,4 +174,4 @@ Fallback si Redis caído: bus in-process (single node). Overview siempre funcion
 
 ---
 
-*Índice: [README.md](README.md) · Sales: [sales.md](sales.md) · Sync: [sync.md](sync.md) · Reports: [reports.md](reports.md)*
+*Índice: [README.md](README.md) · Sales: [sales.md](sales.md) · Sync: [sync.md](sync.md) · Reports: [reports.md](reports.md) · Deploy: [deployment.md](../DevOps/deployment.md)*
