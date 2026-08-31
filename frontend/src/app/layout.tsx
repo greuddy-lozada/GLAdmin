@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import { Toaster } from 'sileo';
-import { SerwistProvider } from '@serwist/turbopack/react';
 import { ThemeProvider } from '@/providers/theme-provider';
 import { AuthProvider } from '@/providers/auth-provider';
 import { QueryProvider } from '@/providers/query-provider';
+import { SerwistRoot } from '@/providers/serwist-provider';
 import { I18nProvider } from '@/i18n/i18n-provider';
 import './globals.css';
 
@@ -20,7 +20,7 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <body className="min-h-screen bg-background text-foreground antialiased">
-        <SerwistProvider swUrl="/serwist/sw.js">
+        <SerwistRoot>
           <I18nProvider>
             <ThemeProvider>
               <AuthProvider>
@@ -28,7 +28,7 @@ export default function RootLayout({
               </AuthProvider>
             </ThemeProvider>
           </I18nProvider>
-        </SerwistProvider>
+        </SerwistRoot>
         <Toaster position="top-right" theme="system" />
       </body>
     </html>

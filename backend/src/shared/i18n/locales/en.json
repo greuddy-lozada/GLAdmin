@@ -22,6 +22,7 @@
   "ADMIN": {
     "MAX_USERS_REACHED": "User limit reached. Upgrade your plan to add more users.",
     "ROLE_NOT_FOUND": "Role not found",
+    "USER_ALREADY_IN_ORG": "The user already belongs to this organization",
     "INVITE_ORG_ROLE_REQUIRED": "Only organization roles can be used for invitations",
     "INVITE_CREATED": "Invitation created. Copy the link to share it",
     "INVITE_CREATED_EMAILED": "Invitation created and emailed"
@@ -29,8 +30,10 @@
   "USER": {
     "CREATED": "User has been created",
     "UPDATED": "User has been updated",
-    "DELETED": "User has been deleted",
+    "DELETED": "User was removed from the organization",
     "ALREADY_EXISTS": "User already exists",
+    "ALREADY_IN_ORG": "The user already belongs to this organization",
+    "IDENTITY_CONFLICT": "Email and username belong to different accounts",
     "NOT_FOUND": "User not found",
     "ROLE_NOT_FOUND": "Role not found",
     "ROLE_HIERARCHY": "You cannot assign or manage this role"

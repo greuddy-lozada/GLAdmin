@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ForbiddenException } from '@nestjs/common';
+import { ConflictException, ForbiddenException } from '@nestjs/common';
 import { UsersService } from '../users.service';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 import { ContextService } from '../../tenant/context.service';
@@ -30,6 +30,7 @@ describe('UsersService hierarchy', () => {
   const mockPrisma = {
     role: { findUnique: jest.fn() },
     organization: { findUnique: jest.fn() },
+    user: { update: jest.fn() },
     userOrganization: {
       count: jest.fn(),
       create: jest.fn(),
@@ -43,6 +44,7 @@ describe('UsersService hierarchy', () => {
 
   const mockUserRepository = {
     findByUserName: jest.fn(),
+    findByEmail: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
   };
@@ -92,6 +94,7 @@ describe('UsersService hierarchy', () => {
       name: 'Empleado',
     });
     mockUserRepository.findByUserName.mockResolvedValue(null);
+    mockUserRepository.findByEmail.mockResolvedValue(null);
     mockPrisma.organization.findUnique.mockResolvedValue({ plan: null });
     mockUserFactory.createFromDto.mockResolvedValue({ ...dto });
     mockUserRepository.create.mockResolvedValue({
@@ -131,6 +134,7 @@ describe('UsersService hierarchy', () => {
       name: 'Empleado',
     });
     mockUserRepository.findByUserName.mockResolvedValue(null);
+    mockUserRepository.findByEmail.mockResolvedValue(null);
     mockPrisma.organization.findUnique.mockResolvedValue({ plan: null });
     mockUserFactory.createFromDto.mockResolvedValue({ ...dto });
     mockUserRepository.create.mockResolvedValue({
@@ -186,6 +190,7 @@ describe('UsersService hierarchy', () => {
       name: 'Ejecutivo',
     });
     mockUserRepository.findByUserName.mockResolvedValue(null);
+    mockUserRepository.findByEmail.mockResolvedValue(null);
     mockPrisma.organization.findUnique.mockResolvedValue({ plan: null });
     mockUserFactory.createFromDto.mockResolvedValue({
       ...dto,
@@ -214,6 +219,7 @@ describe('UsersService hierarchy', () => {
       name: 'Ejecutivo',
     });
     mockUserRepository.findByUserName.mockResolvedValue(null);
+    mockUserRepository.findByEmail.mockResolvedValue(null);
     mockPrisma.organization.findUnique.mockResolvedValue({ plan: null });
     mockUserFactory.createFromDto.mockResolvedValue({
       ...dto,
@@ -230,5 +236,124 @@ describe('UsersService hierarchy', () => {
     await expect(
       service.create({ ...dto, idRole: executiveRoleId }),
     ).resolves.toMatchObject({ message: 'USER.CREATED' });
+  });
+
+  const existingUser = {
+    id: 'existing-1',
+    firstName: 'Ana',
+    lastName: 'Perez',
+    userName: 'aperez',
+    email: 'ana@example.com',
+    password: 'old-hash',
+    idRole: employeeRoleId,
+    isActive: true,
+    mustChangePassword: false,
+    lastLogin: null,
+    currentOrganizationId: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  function stubTargetRole() {
+    mockPrisma.role.findUnique.mockResolvedValue({
+      id: employeeRoleId,
+      slug: 'employee',
+      name: 'Empleado',
+    });
+  }
+
+  it('restores an unlinked user instead of creating a duplicate', async () => {
+    stubTargetRole();
+    mockUserRepository.findByUserName.mockResolvedValue(existingUser);
+    mockUserRepository.findByEmail.mockResolvedValue(existingUser);
+    mockPrisma.userOrganization.findUnique
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({
+        user: { ...existingUser, isActive: true },
+        roleId: employeeRoleId,
+        role: { id: employeeRoleId, name: 'Empleado', slug: 'employee' },
+      });
+    mockPrisma.organization.findUnique.mockResolvedValue({ plan: null });
+    mockPrisma.userOrganization.create.mockResolvedValue({});
+    mockPrisma.user.update.mockResolvedValue(existingUser);
+
+    const result = await service.create(dto);
+
+    expect(result.message).toBe('USER.CREATED');
+    expect(mockUserRepository.create).not.toHaveBeenCalled();
+    expect(mockPrisma.userOrganization.create).toHaveBeenCalledWith({
+      data: {
+        userId: existingUser.id,
+        organizationId: mockOrgId,
+        roleId: employeeRoleId,
+      },
+    });
+  });
+
+  it('reactivates an inactive member instead of conflicting', async () => {
+    stubTargetRole();
+    const inactive = { ...existingUser, isActive: false };
+    mockUserRepository.findByUserName.mockResolvedValue(inactive);
+    mockUserRepository.findByEmail.mockResolvedValue(inactive);
+    mockUserFactory.createFromDto.mockResolvedValue({
+      ...dto,
+      password: 'new-hash',
+    });
+    mockPrisma.userOrganization.findUnique
+      .mockResolvedValueOnce({
+        userId: inactive.id,
+        organizationId: mockOrgId,
+        roleId: employeeRoleId,
+      })
+      .mockResolvedValueOnce({
+        user: { ...inactive, password: 'new-hash', isActive: true },
+        roleId: employeeRoleId,
+        role: { id: employeeRoleId, name: 'Empleado', slug: 'employee' },
+      });
+    mockPrisma.user.update.mockResolvedValue(inactive);
+    mockPrisma.userOrganization.update.mockResolvedValue({});
+
+    const result = await service.create(dto);
+
+    expect(result.message).toBe('USER.CREATED');
+    expect(mockPrisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: inactive.id },
+        data: expect.objectContaining({
+          isActive: true,
+          password: 'new-hash',
+          deletedAt: null,
+        }),
+      }),
+    );
+    expect(mockUserRepository.create).not.toHaveBeenCalled();
+    expect(mockPrisma.userOrganization.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects creating a user who is already an active member', async () => {
+    stubTargetRole();
+    mockUserRepository.findByUserName.mockResolvedValue(existingUser);
+    mockUserRepository.findByEmail.mockResolvedValue(existingUser);
+    mockPrisma.userOrganization.findUnique.mockResolvedValue({
+      userId: existingUser.id,
+      organizationId: mockOrgId,
+      roleId: employeeRoleId,
+    });
+
+    await expect(service.create(dto)).rejects.toBeInstanceOf(ConflictException);
+    expect(mockUserRepository.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects when username and email belong to different users', async () => {
+    stubTargetRole();
+    mockUserRepository.findByUserName.mockResolvedValue(existingUser);
+    mockUserRepository.findByEmail.mockResolvedValue({
+      ...existingUser,
+      id: 'other-user',
+      userName: 'other',
+    });
+
+    await expect(service.create(dto)).rejects.toBeInstanceOf(ConflictException);
+    expect(mockUserRepository.create).not.toHaveBeenCalled();
   });
 });

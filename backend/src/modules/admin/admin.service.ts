@@ -322,6 +322,7 @@ export class AdminService {
         skip,
         take: limit,
         where,
+        orderBy: { updatedAt: 'desc' },
         include: {
           role: true,
           organizations: {
@@ -354,10 +355,12 @@ export class AdminService {
   }
 
   async createUser(dto: CreateAdminUserDto, actorSlug: string) {
-    const existing = await this.prisma.user.findUnique({
-      where: { userName: dto.userName },
+    const matches = await this.prisma.user.findMany({
+      where: { OR: [{ userName: dto.userName }, { email: dto.email }] },
     });
-    if (existing) throw new ConflictException('USER.ALREADY_EXISTS');
+    if (matches.length > 1) {
+      throw new ConflictException('USER.IDENTITY_CONFLICT');
+    }
 
     const role = await this.prisma.role.findUnique({
       where: { id: dto.idRole },
@@ -386,6 +389,10 @@ export class AdminService {
       orgRoleId = orgRole.id;
     }
 
+    if (matches[0]) {
+      return this.restoreAdminUser(matches[0], dto, systemRoleId, orgRoleId);
+    }
+
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(dto.password, salt);
 
@@ -412,6 +419,79 @@ export class AdminService {
       });
     }
 
+    return { data: stripPassword(user), message: 'ADMIN.USER_CREATED' };
+  }
+
+  private async restoreAdminUser(
+    existing: {
+      id: string;
+      isActive: boolean;
+      currentOrganizationId: string | null;
+    },
+    dto: CreateAdminUserDto,
+    systemRoleId: string,
+    orgRoleId: string,
+  ) {
+    const membership = dto.organizationId
+      ? await this.prisma.userOrganization.findUnique({
+          where: {
+            userId_organizationId: {
+              userId: existing.id,
+              organizationId: dto.organizationId,
+            },
+          },
+        })
+      : null;
+
+    if (membership && existing.isActive) {
+      throw new ConflictException('ADMIN.USER_ALREADY_IN_ORG');
+    }
+
+    if (dto.organizationId && !membership) {
+      await this.checkMaxUsers(dto.organizationId);
+    }
+
+    // Recreate (no org) or reactivate: apply form identity. Assign-only keeps password.
+    const rewriteAccount = !existing.isActive || !dto.organizationId;
+    if (rewriteAccount) {
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(dto.password, salt);
+      await this.prisma.user.update({
+        where: { id: existing.id },
+        data: {
+          firstName: dto.firstName,
+          lastName: dto.lastName,
+          password: hashedPassword,
+          idRole: systemRoleId,
+          isActive: dto.isActive ?? true,
+          deletedAt: null,
+          ...(dto.organizationId
+            ? { currentOrganizationId: dto.organizationId }
+            : {}),
+        },
+      });
+    } else if (dto.organizationId && !existing.currentOrganizationId) {
+      await this.prisma.user.update({
+        where: { id: existing.id },
+        data: { currentOrganizationId: dto.organizationId },
+      });
+    }
+
+    if (dto.organizationId && !membership) {
+      await this.prisma.userOrganization.create({
+        data: {
+          userId: existing.id,
+          organizationId: dto.organizationId,
+          roleId: orgRoleId,
+        },
+      });
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: existing.id },
+      include: { role: true },
+    });
+    if (!user) throw new NotFoundException('ADMIN.USER_NOT_FOUND');
     return { data: stripPassword(user), message: 'ADMIN.USER_CREATED' };
   }
 

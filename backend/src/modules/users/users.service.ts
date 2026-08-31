@@ -68,23 +68,12 @@ export class UsersService {
     }
     assertCanAssignRole(actorSlug, targetRole.slug);
 
-    const existing = await this.userRepository.findByUserName(dto.userName);
+    const existing = await this.findIdentityMatch(dto.userName, dto.email);
     if (existing) {
-      throw new ConflictException('USER.ALREADY_EXISTS');
+      return this.restoreOrgUser(existing, dto, organizationId);
     }
 
-    const org = await this.prisma.organization.findUnique({
-      where: { id: organizationId },
-      include: { plan: true },
-    });
-    if (org?.plan) {
-      const count = await this.prisma.userOrganization.count({
-        where: { organizationId },
-      });
-      if (count >= org.plan.maxUsers) {
-        throw new ForbiddenException('ADMIN.MAX_USERS_REACHED');
-      }
-    }
+    await this.assertCanAddMember(organizationId);
 
     const userData = await this.userFactory.createFromDto(dto);
     const user = await this.userRepository.create(userData);
@@ -111,6 +100,90 @@ export class UsersService {
     };
   }
 
+  private async findIdentityMatch(userName: string, email: string) {
+    const byName = await this.userRepository.findByUserName(userName);
+    const byEmail = await this.userRepository.findByEmail(email);
+    if (byName && byEmail && byName.id !== byEmail.id) {
+      throw new ConflictException('USER.IDENTITY_CONFLICT');
+    }
+    return byName ?? byEmail;
+  }
+
+  private async assertCanAddMember(organizationId: string): Promise<void> {
+    const org = await this.prisma.organization.findUnique({
+      where: { id: organizationId },
+      include: { plan: true },
+    });
+    if (org?.plan) {
+      const count = await this.prisma.userOrganization.count({
+        where: { organizationId },
+      });
+      if (count >= org.plan.maxUsers) {
+        throw new ForbiddenException('ADMIN.MAX_USERS_REACHED');
+      }
+    }
+  }
+
+  private async restoreOrgUser(
+    existing: UserEntity,
+    dto: CreateUserDto,
+    organizationId: string,
+  ): Promise<{ data: SafeUser; message: string }> {
+    const membership = await this.prisma.userOrganization.findUnique({
+      where: {
+        userId_organizationId: { userId: existing.id, organizationId },
+      },
+    });
+
+    if (membership && existing.isActive) {
+      throw new ConflictException('USER.ALREADY_IN_ORG');
+    }
+
+    if (!membership) {
+      await this.assertCanAddMember(organizationId);
+    }
+
+    if (!existing.isActive) {
+      const userData = await this.userFactory.createFromDto(dto);
+      await this.prisma.user.update({
+        where: { id: existing.id },
+        data: {
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          password: userData.password,
+          isActive: true,
+          deletedAt: null,
+          currentOrganizationId: organizationId,
+        },
+      });
+    } else if (!existing.currentOrganizationId) {
+      await this.prisma.user.update({
+        where: { id: existing.id },
+        data: { currentOrganizationId: organizationId },
+      });
+    }
+
+    if (!membership) {
+      await this.prisma.userOrganization.create({
+        data: {
+          userId: existing.id,
+          organizationId,
+          roleId: dto.idRole,
+        },
+      });
+    } else {
+      await this.prisma.userOrganization.update({
+        where: {
+          userId_organizationId: { userId: existing.id, organizationId },
+        },
+        data: { roleId: dto.idRole },
+      });
+    }
+
+    const restored = await this.findById(existing.id);
+    return { data: restored, message: 'USER.CREATED' };
+  }
+
   async findAll(page = 1, limit = 20) {
     const organizationId = this.getCurrentOrgId();
     const skip = (page - 1) * limit;
@@ -121,6 +194,7 @@ export class UsersService {
         where,
         skip,
         take: limit,
+        orderBy: { user: { updatedAt: 'desc' } },
         include: {
           user: { include: { role: true } },
           role: true,

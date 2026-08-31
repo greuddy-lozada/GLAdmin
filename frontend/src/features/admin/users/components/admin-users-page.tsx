@@ -29,10 +29,7 @@ import { canAssignRole } from '@/lib/auth/roles';
 
 export default function AdminUsersPage() {
   const [filterActive, setFilterActive] = useState('true');
-  const [filterOrg, setFilterOrg] = useState(() => {
-    if (typeof window === 'undefined') return 'all';
-    return localStorage.getItem('currentOrgId') ?? 'all';
-  });
+  const [filterOrg, setFilterOrg] = useState('all');
   const { items: usersData, isLoading: loading, create, update } = useAdminUsers(
     filterActive,
     filterOrg === 'all' ? undefined : filterOrg,
@@ -134,7 +131,11 @@ export default function AdminUsersPage() {
           idRole: createData.idRole || memberSystemRoleId,
         },
         {
-          onSuccess: () => sileo.success({ description: t('admin.users.created') }),
+          onSuccess: () => {
+            setFilterOrg(createData.organizationId || 'all');
+            setFilterActive(createData.isActive === false ? 'false' : 'true');
+            sileo.success({ description: t('admin.users.created') });
+          },
           onError: (err) => { setError(extractApiError(err) ?? t('admin.users.error.save')); setFormOpen(true); },
         },
       );

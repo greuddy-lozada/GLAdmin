@@ -190,6 +190,8 @@ Para producción: `FRONTEND_URL=https://cuadra.app`.
 
 Serwist genera el service worker durante el build estático. Configuración en `sw.ts`. El archivo `manifest.ts` requiere `export const dynamic = 'force-static'` para compatibilidad con `output: 'export'`. Build verificado: 66 precache entries, ~2MB.
 
+**`next dev` no registra el SW** (`SerwistRoot`): `sw.ts` usa CacheFirst en scripts y en Turbopack eso sirve chunks viejos tras HMR (`module factory is not available`). En desarrollo se desregistra el worker y se limpia Cache Storage. El PWA sigue activo solo con `NODE_ENV=production`.
+
 `skipWaiting: true` y `clientsClaim: true`: al publicar un frontend nuevo, el SW **toma el control al instante** en pestañas abiertas. En caja puede mezclar HTML viejo con JS nuevo a mitad de un ticket. Política: [§7](#7-deploys-sin-interrumpir-usuarios).
 
 ---

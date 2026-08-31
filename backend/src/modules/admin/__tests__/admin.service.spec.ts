@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConflictException } from '@nestjs/common';
 import { AdminService } from '../admin.service';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 import { ContextService } from '../../tenant/context.service';
@@ -24,10 +25,15 @@ describe('AdminService invites', () => {
       count: jest.fn(),
       findUnique: jest.fn(),
       create: jest.fn(),
+      update: jest.fn(),
     },
     role: { findUnique: jest.fn(), findFirst: jest.fn() },
     organization: { findUnique: jest.fn() },
-    userOrganization: { count: jest.fn(), create: jest.fn() },
+    userOrganization: {
+      count: jest.fn(),
+      create: jest.fn(),
+      findUnique: jest.fn(),
+    },
   };
 
   const mockContext = { getCurrent: () => ({ organizationId: 'org-current' }) };
@@ -85,6 +91,7 @@ describe('AdminService invites', () => {
             isActive: true,
             organizations: { some: { organizationId: orgId } },
           },
+          orderBy: { updatedAt: 'desc' },
         }),
       );
     });
@@ -118,7 +125,7 @@ describe('AdminService invites', () => {
     });
 
     test('no usa un rol org como User.idRole', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(null);
+      mockPrisma.user.findMany.mockResolvedValue([]);
       mockPrisma.role.findUnique.mockImplementation(
         ({ where }: { where: { id: string } }) => {
           if (where.id === executiveId) {
@@ -170,6 +177,206 @@ describe('AdminService invites', () => {
           data: expect.objectContaining({ roleId: executiveId }),
         }),
       );
+    });
+
+    const dto = {
+      firstName: 'Ana',
+      lastName: 'Perez',
+      userName: 'anap',
+      email: 'ana@x.com',
+      password: 'secret12',
+      idRole: executiveId,
+      organizationId: 'org-1',
+      orgRoleId: executiveId,
+    };
+
+    const existing = {
+      id: 'user-1',
+      isActive: false,
+      currentOrganizationId: null,
+      password: 'old',
+    };
+
+    function stubAssignableOrgRole() {
+      mockPrisma.role.findUnique.mockImplementation(
+        ({ where }: { where: { id: string } }) => {
+          if (where.id === executiveId) {
+            return Promise.resolve({
+              id: executiveId,
+              slug: 'executive',
+              type: 'org',
+            });
+          }
+          return Promise.resolve(null);
+        },
+      );
+      mockPrisma.role.findFirst.mockResolvedValue({
+        id: employeeId,
+        slug: 'employee',
+        type: 'org',
+      });
+      mockPrisma.organization.findUnique.mockResolvedValue({
+        id: 'org-1',
+        plan: null,
+      });
+    }
+
+    test('reactiva un usuario inactivo en vez de rechazar', async () => {
+      stubAssignableOrgRole();
+      mockPrisma.user.findMany.mockResolvedValue([existing]);
+      mockPrisma.userOrganization.findUnique.mockResolvedValue(null);
+      (bcrypt.genSalt as jest.Mock).mockResolvedValue('salt');
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed');
+      mockPrisma.user.update.mockResolvedValue(existing);
+      mockPrisma.userOrganization.create.mockResolvedValue({});
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...existing,
+        isActive: true,
+        password: 'hashed',
+        role: { slug: 'employee' },
+      });
+
+      const result = await service.createUser(dto, 'admin');
+
+      expect(result.message).toBe('ADMIN.USER_CREATED');
+      expect(mockPrisma.user.create).not.toHaveBeenCalled();
+      expect(mockPrisma.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: existing.id },
+          data: expect.objectContaining({
+            isActive: true,
+            password: 'hashed',
+            deletedAt: null,
+          }),
+        }),
+      );
+      expect(mockPrisma.userOrganization.create).toHaveBeenCalled();
+    });
+
+    test('reasigna a la org un usuario activo sin membresía', async () => {
+      stubAssignableOrgRole();
+      const active = { ...existing, isActive: true };
+      mockPrisma.user.findMany.mockResolvedValue([active]);
+      mockPrisma.userOrganization.findUnique.mockResolvedValue(null);
+      mockPrisma.user.update.mockResolvedValue(active);
+      mockPrisma.userOrganization.create.mockResolvedValue({});
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...active,
+        password: 'old',
+        role: { slug: 'employee' },
+      });
+
+      const result = await service.createUser(dto, 'admin');
+
+      expect(result.message).toBe('ADMIN.USER_CREATED');
+      expect(mockPrisma.user.create).not.toHaveBeenCalled();
+      expect(bcrypt.hash).not.toHaveBeenCalled();
+      expect(mockPrisma.userOrganization.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            userId: active.id,
+            organizationId: 'org-1',
+          }),
+        }),
+      );
+    });
+
+    test('reutiliza un admin activo aunque no se envíe organización', async () => {
+      const active = { ...existing, isActive: true };
+      mockPrisma.user.findMany.mockResolvedValue([active]);
+      mockPrisma.role.findUnique.mockResolvedValue({
+        id: 'role-admin',
+        slug: 'admin',
+        type: 'system',
+      });
+      (bcrypt.genSalt as jest.Mock).mockResolvedValue('salt');
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed');
+      mockPrisma.user.update.mockResolvedValue(active);
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...active,
+        password: 'hashed',
+        role: { slug: 'admin' },
+      });
+
+      const result = await service.createUser(
+        {
+          firstName: 'Ana',
+          lastName: 'Perez',
+          userName: 'anap',
+          email: 'ana@x.com',
+          password: 'secret12',
+          idRole: 'role-admin',
+        },
+        'master',
+      );
+
+      expect(result.message).toBe('ADMIN.USER_CREATED');
+      expect(mockPrisma.user.create).not.toHaveBeenCalled();
+      expect(mockPrisma.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: active.id },
+          data: expect.objectContaining({
+            password: 'hashed',
+            idRole: 'role-admin',
+            isActive: true,
+          }),
+        }),
+      );
+    });
+
+    test('reactiva un admin inactivo sin volver a crear la cuenta', async () => {
+      mockPrisma.user.findMany.mockResolvedValue([existing]);
+      mockPrisma.role.findUnique.mockResolvedValue({
+        id: 'role-admin',
+        slug: 'admin',
+        type: 'system',
+      });
+      (bcrypt.genSalt as jest.Mock).mockResolvedValue('salt');
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed');
+      mockPrisma.user.update.mockResolvedValue(existing);
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...existing,
+        isActive: true,
+        password: 'hashed',
+        role: { slug: 'admin' },
+      });
+
+      const result = await service.createUser(
+        {
+          firstName: 'Ana',
+          lastName: 'Perez',
+          userName: 'anap',
+          email: 'ana@x.com',
+          password: 'secret12',
+          idRole: 'role-admin',
+        },
+        'master',
+      );
+
+      expect(result.message).toBe('ADMIN.USER_CREATED');
+      expect(mockPrisma.user.create).not.toHaveBeenCalled();
+      expect(mockPrisma.userOrganization.create).not.toHaveBeenCalled();
+      expect(mockPrisma.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: existing.id },
+          data: expect.objectContaining({ isActive: true, deletedAt: null }),
+        }),
+      );
+    });
+
+    test('rechaza si el usuario activo ya es miembro de la org', async () => {
+      stubAssignableOrgRole();
+      const active = { ...existing, isActive: true };
+      mockPrisma.user.findMany.mockResolvedValue([active]);
+      mockPrisma.userOrganization.findUnique.mockResolvedValue({
+        userId: active.id,
+        organizationId: 'org-1',
+      });
+
+      await expect(service.createUser(dto, 'admin')).rejects.toBeInstanceOf(
+        ConflictException,
+      );
+      expect(mockPrisma.user.create).not.toHaveBeenCalled();
     });
   });
 });

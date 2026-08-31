@@ -22,6 +22,7 @@
   "ADMIN": {
     "MAX_USERS_REACHED": "Límite de usuarios alcanzado. Actualiza tu plan para añadir más usuarios.",
     "ROLE_NOT_FOUND": "Rol no encontrado",
+    "USER_ALREADY_IN_ORG": "El usuario ya pertenece a esta organización",
     "INVITE_ORG_ROLE_REQUIRED": "Solo se pueden invitar con roles de organización",
     "INVITE_CREATED": "Invitación creada. Copia el link para compartirla",
     "INVITE_CREATED_EMAILED": "Invitación creada y enviada por correo"
@@ -29,8 +30,10 @@
   "USER": {
     "CREATED": "Usuario creado exitosamente",
     "UPDATED": "Usuario actualizado exitosamente",
-    "DELETED": "El usuario fue eliminado",
+    "DELETED": "El usuario fue quitado de la organización",
     "ALREADY_EXISTS": "El usuario ya existe",
+    "ALREADY_IN_ORG": "El usuario ya pertenece a esta organización",
+    "IDENTITY_CONFLICT": "El correo y el nombre de usuario pertenecen a cuentas distintas",
     "NOT_FOUND": "Usuario no encontrado",
     "ROLE_NOT_FOUND": "Rol no encontrado",
     "ROLE_HIERARCHY": "No puedes asignar o gestionar este rol"

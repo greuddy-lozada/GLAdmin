@@ -1,6 +1,6 @@
 # Security — Reglas de Seguridad y Control de Acceso
 
-> **status:** `current` · last-verified: 2026-08-08  
+> **status:** `current` · last-verified: 2026-08-30  
 > **Principio rector:** Cuadra maneja datos financieros de PyMEs venezolanas.  
 > Multi-tenancy: [multi-tenancy.md](multi-tenancy.md) · Plan gating: [plan-gating.md](plan-gating.md) · Ventas: [features/sales.md](../features/sales.md)
 
@@ -182,7 +182,9 @@ Los módulos del panel de administración operan bajo un modelo **"execute then 
 **Acciones que generan approval:**
 - Organizaciones: `CREATE_ORG`, `UPDATE_ORG`
 - Planes: `CREATE_PLAN`, `UPDATE_PLAN`
-- Usuarios admin: `CREATE_ADMIN_USER`, `UPDATE_ADMIN_USER`. `GET /api/admin/users` acepta `organizationId` (UUID) para listar solo miembros de esa org; sin el param lista todos.
+- Usuarios admin: `CREATE_ADMIN_USER`, `UPDATE_ADMIN_USER`. `GET /api/admin/users` acepta `organizationId` (UUID) para listar solo miembros de esa org; sin el param lista todos (orden `updatedAt desc`). La UI de admin arranca en “todas las organizaciones”; tras un alta sin org cambia a ese filtro para que el usuario reutilizado no desaparezca.
+
+**Alta reutiliza identidad global.** `POST /api/users` y `POST /api/admin/users` no crean un segundo `User` si `email` o `userName` ya existen: reactivan (`isActive: true`, `deletedAt: null`) cuando la cuenta está inactiva; reasignan membresía si falta en la org; y `POST /api/admin/users` sin `organizationId` actualiza nombre/contraseña/rol de sistema de la cuenta existente. `409` solo si ya es miembro activo de esa org, o si email y username apuntan a dos cuentas distintas. No hard-delete: ventas, cajas y audit apuntan al mismo id.
 - Asignaciones: `ASSIGN_USER_ORG`, `REMOVE_USER_ORG`, `CHANGE_USER_ROLE`
 - Invitaciones: `CREATE_INVITE`
 
