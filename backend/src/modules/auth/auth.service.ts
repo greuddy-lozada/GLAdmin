@@ -119,6 +119,13 @@ export class AuthService {
       }
     }
 
+    const memberSystemRole = await this.prisma.role.findFirst({
+      where: { slug: 'employee' },
+    });
+    if (!memberSystemRole) {
+      throw new NotFoundException('ADMIN.ROLE_NOT_FOUND');
+    }
+
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(dto.password, salt);
 
@@ -138,7 +145,7 @@ export class AuthService {
           firstName: dto.firstName,
           lastName: dto.lastName,
           password: hashedPassword,
-          idRole: invite.roleId,
+          idRole: memberSystemRole.id,
           isActive: true,
           currentOrganizationId: invite.organizationId,
         },

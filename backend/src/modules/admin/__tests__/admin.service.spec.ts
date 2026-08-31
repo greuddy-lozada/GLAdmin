@@ -3,6 +3,10 @@ import { AdminService } from '../admin.service';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 import { ContextService } from '../../tenant/context.service';
 import { MailService } from '../../../shared/mail/mail.service';
+import { setRoleLevels } from '../../../common/auth/role-hierarchy';
+import * as bcrypt from 'bcrypt';
+
+jest.mock('bcrypt');
 
 describe('AdminService invites', () => {
   let service: AdminService;
@@ -18,10 +22,12 @@ describe('AdminService invites', () => {
     user: {
       findMany: jest.fn(),
       count: jest.fn(),
+      findUnique: jest.fn(),
+      create: jest.fn(),
     },
-    role: { findUnique: jest.fn() },
+    role: { findUnique: jest.fn(), findFirst: jest.fn() },
     organization: { findUnique: jest.fn() },
-    userOrganization: { count: jest.fn() },
+    userOrganization: { count: jest.fn(), create: jest.fn() },
   };
 
   const mockContext = { getCurrent: () => ({ organizationId: 'org-current' }) };
@@ -92,6 +98,76 @@ describe('AdminService invites', () => {
       expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {},
+        }),
+      );
+    });
+  });
+
+  describe('createUser()', () => {
+    const executiveId = 'role-executive';
+    const employeeId = 'role-employee';
+
+    beforeEach(() => {
+      setRoleLevels({
+        master: 100,
+        admin: 90,
+        executive: 80,
+        manager: 60,
+        employee: 40,
+      });
+    });
+
+    test('no usa un rol org como User.idRole', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(null);
+      mockPrisma.role.findUnique.mockImplementation(
+        ({ where }: { where: { id: string } }) => {
+          if (where.id === executiveId) {
+            return Promise.resolve({
+              id: executiveId,
+              slug: 'executive',
+              type: 'org',
+            });
+          }
+          return Promise.resolve(null);
+        },
+      );
+      mockPrisma.role.findFirst.mockResolvedValue({
+        id: employeeId,
+        slug: 'employee',
+        type: 'org',
+      });
+      mockPrisma.organization.findUnique.mockResolvedValue({ id: 'org-1' });
+      (bcrypt.genSalt as jest.Mock).mockResolvedValue('salt');
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed');
+      mockPrisma.user.create.mockResolvedValue({
+        id: 'user-1',
+        password: 'hashed',
+        idRole: employeeId,
+      });
+      mockPrisma.userOrganization.create.mockResolvedValue({});
+
+      await service.createUser(
+        {
+          firstName: 'Ana',
+          lastName: 'Perez',
+          userName: 'anap',
+          email: 'ana@x.com',
+          password: 'secret12',
+          idRole: executiveId,
+          organizationId: 'org-1',
+          orgRoleId: executiveId,
+        },
+        'admin',
+      );
+
+      expect(mockPrisma.user.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ idRole: employeeId }),
+        }),
+      );
+      expect(mockPrisma.userOrganization.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ roleId: executiveId }),
         }),
       );
     });

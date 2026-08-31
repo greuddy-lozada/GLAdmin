@@ -24,6 +24,8 @@ import { sileo } from 'sileo';
 import { Role } from '@/features/roles/models/role.model';
 import apiClient from '@/lib/api/api-client';
 import { extractApiError } from '@/lib/api/extract-api-error';
+import { useAuth } from '@/providers/auth-provider';
+import { canAssignRole } from '@/lib/auth/roles';
 
 export default function AdminUsersPage() {
   const [filterActive, setFilterActive] = useState('true');
@@ -36,6 +38,7 @@ export default function AdminUsersPage() {
     filterOrg === 'all' ? undefined : filterOrg,
   );
   const { t } = useI18n();
+  const { systemRoleSlug } = useAuth();
   const [formOpen, setFormOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [roles, setRoles] = useState<Role[]>([]);
@@ -56,11 +59,21 @@ export default function AdminUsersPage() {
     roleId: undefined,
   });
   const [error, setError] = useState('');
+  const assignableRoles = roles.filter((r) => canAssignRole(systemRoleSlug, r.slug));
+  const assignableSystemRoles = assignableRoles.filter((r) => r.type === 'system');
+  const assignableOrgRoles = assignableRoles.filter((r) => r.type !== 'system');
+  const memberSystemRoleId = roles.find((r) => r.slug === 'employee')?.id ?? '';
 
   useEffect(() => {
-    apiClient.get('/admin/roles').then((r) => setRoles(r.data.data || [])).catch(() => {});
-    apiClient.get('/admin/orgs?isActive=all').then((r) => setOrgs(r.data.data || [])).catch(() => {});
-  }, []);
+    apiClient
+      .get('/admin/roles')
+      .then((r) => setRoles(r.data.data || []))
+      .catch((err) => { setError(extractApiError(err) ?? t('admin.users.error.load')); });
+    apiClient
+      .get('/admin/orgs?isActive=all')
+      .then((r) => setOrgs(r.data.data || []))
+      .catch((err) => { setError(extractApiError(err) ?? t('admin.users.error.load')); });
+  }, [t]);
 
   const columns: Column<AdminUser>[] = [
     { field: 'name', render: (row) => `${row.firstName} ${row.lastName}`.trim(), headerName: t('admin.users.field.name') },
@@ -115,10 +128,16 @@ export default function AdminUsersPage() {
         },
       );
     } else {
-      create.mutate(createData, {
-        onSuccess: () => sileo.success({ description: t('admin.users.created') }),
-        onError: (err) => { setError(extractApiError(err) ?? t('admin.users.error.save')); setFormOpen(true); },
-      });
+      create.mutate(
+        {
+          ...createData,
+          idRole: createData.idRole || memberSystemRoleId,
+        },
+        {
+          onSuccess: () => sileo.success({ description: t('admin.users.created') }),
+          onError: (err) => { setError(extractApiError(err) ?? t('admin.users.error.save')); setFormOpen(true); },
+        },
+      );
     }
   };
 
@@ -130,20 +149,22 @@ export default function AdminUsersPage() {
       panel={
         selectedUser ? (
           <div className="space-y-4">
+            {assignableSystemRoles.length > 0 && (
             <div className="space-y-2">
               <Label>{t('admin.users.field.role')}</Label>
               <Select
-                value={String(editData.roleId ?? '')}
+                value={editData.roleId || undefined}
                 onValueChange={(v) => setEditData({ ...editData, roleId: v || undefined })}
               >
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {roles.map((r) => (
+                  {assignableSystemRoles.map((r) => (
                     <SelectItem key={r.id} value={String(r.id)}>{r.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+            )}
             <div className="flex items-center gap-2">
               <Switch checked={editData.isActive ?? true} onCheckedChange={(c) => setEditData({ ...editData, isActive: c })} />
               <Label>{t('admin.users.field.isActive')}</Label>
@@ -186,24 +207,29 @@ export default function AdminUsersPage() {
               <Label>{t('admin.users.field.password')}</Label>
               <Input type="password" value={createData.password} onChange={(e) => setCreateData({ ...createData, password: e.target.value })} required />
             </div>
+            {assignableSystemRoles.length > 0 && (
             <div className="space-y-2">
               <Label>{t('admin.users.field.role')}</Label>
-              <Select value={createData.idRole} onValueChange={(v) => setCreateData({ ...createData, idRole: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Select
+                value={createData.idRole || undefined}
+                onValueChange={(v) => setCreateData({ ...createData, idRole: v })}
+              >
+                <SelectTrigger className="w-full"><SelectValue placeholder={t('admin.users.field.role')} /></SelectTrigger>
                 <SelectContent>
-                  {roles.map((r) => (
+                  {assignableSystemRoles.map((r) => (
                     <SelectItem key={r.id} value={String(r.id)}>{r.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+            )}
             <div className="space-y-2">
               <Label>{t('admin.users.field.organization')}</Label>
               <Select
-                value={createData.organizationId ?? ''}
+                value={createData.organizationId || undefined}
                 onValueChange={(v) => setCreateData({ ...createData, organizationId: v || undefined, orgRoleId: v ? createData.orgRoleId : undefined })}
               >
-                <SelectTrigger><SelectValue placeholder={t('common.none')} /></SelectTrigger>
+                <SelectTrigger className="w-full"><SelectValue placeholder={t('common.none')} /></SelectTrigger>
                 <SelectContent>
                   {orgs.map((o) => (
                     <SelectItem key={o.id} value={String(o.id)}>{o.name}</SelectItem>
@@ -215,12 +241,12 @@ export default function AdminUsersPage() {
               <div className="space-y-2">
                 <Label>{t('admin.users.field.orgRole')}</Label>
                 <Select
-                  value={createData.orgRoleId ?? ''}
+                  value={createData.orgRoleId || undefined}
                   onValueChange={(v) => setCreateData({ ...createData, orgRoleId: v || undefined })}
                 >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="w-full"><SelectValue placeholder={t('admin.users.field.orgRole')} /></SelectTrigger>
                   <SelectContent>
-                    {roles.filter((r) => r.type !== 'system').map((r) => (
+                    {assignableOrgRoles.map((r) => (
                       <SelectItem key={r.id} value={String(r.id)}>{r.name}</SelectItem>
                     ))}
                   </SelectContent>

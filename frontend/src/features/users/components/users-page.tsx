@@ -166,8 +166,8 @@ export default function UsersPage() {
           </div>
           <div className="space-y-2">
             <Label>{t('users.field.role')}</Label>
-            <Select value={formData.idRole} onValueChange={(v) => setFormData({ ...formData, idRole: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+            <Select value={formData.idRole || undefined} onValueChange={(v) => setFormData({ ...formData, idRole: v })}>
+              <SelectTrigger className="w-full"><SelectValue placeholder={t('users.field.role')} /></SelectTrigger>
               <SelectContent>
                 {assignableRoles.map((r) => (
                   <SelectItem key={r.id} value={String(r.id)}>{r.name}</SelectItem>

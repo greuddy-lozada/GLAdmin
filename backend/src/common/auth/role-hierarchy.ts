@@ -14,6 +14,10 @@ export function setRoleLevels(levels: Record<string, number>): void {
   );
 }
 
+export function isPlatformOperator(slug: string | undefined): boolean {
+  return slug === 'master' || slug === 'admin';
+}
+
 export function canAssignRole(actorSlug: string, targetSlug: string): boolean {
   if (targetSlug === 'admin' && actorSlug !== 'master') return false;
   const actorLevel = roleLevelCache.get(actorSlug);

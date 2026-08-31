@@ -364,6 +364,7 @@ export class AdminService {
     });
     if (!role) throw new NotFoundException('ADMIN.ROLE_NOT_FOUND');
     assertCanAssignRole(actorSlug, role.slug);
+    const systemRoleId = await this.resolveSystemRoleId(role);
 
     if (dto.organizationId) {
       const org = await this.prisma.organization.findUnique({
@@ -395,7 +396,7 @@ export class AdminService {
         userName: dto.userName,
         password: hashedPassword,
         email: dto.email,
-        idRole: dto.idRole,
+        idRole: systemRoleId,
         isActive: dto.isActive ?? true,
       },
       include: { role: true },
@@ -417,21 +418,19 @@ export class AdminService {
   async updateUser(id: string, dto: UpdateUserDto, actorSlug: string) {
     const before = await this.findOneUser(id);
 
+    const data: Record<string, unknown> = {};
+    if (dto.isActive !== undefined) data.isActive = dto.isActive;
     if (dto.roleId !== undefined) {
       const role = await this.prisma.role.findUnique({
         where: { id: dto.roleId },
       });
       if (!role) throw new NotFoundException('ADMIN.ROLE_NOT_FOUND');
       assertCanAssignRole(actorSlug, role.slug);
-      // Cannot change a user whose current system role is not assignable by actor
       if (before.role?.slug) {
         assertCanAssignRole(actorSlug, before.role.slug);
       }
+      data.idRole = await this.resolveSystemRoleId(role);
     }
-
-    const data: Record<string, unknown> = {};
-    if (dto.isActive !== undefined) data.isActive = dto.isActive;
-    if (dto.roleId !== undefined) data.idRole = dto.roleId;
 
     const user = await this.prisma.user.update({
       where: { id },
@@ -518,6 +517,21 @@ export class AdminService {
   }
 
   // ─── Max Users ───────────────────────────────
+
+  /** Org roles belong on membership, not User.idRole (JWT @MinLevel). */
+  private async resolveSystemRoleId(role: {
+    id: string;
+    type: string;
+  }): Promise<string> {
+    if (role.type === 'system') return role.id;
+    const memberSystemRole = await this.prisma.role.findFirst({
+      where: { slug: 'employee' },
+    });
+    if (!memberSystemRole) {
+      throw new NotFoundException('ADMIN.ROLE_NOT_FOUND');
+    }
+    return memberSystemRole.id;
+  }
 
   private async checkMaxUsers(organizationId: string) {
     const org = await this.prisma.organization.findUnique({

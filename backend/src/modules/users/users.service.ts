@@ -45,6 +45,9 @@ export class UsersService {
     if (ctx?.isSuperAdmin || ctx?.systemRole === 'master') {
       return 'master';
     }
+    if (ctx?.systemRole === 'admin') {
+      return 'admin';
+    }
     if (!ctx?.orgRole) {
       throw new ForbiddenException();
     }

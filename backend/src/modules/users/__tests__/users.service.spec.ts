@@ -203,4 +203,32 @@ describe('UsersService hierarchy', () => {
       service.create({ ...dto, idRole: executiveRoleId }),
     ).resolves.toMatchObject({ message: 'USER.CREATED' });
   });
+
+  it('system admin bypasses org membership role for hierarchy', async () => {
+    orgRole = 'employee';
+    systemRole = 'admin';
+    isSuperAdmin = false;
+    mockPrisma.role.findUnique.mockResolvedValue({
+      id: executiveRoleId,
+      slug: 'executive',
+      name: 'Ejecutivo',
+    });
+    mockUserRepository.findByUserName.mockResolvedValue(null);
+    mockPrisma.organization.findUnique.mockResolvedValue({ plan: null });
+    mockUserFactory.createFromDto.mockResolvedValue({
+      ...dto,
+      idRole: executiveRoleId,
+    });
+    mockUserRepository.create.mockResolvedValue({
+      id: '2',
+      ...dto,
+      idRole: executiveRoleId,
+      password: 'hashed',
+    });
+    mockPrisma.userOrganization.create.mockResolvedValue({});
+
+    await expect(
+      service.create({ ...dto, idRole: executiveRoleId }),
+    ).resolves.toMatchObject({ message: 'USER.CREATED' });
+  });
 });

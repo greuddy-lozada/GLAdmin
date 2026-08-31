@@ -31,6 +31,8 @@ GET  /api/auth/invites/:code  → preview público (email, org, rol) si invite v
 POST /api/auth/register       → { code, firstName, lastName, userName, password } → crea user + membership + sesión
 ```
 
+`registerWithInvite` asigna `User.idRole` al rol de sistema `employee` (JWT `@MinLevel`). El rol de la invitación queda en `UserOrganization.roleId` (`orgRole`). No copiar un rol org a `idRole`: eso haría que un ejecutivo de org parezca tener nivel 80 de sistema y rompe el panel admin.
+
 Invites admin: `POST /api/admin/invites` crea el invite y, si `SMTP_*` está configurado, envía el link por correo (`FRONTEND_URL/invite/?code={uuid}`). Sin SMTP el invite se crea igual (copy-link). `GET /api/admin/invites` lista **todas** las invitaciones (no filtra por org activa); orden `createdAt desc`. Ruta de aceptación query (no `/invite/[code]`) por `output: 'export'`.
 
 ### Rate Limiting específico para Auth
@@ -97,6 +99,8 @@ export class RolesGuard implements CanActivate {
     }
     
     if (minOrgLevel !== undefined) {
+      // Platform master/admin operate in any org they have selected.
+      if (user?.role === 'master' || user?.role === 'admin') return true;
       if (!user?.orgRole) throw new ForbiddenException();
       const level = ROLE_LEVEL[user.orgRole as keyof typeof ROLE_LEVEL];
       if (level < minOrgLevel) throw new ForbiddenException();
@@ -212,7 +216,8 @@ Si la compensación falla → `ADMIN_APPROVAL_COMPENSATE_FAILED` (fail-closed; n
 - Los permisos se asignan explícitamente con `@MinLevel()` o `@MinOrgLevel()`.  
 - Un endpoint sin decorador de nivel = endpoint público (ej. login, health check).
 - Los roles de sistema y org son independientes: tener `role: 'admin'` no otorga permisos orgánicos por defecto, y tener `orgRole: 'executive'` no otorga acceso al panel admin.  
-- **Excepción `master`:** el rol de sistema `master` satisface cualquier `@MinOrgLevel` (bypass en `RolesGuard`). En tenant context se marca `isSuperAdmin`; servicios que validan jerarquía org (`UsersService.getActorRoleSlug`) tratan al actor como `master`. Sigue haciendo falta membresía/tenant org para operar datos de esa org.  
+- **Excepción plataforma (`master`/`admin`):** los roles de sistema `master` y `admin` satisfacen cualquier `@MinOrgLevel` (bypass en `RolesGuard` vía `isPlatformOperator`). En tenant context, `master` se marca `isSuperAdmin`; `UsersService.getActorRoleSlug` trata a `master`/`admin` por su rol de sistema (no por la membresía org). Sigue haciendo falta membresía/tenant org para operar datos de esa org. El panel `/admin/*` sigue exigiendo `@MinLevel(admin)` (90+); un ejecutivo de org no entra ahí.
+- Alta de usuario: `User.idRole` solo persiste roles `type: system`. Si el formulario/invitación manda un rol org, se guarda `employee` en `idRole` y el rol org en la membresía.  
 - `AuthGuard` revalida `role` (sistema) y `orgRole` (membresía) desde BD en cada request; no confiar solo en claims JWT stale.  
 - `GET /roles` (org) solo devuelve roles `type: org`. Catálogo completo: `GET /admin/roles` (`@MinLevel(admin)`). 
 

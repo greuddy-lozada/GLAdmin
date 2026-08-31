@@ -52,15 +52,15 @@ export default function AdminInvitesPage() {
     apiClient
       .get('/admin/orgs')
       .then((r) => setOrganizations(r.data.data || []))
-      .catch(() => console.warn('Failed to load organizations'));
+      .catch((err) => { setError(extractApiError(err) ?? t('admin.invites.error.load')); });
     apiClient
       .get('/admin/roles')
       .then((r) => {
         const all = (r.data.data || []) as { id: string; name: string; type?: string }[];
         setRoles(all.filter((role) => role.type === 'org'));
       })
-      .catch(() => console.warn('Failed to load roles'));
-  }, []);
+      .catch((err) => { setError(extractApiError(err) ?? t('admin.invites.error.load')); });
+  }, [t]);
 
   const copyText = async (text: string, successKey: string) => {
     try {
@@ -178,10 +178,10 @@ export default function AdminInvitesPage() {
           <div className="space-y-2">
             <Label>{t('admin.invites.field.organization')}</Label>
             <Select
-              value={formData.organizationId}
+              value={formData.organizationId || undefined}
               onValueChange={(v) => setFormData({ ...formData, organizationId: v })}
             >
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-full"><SelectValue placeholder={t('admin.invites.field.organization')} /></SelectTrigger>
               <SelectContent>
                 {organizations.map((o) => (
                   <SelectItem key={o.id} value={String(o.id)}>{o.name}</SelectItem>
@@ -192,10 +192,10 @@ export default function AdminInvitesPage() {
           <div className="space-y-2">
             <Label>{t('admin.invites.field.role')}</Label>
             <Select
-              value={formData.roleId}
+              value={formData.roleId || undefined}
               onValueChange={(v) => setFormData({ ...formData, roleId: v })}
             >
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-full"><SelectValue placeholder={t('admin.invites.field.role')} /></SelectTrigger>
               <SelectContent>
                 {roles.map((r) => (
                   <SelectItem key={r.id} value={String(r.id)}>{r.name}</SelectItem>

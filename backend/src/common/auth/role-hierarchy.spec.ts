@@ -2,6 +2,7 @@ import {
   canAssignRole,
   assignableRoleSlugs,
   assertCanAssignRole,
+  isPlatformOperator,
   setRoleLevels,
 } from './role-hierarchy';
 
@@ -43,6 +44,13 @@ describe('role-hierarchy', () => {
       expect(assignableRoleSlugs('employee')).toEqual([]);
     });
 
+    it('admin cannot assign admin or master, can assign org roles', () => {
+      expect(canAssignRole('admin', 'admin')).toBe(false);
+      expect(canAssignRole('admin', 'master')).toBe(false);
+      expect(canAssignRole('admin', 'executive')).toBe(true);
+      expect(canAssignRole('admin', 'employee')).toBe(true);
+    });
+
     it('returns false for unknown slugs', () => {
       expect(canAssignRole('unknown', 'employee')).toBe(false);
       expect(canAssignRole('master', 'unknown')).toBe(false);
@@ -58,6 +66,15 @@ describe('role-hierarchy', () => {
 
     it('does not throw when allowed', () => {
       expect(() => assertCanAssignRole('executive', 'employee')).not.toThrow();
+    });
+  });
+
+  describe('isPlatformOperator', () => {
+    it('is true for master and admin only', () => {
+      expect(isPlatformOperator('master')).toBe(true);
+      expect(isPlatformOperator('admin')).toBe(true);
+      expect(isPlatformOperator('executive')).toBe(false);
+      expect(isPlatformOperator(undefined)).toBe(false);
     });
   });
 

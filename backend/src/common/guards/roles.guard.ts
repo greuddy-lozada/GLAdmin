@@ -11,6 +11,7 @@ import {
   MIN_ORG_LEVEL_KEY,
   ROLE_LEVEL,
 } from '../decorators/min-level.decorator';
+import { isPlatformOperator } from '../auth/role-hierarchy';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -40,8 +41,8 @@ export class RolesGuard implements CanActivate {
     }
 
     if (minOrgLevel !== undefined) {
-      // Platform master has full capability in any org they operate in.
-      if (user?.role === 'master') return true;
+      // Platform master/admin operate in any org they have selected.
+      if (isPlatformOperator(user?.role)) return true;
       if (!user?.orgRole) throw new ForbiddenException();
       const orgLevel = ROLE_LEVEL[user.orgRole as keyof typeof ROLE_LEVEL];
       if (orgLevel === undefined || orgLevel < minOrgLevel)

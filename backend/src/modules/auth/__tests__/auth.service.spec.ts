@@ -31,6 +31,7 @@ describe('AuthService', () => {
   const mockUserRepository = {
     findByEmail: jest.fn(),
     findById: jest.fn(),
+    findByUserName: jest.fn(),
   };
 
   const mockAuthFactory = {
@@ -54,11 +55,16 @@ describe('AuthService', () => {
     userOrganization: {
       findMany: jest.fn(),
       findUnique: jest.fn(),
+      count: jest.fn(),
     },
     role: {
       findFirst: jest.fn(),
       findUnique: jest.fn(),
     },
+    invite: {
+      findUnique: jest.fn(),
+    },
+    $transaction: jest.fn(),
   };
 
   const mockAuditLog = {
@@ -447,6 +453,72 @@ describe('AuthService', () => {
       );
       expect(result.data).toBeNull();
       expect(result.message).toBe('AUTH.PASSWORD_CHANGED');
+    });
+  });
+
+  describe('registerWithInvite()', () => {
+    const inviteRoleId = 'role-org-executive';
+    const employeeSystemRoleId = 'role-system-employee';
+    const invite = {
+      id: 'invite-1',
+      code: 'invite-code',
+      email: 'new@org.com',
+      used: false,
+      expiresAt: new Date(Date.now() + 86_400_000),
+      roleId: inviteRoleId,
+      organizationId: 'org-1',
+      role: { id: inviteRoleId, type: 'org', slug: 'executive' },
+      organization: { id: 'org-1', plan: null },
+    };
+
+    test('asigna rol de sistema employee y el rol de la invitación en la membresía', async () => {
+      mockPrisma.invite.findUnique.mockResolvedValue(invite);
+      mockUserRepository.findByEmail.mockResolvedValue(null);
+      mockUserRepository.findByUserName.mockResolvedValue(null);
+      mockPrisma.role.findFirst.mockResolvedValue({
+        id: employeeSystemRoleId,
+        slug: 'employee',
+      });
+      (bcrypt.genSalt as jest.Mock).mockResolvedValue('$2b$10$salt');
+      (bcrypt.hash as jest.Mock).mockResolvedValue('$2b$10$hash');
+
+      const tx = {
+        invite: { updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
+        user: {
+          create: jest.fn().mockResolvedValue({ id: 'user-new' }),
+        },
+        userOrganization: { create: jest.fn().mockResolvedValue({}) },
+      };
+      mockPrisma.$transaction.mockImplementation(
+        async (fn: (t: typeof tx) => Promise<string>) => fn(tx),
+      );
+      jest.spyOn(service, 'login').mockResolvedValue({
+        data: { accessToken: 't' },
+        message: 'AUTH.LOGIN_SUCCESS',
+      } as never);
+
+      await service.registerWithInvite({
+        code: invite.code,
+        userName: 'newuser',
+        firstName: 'New',
+        lastName: 'User',
+        password: 'secret12',
+      });
+
+      expect(tx.user.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            idRole: employeeSystemRoleId,
+          }),
+        }),
+      );
+      expect(tx.userOrganization.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            roleId: inviteRoleId,
+          }),
+        }),
+      );
     });
   });
 });
