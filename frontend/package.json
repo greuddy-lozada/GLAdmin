@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "doctor": "react-doctor --verbose --scope changed",
+    "doctor:full": "react-doctor --verbose"
   },
   "dependencies": {
     "@radix-ui/react-tooltip": "1.2.14",
@@ -50,6 +52,7 @@
     "jsdom": "29.1.1",
     "msw": "2.15.0",
     "postcss": "8.5.15",
+    "react-doctor": "0.9.12",
     "tailwindcss": "4.3.0",
     "typescript": "5",
     "vitest": "4.1.10"

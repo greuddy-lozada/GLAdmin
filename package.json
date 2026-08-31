@@ -13,6 +13,8 @@
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
+    "doctor": "pnpm --filter frontend doctor",
+    "doctor:full": "pnpm --filter frontend doctor:full",
     "test:load": "k6 run load/smoke.k6.js",
     "test:load:products": "k6 run load/products-read.k6.js",
     "test:load:pos": "k6 run load/pos-sale.k6.js",
