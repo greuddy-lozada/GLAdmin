@@ -1,7 +1,8 @@
-FROM node:22-slim
+FROM node:22.21-bookworm
 
 RUN apt-get update -y && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
-RUN corepack enable && corepack prepare pnpm@latest --activate
+ENV NODE_OPTIONS=--dns-result-order=ipv4first
+RUN npm install -g pnpm@10.18.3
 WORKDIR /app
 
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./

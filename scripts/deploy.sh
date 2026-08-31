@@ -41,19 +41,38 @@ if [[ ! -f nginx/certs/cert.pem || ! -f nginx/certs/key.pem ]]; then
 fi
 
 log "Building frontend static export (NEXT_PUBLIC_API_URL=/api)..."
+# node:22-slim tracks latest 22.x; 22.23+ undici can abort corepack's TLS download
+# (assert(!this.paused)). Install a pinned pnpm with IPv4-first + retries instead.
 docker run --rm \
   -v "$ROOT_DIR":/app \
   -w /app \
   -e HUSKY=0 \
   -e NEXT_PUBLIC_API_URL=/api \
   -e NEXT_PUBLIC_APP_NAME="${NEXT_PUBLIC_APP_NAME:-Cuadra}" \
-  node:22-slim \
+  -e NODE_OPTIONS=--dns-result-order=ipv4first \
+  node:22.21-bookworm \
   bash -c '
     set -euo pipefail
-    apt-get update -y >/dev/null
-    apt-get install -y --no-install-recommends ca-certificates >/dev/null
-    corepack enable
-    corepack prepare pnpm@10 --activate
+    PNPM_VERSION=10.18.3
+    install_pnpm() {
+      if command -v curl >/dev/null 2>&1 \
+        && curl -fsSL "https://github.com/pnpm/pnpm/releases/download/v${PNPM_VERSION}/pnpm-linux-x64" \
+          -o /usr/local/bin/pnpm; then
+        chmod +x /usr/local/bin/pnpm
+        return 0
+      fi
+      npm install -g "pnpm@${PNPM_VERSION}"
+    }
+    for attempt in 1 2 3 4 5; do
+      if install_pnpm; then
+        break
+      fi
+      if [[ "$attempt" -eq 5 ]]; then
+        echo "Failed to install pnpm@${PNPM_VERSION}" >&2
+        exit 1
+      fi
+      sleep $((attempt * 4))
+    done
     pnpm install --frozen-lockfile
     pnpm --filter frontend build
   '

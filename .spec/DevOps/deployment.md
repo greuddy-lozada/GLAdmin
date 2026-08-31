@@ -359,7 +359,7 @@ Workflows: [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) (automat
 3. Same workflow `deploy` job SSHs to the VPS and runs scripts/deploy.sh:
    - Ensure nginx/certs self-signed LAN TLS (IP SAN)
    - git fetch + reset --hard origin/dev
-   - Build frontend/out via ephemeral node:22 container
+   - Build frontend/out via ephemeral `node:22.21-bookworm` (pnpm via GitHub release / npm, not `corepack prepare`)
    - docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
    - prisma migrate deploy
    - seed **only if org count is 0** (or FORCE_SEED=1; skip with SKIP_SEED=1)
