@@ -916,6 +916,10 @@
       "error": {
         "save": "Error saving user",
         "load": "Error loading users"
+      },
+      "filter": {
+        "organization": "Organization",
+        "allOrgs": "All organizations"
       }
     },
     "plans": {

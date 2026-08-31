@@ -2,6 +2,31 @@ import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { ContextService } from '../../modules/tenant/context.service';
 
+/** Org-scoped models. Invite is admin-global (listed across orgs, claimed by unique code). */
+export const TENANT_SCOPED_MODELS: readonly string[] = [
+  'Supplier',
+  'Customer',
+  'Company',
+  'Product',
+  'Tax',
+  'Batch',
+  'Stock',
+  'PurchaseOrder',
+  'PurchaseOrderDet',
+  'Sale',
+  'SalesDet',
+  'ExchangeRate',
+  'WithholdingRecord',
+  'AccountsPayable',
+  'AccountsReceivable',
+  'PagoMovilConfig',
+  'PagoMovilTransaction',
+  'GeneratedReport',
+  'CashRegister',
+  'RegisterSession',
+  'RegisterSettlement',
+];
+
 @Injectable()
 export class PrismaService
   extends PrismaClient
@@ -78,31 +103,7 @@ export class PrismaService
               return query(args);
             if (model === 'User') return query(args);
 
-            const businessModels = [
-              'Supplier',
-              'Customer',
-              'Company',
-              'Product',
-              'Tax',
-              'Batch',
-              'Stock',
-              'PurchaseOrder',
-              'PurchaseOrderDet',
-              'Sale',
-              'SalesDet',
-              'ExchangeRate',
-              'WithholdingRecord',
-              'AccountsPayable',
-              'AccountsReceivable',
-              'PagoMovilConfig',
-              'PagoMovilTransaction',
-              'Invite',
-              'GeneratedReport',
-              'CashRegister',
-              'RegisterSession',
-              'RegisterSettlement',
-            ];
-            if (!businessModels.includes(model)) return query(args);
+            if (!TENANT_SCOPED_MODELS.includes(model)) return query(args);
 
             if (operation === 'create') {
               const data = args.data as Record<string, unknown> | undefined;

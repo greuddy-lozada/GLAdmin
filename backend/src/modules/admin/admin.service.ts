@@ -304,11 +304,19 @@ export class AdminService {
 
   // ─── Users ───────────────────────────────────
 
-  async findAllUsers(page = 1, limit = 20, isActive?: string) {
+  async findAllUsers(
+    page = 1,
+    limit = 20,
+    isActive?: string,
+    organizationId?: string,
+  ) {
     const skip = (page - 1) * limit;
     const where: Record<string, unknown> = {};
     if (isActive === 'true' || isActive === undefined) where.isActive = true;
     else if (isActive === 'false') where.isActive = false;
+    if (organizationId) {
+      where.organizations = { some: { organizationId } };
+    }
     const [users, total] = await Promise.all([
       this.prisma.user.findMany({
         skip,
@@ -535,10 +543,13 @@ export class AdminService {
       this.prisma.invite.findMany({
         skip,
         take: limit,
+        orderBy: { createdAt: 'desc' },
         include: {
           organization: true,
           role: true,
-          invitedBy: true,
+          invitedBy: {
+            select: { id: true, firstName: true, lastName: true },
+          },
         },
       }),
       this.prisma.invite.count(),

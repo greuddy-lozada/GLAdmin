@@ -17,7 +17,6 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DataTable, Column } from '@/components/ui/data-table';
 import { SlideForm } from '@/components/ui/slide-form';
-import { SearchableSelect } from '@/components/ui/searchable-select';
 import { useAdminUsers } from '@/features/admin/users/hooks/use-admin-users';
 import { AdminUser, CreateAdminUserRequest, UpdateAdminUserRequest } from '@/features/admin/users/models/admin-user.model';
 import { useI18n } from '@/i18n';
@@ -28,7 +27,14 @@ import { extractApiError } from '@/lib/api/extract-api-error';
 
 export default function AdminUsersPage() {
   const [filterActive, setFilterActive] = useState('true');
-  const { items: usersData, isLoading: loading, create, update } = useAdminUsers(filterActive);
+  const [filterOrg, setFilterOrg] = useState(() => {
+    if (typeof window === 'undefined') return 'all';
+    return localStorage.getItem('currentOrgId') ?? 'all';
+  });
+  const { items: usersData, isLoading: loading, create, update } = useAdminUsers(
+    filterActive,
+    filterOrg === 'all' ? undefined : filterOrg,
+  );
   const { t } = useI18n();
   const [formOpen, setFormOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
@@ -233,15 +239,28 @@ export default function AdminUsersPage() {
       }
     >
       <div className="max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <Select value={filterActive} onValueChange={setFilterActive}>
-          <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="true">{t('admin.organizations.filter.active')}</SelectItem>
-            <SelectItem value="false">{t('admin.organizations.filter.inactive')}</SelectItem>
-            <SelectItem value="all">{t('admin.organizations.filter.all')}</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <div className="flex flex-wrap items-center gap-2">
+          <Select value={filterOrg} onValueChange={setFilterOrg}>
+            <SelectTrigger className="w-56" aria-label={t('admin.users.filter.organization')}>
+              <SelectValue placeholder={t('admin.users.filter.allOrgs')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('admin.users.filter.allOrgs')}</SelectItem>
+              {orgs.map((o) => (
+                <SelectItem key={o.id} value={String(o.id)}>{o.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={filterActive} onValueChange={setFilterActive}>
+            <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="true">{t('admin.organizations.filter.active')}</SelectItem>
+              <SelectItem value="false">{t('admin.organizations.filter.inactive')}</SelectItem>
+              <SelectItem value="all">{t('admin.organizations.filter.all')}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <Button onClick={openCreate}>
           <Plus className="mr-2 h-4 w-4" />
           {t('admin.users.new')}

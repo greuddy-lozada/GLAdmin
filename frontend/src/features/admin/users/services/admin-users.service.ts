@@ -2,8 +2,10 @@ import apiClient from '@/lib/api/api-client';
 import { AdminUser, CreateAdminUserRequest, UpdateAdminUserRequest } from '../models/admin-user.model';
 
 export const adminUsersService = {
-  async getAll(isActive?: string): Promise<AdminUser[]> {
-    const params = isActive ? { isActive } : {};
+  async getAll(isActive?: string, organizationId?: string): Promise<AdminUser[]> {
+    const params: Record<string, string> = {};
+    if (isActive) params.isActive = isActive;
+    if (organizationId) params.organizationId = organizationId;
     const response = await apiClient.get('/admin/users', { params });
     return response.data.data;
   },

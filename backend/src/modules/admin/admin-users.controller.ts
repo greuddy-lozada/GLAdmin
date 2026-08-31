@@ -18,7 +18,7 @@ import {
   ROLE_LEVEL,
 } from '../../common/decorators/min-level.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
+import { FindAdminUsersQueryDto } from './dto/find-admin-users-query.dto';
 
 @Controller('admin/users')
 export class AdminUsersController {
@@ -52,11 +52,12 @@ export class AdminUsersController {
 
   @Get()
   @MinLevel(ROLE_LEVEL.admin)
-  findAll(@Query() pagination: PaginationQueryDto) {
+  findAll(@Query() query: FindAdminUsersQueryDto) {
     return this.adminService.findAllUsers(
-      pagination.page,
-      pagination.limit,
-      pagination.isActive,
+      query.page,
+      query.limit,
+      query.isActive,
+      query.organizationId,
     );
   }
 

@@ -916,6 +916,10 @@
       "error": {
         "save": "Error al guardar usuario",
         "load": "Error al cargar usuarios"
+      },
+      "filter": {
+        "organization": "Organización",
+        "allOrgs": "Todas las organizaciones"
       }
     },
     "plans": {

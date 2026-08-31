@@ -17,10 +17,10 @@ function buildOptimistic(data: CreateAdminUserRequest, tempId: string): AdminUse
   };
 }
 
-export function useAdminUsers(isActive?: string) {
+export function useAdminUsers(isActive?: string, organizationId?: string) {
   return useOptimisticCrud<AdminUser, CreateAdminUserRequest, UpdateAdminUserRequest>({
-    queryKey: ['adminUsers', isActive ?? 'true'],
-    queryFn: () => adminUsersService.getAll(isActive),
+    queryKey: ['adminUsers', isActive ?? 'true', organizationId ?? 'all'],
+    queryFn: () => adminUsersService.getAll(isActive, organizationId),
     createFn: (data) => adminUsersService.create(data),
     updateFn: (id, data) => adminUsersService.update(id, data),
     deleteFn: (id) => adminUsersService.deactivate(id),

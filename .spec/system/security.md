@@ -31,7 +31,7 @@ GET  /api/auth/invites/:code  → preview público (email, org, rol) si invite v
 POST /api/auth/register       → { code, firstName, lastName, userName, password } → crea user + membership + sesión
 ```
 
-Invites admin: `POST /api/admin/invites` crea el invite y, si `SMTP_*` está configurado, envía el link por correo (`FRONTEND_URL/invite/?code={uuid}`). Sin SMTP el invite se crea igual (copy-link). Ruta query (no `/invite/[code]`) por `output: 'export'`.
+Invites admin: `POST /api/admin/invites` crea el invite y, si `SMTP_*` está configurado, envía el link por correo (`FRONTEND_URL/invite/?code={uuid}`). Sin SMTP el invite se crea igual (copy-link). `GET /api/admin/invites` lista **todas** las invitaciones (no filtra por org activa); orden `createdAt desc`. Ruta de aceptación query (no `/invite/[code]`) por `output: 'export'`.
 
 ### Rate Limiting específico para Auth
 
@@ -178,7 +178,7 @@ Los módulos del panel de administración operan bajo un modelo **"execute then 
 **Acciones que generan approval:**
 - Organizaciones: `CREATE_ORG`, `UPDATE_ORG`
 - Planes: `CREATE_PLAN`, `UPDATE_PLAN`
-- Usuarios admin: `CREATE_ADMIN_USER`, `UPDATE_ADMIN_USER`
+- Usuarios admin: `CREATE_ADMIN_USER`, `UPDATE_ADMIN_USER`. `GET /api/admin/users` acepta `organizationId` (UUID) para listar solo miembros de esa org; sin el param lista todos.
 - Asignaciones: `ASSIGN_USER_ORG`, `REMOVE_USER_ORG`, `CHANGE_USER_ROLE`
 - Invitaciones: `CREATE_INVITE`
 

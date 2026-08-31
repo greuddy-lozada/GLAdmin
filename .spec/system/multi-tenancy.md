@@ -30,12 +30,13 @@ Para modelos en la lista **businessModels**:
 - **find/update/delete where:** añade `organizationId` del contexto.
 - **Skip filter** si: no hay contexto, superAdmin, o sin `organizationId`.
 - **User** no se filtra por org en la extension (membership es tabla puente).
+- **Invite** no se filtra por org: el panel `/admin/invites` lista invitaciones de todas las orgs; Auth las reclama por `code` único. El alta sí persiste `organizationId` del DTO.
 
 Soft-delete (`deletedAt: null` en reads; `delete` → update `deletedAt`) aplica a `softDeleteModels` (incluye Product, Sale, Customer, …).
 
 ### Modelos / casos sin auto-filtro org (cuidado)
 
-Ejemplos: `Brand` / `Category` pueden tener soft-delete sin estar en `businessModels`; `SalePayment`, `SyncConflict`, `AuditLog`, `RefreshToken`, `Plan`, etc. — **verificar** antes de asumir aislamiento automático. Si un query nuevo toca datos de negocio, debe estar en businessModels o filtrar a mano.
+Ejemplos: `Brand` / `Category` pueden tener soft-delete sin estar en `businessModels`; `Invite`, `SalePayment`, `SyncConflict`, `AuditLog`, `RefreshToken`, `Plan`, etc. — **verificar** antes de asumir aislamiento automático. Si un query nuevo toca datos de negocio, debe estar en businessModels o filtrar a mano.
 
 ---
 

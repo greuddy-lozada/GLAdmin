@@ -3,7 +3,9 @@ import { AdminInvite, CreateAdminInviteRequest } from '../models/admin-invite.mo
 
 export const adminInvitesService = {
   async getAll(): Promise<AdminInvite[]> {
-    const response = await apiClient.get('/admin/invites');
+    const response = await apiClient.get('/admin/invites', {
+      params: { limit: 100 },
+    });
     return response.data.data;
   },
 
