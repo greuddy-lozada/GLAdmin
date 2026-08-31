@@ -18,14 +18,15 @@ interface PosToolbarProps {
   parkedCount: number;
   onCloseRegister: () => void;
   activeSession: boolean;
+  canCloseRegister: boolean;
 }
 
-export function PosToolbar({ exchangeRate, onPark, onUndo, canUndo, hasItems, onOpenParked, onOpenHistory, parkedCount, onCloseRegister, activeSession }: PosToolbarProps) {
+export function PosToolbar({ exchangeRate, onPark, onUndo, canUndo, hasItems, onOpenParked, onOpenHistory, parkedCount, onCloseRegister, activeSession, canCloseRegister }: PosToolbarProps) {
   const { t } = useI18n();
 
   return (
     <TooltipProvider>
-    <div className="flex items-center justify-between mb-6">
+    <div className="mb-6 flex shrink-0 items-center justify-between">
       <div className="flex items-center gap-1">
         <Tooltip>
           <TooltipTrigger asChild>
@@ -71,11 +72,13 @@ export function PosToolbar({ exchangeRate, onPark, onUndo, canUndo, hasItems, on
         {activeSession && (
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" onClick={onCloseRegister} className="h-8 w-8">
-                <XCircle className="h-4 w-4" />
-              </Button>
+              <span className={canCloseRegister ? undefined : 'cursor-not-allowed'}>
+                <Button variant="ghost" size="icon" onClick={onCloseRegister} disabled={!canCloseRegister} className="h-8 w-8">
+                  <XCircle className="h-4 w-4" />
+                </Button>
+              </span>
             </TooltipTrigger>
-            <TooltipContent side="bottom">{t('registerSession.cerrar')}</TooltipContent>
+            <TooltipContent side="bottom">{canCloseRegister ? t('registerSession.cerrar') : t('sync.posNavLocked')}</TooltipContent>
           </Tooltip>
         )}
         {exchangeRate > 0 && (

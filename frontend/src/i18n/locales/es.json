@@ -818,7 +818,9 @@
     "table": "Tabla:",
     "status": "Estado:",
     "acceptServer": "Aceptar Servidor",
-    "acceptLocal": "Aceptar Local"
+    "acceptLocal": "Aceptar Local",
+    "offline": "Sin conexión",
+    "posNavLocked": "Servidor no disponible. La caja sigue funcionando."
   },
   "roles": {
     "title": "Roles",

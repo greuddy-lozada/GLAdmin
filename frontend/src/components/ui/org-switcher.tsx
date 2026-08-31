@@ -2,6 +2,7 @@
 
 import { useAuth } from '@/providers/auth-provider';
 import { useI18n } from '@/i18n';
+import { usePosNavLock } from '@/lib/sync/hooks/use-pos-nav-lock';
 import { Badge } from '@/components/ui/badge';
 import {
   Select,
@@ -14,6 +15,7 @@ import {
 export function OrgSwitcher() {
   const { organizations, currentOrg, selectOrg } = useAuth();
   const { t } = useI18n();
+  const { lockNav } = usePosNavLock();
 
   if (!currentOrg) return null;
 
@@ -28,8 +30,12 @@ export function OrgSwitcher() {
         <Select
           value={String(currentOrg.id)}
           onValueChange={(v) => selectOrg(v)}
+          disabled={lockNav}
         >
-          <SelectTrigger className="h-8 w-full text-sm font-medium border-0 shadow-none focus:ring-0 [&>svg]:text-muted-foreground">
+          <SelectTrigger
+            className="h-8 w-full text-sm font-medium border-0 shadow-none focus:ring-0 [&>svg]:text-muted-foreground"
+            title={lockNav ? t('sync.posNavLocked') : undefined}
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

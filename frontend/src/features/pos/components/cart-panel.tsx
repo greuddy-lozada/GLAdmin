@@ -40,7 +40,7 @@ export function CartPanel({
 
   if (items.length === 0) {
     return (
-      <div className="border border-border/50 rounded-xl p-6 flex flex-col items-center justify-center text-muted-foreground h-full min-h-[300px]">
+      <div className="border border-border/50 rounded-xl p-6 flex flex-col items-center justify-center text-muted-foreground h-full min-h-0">
         <ShoppingCart className="h-12 w-12 mb-4 opacity-40" />
         <p className="text-sm font-medium mb-4">{t('pos.cart.empty')}</p>
       </div>

@@ -1,6 +1,6 @@
 # UI Patterns — Catálogo Adoptado de Cuadra
 
-> **status:** `current` · Última actualización: 2026-08-29  
+> **status:** `current` · Última actualización: 2026-08-30  
 > **Propósito:** Qué patrones de UI **usamos**, cuáles **adoptamos después**, y cuáles **rechazamos**.  
 > Tokens, tipografía y grids detallados viven en [design-system.md](design-system.md). Este archivo es la lista operativa para agentes y PRs.
 
@@ -39,7 +39,7 @@ Antes de mergear un cambio de pantalla:
 | **SlideForm full-bleed** | Create/edit en teléfono | `SlideForm` full viewport; `--panel-offset: 0` bajo `md` | Panel fijo 420–720px + `paddingRight` que aplasta el main |
 | **DataTable search** | Listados CRUD | Toolbar de búsqueda en `DataTable` (`searchable` default true); filtra filas cargadas; empty `common.noResults` | Input de búsqueda solo en una feature; filtrar sin empty state |
 | **List → detail** | Splits (pedidos) | Un pane a la vez + botón atrás | `w-[440px]` + form lado a lado sin breakpoint |
-| **POS cart sticky** | Caja en teléfono | Productos scrolleables + carrito sticky / cards (no tabla) | Carrito bajo el fold; tabla de carrito aplastada |
+| **POS cart sticky** | Caja en teléfono | Productos scrolleables + carrito en el pane (sin scroll de página) | Carrito bajo el fold; scrollbar de página en `/pos` |
 | **KPI 2-col** | Report viewer / dashboards | `grid-cols-2 md:grid-cols-3\|4` | `grid-cols-3/4` fijos en móvil |
 
 ### Feedback & estados
@@ -68,6 +68,7 @@ Antes de mergear un cambio de pantalla:
 | **Keyboard-first** | Login, PIN, POS search | `autoFocus` + refocus post-async | Obligar mouse para empezar a escribir |
 | **Hotkeys documentados** | Atajos globales/POS | `useHotkey` + badge/tooltip | Atajos ocultos; interferir con typing en inputs (excepto Escape) |
 | **Escape cierra** | Modales / sheets / dialogs | Cierra el overlay más cercano | Escape sin efecto |
+| **POS nav lock** | API down mientras la ruta es `/pos` | Sidebar, tabs, org y logout deshabilitados (excepto POS) + tooltip `sync.posNavLocked`; cobro local sigue | Congelar la caja; dejar salir a pantallas que pegan al API |
 
 ### Marketing (público)
 

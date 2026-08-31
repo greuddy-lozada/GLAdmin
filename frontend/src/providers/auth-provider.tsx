@@ -6,6 +6,7 @@ import { authService, RegisterWithInviteRequest } from '@/features/auth/services
 import { localDb } from '@/lib/sync/db';
 import { networkStatus } from '@/lib/sync/network-status';
 import { syncEngine } from '@/lib/sync/sync-engine';
+import { isNetworkError } from '@/lib/api/is-network-error';
 import { PinSetup } from '@/features/auth/components/pin-setup';
 import { PinUnlock } from '@/features/auth/components/pin-unlock';
 import { useTabsStore } from '@/stores/tabs-store';
@@ -68,16 +69,7 @@ function isAuthRejected(error: unknown): boolean {
 /** Network / unreachable — keep local session for POS. */
 function isLikelyOfflineFailure(error: unknown): boolean {
   if (!networkStatus.isOnline) return true;
-  if (!error || typeof error !== 'object') return true;
-  const e = error as { code?: string; response?: unknown };
-  if (e.response) return false;
-  return (
-    e.code === 'ERR_NETWORK' ||
-    e.code === 'ECONNABORTED' ||
-    e.code === 'ECONNREFUSED' ||
-    e.code === 'ETIMEDOUT' ||
-    !e.code
-  );
+  return isNetworkError(error);
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {

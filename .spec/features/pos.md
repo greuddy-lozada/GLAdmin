@@ -54,8 +54,11 @@ Nav: `/pos`, `minLevel: 40`. Hoy **sin** `requiredFeature` en nav (gap vs plan `
 | Cobrar | `PaymentModal` → `useOfflineSale.createSale` |
 | Historial | Lee `localDb.sales` (no API list) |
 | Sync | Auth provider arranca SyncEngine; push cuando hay red |
+| API down (deploy) | Cobro sigue (Dexie). Sidebar, tabs, org switcher, logout y abrir/cerrar caja se bloquean en `/pos` hasta `HEAD /api/health` 200. Si el selector de caja está abierto, se cierra para no bloquear el cobro. |
 
 Un restart del API (deploy) es **el mismo caso que “sin internet”** para caja: el cobro no espera al servidor. Política de ventana y qué sí se corta: [deployment.md](../DevOps/deployment.md) §7.
+
+Detección: `networkStatus` (ping a `/api/health` + interceptor axios). No usar `navigator.onLine` como “API vivo”. UI: `usePosNavLock` — solo en `/pos`.
 
 ### Persistencia de venta
 
@@ -98,10 +101,11 @@ Documentar atajos en UI (tooltip/badge). No capturar hotkeys modales mientras el
 
 ## 5. UI rules
 
-- Plantilla **B — POS** en [UI-UX/patterns.md](../UI-UX/patterns.md).
+- Plantilla **B — POS** en [UI-UX/patterns.md](../UI-UX/patterns.md). Llena el pane del dashboard **sin scroll de página**; solo scrollean la lista de productos y el carrito.
 - Sin `<h1>` propio si está bajo dashboard layout (POS puede ser fullscreen — seguir patrón existente del feature).
 - i18n `pos.*` / shortcuts keys.
 - Success cobro: feedback en UI + receipt; errores visibles (no tragar).
+- API unreachable en `/pos`: deshabilitar nav online-only (sidebar, tabs, org, logout) con tooltip `sync.posNavLocked`. No congelar el cobro.
 
 ---
 
@@ -123,7 +127,7 @@ Documentar atajos en UI (tooltip/badge). No capturar hotkeys modales mientras el
 - [ ] Stock local no permite qty > existencia mostrada
 - [ ] Hotkeys no rompen typing en inputs
 - [ ] E2E POS: buscar → agregar → cobrar
-- [ ] Spec actualizada si cambia path de persistencia
+- [ ] API down en POS: nav online-only bloqueada; cobro local sigue
 
 ---
 
@@ -134,6 +138,7 @@ Documentar atajos en UI (tooltip/badge). No capturar hotkeys modales mientras el
 - No sync de parked orders como si fueran ventas.
 - No inventar wizard/stepper para el flujo diario de caja.
 - No tratar un deploy como “hay que cerrar caja”. El corte es del API; el ticket local no.
+- No usar `navigator.onLine === true` como señal de que el backend está vivo (un deploy deja el Wi‑Fi arriba).
 
 ---
 

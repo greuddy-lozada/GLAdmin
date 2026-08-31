@@ -5,6 +5,8 @@ import { X } from 'lucide-react';
 import { useI18n } from '@/i18n';
 import { useTabsStore } from '@/stores/tabs-store';
 import { LayoutDashboard } from 'lucide-react';
+import { usePosNavLock, isPosSafePath } from '@/lib/sync/hooks/use-pos-nav-lock';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface VisitedTabsProps {
   iconMap: Record<string, React.ComponentType<{ className?: string }>>;
@@ -18,12 +20,22 @@ export function VisitedTabs({ iconMap, tabs: propTabs }: VisitedTabsProps) {
   const storeTabs = useTabsStore((s) => s.tabs);
   const removeTab = useTabsStore((s) => s.removeTab);
   const tabs = propTabs ?? storeTabs;
+  const { lockNav } = usePosNavLock();
+  const lockMessage = t('sync.posNavLocked');
 
   if (tabs.length === 0) return null;
+
+  const goTo = (tabPath: string) => {
+    if (lockNav && !isPosSafePath(tabPath)) return;
+    router.push(tabPath);
+  };
 
   const handleClose = (e: React.MouseEvent, tabPath: string) => {
     e.stopPropagation();
     e.preventDefault();
+    if (lockNav && isPosSafePath(pathname) && isPosSafePath(tabPath)) {
+      return;
+    }
     removeTab(tabPath);
     if (pathname === tabPath || pathname.startsWith(tabPath)) {
       const remaining = useTabsStore.getState().tabs.filter((t) => t.path !== tabPath);
@@ -41,17 +53,25 @@ export function VisitedTabs({ iconMap, tabs: propTabs }: VisitedTabsProps) {
       {tabs.map((tab) => {
         const active = pathname === tab.path || (tab.path !== '/dashboard' && pathname.startsWith(tab.path));
         const Icon = iconMap[tab.key] || LayoutDashboard;
-        return (
+        const tabLocked = lockNav && !isPosSafePath(tab.path);
+        const tabEl = (
           <div
-            key={tab.path}
             role="button"
             tabIndex={0}
-            onClick={() => router.push(tab.path)}
-            onKeyDown={(e) => { if (e.key === 'Enter') router.push(tab.path); }}
-            className={`group flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-xl cursor-pointer shrink-0 transition-all ${
-              active
-                ? 'neo-nav-active text-[#3e93c1] font-medium'
-                : 'text-[#5a6578] hover:text-[#1a2332]'
+            aria-disabled={tabLocked}
+            onClick={() => goTo(tab.path)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                goTo(tab.path);
+              }
+            }}
+            className={`group flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-xl shrink-0 transition-all ${
+              tabLocked
+                ? 'cursor-not-allowed opacity-50 text-[#5a6578]'
+                : active
+                ? 'neo-nav-active text-[#3e93c1] font-medium cursor-pointer'
+                : 'text-[#5a6578] hover:text-[#1a2332] cursor-pointer'
             }`}
           >
             <Icon className="h-3.5 w-3.5 shrink-0" />
@@ -65,6 +85,15 @@ export function VisitedTabs({ iconMap, tabs: propTabs }: VisitedTabsProps) {
               <X className="h-3 w-3" />
             </button>
           </div>
+        );
+        if (!tabLocked) {
+          return <div key={tab.path}>{tabEl}</div>;
+        }
+        return (
+          <Tooltip key={tab.path}>
+            <TooltipTrigger asChild>{tabEl}</TooltipTrigger>
+            <TooltipContent>{lockMessage}</TooltipContent>
+          </Tooltip>
         );
       })}
       </div>

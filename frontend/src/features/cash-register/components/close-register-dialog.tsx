@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useMyActiveSession, useCloseRegister } from '@/features/cash-register/hooks/use-cash-register';
 import { useI18n } from '@/i18n';
+import { useOffline } from '@/lib/sync/hooks/use-offline';
 import SettlementView from './settlement-view';
 
 interface Props {
@@ -19,6 +20,7 @@ export default function CloseRegisterDialog({ open, onClose, onSuccess }: Props)
   const { data: session } = useMyActiveSession();
   const closeRegister = useCloseRegister();
   const { t, tp } = useI18n();
+  const { isOnline } = useOffline();
   const [countedCash, setCountedCash] = useState('');
   const [notes, setNotes] = useState('');
   const [settlement, setSettlement] = useState<{ expectedCash: number; countedCash: number; difference: number } | null>(null);
@@ -73,7 +75,7 @@ export default function CloseRegisterDialog({ open, onClose, onSuccess }: Props)
             <Label>{t('registerSession.notes')}</Label>
             <Input value={notes} onChange={(e) => setNotes(e.target.value)} />
           </div>
-          <Button onClick={handleClose} disabled={!countedCash || closeRegister.isPending} className="w-full">
+          <Button onClick={handleClose} disabled={!countedCash || closeRegister.isPending || !isOnline} className="w-full">
             {t('registerSession.cerrar')}
           </Button>
         </div>

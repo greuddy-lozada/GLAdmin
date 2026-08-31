@@ -66,6 +66,7 @@ DB versioned in `frontend/src/lib/sync/db.ts` (v10+). Tables include:
 - Started from auth provider when session válida
 - On `networkStatus` back online → `forceSync()` (pull + push queued sales)
 - Visibility regain → pull + push if tab is leader
+- `networkStatus` pings `HEAD /api/health` (10s online / 3s offline); `navigator.online` solo dispara un ping, no marca el API como vivo. Axios network/502/503/504 → offline inmediato.
 
 Un deploy que tumba el API es el mismo camino que offline: la cola no se descarta; reintenta al volver. Confirmar post-deploy que la cola se vacía. Conflictos `oversold` pendientes son stock, no fallo de deploy. Ventana y SW: [deployment.md](../DevOps/deployment.md) §7.
 
@@ -77,7 +78,7 @@ If `GET /auth/me` fails with a **network-like** error (not 401/403) and `user` +
 2. If PIN exists in Dexie → show PIN unlock; otherwise continue soft-offline.
 3. Start SyncEngine so the queue can push when connectivity returns.
 
-Do **not** wipe the session on network failure alone — that strands cashiers on `/login` while Dexie still has catalog and pending sales.
+Do **not** wipe the session on network failure alone (including failed token refresh during a deploy) — that strands cashiers on `/login` while Dexie still has catalog and pending sales.
 
 ---
 
@@ -95,6 +96,7 @@ Do **not** wipe the session on network failure alone — that strands cashiers o
 
 - Conflictos: `features/sync` / settings sync conflicts (`minLevel` manager en nav).
 - Empty / error states según [patterns.md](../UI-UX/patterns.md).
+- POS en `/pos` con API down: lock de nav online-only ([pos.md](pos.md)); cobro no se congela.
 
 ---
 

@@ -15,6 +15,7 @@ import { syncQueue } from '@/lib/sync/sync-queue';
 import { sileo } from 'sileo';
 import apiClient from '@/lib/api/api-client';
 import { extractApiError } from '@/lib/api/extract-api-error';
+import { useOffline } from '@/lib/sync/hooks/use-offline';
 
 interface QuickAddCustomerProps {
   onCreated: (customer: { id: string; name: string; taxId: string; isWithholdingAgent: boolean; withholdingPercentage?: number | null; withholdingProof?: string }) => void;
@@ -24,6 +25,7 @@ interface QuickAddCustomerProps {
 
 export function QuickAddCustomer({ onCreated, open: externalOpen, onOpenChange }: QuickAddCustomerProps) {
   const { t } = useI18n();
+  const { isOnline } = useOffline();
   const [internalOpen, setInternalOpen] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -154,14 +156,16 @@ export function QuickAddCustomer({ onCreated, open: externalOpen, onOpenChange }
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" disabled={uploading} className="relative">
+                    <Button variant="outline" size="sm" disabled={uploading || !isOnline} className="relative">
                       {uploading ? t('common.saving') : (
                         <>
                           <Upload className="mr-2 h-4 w-4" />
                           {t('customers.field.withholdingProof')}
                         </>
                       )}
-                      <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileUpload} />
+                      {isOnline && (
+                        <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileUpload} />
+                      )}
                     </Button>
                   </div>
                 )}

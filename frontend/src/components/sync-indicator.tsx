@@ -2,12 +2,14 @@
 
 import { Badge } from '@/components/ui/badge';
 import { useSyncStatus } from '@/lib/sync/hooks/use-sync-status';
+import { useI18n } from '@/i18n';
 
 export function SyncIndicator() {
   const { isOnline, pendingCount, syncStatus } = useSyncStatus();
+  const { t } = useI18n();
 
   if (!isOnline) {
-    return <Badge variant="destructive">Offline</Badge>;
+    return <Badge variant="destructive">{t('sync.offline')}</Badge>;
   }
 
   if (syncStatus === 'syncing') {

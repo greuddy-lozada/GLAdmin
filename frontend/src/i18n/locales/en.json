@@ -818,7 +818,9 @@
     "table": "Table:",
     "status": "Status:",
     "acceptServer": "Accept Server",
-    "acceptLocal": "Accept Local"
+    "acceptLocal": "Accept Local",
+    "offline": "Offline",
+    "posNavLocked": "Server unavailable. The register still works."
   },
   "roles": {
     "title": "Roles",

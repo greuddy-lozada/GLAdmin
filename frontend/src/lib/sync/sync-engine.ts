@@ -3,6 +3,7 @@ import { syncQueue, MAX_PUSH_RETRIES, getBackoffDelay } from './sync-queue';
 import { networkStatus } from './network-status';
 import type { SyncEvent, SyncListener, PullResponse, PushResponse } from './types';
 import apiClient from '@/lib/api/api-client';
+import { isNetworkError } from '@/lib/api/is-network-error';
 
 const ORG_STORAGE_KEY = 'currentOrgId';
 const INITIAL_BACKOFF = 15000;
@@ -207,12 +208,7 @@ export class SyncEngine {
     } catch (error) {
       this.retryCount++;
       this.emit('sync-error', error);
-      if (
-        error &&
-        typeof error === 'object' &&
-        'code' in error &&
-        (error.code === 'ERR_NETWORK' || error.code === 'ECONNREFUSED')
-      ) {
+      if (isNetworkError(error)) {
         networkStatus.setOnline(false);
       }
     } finally {

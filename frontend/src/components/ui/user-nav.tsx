@@ -7,7 +7,9 @@ import { useI18n } from '@/i18n';
 import { useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Languages, LogOut } from 'lucide-react';
+import { usePosNavLock } from '@/lib/sync/hooks/use-pos-nav-lock';
 
 export function UserNav() {
   const [open, setOpen] = useState(false);
@@ -15,6 +17,8 @@ export function UserNav() {
   const { user, logout } = useAuth();
   const { t, locale, setLocale } = useI18n();
   const router = useRouter();
+  const { lockNav } = usePosNavLock();
+  const lockMessage = t('sync.posNavLocked');
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -71,14 +75,26 @@ export function UserNav() {
               {locale === 'es' ? 'English' : 'Español'}
             </button>
             <div className="my-1 h-px bg-[#c5cedc]/60" />
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="flex w-full items-center gap-2 rounded-xl px-2 py-1.5 text-sm text-destructive transition-colors hover:bg-[#d8dee9]/60"
-            >
-              <LogOut className="h-4 w-4" />
-              {t('nav.logout')}
-            </button>
+            {lockNav ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="flex w-full cursor-not-allowed items-center gap-2 rounded-xl px-2 py-1.5 text-sm text-destructive opacity-50">
+                    <LogOut className="h-4 w-4" />
+                    {t('nav.logout')}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>{lockMessage}</TooltipContent>
+              </Tooltip>
+            ) : (
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex w-full items-center gap-2 rounded-xl px-2 py-1.5 text-sm text-destructive transition-colors hover:bg-[#d8dee9]/60"
+              >
+                <LogOut className="h-4 w-4" />
+                {t('nav.logout')}
+              </button>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

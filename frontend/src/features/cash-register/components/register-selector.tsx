@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useCashRegisters, useOpenRegister } from '@/features/cash-register/hooks/use-cash-register';
 import { useI18n } from '@/i18n';
+import { useOffline } from '@/lib/sync/hooks/use-offline';
 
 interface Props {
   open: boolean;
@@ -17,6 +18,7 @@ export default function RegisterSelector({ open, onSuccess }: Props) {
   const { items: cashRegisters } = useCashRegisters();
   const openRegister = useOpenRegister();
   const { t } = useI18n();
+  const { isOnline } = useOffline();
   const [selectedRegisterId, setSelectedRegisterId] = useState('');
   const [initialCashBs, setInitialCashBs] = useState('');
   const [initialCashUsd, setInitialCashUsd] = useState('');
@@ -79,8 +81,8 @@ export default function RegisterSelector({ open, onSuccess }: Props) {
               />
             </div>
           </div>
-          <Button onClick={handleOpen} disabled={!canOpen || openRegister.isPending} className="w-full">
-            {openRegister.isPending ? t('common.loading') : t('registerSession.abrir')}
+          <Button onClick={handleOpen} disabled={!canOpen || openRegister.isPending || !isOnline} className="w-full">
+            {openRegister.isPending ? t('common.loading') : !isOnline ? t('sync.posNavLocked') : t('registerSession.abrir')}
           </Button>
         </div>
       </DialogContent>

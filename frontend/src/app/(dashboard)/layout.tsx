@@ -2,7 +2,6 @@
 
 import { ReactNode, useState, useEffect, Suspense } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import Link from 'next/link';
 import { useAuth } from '@/providers/auth-provider';
 import { useUiStore } from '@/stores/ui-store';
 import { useTabsStore } from '@/stores/tabs-store';
@@ -13,7 +12,10 @@ import { parsePlanFeatures } from '@/lib/parse-features';
 import { useI18n } from '@/i18n';
 import { UserNav } from '@/components/ui/user-nav';
 import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { ServerLockLink } from '@/components/server-lock-link';
 import { SyncIndicator } from '@/components/sync-indicator';
+import { usePosNavLock } from '@/lib/sync/hooks/use-pos-nav-lock';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { OrgSwitcher } from '@/components/ui/org-switcher';
 import { VisitedTabs } from '@/features/visited-tabs/visited-tabs';
@@ -68,6 +70,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { t, tp } = useI18n();
   const router = useRouter();
   const pathname = usePathname();
+  const { lockNav } = usePosNavLock();
+  const lockMessage = t('sync.posNavLocked');
+  const isPosPage = pathname.startsWith('/pos');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<number>>(new Set());
 
@@ -155,6 +160,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   };
 
   return (
+    <TooltipProvider>
     <div className="soft-tech flex h-screen flex-col overflow-hidden bg-[#e4e9f2] text-[#1a2332] md:flex-row print:h-auto print:block print:overflow-visible">
       <div className="print:hidden p-3 md:pr-1">
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen}>
@@ -213,9 +219,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                         {group.items.map((item) => {
                           const active = pathname.startsWith(item.path);
                           return (
-                            <Link
+                            <ServerLockLink
                               key={item.path}
                               href={item.path}
+                              locked={lockNav}
+                              lockMessage={lockMessage}
                               className={`flex items-center gap-2 pl-1 pr-3 py-2 text-sm transition-colors overflow-hidden group/sidebar ${
                                 active
                                   ? 'neo-nav-active rounded-xl font-medium'
@@ -224,7 +232,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                             >
                               {(() => { const Icon = iconMap[item.key] || LayoutDashboard; return <Icon className={`h-5 w-5 shrink-0 ${active ? 'text-[#3e93c1]' : 'text-muted-foreground'}`} />; })()}
                               <span className="group-hover/sidebar:translate-x-1 transition duration-150">{t(item.label)}</span>
-                            </Link>
+                            </ServerLockLink>
                           );
                         })}
                         </div>
@@ -243,6 +251,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                               href: item.path,
                               icon: <Icon className={`h-5 w-5 shrink-0 ${active ? 'text-[#3e93c1]' : 'text-muted-foreground'}`} />,
                             }}
+                            disabled={lockNav && !item.path.startsWith('/pos')}
+                            lockMessage={lockMessage}
                             className={active
                               ? 'neo-nav-active rounded-xl font-medium'
                               : 'text-muted-foreground hover:text-foreground transition-colors'}
@@ -290,9 +300,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <div className="px-4 md:px-6 pt-3 pb-1 shrink-0 print:hidden">
           <VisitedTabs iconMap={iconMap} tabs={tabs} />
         </div>
-        {/* overflow-y-auto + pad so neo top/left highlight is not clipped */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 md:px-6 pb-6 pt-2 print:h-auto print:overflow-visible print:block print:px-4 print:pb-4">
-          <div className="w-full h-full print:h-auto">
+        <div className={`flex-1 overflow-x-hidden px-4 md:px-6 pb-6 pt-2 print:h-auto print:overflow-visible print:block print:px-4 print:pb-4 ${isPosPage ? 'min-h-0 overflow-hidden' : 'overflow-y-auto'}`}>
+          <div className={`w-full h-full ${isPosPage ? 'min-h-0' : ''} print:h-auto`}>
             <Suspense fallback={<div className="flex items-center justify-center h-64"><p className="text-[#5a6578]">{t('common.loading')}</p></div>}>
               <ErrorBoundary>
                 {children}
@@ -302,5 +311,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
       </main>
     </div>
+    </TooltipProvider>
   );
 }

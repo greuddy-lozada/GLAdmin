@@ -1,5 +1,7 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { env } from '@/config/env';
+import { isNetworkError } from '@/lib/api/is-network-error';
+import { networkStatus } from '@/lib/sync/network-status';
 
 const API_URL = env.NEXT_PUBLIC_API_URL;
 
@@ -42,8 +44,15 @@ const MAX_RETRIES = 3;
 const INITIAL_BACKOFF_MS = 500;
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    networkStatus.setOnline(true);
+    return response;
+  },
   async (error) => {
+    if (isNetworkError(error)) {
+      networkStatus.setOnline(false);
+    }
+
     const originalRequest = error.config;
     if (error.response?.status === 401 && typeof window !== 'undefined') {
       if (isRefreshing) {
@@ -57,10 +66,22 @@ apiClient.interceptors.response.use(
 
       isRefreshing = true;
 
+      const clearSessionAndRedirect = (err: unknown) => {
+        processQueue(err, null);
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+        return Promise.reject(err);
+      };
+
       try {
         const refreshToken = localStorage.getItem('refreshToken');
-        if (!refreshToken) throw new Error('No refresh token');
+        if (!refreshToken) {
+          return clearSessionAndRedirect(error);
+        }
 
+        let lastAuthError: unknown;
         for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
           if (attempt > 0) {
             const delay = Math.min(INITIAL_BACKOFF_MS * Math.pow(2, attempt - 1), 4000);
@@ -76,19 +97,24 @@ apiClient.interceptors.response.use(
             processQueue(null, accessToken);
             originalRequest.headers.Authorization = `Bearer ${accessToken}`;
             return apiClient(originalRequest);
-          } catch {
-            // will retry on next loop iteration
+          } catch (refreshAttemptError) {
+            if (isNetworkError(refreshAttemptError)) {
+              networkStatus.setOnline(false);
+              processQueue(refreshAttemptError, null);
+              return Promise.reject(refreshAttemptError);
+            }
+            lastAuthError = refreshAttemptError;
           }
         }
 
-        throw new Error('Max refresh retries exceeded');
+        return clearSessionAndRedirect(lastAuthError ?? error);
       } catch (refreshError) {
-        processQueue(refreshError, null);
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
-        return Promise.reject(refreshError);
+        if (isNetworkError(refreshError)) {
+          networkStatus.setOnline(false);
+          processQueue(refreshError, null);
+          return Promise.reject(refreshError);
+        }
+        return clearSessionAndRedirect(refreshError);
       } finally {
         isRefreshing = false;
       }

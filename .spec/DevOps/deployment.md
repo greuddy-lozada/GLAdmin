@@ -431,7 +431,7 @@ git reset --hard
 
 | Superficie | Durante el hueco |
 |---|---|
-| **POS (caja)** | Sigue cobrando. `createSale` → Dexie + `syncQueue`. Al volver el API, SyncEngine reintenta (backoff ~15–30s, máx. 5). Un deploy corto se siente como “un rato sin internet”, que el producto ya cubre. |
+| **POS (caja)** | Sigue cobrando. `createSale` → Dexie + `syncQueue`. Al volver el API, SyncEngine reintenta (backoff ~15–30s, máx. 5). Un deploy corto se siente como “un rato sin internet”, que el producto ya cubre. Nav fuera de `/pos` (sidebar, tabs, org, logout) se **bloquea** hasta `HEAD /api/health` 200. |
 | **Admin, catálogo, reportes, CXC/CXP online** | Requests fallan hasta que el backend nuevo responda 200 en `/api/health` (`start_period` ~40s + tiempo de build). |
 | **Dashboard SSE** (`/api/dashboard/stream`) | La conexión cae. El cliente reintenta solo. |
 | **Sesión** | No se cierra. Access + refresh JWT viven en `localStorage`; un restart del API no invalida tokens. |

@@ -24,7 +24,7 @@ export const CustomerBar = forwardRef<HTMLInputElement, CustomerBarProps>(
     const hasCustomer = !!(customerId && customerName);
 
     return (
-      <div className="relative min-h-[3.25rem]">
+      <div className="relative min-h-[3.25rem] shrink-0">
         <AnimatePresence mode="wait" initial={false}>
           {hasCustomer ? (
             <motion.div

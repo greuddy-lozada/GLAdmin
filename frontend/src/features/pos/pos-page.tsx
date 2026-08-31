@@ -21,6 +21,7 @@ import { PaymentMethod, type SalePayment } from './models/pos.model';
 import type { CartItem } from './models/pos.model';
 import type { ParkedOrder, LocalSale } from '@/lib/sync/db';
 import { localDb } from '@/lib/sync/db';
+import { useOffline } from '@/lib/sync/hooks/use-offline';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useMyActiveSession } from '@/features/cash-register/hooks/use-cash-register';
 import RegisterSelector from '@/features/cash-register/components/register-selector';
@@ -58,6 +59,7 @@ export default function PosPage() {
   const setExchangeRate = usePosStore(s => s.setExchangeRate);
 
   const { createSale } = useOfflineSale();
+  const { isOnline } = useOffline();
   const [receipt, setReceipt] = useState<ReceiptData>({ open: false, code: '', items: [], total: 0, totalUsd: 0, payments: [], exchangeRate: 0 });
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
@@ -66,7 +68,7 @@ export default function PosPage() {
   const [parkedSheetOpen, setParkedSheetOpen] = useState(false);
   const [historySheetOpen, setHistorySheetOpen] = useState(false);
   const [parkedCount, setParkedCount] = useState(0);
-  const { data: activeSession, isLoading: loadingSession } = useMyActiveSession();
+  const { data: activeSession, isLoading: loadingSession, isError: sessionError } = useMyActiveSession();
   const [selectRegisterOpen, setSelectRegisterOpen] = useState(false);
   const [closeRegisterOpen, setCloseRegisterOpen] = useState(false);
 
@@ -164,16 +166,22 @@ export default function PosPage() {
     return () => window.removeEventListener('keydown', handler);
   }, [addToCart]);
 
+  const hasSession = Boolean(activeSession);
+
   useEffect(() => {
-    if (!loadingSession && !activeSession) {
+    if (!isOnline) {
+      setSelectRegisterOpen(false);
+      return;
+    }
+    if (!loadingSession && !hasSession && !sessionError) {
       setSelectRegisterOpen(true);
     }
-  }, [loadingSession, activeSession]);
+  }, [isOnline, loadingSession, hasSession, sessionError]);
 
   return (
     <>
-      <div className="flex flex-col h-[calc(100dvh-8rem)] pb-6 md:h-[calc(100vh-8rem)]">
-      <PosToolbar exchangeRate={exchangeRate} onPark={handlePark} onUndo={undoLastItem} canUndo={canUndo} hasItems={cart.length > 0} onOpenParked={() => setParkedSheetOpen(true)} onOpenHistory={() => setHistorySheetOpen(true)} parkedCount={parkedCount} onCloseRegister={() => setCloseRegisterOpen(true)} activeSession={!!activeSession} />
+      <div className="flex h-full min-h-0 flex-col overflow-hidden">
+      <PosToolbar exchangeRate={exchangeRate} onPark={handlePark} onUndo={undoLastItem} canUndo={canUndo} hasItems={cart.length > 0} onOpenParked={() => setParkedSheetOpen(true)} onOpenHistory={() => setHistorySheetOpen(true)} parkedCount={parkedCount} onCloseRegister={() => setCloseRegisterOpen(true)} activeSession={!!activeSession} canCloseRegister={!!activeSession && isOnline} />
 
       <CustomerBar
         ref={customerSearchRef}
@@ -186,14 +194,14 @@ export default function PosPage() {
         onQuickAdd={openQuickAdd}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4 flex-1 min-h-0">
-        <div className="lg:col-span-2 h-full min-h-0 flex flex-col order-1">
-          <div className="flex-1 min-h-0 max-h-[45vh] lg:max-h-none">
+      <div className="mt-4 grid min-h-0 flex-1 grid-cols-1 grid-rows-[minmax(0,1fr)_auto] gap-4 lg:grid-cols-3 lg:grid-rows-none">
+        <div className="flex min-h-0 flex-col order-1 lg:col-span-2">
+          <div className="min-h-0 flex-1">
             <ProductGrid ref={productGridRef} onAddToCart={addToCart} refreshTrigger={gridRefresh} />
           </div>
         </div>
 
-        <div className="lg:col-span-1 flex flex-col min-h-0 order-2 sticky bottom-0 lg:static bg-background z-10 border-t lg:border-t-0 border-border/50 pt-2 lg:pt-0 -mx-1 px-1">
+        <div className="flex min-h-0 max-h-[40%] flex-col order-2 lg:col-span-1 lg:h-full lg:max-h-none">
           <div className="flex-1 min-h-0">
             <CartPanel
               items={cart}

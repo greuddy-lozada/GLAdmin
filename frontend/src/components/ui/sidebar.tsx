@@ -5,6 +5,7 @@ import Link from "next/link";
 import React, { useState, createContext, useContext } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Menu, X } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Links {
   label: string;
@@ -178,22 +179,19 @@ export const MobileSidebar = ({
 export const SidebarLink = ({
   link,
   className,
+  disabled,
+  lockMessage,
   ...props
 }: {
   link: Links;
   className?: string;
+  disabled?: boolean;
+  lockMessage?: string;
   [key: string]: unknown;
 }) => {
   const { open, animate } = useSidebar();
-  return (
-    <Link
-      href={link.href}
-      className={cn(
-        "flex items-center gap-2 group/sidebar py-2 pl-1 overflow-hidden",
-        className,
-      )}
-      {...props}
-    >
+  const content = (
+    <>
       {link.icon}
       <motion.span
         animate={{
@@ -207,6 +205,35 @@ export const SidebarLink = ({
       >
         {link.label}
       </motion.span>
+    </>
+  );
+
+  const classes = cn(
+    "flex items-center gap-2 group/sidebar py-2 pl-1 overflow-hidden",
+    className,
+    disabled && "cursor-not-allowed opacity-50",
+  );
+
+  if (disabled) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span aria-disabled="true" className={classes}>
+            {content}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>{lockMessage}</TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return (
+    <Link
+      href={link.href}
+      className={classes}
+      {...props}
+    >
+      {content}
     </Link>
   );
 };
